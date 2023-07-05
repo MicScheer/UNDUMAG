@@ -1,0 +1,6 @@
+*KEEP,useclcmag.
+      use commandlinef90m
+      use bpolyederf90m
+      use undumagf90m
+      use magnets_structure
+      use displacement

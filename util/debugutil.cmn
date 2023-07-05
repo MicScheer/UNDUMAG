@@ -1,0 +1,5 @@
+*KEEP,debugutil.
+      double precision x_debug,y_debug,z_debug,a_debug(100)
+      integer i_debug,k_debug
+
+      common/c_debug/x_debug,y_debug,z_debug,a_debug,i_debug,k_debug

@@ -1,0 +1,7 @@
+*KEEP,commandlinef90m.
+      module commandlinef90m
+
+      integer narg_cl, lencomline_cl, lencprog_cl, ierr_cl, iarg_cl,lun6
+      character(2048) comline_cl, cprog_cl, carg_cl(32), Fclc, Fnam
+
+      end module

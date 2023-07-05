@@ -1,0 +1,183 @@
+MACRO CMZLOGON
+AUTHOR Michael Scheer
+			
+* +PATCH,//UNDUMAG/SYSTEM
+* +DECK,cmzlogon, T=kumac.
+
+*sel debug3d
+
+*sel debugcm | cut magnets
+
+*sel trace
+
+*sel msingle
+
+sel div1
+
+*sel 77k
+sel 300k
+*sel magpol
+
+sel undunew
+
+* Eds Undulator{
+sel 1234
+sel 57911
+sel 681012
+* }Eds Undulator
+
+* U17{
+
+sel u17
+
+**sel u17hptilt
+**sel u17hpol1r
+
+sel u17hpol1
+sel u17mag1
+sel u17hpol2
+sel u17hpol3
+sel u17mag2
+sel u17hpol4
+sel u17hpol5
+
+sel u17spec
+
+**** wg HPol5 * *sel u17ehpol
+sel u17emag3
+sel u17epol1
+sel u17emag2
+sel u17epol2
+sel u17emag1
+
+*#*sel u17hpol1r
+*#*sel u17mag1r
+*#*sel u17hpol2r
+*#*sel u17hpol3r
+*#*sel u17mag2r
+*#*sel u17hpol4r
+*#*sel u17hpol5r
+*#*sel u17ehpolr
+*#*sel u17emag3r
+*#*sel u17epol1r
+*#**#*sel u17emag2r
+*#**#*sel u17epol2r
+*#**#*sel u17emag1r
+
+************sel oldu17emag1
+* }U17
+
+* U15{
+*sel u15
+*sel div1
+*sel magu15
+*sel endmagu15
+*sel polu15
+* }U15
+
+*sel posx
+
+*sel probe
+
+* U17_sym for ixsym=1
+sel spech3
+*sel spech4
+*sel spech5
+*sel specp3
+*sel specp4
+*sel specp5
+sel spechpol
+
+sel magchamf
+sel magtop
+sel magbot
+
+sel polchamf
+sel poltop
+sel polmid
+sel polbot
+
+sel hpolchamf
+sel hpoltop
+sel hpolmid
+sel hpolbot
+
+sel mshplt
+file ~/mshplt/cmz/mshplt -r
+file ~/wav/cmz/wave -r
+file ~/waves/cmz/waves 
+file ~/ntupplot/cmz/ntupplot
+*file ~/polymag/polymag -r
+
+FILE ~/undu/cmz/undumag -u
+	
+SEL NOWARNINGS | Keine Warnungen in bpeq
+sel lena
+sel omp
+
+MACRO/DEFAULT ~/undu/cmz,~/cmz
+MACRO/DEFAULT -AUTO
+
+host_editor 'xjed -fn 10x20 -geometry +300+500'
+select linux
+
+FILECASE CONVERT
+
+SET F77 -lan
+SET ../for/*.f -F
+SET cmzedit.F -E
+SET libundumag.a -L
+
+SET C -lan
+SET ../*.c -F
+SET cmzedit.c -E
+SET libmyc.a -L
+
+SET C++ -lan
+SET ../*.cc -F
+SET cmzedit.cc -E
+SET libmycpp.a -L
+
+SET latex -lan
+SET ../*.tex -F
+SET cmzedit.tex -E
+SET libmytex.a -L
+
+SET kumac -lan
+SET ../*.kumac -F
+SET cmzedit.kumac -E
+SET libmykumac.a -L
+
+SET text -lan
+SET ../*.txt -F
+SET cmzedit.TXT -E
+SET libmytext.a -L
+
+SET data -lan
+SET ../*.dat -F
+SET cmzedit.DAT -E
+SET libmydata.a -L
+
+SET perl -lan
+SET ../*.pl -F
+SET cmzedit.pl -E
+SET libmypl.a -L
+
+SET html -lan
+SET ../*.html -F
+SET cmzedit.html -E
+SET libmyhtml.a -L
+
+EXEC  ~/cmz/cmz_symbols
+EXEC ~/undu/cmz/cmzsymbols
+
+VERS
+LMOD * LAST
+
+exec cmzgotolastdir.kumac
+LMOD * LAST
+
+*cx cpmu17
+*exit
+
+EXITM

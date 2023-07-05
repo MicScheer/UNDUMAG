@@ -1,0 +1,8 @@
+*CMZ :  4.01/00 13/03/2023  14.35.41  by  Michael Scheer
+*CMZ :  3.02/00 01/09/2014  12.55.26  by  Michael Scheer
+*CMZ :  2.33/07 08/05/2001  12.18.00  by  Michael Scheer
+*-- Author :    Michael Scheer   08/05/2001
+      MODULE SPECFIT
+      DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: FREQR,SPECTOTR
+      DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: FREQ,SPECTOT
+      END MODULE

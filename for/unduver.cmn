@@ -1,0 +1,25 @@
+*KEEP,unduver.
+      print *
+      print *
+      print *
+      write(lun6,*)'     **********************************************************'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                       UNDUMAG                          *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                    Version 2.04/05                     *'
+      write(lun6,*)'     *                       15.3.2023                        *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                     Michael Scheer                     *'
+      write(lun6,*)'     *                       HZB/BESSY                        *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     **********************************************************'
+      print *
+      print *
+      print *
+
+      call util_zeit_kommentar(lun6,"")
+
+      open(unit=999,file="undumag.ver")
+      chuvers="2.04/04"
+      write(999,*)chuvers
+      close(999)

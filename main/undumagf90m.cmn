@@ -1,0 +1,108 @@
+*KEEP,UNDUMAGF90M.
+      module undumagf90m
+
+c +PATCH,//UNDUMAG/SEQ
+c +KEEP,UNDUMAGF90M.
+
+      implicit none
+
+      integer nthreadp,nwitems
+      parameter (nthreadp=1000,nwitems=11)
+
+!      double precision, dimension (:,:,:,:), allocatable :: wwmatrix
+
+      double precision, dimension (:,:,:), allocatable :: bcmat
+      double precision, dimension (:,:), allocatable :: bc0,bc00,bpm,
+     &  bpebc0,wire,race,wind,arc,carc,crace,rectbar,thickwire,brnmat
+
+      double precision, dimension (:), allocatable ::
+     &  feh1,feh2,feh3,fem1,fem2,fem3,ufespl1,
+     &  fespl1,fewspl1,fewspl2,fewspl3,fewspl4,
+     &  bxconvw,byconvw,bzconvw
+
+      double precision, dimension (:,:), allocatable :: dipoles
+      double precision, dimension (:,:,:), allocatable :: cornpoles
+
+      real*4, dimension (:,:,:,:), allocatable :: wwmatrix4,convmat
+c      real*4, dimension (:,:,:), allocatable :: wwmatrix
+
+      integer, dimension (:), allocatable :: kspecmag,idamp8,ncornpoles
+      integer, dimension(:,:), allocatable :: magcyl
+
+      double precision
+     &  unduplot_phi,unduplot_theta,traxyz_theta,traxyz_phi,permu,parmu,perksi,parksi,
+     &  xmapmin,xmapmax,ymapmin,ymapmax,zmapmin,zmapmax,dxmap,
+     &  xminpl,xmaxpl,yminpl,ymaxpl,zminpl,zmaxpl,
+     &  xconvmin,xconvmax,dxconv,xconv(100),yconv,zconv,hconv,hconva,uwindow,xsym,
+     &  xbeff,xbeffy,xbeffz,perlen,
+     &  ebeam,zslit,xcenter,xmaxinf,xcentershift,xelec,yelec,zelec,
+     &  vxelec,vyelec,vzelec,
+     &  ds,xf,yf,zf,efx,efy,efz,xobsv,yobsv,zobsv,phelow,phehig,dampiron,dampi,
+     &  ubfcenx,ubfceny,ubfcenz,ubflenx,ubfleny,ubflenz,
+     &  utorqcenx,utorqceny,utorqcenz,
+     &  fxdip,fydip,fzdip,
+     &  txdip,tydip,tzdip,
+     &  uservar(100),corrtiny,cuttiny,hulltiny,randos,randox,randoy,randoz
+     &  ,dampfac,hconvbase,hconvexp,chicut,damp8,rcvthron,angmaprotx,
+     &  cenmaprotxy,cenmaprotxz,zminprof,zmaxprof,
+     &  bxex,byex,bzex,hresidiron,resiron,halt,dedgefb,coating
+
+      real randoxa,randoya,randoza,randox10,randoy10,randoz10,
+     &  randomx,randomy,randomz
+
+      integer
+     &  maxiter,maxiterrec,maxiteriron,nchiiron,ibulk,nchimax,kesti,
+     &  ktetmesh,
+     &  kiter,iterrectot,iterirontot,
+     &  iunduplot,kcomment,krunnum,kdate,kplsym,nrec,niron,nxmap,intmaglis,noduplis,nymap,nzmap
+     &  ,mode,ncornmax,nplanmax,ncornadd,nplanadd,niterrec,niteriron,niter,
+     &  kconvrec,kconviron,kconv,lunconv,kdumpconv,nmatfiles,
+     &  matmaps(4,1000),kpreset,matrix,
+     &  magmatrix,nuthreads,
+     &  ixsym,iysym,izsym,nspecmag,nxbeff,kbeffmode,
+     &  ixsymo,iysymo,izsymo,
+     &  ieneloss,ivelofield,nphener,nstep,kxcenter,kudebug,kcalcvars,isimpson,
+     &  nxconv,kdisplace,kechocalc,knomagmap,knopolmap,isplinefm,
+     &  iforce,ivrml,iundugeo,idipoles,iforcedip,iplforce,itorque,mbforcex,mbforcey,mbforcez,mfcolor,
+     &  kmapmode,kmapnohead,knointmap,konv,iwarnsum,maxpoints,nmagpols,kallodip,
+     &  nwarnbound, iwarnin,iwarn2pi,iwarnbound,ndipoles,killbadmag,irecrepl,kwarncom,irandmag,kshuffle,
+     &  kforcemag,kurad,kbextern,kresiron,kprint,ndivfboxy,
+     &  ncwires,nrace,nwind,ncrace,ncfila,narc,ncarc,nwcarc,nwrace,nwwind,
+     &  nwcrace,nwarc,ncoil,newclc,
+     &  nrbar,nwrbar,nthwir,nwthwir,nmagcyl,kwave,iforcegrid,modegui,nbrnmat
+
+      character(256) unducomment
+      character(512) cundutit
+      character(16) chuvers
+
+      character, dimension (:,:), allocatable :: chmags, chmoths,
+     &  chmagsm,chmothsm,chmagsi,chmothsi,chmagpols,chmothso
+
+      character(32) chmag,chmoth,chforcemag
+
+      namelist/undumagn/
+     &  maxiter,maxiterrec,maxiteriron,nchiiron,ibulk,iunduplot,kcomment,
+     &  krunnum,kdate,ktetmesh,kesti,
+     &  kplsym,nxmap,intmaglis,noduplis,nymap,nzmap
+     &  ,mode,kdumpconv,dxmap,
+     &  unduplot_phi,unduplot_theta,traxyz_theta,traxyz_phi,
+     &  xmapmin,xmapmax,ymapmin,ymapmax,zmapmin,zmapmax,
+     &  xconvmin,xconvmax,dxconv,nxconv,yconv,zconv,hconv,kpreset,uwindow,matrix,nuthreads,
+     &  xminpl,xmaxpl,yminpl,ymaxpl,zminpl,zmaxpl,
+     &  ixsym,iysym,izsym,xsym,
+     &  xbeff,xbeffy,xbeffz,perlen,nxbeff,kbeffmode,kurad,ebeam,zslit,xcenter,
+     &  xelec,yelec,zelec,vxelec,vyelec,vzelec,
+     &  ds,xf,yf,zf,efx,efy,efz,xobsv,yobsv,zobsv,phelow,phehig,
+     &  ieneloss,ivelofield,nphener,nstep,kxcenter,kcalcvars,
+     &  dampiron,isimpson,isplinefm,kdisplace,kechocalc,knomagmap,knopolmap,
+     &  kmapmode,kmapnohead,knointmap,
+     &  iforce,ivrml,iundugeo,idipoles,iforcedip,iplforce,itorque,mbforcex,mbforcey,mbforcez,mfcolor,
+     &  ubfcenx,ubfceny,ubfcenz,ubflenx,ubfleny,ubflenz,
+     &  utorqcenx,utorqceny,utorqcenz,chforcemag,nwarnbound, iwarnin,iwarn2pi,
+     &  killbadmag,corrtiny,cuttiny,hulltiny,randos,randox,randoy,randoz,irecrepl
+     &  ,dampfac,hconvbase,hconvexp,chicut,irandmag,kshuffle,
+     &  randomx,randomy,randomz,rcvthron,angmaprotx,cenmaprotxy,cenmaprotxz,
+     &  bxex,byex,bzex,kbextern,kresiron,resiron,kprint,ndivfboxy,dedgefb,
+     &  iforcegrid,kudebug,newclc
+
+      end module undumagf90m

@@ -1,0 +1,9 @@
+*KEEP,commandargs.
+      call get_command(comline_cl,lencomline_cl,ierr_cl)
+      narg_cl = command_argument_count()
+
+      call get_command_argument(0,cprog_cl,lencprog_cl,ierr_cl)
+
+      do iarg_cl=1,narg_cl
+        call get_command_argument(iarg_cl,carg_cl(iarg_cl))
+      enddo

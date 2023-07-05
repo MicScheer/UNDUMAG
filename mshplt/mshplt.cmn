@@ -1,0 +1,164 @@
+*KEEP,mshplt.
+      real
+     &  pttomm_ps,pttocm_ps, !convert from pt to mm or cm respectively
+     &  scale_ps, isscale_ps, !current scale to convert from pt
+     &  scalex_ps, !current scale to convert x to pad system
+     &  scaley_ps, !current scale to convert y to pad system
+     &  xold_ps,yold_ps, !old pen position on pad
+     &  x_ps,y_ps, !current pen position on pad
+     &  rlinewidth_ps !line width on pad
+     & ,chhe_ps, chhe_index_ps ! character height
+     & ,ticsiz_ps ! tic height
+     & ,ang_ps,tang_ps ! current angle and text angle
+     &  ,offgtitx_ps !offset of global title on pad
+     &  ,offgtity_ps !offset of global title on pad
+     &  ,offdatex_ps !offset of date on pad
+     &  ,offdatey_ps !offset of date on pad
+     &  ,aLabHeight_ps !character height of axis label
+     &  ,xoffexp_ps !xoffset of power term
+     &  ,yoffexp_ps !yoffset of power term
+     &  ,xlaboff_ps !offset of x-axis label on pad
+     &  ,xtitoff_ps !offset of x-axis title on pad
+     &  ,ylaboff_ps ! offset of y-axis label on pad
+     &  ,ytitoff_ps !offset of y-axis title on pad
+     &  ,ztitoff_ps !offset of z-axis title on pad
+     &  ,zlaboff_ps ! offset of z-axis label on pad
+     &  ,xsiz_ps,ysiz_ps !size on pad of plotting canvas
+     &  ,wxmin_ps,wxmax_ps,wymin_ps,wymax_ps !world
+     &  ,xleft_ps,xright_ps,ybottom_ps,ytop_ps ! pad on pad
+     &  ,xsizorig_ps,ysizorig_ps !size on pad of plotting canvas for paper scale
+     &  ,xleftorig_ps,xrightorig_ps,ybottomorig_ps,ytoporig_ps ! orig pad on paper
+     &  ,rmtyp_ps(2,0:100) !postscript encoding of characters
+     &  ,rmsiz_ps ! marker size
+     &  ,phi_ps,theta_ps ! 3d viewing angles
+     &  ,pi_ps !Pi
+     &  ,xmin3d_ps,xmax3d_ps
+     &  ,ymin3d_ps,ymax3d_ps
+     &  ,zmin3d_ps,zmax3d_ps
+     &  ,xmgl_ps,xmgr_ps,ymgu_ps,ymgl_ps !old hplot variables for margins
+     &  ,xwin_ps,ywin_ps ! horizontal and vertical distance of pads
+     &  ,ygti_ps !y-offset of global title for hplot
+     &  ,gsiz_ps !character size of global title for hplot
+     &  ,xcen_ps,ycen_ps !center on canvas
+     &  ,scaletxt_ps ! Scaling for text entities
+     &  ,ihigzmode_ps !HIGZ-compatibility mode
+     &  ,tsiz_ps ! axis-title-size in HIGZ-mode
+     &  ,coln_ps,cnLine_ps,cnFill_ps,cnMarker_ps,cnText_ps,cnFrame_ps !color norms
+     &  ,clips_ps(2,1000) !clipping range
+     &  ,radtodeg_ps
+     &  ,xpcorn_ps(8),ypcorn_ps(8) !3d frame box
+     &  ,ifbox_ps,xfb_ps(9),yfb_ps(9)
+
+      parameter(pttocm_ps=72/2.54,pttomm_ps=72/25.4)
+
+      integer nmaxfile_ps
+      parameter(nmaxfile_ps=10000)
+
+      integer
+     &  lun_ps,istat_ps
+     &  ,ilabmod_ps !mode off plotting label
+     &  ,inolabs_ps !no axis labeling
+     &  ,irunviewer_ps !start live viewer
+     &  ,iviewinter_ps !interactive stopping of live viewer
+     &  ,mtyp_ps ! current marker type
+     &  ,icolor_ps, ired_ps,igreen_ps,iblue_ps !color, if <1, rgb values are used
+     &  ,ilinestyle_ps !line style: 1: solid, 2: dashed, 3: dotted, 4: dashed-dotted
+     &  ,kzone_ps, itouched_ps !current zone and flag of usage
+     &  ,nzone_ps,nxzone_ps,nyzone_ps !zones of canvas
+     &  ,ifirst_ps !first zone for plotting
+     &  ,isamecanvas_ps,isameframe_ps
+     &  ,nfile_ps !file counter
+     &  ,lunall_ps(nmaxfile_ps) !LUNs of plotfiles
+     &  ,kbbxl_ps,kbbxr_ps,kbbyb_ps,kbbyt_ps !bounding box (kbbxl_ps,kbbxr_ps,...)
+     &  ,inewpage_ps !new page
+     &  ,kFrameColor_ps,kFrameRed_ps,kFrameBlue_ps,kFrameGreen_ps
+     &  ,kFillColor_ps,kFillRed_ps,kFillBlue_ps,kFillGreen_ps
+     &  ,kLineColor_ps,kLineRed_ps,kLineBlue_ps,kLineGreen_ps
+     &  ,kTextColor_ps,kTextRed_ps,kTextBlue_ps,kTextGreen_ps
+     &  ,kMarkerColor_ps,kMarkerRed_ps,kMarkerBlue_ps,kMarkerGreen_ps
+     &  ,idrawgtit_ps !draw global title on top of page
+     &  ,lunbase_ps
+     &  ,log10x_ps,log10y_ps,log10z_ps !flags for logarithmic axis
+     &  ,nclips_ps ! number of clipping points
+     &  ,mode3d_ps
+     &  ,isbox_ps,isdate_ps,isoffdate_ps
+     &  ,kBox_ps,kDate_ps ! to plot surrounding box and date on top of plots
+
+      character(2048)
+     &  file_ps,viewer_ps,cline_ps,filebase_ps,
+     &  xtit_ps,ytit_ps,ztit_ps,gtit_ps !axis-title and global title
+     &  ,fileall_ps(nmaxfile_ps) !plotfiles
+
+      character(4) chmarker_ps !current marker
+
+      integer nbuffsize_ps,ibuffpos_ps
+      parameter(nbuffsize_ps=100000)
+      character(2048) chbuff_ps(nbuffsize_ps)
+      character(4) chch_ps(1000)
+
+      common/mshpltc/
+     &  scale_ps, isscale_ps,scalex_ps,scaley_ps,
+     &  xold_ps,yold_ps,x_ps,y_ps,rlinewidth_ps,chhe_ps, chhe_index_ps,
+     &  ticsiz_ps,
+     &  ang_ps,tang_ps
+     & ,xlaboff_ps,ylaboff_ps
+     & ,xtitoff_ps,ytitoff_ps
+     &  ,ztitoff_ps !offset of z-axis title on pad
+     &  ,zlaboff_ps ! offset of z-axis label on pad
+     & ,xsiz_ps,ysiz_ps
+     &  ,wxmin_ps,wxmax_ps,wymin_ps,wymax_ps !world
+     &  ,xleft_ps,xright_ps,ybottom_ps,ytop_ps ! pad on pad
+     &  ,ilabmod_ps,rmtyp_ps,rmsiz_ps
+     & ,lun_ps,istat_ps,inolabs_ps,irunviewer_ps,iviewinter_ps,mtyp_ps
+     &  ,file_ps,viewer_ps,filebase_ps
+     &  ,ibuffpos_ps,chbuff_ps,chch_ps,chmarker_ps,cline_ps
+     &  ,phi_ps,theta_ps ! 3d viewing angles
+     &  ,pi_ps !Pi
+     &  ,icolor_ps, ired_ps,igreen_ps,iblue_ps !color, if <1, rgb values are used
+     &  ,ilinestyle_ps !line style: 1: solid, 2: dashed, 3: dotted, 4: dashed-dotted
+     &  ,xmin3d_ps,xmax3d_ps
+     &  ,ymin3d_ps,ymax3d_ps
+     &  ,zmin3d_ps,zmax3d_ps
+     &  ,offgtitx_ps !offset of global title on pad
+     &  ,offgtity_ps !offset of global title on pad
+     &  ,offdatex_ps !offset of date on pad
+     &  ,offdatey_ps !offset of date on pad
+     &  ,xmgl_ps,xmgr_ps,ymgu_ps,ymgl_ps !old hplot variables for margins
+     &  ,xwin_ps,ywin_ps ! horizontal and vertical distance of pads
+     &  ,xsizorig_ps,ysizorig_ps !size on pad of plotting canvas for paper scale
+     &  ,xleftorig_ps,xrightorig_ps,ybottomorig_ps,ytoporig_ps ! orig pad on paper
+     &  ,kzone_ps, itouched_ps !current zone and flag of usage
+     &  ,nzone_ps,nxzone_ps,nyzone_ps !zones of canvas
+     &  ,ifirst_ps !first zone for plotting
+     &  ,isamecanvas_ps,isameframe_ps
+     &  ,xtit_ps,ytit_ps,ztit_ps,gtit_ps !axis-title and global title
+     &  ,nfile_ps !file counter
+     &  ,lunall_ps !LUNs of plotfiles
+     &  ,fileall_ps !plotfiles
+     &  ,kbbxl_ps,kbbxr_ps,kbbyb_ps,kbbyt_ps !bounding box (kbbxl_ps,kbbxr_ps,...)
+     &  ,inewpage_ps !new page
+     &  ,kBox_ps,kDate_ps ! to plot surrounding box and date on top of plots
+     &  ,ygti_ps !y-offset of global title for hplot
+     &  ,gsiz_ps !character size of global title for hplot
+     &  ,kFrameColor_ps,kFrameRed_ps,kFrameBlue_ps,kFrameGreen_ps
+     &  ,kLineColor_ps,kLineRed_ps,kLineBlue_ps,kLineGreen_ps
+     &  ,kFillColor_ps,kFillRed_ps,kFillBlue_ps,kFillGreen_ps
+     &  ,kTextColor_ps,kTextRed_ps,kTextBlue_ps,kTextGreen_ps
+     &  ,kMarkerColor_ps,kMarkerRed_ps,kMarkerBlue_ps,kMarkerGreen_ps
+     &  ,xcen_ps,ycen_ps !center on canvas
+     &  ,scaletxt_ps ! Scaling for text entities
+     &  ,ihigzmode_ps !HIGZ-compatibility mode
+     &  ,idrawgtit_ps !draw global title on top of page
+     &  ,tsiz_ps ! axis-title-size in HIGZ-mode
+     &  ,lunbase_ps
+     &  ,coln_ps,cnLine_ps,cnFill_ps,cnMarker_ps,cnText_ps,cnFrame_ps !color norms
+     &  ,log10x_ps,log10y_ps,log10z_ps !flags for logarithmic axis
+     &  ,aLabHeight_ps !character height of axis label
+     &  ,clips_ps,nclips_ps
+     &  ,radtodeg_ps
+     &  ,mode3d_ps
+     &  ,isbox_ps,isdate_ps,isoffdate_ps
+     &  ,xoffexp_ps !xoffset of power term
+     &  ,yoffexp_ps !yoffset of power term
+     &  ,xpcorn_ps,ypcorn_ps
+     &  ,ifbox_ps,xfb_ps,yfb_ps
