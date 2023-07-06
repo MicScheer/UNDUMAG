@@ -293,7 +293,7 @@ def undu_update():
           l = Flines.readline()
           if Idebug > 1: print(l)
           if not l: break
-          if len(l) < 10: break
+          #if len(l) < 10: break
           sl = l.split()
           if len(sl) > 1:
             key = sl[0].lower()
@@ -323,7 +323,7 @@ def undu_update():
         while True:
           l = Flines.readline()
           if not l: break
-          if len(l) < 10: break
+          #if len(l) < 10: break
           sl = l.split()
           if len(sl) > 1:
             key = sl[0].lower()
@@ -374,9 +374,10 @@ def undu_update():
         while True:
           l = Flines.readline()
           if not l: break
-          if len(l) < 10: break
+          #if len(l) < 10: break
           sl = l.split()
-          if sl[0][0] == '*' or sl[0][0] == '!' or len(sl) < 6: continue
+          if len(sl) < 2: continue
+          if sl[0][0] == '*' or sl[0][0] == '!' or len(sl[0]) < 7: continue
           key = sl[0].lower()
           if key== 'include':
             #reakpoint()
