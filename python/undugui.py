@@ -27205,11 +27205,13 @@ def undugui_clean(key=''):
   VHybrid = {}
   Mirror = {}
   VMirror = {}
+  Hybrid_Mode = 0
 
   AppleII = {}
   VAppleII = {}
   AppleII["MatIndex"] = -1
   AppleII["xMagCen"] = 0.0
+
   VAppleII = {}
   AppleII_Mode = 0
 
@@ -27790,6 +27792,19 @@ def ugui_calc_line(cline):
 
 
 
+  idebug = 0
+
+  if idebug > 0:
+    try:
+      Ical += 1
+    except:
+      Ical = 0
+      #endtry
+
+      print("\nugui_calc_line: ",Ical)
+      print(cline)
+  #endif idebug > 0
+
   try:
     retval = eval(str(cline))
     return retval
@@ -28310,7 +28325,167 @@ def utransrotcop():
     update_magnets()
   #endfor
 
-#  for mp in MagPolsTot: print(mp)
+
+#enddef utransrotcop()
+
+def checktransrotcop():
+
+  global TransRotCop,EchoCLC
+
+  global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
+  Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
+  NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
+  Nmat, Materials, Br, Rmu, Coating, PerLen, ChamfM, ChamfP, MCol, PCol, \
+  AirGap, KeeperGap, MspaceX, MoffY, Parameters, Variables, Npar, Ncalc, Nvar, \
+  CalcLines, Calcs, Pars, Ucomment, Modules, MagPolsTotOld, MagPolOld, \
+  EditMag_CheckMode,CopyMag_CheckMode, EditMagX, EditMagY,CopyMagX, CopyMagY,WWait, WError, \
+  CheckVars, CheckCalcs, CheckDictCalcs, CheckVarNum, VarNum, \
+  MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
+  S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
+
+  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
+
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
+  WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
+
+  global AppleII_Mode, AppleII, AppleIIOld, VAppleII, \
+  S_nPer_AppleII, S_FullGap_AppleII, \
+  S_Xlen_AppleII, S_Ylen_AppleII, S_Zlen_AppleII, \
+  S_DeadCoat_AppleII, S_AirGap_AppleII, S_Br_AppleII, S_Mu_AppleII, S_KsiPerp_AppleII, \
+  S_HorSlit_AppleII, S_S2Shift_AppleII, S_S3Shift_AppleII, \
+  S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
+
+  global V_CmagOld, V_CmothOld, V_XcenOld, V_YcenOld, V_ZcenOld, V_cornsOld, V_NcornOld, V_CornFileOld, \
+  V_nXdivOld, V_nYdivOld, V_nZdivOld, \
+  V_FracDivYOld,   V_FracDivZOld,  V_XlenOld, V_YlenOld, V_ZlenOld, V_KeyOld, V_MatTypeOld, V_MatOld, \
+  V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
+
+  global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
+  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
+  S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
+
+  global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
+  V_nXdiv, V_nYdiv, V_nZdiv, \
+  V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
+  V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
+
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  S_nXdiv, S_nYdiv, S_nZdiv, \
+  S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
+  S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
+  S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
+  S_Iron_FracDivY,S_Iron_FracDivZ,S_Iron_Xlen, S_Iron_Ylen, S_Iron_Zlen, S_Iron_Key, S_Iron_MatType, S_Iron_Mat, \
+  S_Iron_Bc, S_Iron_Bxn, S_Iron_Byn, S_Iron_Bzn, S_Iron_Ispec, S_Iron_Color
+
+  global LastCLC, LastNAM
+  global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
+  NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
+  global Ngeo
+
+  global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
+  S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
+  cIxSym, cIySym, cIzSym, KxCenter, cIxSym, Xcenter, Xsym
+
+  global GeoWaddVars, GeoWlistVars
+  global Mirror, VMirror, Hybrid, VHybrid, Hybrid_Mode
+
+  global WSetMap, \
+  S_xMapMin,S_yMapMin,S_zMapMin,S_xMapMax,S_yMapMax,S_zMapMax, S_MHmap, \
+  S_dxMap,S_NxMap,S_NyMap,S_NzMap,S_dxBeff,S_NxBeff, S_xMinBeff,S_xMaxBeff
+
+  global NCoil, Coils, Filaments, S_Current_Coil, S_Name_Coil, \
+  S_nWindings_Coil, S_Filling_Coil, \
+  S_Xcen_Coil,S_Ycen_Coil,S_Zcen_Coil,S_VnX_Coil,S_VnY_Coil,S_VnZ_Coil, \
+  S_AngRot_Coil,S_xLenOut_Coil,S_zLenIn_Coil,S_zLenOut_Coil,S_RadiusIn_Coil, \
+  S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
+  WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
+  WaddCoilRace,WaddCoilCirc
+
+
+  for trc in TransRotCop:
+
+    key = trc[0]
+
+    if key == 'Copy':
+
+      w = trc[1].split()
+      source = w[0]
+      tarmag = w[1]
+      tarmoth = w[2]
+
+      try:
+        kmoth = DictMoths[source]
+      except:
+        try:
+          kmag = DictMagPolsTot[source]
+        except:
+          print(NL,"*** Error for key Copy: Magnet or mother not found for:")
+          print("Copy", source, tarmag, tarmoth,NL)
+        #endtry
+      #endtry
+
+      try:
+        kmoth = DictMoths[tarmoth]
+        print(NL,"*** Error for key Copy: Target mother exists already ***")
+        print("Copy", source, tarmag, tarmoth,NL)
+      except:
+        try:
+          kmag = DictMagPolsTot[tarmag]
+          print(NL,"*** Error for key Copy: Target magnet exists already ***")
+          print("Copy", source, tarmag,NL)
+        except:
+          pass
+        #endtry
+      #endtry
+
+    elif key == 'Translate' or key == 'Rotate' or \
+    key == 'Rotate_Shape' or key == 'Remanence':
+
+      mp = trc[1]
+      tr = trc[2].split()
+
+      try:
+
+        kmoth = DictMoths[mp]
+
+        for mag in Moths[kmoth]:
+          kmag = DictMagPolsTot[mag]
+          mt = MagPolsTot[kmag]
+          ckey = mt[3]
+          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file ***")
+            print("\n*** Check",mag," ***")
+            continue
+          #endif
+        #endfor
+
+      except:
+
+        try:
+          kmag = DictMagPolsTot[mp]
+          mag = MagPolsTot[kmag]
+          ckey = mag[3]
+          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            print("\n*** Check",mag," ***")
+            continue
+          #endif
+        except:
+          print(NL,"*** Error for key",key,": Magnet or mother not found for:")
+          print(key,mp,NL)
+        #endtry
+      #endtry
+
+    #endif key
+
+  #endfor trc
+
+#enddef checktransrotcop()
 
 def undumag_wind_to_fila(coilin):
   global Filaments, Coils, CurrLoops, DictUnduColors,UnduColors
@@ -29468,10 +29643,10 @@ def ureadclc(callkey=''):
     mat = vmat[4]
 
     if mat[0] == '$':
-      mat = Variables[mat]
+      mat = int(Variables[mat])
     #endif mat[0] == '$'
 
-    tmat = Materials[mat-1][1]
+    tmat = Materials[int(mat)-1][1]
 
 
     if tmat == 'REC':
@@ -29507,12 +29682,12 @@ def ureadclc(callkey=''):
     if mat[0] == '$':
       mat = Variables[mat]
     #endif mat[0] == '$'
-    if mat < 1 or mat > Nmat:
+    if int(mat) < 1 or int(mat) > Nmat:
       print("*** Error in ureadclc: Bad Material index for",mp[0])
       Quit()
     #endif
 
-    tmat = Materials[mat-1][1]
+    tmat = Materials[int(mat)-1][1]
 
 
     if tmat == 'REC':
@@ -29734,11 +29909,13 @@ def ureadclc(callkey=''):
   NCoil = len(Coils)
   if NCoil: undu_coils_to_filaments()
 
-  if len(TransRotCop): utransrotcop()
+  #if len(TransRotCop): utransrotcop()
+  if len(TransRotCop): checktransrotcop()
 
   #debug("debug: Ende von ureadclc")
 
 #enddef ureadclc()
+
 
 def start():
   pass
@@ -29957,6 +30134,134 @@ def _canvas_key(ev):
       Quit()
 #enddef canvas_key(ev)
 
+
+def uwritetrc(filename):
+
+  idebug = 0
+
+
+  fclc = open(filename,'r')
+  lins = fclc.readlines()
+  fclc.close()
+
+  isopen = 0
+  llins = len(lins)
+
+  try:
+
+    fclc = open(filename,'w')
+    isopen = 1
+    lc = 0
+
+    for l in range(llins):
+
+      if lc > llins-1: break
+      lin = lins[lc]
+
+      if idebug > 1:
+        print(l,llins,lin)
+      #endif
+      fclc.write(lin)
+
+      if len(lin) > 0:
+        if lin[0] == '&':
+          spl = lin.split()
+          if spl[1] == 'Magnet' or spl[1] == 'Special_Magnet' or \
+          spl[1] == 'Pole' or spl[1] == 'Special_Pole':
+
+            nam = 0
+            ln = 1
+            while True:
+              snam = lins[l+ln].split()
+              if snam[0][0] != '*' and snam[0][0] != '!':
+                cmag = snam[1]
+                cmoth = snam[2]
+                break
+              #endif
+              ln += 1
+            #endwhile
+
+            # Search end of block
+            n = 0
+            for ll in range(llins):
+              lt = lc + ll + 1
+              if idebug > 1:
+                print("lc, ll, lt, n:",lc,ll,lt,n)
+              #endif
+              if lt > llins: break
+              lint = lins[lt].strip()
+              if idebug > 1:
+                print("testline:\n",lint)
+              #endif
+              fclc.write(lins[lt])
+              if len(lint) == 0:
+                break
+              else:
+                if lint[0] == '&': break
+              #endif
+              n += 1
+            #endfor
+
+            if idebug > 1:
+              print("Block:\n",lc,lins[lc],'\n',lt,lins[lt])
+            #endif
+
+            lc = lt
+
+            for trc in TransRotCop:
+              if idebug > 0:
+                print(trc)
+              #endif
+              if trc[1] == cmag:
+                try:
+                  mag = DictMagPolsTot[cmag]
+                  fclc.write('& '+trc[0]+'\n')
+                  for it in range(1,len(trc)):
+                    fclc.write(trc[it]+'\n')
+                  #endfor
+                  fclc.write('\n')
+                except:
+                  print(trc)
+                  print('\n*** Error in uwritetrc: Magnet',cmag,' not found ***')
+                #endtry
+              elif trc[1] == cmoth:
+                try:
+                  moth = DictMoths[cmoth]
+                  fclc.write('& '+trc[0]+'\n')
+                  for it in range(1,len(trc)):
+                    fclc.write(trc[it]+'\n')
+                  #endfor
+                  fclc.write('\n')
+                except:
+                  print(trc)
+                  print('\n*** Error in uwritetrc: Mother',cmoth,' not found ***')
+                  pass
+                #endtry
+              #endif
+            #endfor
+          #endif
+        #endif
+      #endif
+      lc += 1
+      if lc > llins-1: break
+    #endfor
+    fclc.close()
+
+  except:
+    print("\n*** Error in uwritetrc while writing",filename," ***")
+    if isopen == 1:
+      fclc.close()
+    #endif
+    Quit("Hoppla")
+    fclc = open(filename,'w')
+    for lin in lins:
+      fclc.write(lin)
+    #endfor
+    fclc.close()
+    #endif
+  #endtry
+
+#enddef uwritetrc(filename)
 def write_variables(Fclc):
 
   global TransRotCop,EchoCLC
@@ -31992,9 +32297,15 @@ def uwriteclc(callkey=''):
     #endif Nmat
 
     if len(Coils): write_coils(Coils,Fclc)
+
     Fclc.close()
 
   #endif int(AppleII_Mode) > 0
+
+  #print(TransRotCop)
+  if len(TransRotCop) > 0:
+    uwritetrc(FileCLC)
+  #endif
 
 #enddef uwriteclc()
 
@@ -32445,7 +32756,6 @@ ugui_ini()
 
 MyFontStyle = 'arial'
 MyFontSize = 13
-MyFontSize = 9
 
 MyDPI = 100
 #CanWid = 10. # inch
@@ -32838,7 +33148,167 @@ def utransrotcop():
     update_magnets()
   #endfor
 
-#  for mp in MagPolsTot: print(mp)
+
+#enddef utransrotcop()
+
+def checktransrotcop():
+
+  global TransRotCop,EchoCLC
+
+  global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
+  Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
+  NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
+  Nmat, Materials, Br, Rmu, Coating, PerLen, ChamfM, ChamfP, MCol, PCol, \
+  AirGap, KeeperGap, MspaceX, MoffY, Parameters, Variables, Npar, Ncalc, Nvar, \
+  CalcLines, Calcs, Pars, Ucomment, Modules, MagPolsTotOld, MagPolOld, \
+  EditMag_CheckMode,CopyMag_CheckMode, EditMagX, EditMagY,CopyMagX, CopyMagY,WWait, WError, \
+  CheckVars, CheckCalcs, CheckDictCalcs, CheckVarNum, VarNum, \
+  MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
+  S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
+
+  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
+
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
+  WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
+
+  global AppleII_Mode, AppleII, AppleIIOld, VAppleII, \
+  S_nPer_AppleII, S_FullGap_AppleII, \
+  S_Xlen_AppleII, S_Ylen_AppleII, S_Zlen_AppleII, \
+  S_DeadCoat_AppleII, S_AirGap_AppleII, S_Br_AppleII, S_Mu_AppleII, S_KsiPerp_AppleII, \
+  S_HorSlit_AppleII, S_S2Shift_AppleII, S_S3Shift_AppleII, \
+  S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
+
+  global V_CmagOld, V_CmothOld, V_XcenOld, V_YcenOld, V_ZcenOld, V_cornsOld, V_NcornOld, V_CornFileOld, \
+  V_nXdivOld, V_nYdivOld, V_nZdivOld, \
+  V_FracDivYOld,   V_FracDivZOld,  V_XlenOld, V_YlenOld, V_ZlenOld, V_KeyOld, V_MatTypeOld, V_MatOld, \
+  V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
+
+  global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
+  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
+  S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
+
+  global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
+  V_nXdiv, V_nYdiv, V_nZdiv, \
+  V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
+  V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
+
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  S_nXdiv, S_nYdiv, S_nZdiv, \
+  S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
+  S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
+  S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
+  S_Iron_FracDivY,S_Iron_FracDivZ,S_Iron_Xlen, S_Iron_Ylen, S_Iron_Zlen, S_Iron_Key, S_Iron_MatType, S_Iron_Mat, \
+  S_Iron_Bc, S_Iron_Bxn, S_Iron_Byn, S_Iron_Bzn, S_Iron_Ispec, S_Iron_Color
+
+  global LastCLC, LastNAM
+  global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
+  NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
+  global Ngeo
+
+  global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
+  S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
+  cIxSym, cIySym, cIzSym, KxCenter, cIxSym, Xcenter, Xsym
+
+  global GeoWaddVars, GeoWlistVars
+  global Mirror, VMirror, Hybrid, VHybrid, Hybrid_Mode
+
+  global WSetMap, \
+  S_xMapMin,S_yMapMin,S_zMapMin,S_xMapMax,S_yMapMax,S_zMapMax, S_MHmap, \
+  S_dxMap,S_NxMap,S_NyMap,S_NzMap,S_dxBeff,S_NxBeff, S_xMinBeff,S_xMaxBeff
+
+  global NCoil, Coils, Filaments, S_Current_Coil, S_Name_Coil, \
+  S_nWindings_Coil, S_Filling_Coil, \
+  S_Xcen_Coil,S_Ycen_Coil,S_Zcen_Coil,S_VnX_Coil,S_VnY_Coil,S_VnZ_Coil, \
+  S_AngRot_Coil,S_xLenOut_Coil,S_zLenIn_Coil,S_zLenOut_Coil,S_RadiusIn_Coil, \
+  S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
+  WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
+  WaddCoilRace,WaddCoilCirc
+
+
+  for trc in TransRotCop:
+
+    key = trc[0]
+
+    if key == 'Copy':
+
+      w = trc[1].split()
+      source = w[0]
+      tarmag = w[1]
+      tarmoth = w[2]
+
+      try:
+        kmoth = DictMoths[source]
+      except:
+        try:
+          kmag = DictMagPolsTot[source]
+        except:
+          print(NL,"*** Error for key Copy: Magnet or mother not found for:")
+          print("Copy", source, tarmag, tarmoth,NL)
+        #endtry
+      #endtry
+
+      try:
+        kmoth = DictMoths[tarmoth]
+        print(NL,"*** Error for key Copy: Target mother exists already ***")
+        print("Copy", source, tarmag, tarmoth,NL)
+      except:
+        try:
+          kmag = DictMagPolsTot[tarmag]
+          print(NL,"*** Error for key Copy: Target magnet exists already ***")
+          print("Copy", source, tarmag,NL)
+        except:
+          pass
+        #endtry
+      #endtry
+
+    elif key == 'Translate' or key == 'Rotate' or \
+    key == 'Rotate_Shape' or key == 'Remanence':
+
+      mp = trc[1]
+      tr = trc[2].split()
+
+      try:
+
+        kmoth = DictMoths[mp]
+
+        for mag in Moths[kmoth]:
+          kmag = DictMagPolsTot[mag]
+          mt = MagPolsTot[kmag]
+          ckey = mt[3]
+          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file ***")
+            print("\n*** Check",mag," ***")
+            continue
+          #endif
+        #endfor
+
+      except:
+
+        try:
+          kmag = DictMagPolsTot[mp]
+          mag = MagPolsTot[kmag]
+          ckey = mag[3]
+          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            print("\n*** Check",mag," ***")
+            continue
+          #endif
+        except:
+          print(NL,"*** Error for key",key,": Magnet or mother not found for:")
+          print(key,mp,NL)
+        #endtry
+      #endtry
+
+    #endif key
+
+  #endfor trc
+
+#enddef checktransrotcop()
 
 def undumag_wind_to_fila(coilin):
   global Filaments, Coils, CurrLoops, DictUnduColors,UnduColors
@@ -33996,10 +34466,10 @@ def ureadclc(callkey=''):
     mat = vmat[4]
 
     if mat[0] == '$':
-      mat = Variables[mat]
+      mat = int(Variables[mat])
     #endif mat[0] == '$'
 
-    tmat = Materials[mat-1][1]
+    tmat = Materials[int(mat)-1][1]
 
 
     if tmat == 'REC':
@@ -34035,12 +34505,12 @@ def ureadclc(callkey=''):
     if mat[0] == '$':
       mat = Variables[mat]
     #endif mat[0] == '$'
-    if mat < 1 or mat > Nmat:
+    if int(mat) < 1 or int(mat) > Nmat:
       print("*** Error in ureadclc: Bad Material index for",mp[0])
       Quit()
     #endif
 
-    tmat = Materials[mat-1][1]
+    tmat = Materials[int(mat)-1][1]
 
 
     if tmat == 'REC':
@@ -34262,11 +34732,13 @@ def ureadclc(callkey=''):
   NCoil = len(Coils)
   if NCoil: undu_coils_to_filaments()
 
-  if len(TransRotCop): utransrotcop()
+  #if len(TransRotCop): utransrotcop()
+  if len(TransRotCop): checktransrotcop()
 
   #debug("debug: Ende von ureadclc")
 
 #enddef ureadclc()
+
 
 def undu_coil(ntup='ncoil', fcoil='undumag.fil'):
   if fexist(fcoil):
@@ -39345,6 +39817,7 @@ MShowGeo.add_command(label='eps', command= lambda mode='eps', item=-1: _showGeo(
 
 MVariables = Menu(Mgeo,tearoff=1,font=MyFont)
 MenuMagPols = Menu(Mgeo,tearoff=1,font=MyFont)
+MenuTRC = Menu(Mgeo,tearoff=1,font=MyFont)
 MenuCoils = Menu(Mgeo,tearoff=1,font=MyFont)
 MenuModules = Menu(Mgeo,tearoff=1,font=MyFont)
 MaddMag = Menu(MenuMagPols,tearoff=1,font=MyFont)
@@ -39358,6 +39831,7 @@ Mgeo.add_command(label='Load file', command= lambda mode='LoadCLC': _uclc(mode),
 Mgeo.add_cascade(label='Predefined settings',  menu=MpreDefs,font=MyFont)
 Mgeo.add_cascade(label='Variables', menu=MVariables,font=MyFont)
 Mgeo.add_cascade(label='Magnets and poles', menu=MenuMagPols,font=MyFont)
+Mgeo.add_cascade(label='Operations', menu=MenuTRC,font=MyFont)
 Mgeo.add_cascade(label='Coils', menu=MenuCoils,font=MyFont)
 Mgeo.add_cascade(label='Modules', menu=MenuModules,font=MyFont)
 Mgeo.add_cascade(label='Show', menu=MShowGeo,font=MyFont)
@@ -43256,7 +43730,8 @@ def _clWaddPol(key):
   #endfor mat in Materials
 
   if ifound == 0:
-    wError("Undefined material index")
+    wError("Undefined material index in _clWaddPole")
+    _MaddMatIron()
     return
   #endif ifound == 0
 
@@ -43436,6 +43911,7 @@ def _clWaddMag(key):
       mp.append('BlockChamf')
     elif chamfus != 0.0: mp.append('BlockUsChamf')
     elif chamdus != 0.0: mp.append('BlockDsChamf')
+    #endif
 
   elif key == 'File':
     mp.append('File')
@@ -43487,7 +43963,8 @@ def _clWaddMag(key):
   #endfor mat in Materials
 
   if ifound == 0:
-    wError("Undefined material index")
+    wError("Undefined material index _clWaddMag")
+    _MaddMatREClin()
     return
   #endif ifound == 0
 
@@ -47368,6 +47845,740 @@ def _addVariables(mode='first'):
 
 #enddef _addVariables(mode='first')
 
+
+# +KEEP,listtrc,T=PYTHON{
+
+S_Remanence = StringVar()
+S_BrX = StringVar()
+S_BrY = StringVar()
+S_BrZ = StringVar()
+S_BrM = StringVar()
+S_BrC = StringVar()
+
+S_CS = StringVar()
+S_CT = StringVar()
+
+S_Tx = StringVar()
+S_Ty = StringVar()
+S_Tz = StringVar()
+
+S_Rx = StringVar()
+S_Ry = StringVar()
+S_Rz = StringVar()
+S_Romx = StringVar()
+S_Romy = StringVar()
+S_Romz = StringVar()
+S_Rang = StringVar()
+
+S_RSx = StringVar()
+S_RSy = StringVar()
+S_RSz = StringVar()
+S_RSomx = StringVar()
+S_RSomy = StringVar()
+S_RSomz = StringVar()
+S_RSang = StringVar()
+
+S_AddTRCmag = StringVar()
+S_AddTx = StringVar()
+S_AddTy = StringVar()
+S_AddTz = StringVar()
+
+S_AddCTmag = StringVar()
+S_AddCTmoth = StringVar()
+
+S_AddRTx = StringVar()
+S_AddRTy = StringVar()
+S_AddRTz = StringVar()
+S_AddRomx = StringVar()
+S_AddRomy = StringVar()
+S_AddRomz = StringVar()
+S_AddRang = StringVar()
+
+S_AddRSTx = StringVar()
+S_AddRSTy = StringVar()
+S_AddRSTz = StringVar()
+S_AddRSomx = StringVar()
+S_AddRSomy = StringVar()
+S_AddRSomz = StringVar()
+S_AddRSang = StringVar()
+
+def _clWlistTRC():
+  global Umaster, WlistTRC,WediTRC,WaddTRC
+
+  try:
+    WediTRC.destroy()
+  except:
+    pass
+  #endtry
+
+  try:
+    WaddTRC.destroy()
+  except:
+    pass
+  #endtry
+
+  WlistTRC.destroy()
+#enddef _clWediTRC()
+
+def _listTRC(key='list'):
+
+  global TransRotCop
+  global Umaster,WlistTRC, WediTRC
+
+  if len(TransRotCop) <= 0:
+    wError("No Operations defined")
+    return
+  #endif Nmodul < 0
+
+  try:
+    sgeo = WlistTRC.geometry()
+  except:
+    WlistTRC = Toplevel()
+    WlistTRC.title("List of Operations")
+    WlistTRC.attributes('-topmost', 1)
+    x,y = Umaster.winfo_pointerxy()
+    sgeo = ""
+  #endtry
+
+  if sgeo == "": sgeo = '+' + str(x) + '+' + str(y)
+
+  if key == 'refresh':
+    WlistTRC.destroy()
+    WlistTRC = Toplevel()
+    WlistTRC.title("List of Operations")
+    WlistTRC.attributes('-topmost', 1)
+  #endif
+
+  WlistTRC.geometry(sgeo)
+
+  ltrc = 0
+  for it in range(len(TransRotCop)):
+    trc = TransRotCop[it]
+    ttrc = ''
+    for tt in trc:
+      ttrc = ttrc + tt + ' | '
+    #endfor
+    if len(ttrc) > ltrc: ltrc = len(ttrc)
+  #endfor
+
+  widlab = ltrc
+
+  for it in range(len(TransRotCop)):
+
+    trc = TransRotCop[it]
+    print(trc)
+
+    ttrc = ''
+    for tt in trc:
+      ttrc = ttrc + tt + ' | '
+    #endfor
+
+    ftrc = Frame(WlistTRC)
+
+    lnum = Label(ftrc,text=ttrc,width=widlab,justify=LEFT,font=MyFont,anchor='w',bg='white',fg='black')
+    lnum.pack(side=LEFT)
+
+    bdel = Button(ftrc,text='delete',command= lambda ied=-it-1: _EdiTRC(ied))
+    bedi = Button(ftrc,text='edit',command= lambda ied=it: _EdiTRC(ied))
+
+    bdel.pack(fill=X,side=RIGHT)
+    bedi.pack(fill=X,side=RIGHT)
+
+    ftrc.pack()
+
+  #endfor im in range(TransRotCop)
+
+  bClose = Button(WlistTRC,text='Ok',command=_clWlistTRC)
+  bClose.pack(expand=TRUE,fill=X)
+
+#enddef _listTRC(key='list')
+
+MenuTRC.add_command(label='Add Copy', command= lambda key='copy': _AddTransRotCop(key),font=MyFont)
+MenuTRC.add_command(label='Add Translation', command= lambda key='trans': _AddTransRotCop(key),font=MyFont)
+MenuTRC.add_command(label='Add Rotation', command= lambda key='rotate': _AddTransRotCop(key),font=MyFont)
+MenuTRC.add_command(label='Add Shape Roation', command= lambda key='rotate_shape': _AddTransRotCop(key),font=MyFont)
+MenuTRC.add_command(label='List', command= lambda key='list': _listTRC(key),font=MyFont)
+
+# }+KEEP,listtrc,T=PYTHON
+
+def _EdiTRC(ied):
+
+  global TransRotCop
+  global Umaster,WlistTRC, WediTRC
+
+  global S_Remanence,S_BrX,S_BrY,S_BrZ,S_BrC,S_BrM
+  global S_CS,S_CT
+  global S_Tx,S_Ty,S_Tz
+  global S_Rx,S_Ry,S_Rz,S_Romx,S_Romy,S_Romz,S_Rang
+  global S_RSx,S_RSy,S_RSz,S_RSomx,S_RSomy,S_RSomz,S_RSang
+
+  if ied < 0:
+    trc = deepcopy(TransRotCop)
+    TransRotCop = []
+    ied = - (ied+1)
+    for it in range(len(trc)):
+      if it != ied: TransRotCop.append(trc[it])
+    #endfor
+    _listTRC('refresh')
+    return
+  #endif
+
+  trc = TransRotCop[ied]
+  key = trc[0]
+
+  WediTRC = Toplevel()
+  WediTRC.title("Edit Operation on " + trc[1])
+  WediTRC.attributes('-topmost', 1)
+
+  x,y = Umaster.winfo_pointerxy()
+  sgeo = ""
+
+  if sgeo == "": sgeo = '+' + str(x) + '+' + str(y)
+  WediTRC.geometry(sgeo)
+
+  ftrc = Frame(WediTRC)
+
+  widlab = 20
+
+  if key == 'Remanence':
+
+    strc2 = str(trc[2]).split()
+
+    S_Remanence.set(strc2[0])
+    S_BrX.set(strc2[1])
+    S_BrY.set(strc2[2])
+    S_BrZ.set(strc2[3])
+    S_BrM.set(strc2[4])
+    S_BrC.set(strc2[5])
+
+    frem = Frame(ftrc)
+    lrem = Label(frem,width=widlab,text='Remanence [T]',justify=LEFT,font=MyFont)
+    lrem.pack(side=LEFT)
+    erem = Entry(frem,text=S_Remanence,justify=CENTER,font=MyFont)
+    erem.pack(side=RIGHT)
+    frem.pack()
+
+    fbrx = Frame(ftrc)
+    lbrx = Label(fbrx,width=widlab,text='Mx',justify=LEFT,font=MyFont)
+    lbrx.pack(side=LEFT)
+    ebrx = Entry(fbrx,text=S_BrX,justify=CENTER,font=MyFont)
+    ebrx.pack(side=RIGHT)
+    fbrx.pack()
+
+    fbry = Frame(ftrc)
+    lbry = Label(fbry,width=widlab,text='My',justify=LEFT,font=MyFont)
+    lbry.pack(side=LEFT)
+    ebry = Entry(fbry,text=S_BrY,justify=CENTER,font=MyFont)
+    ebry.pack(side=RIGHT)
+    fbry.pack()
+
+    fbrz = Frame(ftrc)
+    lbrz = Label(fbrz,width=widlab,text='Mz',justify=LEFT,font=MyFont)
+    lbrz.pack(side=LEFT)
+    ebrz = Entry(fbrz,text=S_BrZ,justify=CENTER,font=MyFont)
+    ebrz.pack(side=RIGHT)
+    fbrz.pack()
+
+    fbrm = Frame(ftrc)
+    lbrm = Label(fbrm,width=widlab,text='Material index',justify=LEFT,font=MyFont)
+    lbrm.pack(side=LEFT)
+    ebrm = Entry(fbrm,text=S_BrM,justify=CENTER,font=MyFont)
+    ebrm.pack(side=RIGHT)
+    fbrm.pack()
+
+    fbrc = Frame(ftrc)
+    lbrc = Label(fbrc,width=widlab,text='Color index',justify=LEFT,font=MyFont)
+    lbrc.pack(side=LEFT)
+    ebrc = Entry(fbrc,text=S_BrC,justify=CENTER,font=MyFont)
+    ebrc.pack(side=RIGHT)
+    fbrc.pack()
+
+  elif key == 'Copy':
+
+    strc = str(trc[1]).split()
+
+    S_CS.set(strc[1])
+    S_CT.set(strc[2])
+
+    fcp = Frame(ftrc)
+    lcp = Label(fcp,width=widlab,text='Source',justify=LEFT,font=MyFont)
+    lcp.pack(side=LEFT)
+    ecp = Entry(fcp,text=S_CS,justify=CENTER,font=MyFont)
+    ecp.pack(side=RIGHT)
+    fcp.pack()
+
+    fta = Frame(ftrc)
+    lta = Label(fta,width=widlab,text='Target',justify=LEFT,font=MyFont)
+    lta.pack(side=LEFT)
+    eta = Entry(fta,text=S_CT,justify=CENTER,font=MyFont)
+    eta.pack(side=RIGHT)
+    fta.pack()
+
+  elif key == 'Translate':
+
+    strc2 = str(trc[2]).split()
+
+    S_Tx.set(strc2[0])
+    S_Ty.set(strc2[1])
+    S_Tz.set(strc2[2])
+
+    ftrx = Frame(ftrc)
+    ltrx = Label(ftrx,width=widlab,text='Tx [mm]',justify=LEFT,font=MyFont)
+    ltrx.pack(side=LEFT)
+    etrx = Entry(ftrx,text=S_Tx,justify=CENTER,font=MyFont)
+    etrx.pack(side=RIGHT)
+    ftrx.pack()
+
+    ftry = Frame(ftrc)
+    ltry = Label(ftry,width=widlab,text='Ty [mm]',justify=LEFT,font=MyFont)
+    ltry.pack(side=LEFT)
+    etry = Entry(ftry,text=S_Ty,justify=CENTER,font=MyFont)
+    etry.pack(side=RIGHT)
+    ftry.pack()
+
+    ftrz = Frame(ftrc)
+    ltrz = Label(ftrz,width=widlab,text='Tz [mm]',justify=LEFT,font=MyFont)
+    ltrz.pack(side=LEFT)
+    etrz = Entry(ftrz,text=S_Tz,justify=CENTER,font=MyFont)
+    etrz.pack(side=RIGHT)
+    ftrz.pack()
+
+  elif key == 'Rotate_Shape':
+
+    strc2 = str(trc[2]).split()
+
+    S_RSx.set(strc2[0])
+    S_RSy.set(strc2[1])
+    S_RSz.set(strc2[2])
+
+    strc3 = str(trc[3]).split()
+    S_RSomx.set(strc3[0])
+    S_RSomy.set(strc3[1])
+    S_RSomz.set(strc3[2])
+    S_RSang.set(strc3[3])
+
+    ftrx = Frame(ftrc)
+    ltrx = Label(ftrx,width=widlab,text='RotCenX [mm]',justify=LEFT,font=MyFont)
+    ltrx.pack(side=LEFT)
+    etrx = Entry(ftrx,text=S_RSx,justify=CENTER,font=MyFont)
+    etrx.pack(side=RIGHT)
+    ftrx.pack()
+
+    ftry = Frame(ftrc)
+    ltry = Label(ftry,width=widlab,text='RotCenY [mm]',justify=LEFT,font=MyFont)
+    ltry.pack(side=LEFT)
+    etry = Entry(ftry,text=S_RSy,justify=CENTER,font=MyFont)
+    etry.pack(side=RIGHT)
+    ftry.pack()
+
+    ftrz = Frame(ftrc)
+    ltrz = Label(ftrz,width=widlab,text='RotCenZ [mm]',justify=LEFT,font=MyFont)
+    ltrz.pack(side=LEFT)
+    etrz = Entry(ftrz,text=S_RSz,justify=CENTER,font=MyFont)
+    etrz.pack(side=RIGHT)
+    ftrz.pack()
+
+    fomx = Frame(ftrc)
+    lomx = Label(fomx,width=widlab,text='RotAxisX',justify=LEFT,font=MyFont)
+    lomx.pack(side=LEFT)
+    eomx = Entry(fomx,text=S_RSomx,justify=CENTER,font=MyFont)
+    eomx.pack(side=RIGHT)
+    fomx.pack()
+
+    fomy = Frame(ftrc)
+    lomy = Label(fomy,width=widlab,text='RotAxisY',justify=LEFT,font=MyFont)
+    lomy.pack(side=LEFT)
+    eomy = Entry(fomy,text=S_RSomy,justify=CENTER,font=MyFont)
+    eomy.pack(side=RIGHT)
+    fomy.pack()
+
+    fomz = Frame(ftrc)
+    lomz = Label(fomz,width=widlab,text='RotAxisZ',justify=LEFT,font=MyFont)
+    lomz.pack(side=LEFT)
+    eomz = Entry(fomz,text=S_RSomz,justify=CENTER,font=MyFont)
+    eomz.pack(side=RIGHT)
+    fomz.pack()
+
+    fang = Frame(ftrc)
+    lang = Label(fang,width=widlab,text='RotAng [degree]',justify=LEFT,font=MyFont)
+    lang.pack(side=LEFT)
+    eang = Entry(fang,text=S_RSang,justify=CENTER,font=MyFont)
+    eang.pack(side=RIGHT)
+    fang.pack()
+
+  elif key == 'Rotate':
+
+    strc2 = str(trc[2]).split()
+
+    S_Rx.set(strc2[0])
+    S_Ry.set(strc2[1])
+    S_Rz.set(strc2[2])
+
+    strc3 = str(trc[3]).split()
+    S_Romx.set(strc3[0])
+    S_Romy.set(strc3[1])
+    S_Romz.set(strc3[2])
+    S_Rang.set(strc3[3])
+
+    ftrx = Frame(ftrc)
+    ltrx = Label(ftrx,width=widlab,text='RotCenX [mm]',justify=LEFT,font=MyFont)
+    ltrx.pack(side=LEFT)
+    etrx = Entry(ftrx,text=S_Rx,justify=CENTER,font=MyFont)
+    etrx.pack(side=RIGHT)
+    ftrx.pack()
+
+    ftry = Frame(ftrc)
+    ltry = Label(ftry,width=widlab,text='RotCenY [mm]',justify=LEFT,font=MyFont)
+    ltry.pack(side=LEFT)
+    etry = Entry(ftry,text=S_Ry,justify=CENTER,font=MyFont)
+    etry.pack(side=RIGHT)
+    ftry.pack()
+
+    ftrz = Frame(ftrc)
+    ltrz = Label(ftrz,width=widlab,text='RotCenZ [mm]',justify=LEFT,font=MyFont)
+    ltrz.pack(side=LEFT)
+    etrz = Entry(ftrz,text=S_Rz,justify=CENTER,font=MyFont)
+    etrz.pack(side=RIGHT)
+    ftrz.pack()
+
+    fomx = Frame(ftrc)
+    lomx = Label(fomx,width=widlab,text='RotAxisX',justify=LEFT,font=MyFont)
+    lomx.pack(side=LEFT)
+    eomx = Entry(fomx,text=S_Romx,justify=CENTER,font=MyFont)
+    eomx.pack(side=RIGHT)
+    fomx.pack()
+
+    fomy = Frame(ftrc)
+    lomy = Label(fomy,width=widlab,text='RotAxisY',justify=LEFT,font=MyFont)
+    lomy.pack(side=LEFT)
+    eomy = Entry(fomy,text=S_Romy,justify=CENTER,font=MyFont)
+    eomy.pack(side=RIGHT)
+    fomy.pack()
+
+    fomz = Frame(ftrc)
+    lomz = Label(fomz,width=widlab,text='RotAxisZ',justify=LEFT,font=MyFont)
+    lomz.pack(side=LEFT)
+    eomz = Entry(fomz,text=S_Romz,justify=CENTER,font=MyFont)
+    eomz.pack(side=RIGHT)
+    fomz.pack()
+
+    fang = Frame(ftrc)
+    lang = Label(fang,width=widlab,text='RotAng [degree]',justify=LEFT,font=MyFont)
+    lang.pack(side=LEFT)
+    eang = Entry(fang,text=S_Rang,justify=CENTER,font=MyFont)
+    eang.pack(side=RIGHT)
+    fang.pack()
+
+  #endif key
+
+  ftrc.pack()
+
+  bClose = Button(WediTRC,text='Ok',command= lambda it = ied: _clWediTRC(it))
+  bClose.pack(expand=TRUE,fill=X)
+
+#enddef _EdiTRC(ied)
+
+def _clWediTRC(itrc):
+
+  global Umaster, WediTRC
+  global TransRotCop
+  global S_Remanence,S_BrX,S_BrY,S_BrZ,S_BrC,S_BrM
+  global S_CS,S_CT
+  global S_Tx,S_Ty,S_Tz
+  global S_RSx,S_RSy,S_RSz,S_RSomx,S_RSomy,S_RSomz,S_RSang
+  global S_Rx,S_Ry,S_Rz,S_Romx,S_Romy,S_Romz,S_Rang
+
+  trc = TransRotCop[itrc]
+
+  if TransRotCop[itrc][0] == 'Remanence':
+    TransRotCop[itrc][2] = S_Remanence.get() + " " \
+    + S_BrX.get() + " " + S_BrY.get() + " " + S_BrZ.get() + " " \
+    + S_BrM.get() + " " + S_BrC.get()
+  elif TransRotCop[itrc][0] == 'Copy':
+    TransRotCop[itrc][1] = S_CS.get() + " " + S_CT.get()
+  elif TransRotCop[itrc][0] == 'Translate':
+    TransRotCop[itrc][2] = S_Tx.get() + " " + S_Ty.get() + " " + S_Tz.get()
+  elif TransRotCop[itrc][0] == 'Rotate_Shape':
+    TransRotCop[itrc][2] = S_RSx.get() + " " + S_RSy.get() + " " + S_RSz.get() \
+    + " " + S_RSomx.get() + " " + S_RSomy.get() + " " + S_RSomz.get() \
+    + " " + S_RSang.get()
+  elif TransRotCop[itrc][0] == 'Rotate':
+    TransRotCop[itrc][2] = S_Rx.get() + " " + S_Ry.get() + " " + S_Rz.get() \
+    + " " + S_Romx.get() + " " + S_Romy.get() + " " + S_Romz.get() \
+    + " " + S_Rang.get()
+  #endif
+
+  WediTRC.destroy()
+  _listTRC('refresh')
+
+#enddef _clWediTRC()
+
+def _AddTransRotCop(key=''):
+
+
+  global TransRotCop
+  global Umaster,WaddTRC
+
+  global S_AddRemanence,S_AddBrX,S_AddBrY,S_AddBrZ,S_AddBrC,S_AddBrM
+  global S_AddCS,S_AddCT
+  global S_AddTx,S_AddTy,S_AddTz
+  global S_AddTRCmag, S_AddTx,S_AddTy,S_AddTz
+  global S_AddCTmag, S_AddCTmoth
+  global S_AddRTx,S_AddRTy,S_AddRTz,S_AddRomx,S_AddRomy,S_AddRomz,S_AddRang
+  global S_AddRSTx,S_AddRSTy,S_AddRSTz,S_AddRSomx,S_AddRSomy,S_AddRSomz,S_AddRSang
+
+  S_AddTRCmag.set('MagMoth')
+
+  WaddTRC = Toplevel()
+  WaddTRC.title("Add Translation")
+  WaddTRC.attributes('-topmost', 1)
+
+  x,y = Umaster.winfo_pointerxy()
+  sgeo = ""
+
+  if sgeo == "": sgeo = '+' + str(x) + '+' + str(y)
+  WaddTRC.geometry(sgeo)
+
+  ftrc = Frame(WaddTRC)
+
+  widlab = 20
+
+  if key == 'trans':
+
+    S_AddTx.set('0.0')
+    S_AddTy.set('0.0')
+    S_AddTz.set('0.0')
+    trc = ['Translate',S_AddTRCmag.get(),
+           S_AddTx.get() + " " + S_AddTy.get() + " " + S_AddTz.get()]
+    TransRotCop.append(trc)
+
+    fmag = Frame(ftrc)
+    lmag = Label(fmag,width=widlab,text='Magnet',justify=LEFT,font=MyFont)
+    lmag.pack(side=LEFT)
+    emag = Entry(fmag,text=S_AddTRCmag,justify=CENTER,font=MyFont)
+    emag.pack(side=RIGHT)
+    fmag.pack()
+
+    ftrx = Frame(ftrc)
+    ltrx = Label(ftrx,width=widlab,text='Tx [mm]',justify=LEFT,font=MyFont)
+    ltrx.pack(side=LEFT)
+    etrx = Entry(ftrx,text=S_AddTx,justify=CENTER,font=MyFont)
+    etrx.pack(side=RIGHT)
+    ftrx.pack()
+
+    ftry = Frame(ftrc)
+    ltry = Label(ftry,width=widlab,text='Ty [mm]',justify=LEFT,font=MyFont)
+    ltry.pack(side=LEFT)
+    etry = Entry(ftry,text=S_AddTy,justify=CENTER,font=MyFont)
+    etry.pack(side=RIGHT)
+    ftry.pack()
+
+    ftrz = Frame(ftrc)
+    ltrz = Label(ftrz,width=widlab,text='Tz [mm]',justify=LEFT,font=MyFont)
+    ltrz.pack(side=LEFT)
+    etrz = Entry(ftrz,text=S_AddTz,justify=CENTER,font=MyFont)
+    etrz.pack(side=RIGHT)
+    ftrz.pack()
+
+  elif key == 'rotate_shape':
+
+    S_AddRSTx.set('0.0')
+    S_AddRSTy.set('0.0')
+    S_AddRSTz.set('0.0')
+
+    S_AddRSomx.set('0.0')
+    S_AddRSomy.set('0.0')
+    S_AddRSomz.set('0.0')
+
+    S_AddRSang.set('0.0')
+
+    trc = ['Rotate',S_AddTRCmag.get(), \
+    S_AddRSTx.get() + " " + S_AddRSTy.get() + " " + S_AddRSTz.get(), \
+    + " " + S_AddRSomx.get() + " " + S_AddRSomy.get() + " " + S_AddRSomz.get() \
+    + " " + S_AddRSang.get()]
+
+    TransRotCop.append(trc)
+
+    fmag = Frame(ftrc)
+    lmag = Label(fmag,width=widlab,text='Magnet',justify=LEFT,font=MyFont)
+    lmag.pack(side=LEFT)
+    emag = Entry(fmag,text=S_AddTRCmag,justify=CENTER,font=MyFont)
+    emag.pack(side=RIGHT)
+    fmag.pack()
+
+    ftrx = Frame(ftrc)
+    ltrx = Label(ftrx,width=widlab,text='Tx [mm]',justify=LEFT,font=MyFont)
+    ltrx.pack(side=LEFT)
+    etrx = Entry(ftrx,text=S_AddRSTx,justify=CENTER,font=MyFont)
+    etrx.pack(side=RIGHT)
+    ftrx.pack()
+
+    ftry = Frame(ftrc)
+    ltry = Label(ftry,width=widlab,text='Ty [mm]',justify=LEFT,font=MyFont)
+    ltry.pack(side=LEFT)
+    etry = Entry(ftry,text=S_AddRSTy,justify=CENTER,font=MyFont)
+    etry.pack(side=RIGHT)
+    ftry.pack()
+
+    ftrz = Frame(ftrc)
+    ltrz = Label(ftrz,width=widlab,text='Tz [mm]',justify=LEFT,font=MyFont)
+    ltrz.pack(side=LEFT)
+    etrz = Entry(ftrz,text=S_AddRSTz,justify=CENTER,font=MyFont)
+    etrz.pack(side=RIGHT)
+    ftrz.pack()
+
+    fomx = Frame(ftrc)
+    lomx = Label(fomx,width=widlab,text='RotAxisX',justify=LEFT,font=MyFont)
+    lomx.pack(side=LEFT)
+    eomx = Entry(fomx,text=S_AddRSTx,justify=CENTER,font=MyFont)
+    eomx.pack(side=RIGHT)
+    fomx.pack()
+
+    fomy = Frame(ftrc)
+    lomy = Label(fomy,width=widlab,text='RotAxisY',justify=LEFT,font=MyFont)
+    lomy.pack(side=LEFT)
+    eomy = Entry(fomy,text=S_AddRSTy,justify=CENTER,font=MyFont)
+    eomy.pack(side=RIGHT)
+    fomy.pack()
+
+    fomz = Frame(ftrc)
+    lomz = Label(fomz,width=widlab,text='RotAxisZ',justify=LEFT,font=MyFont)
+    lomz.pack(side=LEFT)
+    eomz = Entry(fomz,text=S_AddRSTz,justify=CENTER,font=MyFont)
+    eomz.pack(side=RIGHT)
+    fomz.pack()
+
+    fomz = Frame(ftrc)
+    lomz = Label(fomz,width=widlab,text='RotAng [degree]',justify=LEFT,font=MyFont)
+    lomz.pack(side=LEFT)
+    eomz = Entry(fomz,text=S_AddRSang,justify=CENTER,font=MyFont)
+    eomz.pack(side=RIGHT)
+    fomz.pack()
+
+  elif key == 'rotate':
+
+    S_AddRTx.set('0.0')
+    S_AddRTy.set('0.0')
+    S_AddRTz.set('0.0')
+
+    S_AddRomx.set('0.0')
+    S_AddRomy.set('0.0')
+    S_AddRomz.set('0.0')
+
+    S_AddRang.set('0.0')
+
+    trc = ['Rotate',S_AddTRCmag.get(), \
+    S_AddRTx.get() + " " + S_AddRTy.get() + " " + S_AddRTz.get(), \
+    S_AddRomx.get() + " " + S_AddRomy.get() + " " + S_AddRomz.get() \
+    + " " + S_AddRang.get()]
+
+    TransRotCop.append(trc)
+
+    fmag = Frame(ftrc)
+    lmag = Label(fmag,width=widlab,text='Magnet',justify=LEFT,font=MyFont)
+    lmag.pack(side=LEFT)
+    emag = Entry(fmag,text=S_AddTRCmag,justify=CENTER,font=MyFont)
+    emag.pack(side=RIGHT)
+    fmag.pack()
+
+    ftrx = Frame(ftrc)
+    ltrx = Label(ftrx,width=widlab,text='Tx [mm]',justify=LEFT,font=MyFont)
+    ltrx.pack(side=LEFT)
+    etrx = Entry(ftrx,text=S_AddRTx,justify=CENTER,font=MyFont)
+    etrx.pack(side=RIGHT)
+    ftrx.pack()
+
+    ftry = Frame(ftrc)
+    ltry = Label(ftry,width=widlab,text='Ty [mm]',justify=LEFT,font=MyFont)
+    ltry.pack(side=LEFT)
+    etry = Entry(ftry,text=S_AddRTy,justify=CENTER,font=MyFont)
+    etry.pack(side=RIGHT)
+    ftry.pack()
+
+    ftrz = Frame(ftrc)
+    ltrz = Label(ftrz,width=widlab,text='Tz [mm]',justify=LEFT,font=MyFont)
+    ltrz.pack(side=LEFT)
+    etrz = Entry(ftrz,text=S_AddRTz,justify=CENTER,font=MyFont)
+    etrz.pack(side=RIGHT)
+    ftrz.pack()
+
+    fomx = Frame(ftrc)
+    lomx = Label(fomx,width=widlab,text='RotAxisX',justify=LEFT,font=MyFont)
+    lomx.pack(side=LEFT)
+    eomx = Entry(fomx,text=S_AddRTx,justify=CENTER,font=MyFont)
+    eomx.pack(side=RIGHT)
+    fomx.pack()
+
+    fomy = Frame(ftrc)
+    lomy = Label(fomy,width=widlab,text='RotAxisY',justify=LEFT,font=MyFont)
+    lomy.pack(side=LEFT)
+    eomy = Entry(fomy,text=S_AddRTy,justify=CENTER,font=MyFont)
+    eomy.pack(side=RIGHT)
+    fomy.pack()
+
+    fomz = Frame(ftrc)
+    lomz = Label(fomz,width=widlab,text='RotAxisZ',justify=LEFT,font=MyFont)
+    lomz.pack(side=LEFT)
+    eomz = Entry(fomz,text=S_AddRTz,justify=CENTER,font=MyFont)
+    eomz.pack(side=RIGHT)
+    fomz.pack()
+
+    fomz = Frame(ftrc)
+    lomz = Label(fomz,width=widlab,text='RotAng [degree]',justify=LEFT,font=MyFont)
+    lomz.pack(side=LEFT)
+    eomz = Entry(fomz,text=S_AddRang,justify=CENTER,font=MyFont)
+    eomz.pack(side=RIGHT)
+    fomz.pack()
+
+  elif key == 'copy':
+
+    S_AddCTmag.set('Magnet')
+    S_AddCTmoth.set('Mother')
+
+    trc = ['Copy',S_AddTRCmag.get() + " " + S_AddCTmag.get() + " " + S_AddCTmoth.get()]
+    TransRotCop.append(trc)
+
+    fmag = Frame(ftrc)
+    lmag = Label(fmag,width=widlab,text='Magnet to copy',justify=LEFT,font=MyFont)
+    lmag.pack(side=LEFT)
+    emag = Entry(fmag,text=S_AddTRCmag,justify=CENTER,font=MyFont)
+    emag.pack(side=RIGHT)
+    fmag.pack()
+
+    ftmag = Frame(ftrc)
+    lmag = Label(ftmag,width=widlab,text='Magnet',justify=LEFT,font=MyFont)
+    lmag.pack(side=LEFT)
+    emag = Entry(ftmag,text=S_AddCTmag,justify=CENTER,font=MyFont)
+    emag.pack(side=RIGHT)
+    ftmag.pack()
+
+    ftmoth = Frame(ftrc)
+    lmag = Label(ftmoth,width=widlab,text='Mother',justify=LEFT,font=MyFont)
+    lmag.pack(side=LEFT)
+    emag = Entry(ftmoth,text=S_AddCTmoth,justify=CENTER,font=MyFont)
+    emag.pack(side=RIGHT)
+    ftmoth.pack()
+
+  #endif key
+
+  ftrc.pack()
+
+  bClose = Button(WaddTRC,text='Ok',command=_clWaddTRC)
+  bClose.pack(expand=TRUE,fill=X)
+
+#enddef _AddTransRotCop(key='')
+
+def _clWaddTRC():
+  global WaddTRC, TransRotCop
+
+
+  WaddTRC.destroy()
+  _listTRC('refresh')
+
+
+#enddef _clWaddTRC()
+
+
 global S_MateType, S_MateMode, S_MuPar, S_KsiPerp, S_FileMat
 global WaddMatIron, S_RmodeIron, S_FileIron, FileIron, RmodeIron
 
@@ -48110,9 +49321,9 @@ MenuBar.add_cascade(label='Geometry',menu=Mgeo,font=MyFont)
 
 Mmat = Menu(MenuBar)
 
-Mmat.add_command(label='Add linear REC',command=_MaddMatREClin)
-Mmat.add_command(label='Add Iron',command=_MaddMatIron)
-Mmat.add_command(label='List',command=_MlistMat)
+Mmat.add_command(font=MyFont,label='Add linear REC',command=_MaddMatREClin)
+Mmat.add_command(font=MyFont,label='Add Iron',command=_MaddMatIron)
+Mmat.add_command(font=MyFont,label='List',command=_MlistMat)
 
 MenuBar.add_cascade(label='Materials',menu=Mmat,font=MyFont)
 
@@ -49717,22 +50928,22 @@ def _McontrolLoad():
 
 Mcontrol = Menu(MenuBar)
 MenuBar.add_cascade(label='Control',menu=Mcontrol,font=MyFont)
-Mcontrol.add_command(label='Load file',command=_McontrolLoad)
-Mcontrol.add_command(label='Set symmetries',command=_Mcontrol_SetSym)
-Mcontrol.add_command(label='Set field map',command=_Mcontrol_SetMap)
+Mcontrol.add_command(font=MyFont,label='Load file',command=_McontrolLoad)
+Mcontrol.add_command(font=MyFont,label='Set symmetries',command=_Mcontrol_SetSym)
+Mcontrol.add_command(font=MyFont,label='Set field map',command=_Mcontrol_SetMap)
 
 MRun = Menu(MenuBar)
-MenuBar.add_cascade(label='UNDUMAG',menu=MRun)
-MRun.add_command(label='Run',command= lambda ck='McontrolLoad', rm = '': _runundumag(ck,rm))
-MRun.add_command(label='Load Ntuples',command=_ushow_read_map)
-MRun.add_command(label='Show overview',command=_ushow_overview)
-MRun.add_command(label='Show on-axis magnetic field',command=_ushow_onaxis)
-MRun.add_command(label='Show field for Beff calculation',command=_ushow_beff)
-MRun.add_command(label='Show first integrals',command=_ushow_int1)
-MRun.add_command(label='Show second integrals',command=_ushow_int2)
-MRun.add_command(label='3d trajectory',command=_ushow_traj)
-MRun.add_command(label='Show field profile',command=_ushow_map_profile)
-MRun.add_command(label='Show magnetisation',command=_ushow_mat_mh)
+MenuBar.add_cascade(font=MyFont,label='UNDUMAG',menu=MRun)
+MRun.add_command(font=MyFont,label='Run',command= lambda ck='McontrolLoad', rm = '': _runundumag(ck,rm))
+MRun.add_command(font=MyFont,label='Load Ntuples',command=_ushow_read_map)
+MRun.add_command(font=MyFont,label='Show overview',command=_ushow_overview)
+MRun.add_command(font=MyFont,label='Show on-axis magnetic field',command=_ushow_onaxis)
+MRun.add_command(font=MyFont,label='Show field for Beff calculation',command=_ushow_beff)
+MRun.add_command(font=MyFont,label='Show first integrals',command=_ushow_int1)
+MRun.add_command(font=MyFont,label='Show second integrals',command=_ushow_int2)
+MRun.add_command(font=MyFont,label='3d trajectory',command=_ushow_traj)
+MRun.add_command(font=MyFont,label='Show field profile',command=_ushow_map_profile)
+MRun.add_command(font=MyFont,label='Show magnetisation',command=_ushow_mat_mh)
 
 #MExit = Menu(MenuBar)
 MenuBar.add_command(label='Exit',command=_exit,font=MyFont)
