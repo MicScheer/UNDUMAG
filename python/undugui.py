@@ -29159,8 +29159,8 @@ def ureadclc(callkey=''):
   WaddCoilRace,WaddCoilCirc
 
 
-  NL = "\n"
 
+  NL = "\n"
 
   undugui_clean(callkey)
 
@@ -29507,26 +29507,26 @@ def ureadclc(callkey=''):
           print("*** Error in ureadclc: Unknown coil key: " + key + NL)
         #endif
 
-      elif ckey == "Translate":
+      elif ckey.upper() == "TRANSLATE":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         TransRotCop.append(trc)
-      elif ckey == "Remanence":
+      elif ckey.upper() == "REMANENCE":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         TransRotCop.append(trc)
-      elif ckey == "Copy":
+      elif ckey.upper() == "COPY":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         TransRotCop.append(trc)
-      elif ckey == "Rotate" or ckey == "Rotate_Shape":
+      elif ckey.upper() == "ROTATE" or ckey.upper() == "ROTATE_SHAPE":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
@@ -29536,7 +29536,7 @@ def ureadclc(callkey=''):
         trc.append(cline)
         TransRotCop.append(trc)
 
-      elif ckey == "Module":
+      elif ckey.upper() == "MODULE":
 
         Nmodul += 1
 
@@ -29552,7 +29552,7 @@ def ureadclc(callkey=''):
         modu = [trans,nper,space,scale]
         Modules.append(modu)
 
-      elif ckey == "Materials":
+      elif ckey.upper() == "MATERIALS":
 
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         Nmat = int(cline)
@@ -29572,6 +29572,36 @@ def ureadclc(callkey=''):
           Materials.append(words)
         #endfor i in range(Nmat)
 
+      elif ckey.upper() == 'INHOMOGENEITY':
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        print(cline)
+        spl = cline.split()
+        if spl[0] != '&':
+          cnam = spl[0]
+          tayx = spl[1]
+          tayy = spl[2]
+          tayz = spl[3]
+          modus = spl[4]
+          inh = ['',tayx,tayy,tayz,'','','','',modus]
+          DictInhomogen[cnam] = [cnam,inh]
+          ncoef = 0
+          while TRUE:
+            iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+            print(cline)
+            spl = cline.split()
+            if spl[0] == '&':
+              print("Bruch")
+              break
+            ncoef += 1
+            print(cline)
+            if ncoef > 1: DictInhomogen[cnam].append(['',tayx,tayy,tayz,'','','','',modus])
+            DictInhomogen[cnam][ncoef][0] = spl[0]
+            DictInhomogen[cnam][ncoef][4] = spl[1]
+            DictInhomogen[cnam][ncoef][5] = spl[2]
+            DictInhomogen[cnam][ncoef][6] = spl[3]
+            DictInhomogen[cnam][ncoef][7] = spl[4]
+          #end while
+        #endif
       else:
         print("*** Error in ureadclc: Unknown key: " + ckey + NL)
       #endif ckey
@@ -30164,8 +30194,11 @@ def uwritetrc(filename):
       fclc.write(lin)
 
       if len(lin) > 0:
+
         if lin[0] == '&':
+
           spl = lin.split()
+
           if spl[1] == 'Magnet' or spl[1] == 'Special_Magnet' or \
           spl[1] == 'Pole' or spl[1] == 'Special_Pole':
 
@@ -30238,10 +30271,34 @@ def uwritetrc(filename):
                   pass
                 #endtry
               #endif
-            #endfor
-          #endif
-        #endif
-      #endif
+            #endfor TransRotCop
+
+            try:
+              c = DictInhomogen[cmoth][1]
+              fclc.write('\n& Inhomogeneity\n')
+              coel = cmag + ' ' + c[1] + ' ' + c[2] + ' ' + c[3] + ' ' + c[8] + '\n'
+              fclc.write(coel)
+              coel = c[0] + ' ' + c[4] + ' ' + c[5] + ' ' + c[6] + ' ' + c[7] + '\n'
+              fclc.write(coel)
+              fclc.write('& End Inhomogeneity\n\n')
+            except:
+              try:
+                c = DictInhomogen[cmag][1]
+                fclc.write('\n& Inhomogeneity\n')
+                coel = cmag + ' ' + c[1] + ' ' + c[2] + ' ' + c[3] + ' ' + c[8] + '\n'
+                fclc.write(coel)
+                coel = c[0] + ' ' + c[4] + ' ' + c[5] + ' ' + c[6] + ' ' + c[7] + '\n'
+                fclc.write(coel)
+                fclc.write('& End Inhomogeneity\n\n')
+              except:
+                pass
+              #endtry
+            #endtry
+
+          #endif Magnet
+        #endif '&'
+      #endif len(lin)
+
       lc += 1
       if lc > llins-1: break
     #endfor
@@ -32303,7 +32360,7 @@ def uwriteclc(callkey=''):
   #endif int(AppleII_Mode) > 0
 
   #print(TransRotCop)
-  if len(TransRotCop) > 0:
+  if len(TransRotCop) > 0 or len(DictInhomogen) > 0:
     uwritetrc(FileCLC)
   #endif
 
@@ -33982,8 +34039,8 @@ def ureadclc(callkey=''):
   WaddCoilRace,WaddCoilCirc
 
 
-  NL = "\n"
 
+  NL = "\n"
 
   undugui_clean(callkey)
 
@@ -34330,26 +34387,26 @@ def ureadclc(callkey=''):
           print("*** Error in ureadclc: Unknown coil key: " + key + NL)
         #endif
 
-      elif ckey == "Translate":
+      elif ckey.upper() == "TRANSLATE":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         TransRotCop.append(trc)
-      elif ckey == "Remanence":
+      elif ckey.upper() == "REMANENCE":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         TransRotCop.append(trc)
-      elif ckey == "Copy":
+      elif ckey.upper() == "COPY":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         TransRotCop.append(trc)
-      elif ckey == "Rotate" or ckey == "Rotate_Shape":
+      elif ckey.upper() == "ROTATE" or ckey.upper() == "ROTATE_SHAPE":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
@@ -34359,7 +34416,7 @@ def ureadclc(callkey=''):
         trc.append(cline)
         TransRotCop.append(trc)
 
-      elif ckey == "Module":
+      elif ckey.upper() == "MODULE":
 
         Nmodul += 1
 
@@ -34375,7 +34432,7 @@ def ureadclc(callkey=''):
         modu = [trans,nper,space,scale]
         Modules.append(modu)
 
-      elif ckey == "Materials":
+      elif ckey.upper() == "MATERIALS":
 
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         Nmat = int(cline)
@@ -34395,6 +34452,36 @@ def ureadclc(callkey=''):
           Materials.append(words)
         #endfor i in range(Nmat)
 
+      elif ckey.upper() == 'INHOMOGENEITY':
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        print(cline)
+        spl = cline.split()
+        if spl[0] != '&':
+          cnam = spl[0]
+          tayx = spl[1]
+          tayy = spl[2]
+          tayz = spl[3]
+          modus = spl[4]
+          inh = ['',tayx,tayy,tayz,'','','','',modus]
+          DictInhomogen[cnam] = [cnam,inh]
+          ncoef = 0
+          while TRUE:
+            iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+            print(cline)
+            spl = cline.split()
+            if spl[0] == '&':
+              print("Bruch")
+              break
+            ncoef += 1
+            print(cline)
+            if ncoef > 1: DictInhomogen[cnam].append(['',tayx,tayy,tayz,'','','','',modus])
+            DictInhomogen[cnam][ncoef][0] = spl[0]
+            DictInhomogen[cnam][ncoef][4] = spl[1]
+            DictInhomogen[cnam][ncoef][5] = spl[2]
+            DictInhomogen[cnam][ncoef][6] = spl[3]
+            DictInhomogen[cnam][ncoef][7] = spl[4]
+          #end while
+        #endif
       else:
         print("*** Error in ureadclc: Unknown key: " + ckey + NL)
       #endif ckey
@@ -38834,10 +38921,10 @@ def ugui_ini_hybrid(mode=''):
       #endfor
       Hybrid["RECIndex_Hybrid"] = -1
       Hybrid["IronIndex_Hybrid"] = -1
-      print("--- Succeeded ---",NL)
+      print(" --- Succeeded ---",NL)
       #endfor
     except:
-      print("--- Failed ---",NL)
+      print(" --- Failed ---",NL)
       Hybrid = {}
       Hybrid["RECIndex_Hybrid"] = -1
       Hybrid["IronIndex_Hybrid"] = -1
@@ -39145,9 +39232,9 @@ def ugui_ini_appleII(mode=''):
         app = line.strip().split()
         AppleII[app[0]] = app[1]
       #endfor
-      print("--- Succeeded ---",NL)
+      print(" --- Succeeded ---",NL)
     except:
-      print("--- Failed ---",NL)
+      print(" --- Failed ---",NL)
   #endif
 
   if len(AppleII) < 3 or mode == 'force':
@@ -39818,6 +39905,7 @@ MShowGeo.add_command(label='eps', command= lambda mode='eps', item=-1: _showGeo(
 MVariables = Menu(Mgeo,tearoff=1,font=MyFont)
 MenuMagPols = Menu(Mgeo,tearoff=1,font=MyFont)
 MenuTRC = Menu(Mgeo,tearoff=1,font=MyFont)
+MenuInhom = Menu(Mgeo,tearoff=1,font=MyFont)
 MenuCoils = Menu(Mgeo,tearoff=1,font=MyFont)
 MenuModules = Menu(Mgeo,tearoff=1,font=MyFont)
 MaddMag = Menu(MenuMagPols,tearoff=1,font=MyFont)
@@ -39832,6 +39920,7 @@ Mgeo.add_cascade(label='Predefined settings',  menu=MpreDefs,font=MyFont)
 Mgeo.add_cascade(label='Variables', menu=MVariables,font=MyFont)
 Mgeo.add_cascade(label='Magnets and poles', menu=MenuMagPols,font=MyFont)
 Mgeo.add_cascade(label='Operations', menu=MenuTRC,font=MyFont)
+Mgeo.add_cascade(label='Inhomogeneities', menu=MenuInhom,font=MyFont)
 Mgeo.add_cascade(label='Coils', menu=MenuCoils,font=MyFont)
 Mgeo.add_cascade(label='Modules', menu=MenuModules,font=MyFont)
 Mgeo.add_cascade(label='Show', menu=MShowGeo,font=MyFont)
@@ -48577,6 +48666,502 @@ def _clWaddTRC():
 
 
 #enddef _clWaddTRC()
+global DictInhomogen
+DictInhomogen = {}
+
+S_InhMag = StringVar()
+S_comp = StringVar()
+S_x = StringVar()
+S_y = StringVar()
+S_z = StringVar()
+S_px = StringVar()
+S_py = StringVar()
+S_pz = StringVar()
+S_coef = StringVar()
+S_a = StringVar()
+
+S_InhMag.set('mag')
+S_comp.set('y')
+S_coef.set('0.0')
+S_x.set('0.0')
+S_y.set('0.0')
+S_z.set('0.0')
+S_px.set('0.0')
+S_py.set('0.0')
+S_pz.set('0.0')
+S_a.set('normalized')
+
+def _listInhom(key=''):
+  global DictInhomogen, WlistInh
+
+
+  global Umaster,WlistInh, WaddInhCoef
+  global sgeo
+
+  try:
+    WlistInh.destroy()
+  except:
+    if key != 'refresh':
+      x,y = Umaster.winfo_pointerxy()
+      sgeo = '+' + str(x) + '+' + str(y)
+    #endif
+  #endtry
+
+  WlistInh = Toplevel()
+  WlistInh.title("List of Inhomogenieties")
+  WlistInh.attributes('-topmost', 1)
+
+  WlistInh.geometry(sgeo)
+
+  finh = Frame(WlistInh)
+
+  for mag in DictInhomogen:
+
+    for icoef in range(len(DictInhomogen[mag])-1):
+
+      c = DictInhomogen[mag][icoef+1]
+
+      cline = mag + ': ' + c[0] + ' | ( ' + c[1] + ' | ' + c[2] + ' | ' + c[3] + ' ) | (' \
+      + c[4] + ' | ' + c[5] + ' | ' + c[6] + ' ) | ' + c[7]
+
+      fcoef = Frame(finh)
+      lcoef = Label(fcoef,text=cline,justify=LEFT,font=MyFont,bg='white')
+      lcoef.pack(side=LEFT)
+
+      bdel = Button(fcoef,text='delete',command= lambda m=mag, ic=icoef: _DelInhom(m,ic))
+      bedi = Button(fcoef,text='edit',command= lambda m=mag, ic=icoef, : _EdiInhom(m,ic))
+
+      bdel.pack(fill=X,side=RIGHT)
+      bedi.pack(fill=X,side=RIGHT)
+
+      fcoef.pack()
+
+    #endfor
+
+  #endfor
+
+  ido = 0
+  for m in DictInhomogen:
+    #print(DictInhomogen[m])
+    try:
+      if len(DictInhomogen[m][1]) > 0:
+        ido = 1
+        break
+      #endif
+    except: pass
+  #endfor
+
+  if ido == 0:
+    lcoef = Label(finh,text=' No Inhomogeneities defined ',justify=LEFT,font=MyFont,bg='white')
+    lcoef.pack(side=LEFT)
+  #endif
+
+  finh.pack()
+
+  bClose = Button(WlistInh,text='Ok',command=_clWlistInh,font=MyFont)
+  bClose.pack(side=RIGHT,expand=TRUE,fill=X)
+
+
+#enddef _listInhom(key='')
+
+def _AddInhom(key=''):
+
+
+  global Umaster,WaddINH, WaddInhCoef
+  global sgeo
+
+  if key != 'refresh':
+
+    mag = 'Magnet/Mother'
+    S_InhMag.set(mag)
+
+    DictInhomogen[mag] = [mag]
+
+    WaddINH = Toplevel()
+    WaddINH.title("Add Inhomogeniety")
+    WaddINH.attributes('-topmost', 1)
+
+    x,y = Umaster.winfo_pointerxy()
+    sgeo = ""
+
+    if sgeo == "": sgeo = '+' + str(x) + '+' + str(y)
+
+  else:
+
+    WaddINH.destroy()
+
+    WaddINH = Toplevel()
+    WaddINH.title("Add Inhomogeniety")
+    WaddINH.attributes('-topmost', 1)
+
+    x,y = Umaster.winfo_pointerxy()
+
+    if sgeo == "": sgeo = '+' + str(x) + '+' + str(y)
+    #Quit(sgeo)
+    mag = S_InhMag.get()
+    #print(DictInhomogen[mag][1])
+
+  #endif
+
+  WaddINH.geometry(sgeo)
+
+  finh = Frame(WaddINH)
+
+  widlab = 20
+
+  fmag = Frame(finh)
+  lmag = Label(fmag,text='Magnet/Mother',width=widlab,justify=LEFT,font=MyFont)
+  lmag.pack(side=LEFT)
+  emag = Entry(fmag,text=S_InhMag,justify=CENTER,font=MyFont)
+  emag.pack(side=RIGHT)
+  emag.pack()
+  fmag.pack()
+
+  fposx = Frame(finh)
+  lposx = Label(fposx,width=widlab,text='X0 Taylor',justify=LEFT,font=MyFont)
+  lposx.pack(side=LEFT)
+  eposx = Entry(fposx,text=S_x,justify=CENTER,font=MyFont)
+  eposx.pack(side=RIGHT)
+  fposx.pack()
+
+  fposy = Frame(finh)
+  lposy = Label(fposy,width=widlab,text='Y0 Taylor',justify=LEFT,font=MyFont)
+  lposy.pack(side=LEFT)
+  eposy = Entry(fposy,text=S_y,justify=CENTER,font=MyFont)
+  eposy.pack(side=RIGHT)
+  fposy.pack()
+
+  fposz = Frame(finh)
+  lposz = Label(fposz,width=widlab,text='Z0 Taylor',justify=LEFT,font=MyFont)
+  lposz.pack(side=LEFT)
+  eposz = Entry(fposz,text=S_z,justify=CENTER,font=MyFont)
+  eposz.pack(side=RIGHT)
+  fposz.pack()
+
+  fmode = Frame(finh)
+  lmode = Label(fmode,width=widlab,text='Mode',justify=LEFT,font=MyFont)
+  lmode.pack(side=LEFT)
+  emode = Entry(fmode,text=S_a,justify=CENTER,font=MyFont)
+  emode.pack(side=RIGHT)
+  fmode.pack()
+
+  lc = Label(finh,text='\nCoefficients:\n',font=MyFont)
+  lc.pack()
+
+  for ic in range(1,len(DictInhomogen[mag])):
+    try:
+      c = DictInhomogen[mag][ic]
+      cline = c[0] + ' | ( ' + c[1] + ' | ' + c[2] + ' | ' + c[3] + ' ) | (' \
+      + c[4] + ' | ' + c[5] + ' | ' + c[6] + ' ) | ' + c[7]
+      fcoef = Frame(finh)
+      lcoef = Label(fcoef,text=cline,justify=LEFT,font=MyFont,bg='white')
+      lcoef.pack(side=LEFT)
+      fcoef.pack()
+    except: pass
+  #endfor
+
+  le = Label(finh,text='\n',font=MyFont)
+  le.pack()
+
+  finh.pack()
+
+  fbot = Frame(WaddINH)
+
+  bClose = Button(fbot,text='Ok',command=_clWaddINH,font=MyFont)
+  bClose.pack(side=RIGHT,expand=TRUE,fill=X)
+
+  bAdd = Button(fbot,text='Add coefficient',command= lambda m = mag: _addInhCoef(m), font=MyFont)
+  bAdd.pack(side=RIGHT,expand=TRUE,fill=X)
+
+  bCancel = Button(fbot,text='Cancel',font=MyFont,command=_cnWaddINH)
+  bCancel.pack(side=RIGHT,expand=TRUE,fill=X)
+
+  fbot.pack(expand=TRUE,fill=X)
+
+#enddef _AddInhom()
+
+MenuInhom.add_command(label='Add Inhomogeneity',command=_AddInhom,font=MyFont)
+MenuInhom.add_command(label='List',command=_listInhom,font=MyFont)
+
+def _cnWediINH():
+  global WediINH
+  WediINH.destroy()
+#enddef _cnWediINH()
+
+def _clWediINH(icoef):
+  global WediINH
+
+  mag = S_InhMag.get()
+  sl = [S_comp.get(),
+        S_x.get(),S_y.get(),S_z.get(),S_px.get(),S_py.get(),
+        S_pz.get(),S_coef.get(),S_a.get()]
+  DictInhomogen[mag][icoef+1] = sl
+
+  WediINH.destroy()
+  _listInhom('refresh')
+#enddef _clWediINH()
+
+def _cnWaddINH():
+  global WaddINH
+  WaddINH.destroy()
+#enddef _cnWaddINH()
+
+def _clWaddINH():
+  global WaddINH
+  WaddINH.destroy()
+  _listInhom('refresh')
+#enddef _clWaddINH()
+
+def _addInhCoef(mag):
+
+  global Umaster,WaddINH,WaddInhCoef,DictInhomogen
+
+
+  mag = S_InhMag.get()
+  #print(DictInhomogen)
+
+  S_px.set('0.0')
+  S_py.set('0.0')
+  S_pz.set('0.0')
+  S_coef.set('0.0')
+
+  if not mag in DictInhomogen:
+    S_comp.set('y')
+    S_x.set('0.0')
+    S_y.set('0.0')
+    S_z.set('0.0')
+    S_a.set('normalized')
+    DictInhomogen[mag] = [mag]
+  #endif
+
+  WaddInhCoef = Toplevel()
+  WaddInhCoef.title("Add Inhomogeniety Coefficient")
+  WaddInhCoef.attributes('-topmost', 1)
+
+  x,y = Umaster.winfo_pointerxy()
+  sgeo = ""
+
+  if sgeo == "": sgeo = '+' + str(x) + '+' + str(y)
+  WaddInhCoef.geometry(sgeo)
+
+  finh = Frame(WaddInhCoef)
+
+  widlab = 20
+
+  fcomp = Frame(finh)
+  lcomp = Label(fcomp,width=widlab,text='Component',justify=LEFT,font=MyFont)
+  lcomp.pack(side=LEFT)
+  ecomp = Entry(fcomp,text=S_comp,justify=CENTER,font=MyFont)
+  ecomp.pack(side=RIGHT)
+  fcomp.pack()
+
+  fposx = Frame(finh)
+  lposx = Label(fposx,width=widlab,text='PowX',justify=LEFT,font=MyFont)
+  lposx.pack(side=LEFT)
+  eposx = Entry(fposx,text=S_px,justify=CENTER,font=MyFont)
+  eposx.pack(side=RIGHT)
+  fposx.pack()
+
+  fposy = Frame(finh)
+  lposy = Label(fposy,width=widlab,text='PowY',justify=LEFT,font=MyFont)
+  lposy.pack(side=LEFT)
+  eposy = Entry(fposy,text=S_py,justify=CENTER,font=MyFont)
+  eposy.pack(side=RIGHT)
+  fposy.pack()
+
+  fposz = Frame(finh)
+  lposz = Label(fposz,width=widlab,text='PowZ',justify=LEFT,font=MyFont)
+  lposz.pack(side=LEFT)
+  eposz = Entry(fposz,text=S_pz,justify=CENTER,font=MyFont)
+  eposz.pack(side=RIGHT)
+  fposz.pack()
+
+  fcoef = Frame(finh)
+  lcoef = Label(fcoef,width=widlab,text='Coef',justify=LEFT,font=MyFont)
+  lcoef.pack(side=LEFT)
+  ecoef = Entry(fcoef,text=S_coef,justify=CENTER,font=MyFont)
+  ecoef.pack(side=RIGHT)
+  fcoef.pack()
+
+  finh.pack()
+
+  fbot = Frame(WaddInhCoef)
+  bCancel = Button(fbot,text='Cancel',font=MyFont,command=_cnWaddInhCoef,width=widlab-2)
+  bCancel.pack(side=LEFT)
+  bClose = Button(fbot,text='Ok',command=_clWaddInhCoef)
+  bClose.pack(side=LEFT,expand=TRUE,fill=X)
+  fbot.pack(expand=TRUE,fill=X)
+
+
+#enddef _addInhCoef(mag)
+
+def _clWaddInhCoef():
+
+
+  global DictInhomogen
+  global WaddInhCoef
+
+  DictInhomogen[S_InhMag.get()].append([S_comp.get(),\
+  S_x.get(),S_y.get(),S_z.get(),S_px.get(),S_py.get(),
+                                        S_pz.get(),S_coef.get(),S_a.get()])
+  WaddInhCoef.destroy()
+
+  _AddInhom('refresh')
+
+
+#enddef _clWaddInhCoef()
+
+def _cnWaddInhCoef():
+  global WaddInhCoef
+  WaddInhCoef.destroy()
+#enddef _clWaddInhCoef()
+
+def _clWlistInh():
+  global WlistInh, DictInhomogen
+  WlistInh.destroy()
+#enddef _clWlistInh()
+
+def _DelInhom(mag,icoef):
+
+  global DictInhomogen
+
+  #print('\n------------------\n',mag,icoef,'\n',DictInhomogen,'\n\n')
+  dc = deepcopy(DictInhomogen)
+  DictInhomogen = {}
+
+  for m in dc:
+    #print(m)
+    DictInhomogen[mag] = [m]
+    for ic in range(1,len(dc[m])):
+      if m == mag and ic == icoef+1: continue
+      #print(ic,dc[m][ic])
+      DictInhomogen[m].append(dc[m][ic])
+    #endfor
+  #endfor
+
+  #Quit(DictInhomogen)
+
+  if not len(DictInhomogen): WlistInh.destroy()
+  else: _listInhom(' refresh')
+#enddef _DelInhom(mag)
+
+def _EdiInhom(mag,icoef):
+
+
+  global Umaster,WediINH, WaddInhCoef
+  global sgeo
+
+  S_InhMag.set(mag)
+  dmag = DictInhomogen[mag][icoef+1]
+
+  S_comp.set(dmag[0])
+  S_x.set(dmag[1])
+  S_y.set(dmag[2])
+  S_z.set(dmag[3])
+  S_px.set(dmag[4])
+  S_py.set(dmag[5])
+  S_pz.set(dmag[6])
+  S_coef.set(dmag[7])
+  S_a.set(dmag[8])
+
+  WediINH = Toplevel()
+  WediINH.title("Edi Inhomogeniety")
+  WediINH.attributes('-topmost', 1)
+
+  x,y = Umaster.winfo_pointerxy()
+  sgeo = '+' + str(x) + '+' + str(y)
+
+  WediINH.geometry(sgeo)
+
+  finh = Frame(WediINH)
+
+  widlab = 20
+
+  fmag = Frame(finh)
+  lmag = Label(fmag,text='Magnet/Mother',width=widlab,justify=LEFT,font=MyFont)
+  lmag.pack(side=LEFT)
+  emag = Entry(fmag,text=S_InhMag,justify=CENTER,font=MyFont)
+  emag.pack(side=RIGHT)
+  emag.pack()
+  fmag.pack()
+
+  fposx = Frame(finh)
+  lposx = Label(fposx,width=widlab,text='X0 Taylor',justify=LEFT,font=MyFont)
+  lposx.pack(side=LEFT)
+  eposx = Entry(fposx,text=S_x,justify=CENTER,font=MyFont)
+  eposx.pack(side=RIGHT)
+  fposx.pack()
+
+  fposy = Frame(finh)
+  lposy = Label(fposy,width=widlab,text='Y0 Taylor',justify=LEFT,font=MyFont)
+  lposy.pack(side=LEFT)
+  eposy = Entry(fposy,text=S_y,justify=CENTER,font=MyFont)
+  eposy.pack(side=RIGHT)
+  fposy.pack()
+
+  fposz = Frame(finh)
+  lposz = Label(fposz,width=widlab,text='Z0 Taylor',justify=LEFT,font=MyFont)
+  lposz.pack(side=LEFT)
+  eposz = Entry(fposz,text=S_z,justify=CENTER,font=MyFont)
+  eposz.pack(side=RIGHT)
+  fposz.pack()
+
+  fmode = Frame(finh)
+  lmode = Label(fmode,width=widlab,text='Mode',justify=LEFT,font=MyFont)
+  lmode.pack(side=LEFT)
+  emode = Entry(fmode,text=S_a,justify=CENTER,font=MyFont)
+  emode.pack(side=RIGHT)
+  fmode.pack()
+
+  fcomp = Frame(finh)
+  lcomp = Label(fcomp,width=widlab,text='Component',justify=LEFT,font=MyFont)
+  lcomp.pack(side=LEFT)
+  ecomp = Entry(fcomp,text=S_comp,justify=CENTER,font=MyFont)
+  ecomp.pack(side=RIGHT)
+  fcomp.pack()
+
+  fposx = Frame(finh)
+  lposx = Label(fposx,width=widlab,text='PowX',justify=LEFT,font=MyFont)
+  lposx.pack(side=LEFT)
+  eposx = Entry(fposx,text=S_px,justify=CENTER,font=MyFont)
+  eposx.pack(side=RIGHT)
+  fposx.pack()
+
+  fposy = Frame(finh)
+  lposy = Label(fposy,width=widlab,text='PowY',justify=LEFT,font=MyFont)
+  lposy.pack(side=LEFT)
+  eposy = Entry(fposy,text=S_py,justify=CENTER,font=MyFont)
+  eposy.pack(side=RIGHT)
+  fposy.pack()
+
+  fposz = Frame(finh)
+  lposz = Label(fposz,width=widlab,text='PowZ',justify=LEFT,font=MyFont)
+  lposz.pack(side=LEFT)
+  eposz = Entry(fposz,text=S_pz,justify=CENTER,font=MyFont)
+  eposz.pack(side=RIGHT)
+  fposz.pack()
+
+  fcoef = Frame(finh)
+  lcoef = Label(fcoef,width=widlab,text='Coef',justify=LEFT,font=MyFont)
+  lcoef.pack(side=LEFT)
+  ecoef = Entry(fcoef,text=S_coef,justify=CENTER,font=MyFont)
+  ecoef.pack(side=RIGHT)
+  fcoef.pack()
+
+  finh.pack()
+
+  fbot = Frame(WediINH)
+
+  bClose = Button(fbot,text='Ok',command= lambda ic=icoef: _clWediINH(ic),font=MyFont)
+  bClose.pack(side=RIGHT,expand=TRUE,fill=X)
+
+  bCancel = Button(fbot,text='Cancel',font=MyFont,command=_cnWediINH)
+  bCancel.pack(side=RIGHT,expand=TRUE,fill=X)
+
+  fbot.pack(expand=TRUE,fill=X)
+
+
+#enddef _EdiInhom(mag)
 
 
 global S_MateType, S_MateMode, S_MuPar, S_KsiPerp, S_FileMat
