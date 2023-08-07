@@ -1,3 +1,4 @@
+*CMZ :  2.04/06 01/08/2023  15.05.17  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/01 20/01/2023  08.02.02  by  Michael Scheer
 *CMZ :  2.04/00 16/01/2023  15.35.00  by  Michael Scheer
@@ -12,15 +13,62 @@
       use displacement
 
       implicit none
-*KEEP,grarad.
-      include 'grarad.cmn'
+*KEEP,grarad,T=F77.
+c-----------------------------------------------------------------------
+c     grarad.cmn
+c-----------------------------------------------------------------------
+      double precision, parameter ::
+     &  PI1=3.141592653589793D0,
+     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
+     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
 *KEND.
 
       type(T_magnet) tmag
       double precision rm(3,3),t8(8),r(3),xmin,xmax,ymin,ymax,zmin,zmax
-      integer imag,itr,ipoi,istat,ifound,iold
-      character(128) ctrans
+      integer imag,itr,ipoi,istat,ifound,iold,i,key,ipos(2,100),nwords
+      integer :: ndim=100,j,nvar
+      character(2048) cline
+      character(128) ctrans,cvar
 
+      double precision undumag_variable_getval
+
+
+      do itr=1,ntransrotcop
+
+        t8=transrotcop(:,itr)
+        key=int(t8(8))
+        i=int(t8(1))
+
+        nvar=3
+        if (key.eq.3) nvar=6
+
+        cline=clcbuff(i)
+        call util_string_split(cline,ndim,nwords,ipos,istat)
+
+        do j=1,nvar
+          cvar=cline(ipos(1,j):ipos(2,j))
+          if (cvar(1:1).eq.'$') then
+            transrotcop(j,itr)=undumag_variable_getval(trim(cvar))
+          else
+            read(cvar,*) transrotcop(j,itr)
+          endif
+        enddo !nvar
+
+        if (key.eq.2) then
+          ! Rotation
+          cline=clcbuff(i+1)
+          call util_string_split(cline,ndim,nwords,ipos,istat)
+          do j=1,4
+            cvar=cline(ipos(1,j):ipos(2,j))
+            if (cvar(1:1).eq.'$') then
+              transrotcop(3+j,itr)=undumag_variable_getval(trim(cvar))
+            else
+              read(cvar,*) transrotcop(3+j,itr)
+            endif
+          enddo
+        endif !key
+
+      enddo !ntransrotcop
 
       iold=0
       ctrans=''

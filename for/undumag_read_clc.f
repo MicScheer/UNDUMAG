@@ -1,3 +1,4 @@
+*CMZ :  2.04/06 02/08/2023  09.04.03  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/01 22/01/2023  13.04.45  by  Michael Scheer
 *CMZ :  2.04/00 14/01/2023  14.39.42  by  Michael Scheer
@@ -253,7 +254,8 @@
             ctransrotcop(ntransrotcop)=trim(clcbuff(i))
             i=i+1
             if (kechocalc.ne.0) print*,trim(clcbuff(i))
-            read(clcbuff(i),*) transrotcop(1:3,ntransrotcop)
+            !read(clcbuff(i),*) transrotcop(1:3,ntransrotcop)
+            transrotcop(1,ntransrotcop)=dble(i)
             transrotcop(8,ntransrotcop)=0.0d0
           else if (cline(ipos(1,2):ipos(2,2)).eq.'Remanence') then
             ntransrotcop=ntransrotcop+1
@@ -266,7 +268,8 @@
             ctransrotcop(ntransrotcop)=trim(clcbuff(i))
             i=i+1
             if (kechocalc.ne.0) print*,trim(clcbuff(i))
-            read(clcbuff(i),*) transrotcop(1:6,ntransrotcop)
+            transrotcop(1,ntransrotcop)=dble(i)
+            !read(clcbuff(i),*) transrotcop(1:6,ntransrotcop)
           else if (cline(ipos(1,2):ipos(2,2)).eq.'Copy') then
             nclccop_t=nclccop_t+1
             i=i+1
@@ -299,10 +302,11 @@
             ctransrotcop(ntransrotcop)=trim(clcbuff(i))
             i=i+1
             if (kechocalc.ne.0) print*,trim(clcbuff(i))
-            read(clcbuff(i),*) transrotcop(1:3,ntransrotcop)
+            transrotcop(1,ntransrotcop)=dble(i)
+            !read(clcbuff(i),*) transrotcop(1:3,ntransrotcop)
             i=i+1
             if (kechocalc.ne.0) print*,trim(clcbuff(i))
-            read(clcbuff(i),*) transrotcop(4:7,ntransrotcop)
+            !read(clcbuff(i),*) transrotcop(4:7,ntransrotcop)
           else if (
      &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Magnet'.or.
      &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Pole'

@@ -1,3 +1,4 @@
+*CMZ :  2.04/06 04/08/2023  11.32.02  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  19.30.13  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  20.28.35  by  Michael Scheer
@@ -20,7 +21,9 @@
       integer :: idebug=0
       character(32) ctype
 
-      open(newunit=luno,file='undumag_voxels.geo')
+      if (iundugeo.ne.0) then
+        open(newunit=luno,file='undumag_voxels.geo')
+      endif
 
       do imag=1,nmag_t+nspecmag_t
 
@@ -72,21 +75,23 @@
                 t_magnets(imag)%t_voxels(nvox)%izdiv=iz
                 call clcmag_voxel_volume(imag,nvox)
                 l=0
-                do iface=1,t_magnets(imag)%t_voxels(nvox)%nface
-                  l=l+1
-                  npoi=t_magnets(imag)%t_voxels(nvox)%kface(l)
-                  gcen=t_magnets(imag)%t_voxels(nvox)%gcen
-                  do ipoi=1,npoi
+                if (iundugeo.ne.0) then
+                  do iface=1,t_magnets(imag)%t_voxels(nvox)%nface
                     l=l+1
-                    k=t_magnets(imag)%t_voxels(nvox)%kface(l)
-                    write(luno,*)imag,nvox,ix,iy,iz,iface,ipoi,
-     &                t_magnets(imag)%t_voxels(nvox)%xhull(k)+gcen(1),
-     &                t_magnets(imag)%t_voxels(nvox)%yhull(k)+gcen(2),
-     &                t_magnets(imag)%t_voxels(nvox)%zhull(k)+gcen(3),
-     &                gcen,
-     &                t_magnets(imag)%t_voxels(nvox)%volume
+                    npoi=t_magnets(imag)%t_voxels(nvox)%kface(l)
+                    gcen=t_magnets(imag)%t_voxels(nvox)%gcen
+                    do ipoi=1,npoi
+                      l=l+1
+                      k=t_magnets(imag)%t_voxels(nvox)%kface(l)
+                      write(luno,*)imag,nvox,ix,iy,iz,iface,ipoi,
+     &                  t_magnets(imag)%t_voxels(nvox)%xhull(k)+gcen(1),
+     &                  t_magnets(imag)%t_voxels(nvox)%yhull(k)+gcen(2),
+     &                  t_magnets(imag)%t_voxels(nvox)%zhull(k)+gcen(3),
+     &                  gcen,
+     &                  t_magnets(imag)%t_voxels(nvox)%volume
+                    enddo
                   enddo
-                enddo
+                endif
                 volmag=volmag+t_magnets(imag)%t_voxels(nvox)%volume
                 call clcmag_br_inhom(imag,nvox,br)
                 t_magnets(imag)%t_voxels(nvox)%Br=br
@@ -108,8 +113,10 @@
 
       enddo !imag
 
-      flush(luno)
-      close(luno)
+      if (iundugeo.ne.0) then
+        flush(luno)
+        close(luno)
+      endif
 
       return
       end
