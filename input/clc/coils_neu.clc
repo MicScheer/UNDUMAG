@@ -1,0 +1,87 @@
+*===============================================================
+*===============================================================
+* +PATCH,//UNDUMAG/INPUT
+* +DECK,coils_neu,T=TEXT.
+
+$PerLen=10. !Dummy
+
+$xPol=0.0
+$yPol=30.
+$zPol=0.0
+
+$LxPol=10.
+$LyPol=50.
+$LzPol=30.
+
+$wwidth=5. !Width of coil
+
+$RectL = $LxPol + 2. * $wwidth
+$RectH = $LyPol
+$RectRi = $LxPol / 2.
+$RectWi = $LzPol + 2. * $RectRi
+$RectWo = $RectWi + 2. * $wwidth
+
+*& Coil
+Filaments
+1 !number of filaments
+1. -100.0 10. 10. 100.0 10. 10. 3 ! Current x1 y1 z1 x2 y2 z2 color-index
+
+
+*& Coil
+File
+'coil.fil'
+
+*& Coil
+Rectangular
+* Current, center, normal vector, rotation-angle, total length,
+* inner width, outer width, inner radius, height, vert/hori/rad
+* divisions, color-index
+1000. $xPol $yPol $zPol    0. 1. 0.  0.  $RectL $RectWi $RectWo $RectRi $RectH 10 3 6 2
+
+*& Coil
+RectangCirc Helmholtz
+* Current, center, normal vector, rotation-angle, total length,
+* inner width, outer width, inner radius,   height,  vert/hori/rad divisions, color-index
+1000.    0. -1.5 0.   0. 1. 0.   0.  6.02  6.0 6.02  3. 9999. 1 1 12 2
+
+*& Coil
+RectangCirc
+* Current, center, normal vector, rotation-angle, total length,
+* inner width, outer width, inner radius, height, vert/hori/rad divisions, color-index
+1000.    0. 30. 0.   0. 1. 0.   0.  16.0 10. 16. 1. 9999. 1 1 3 2
+
+*& Coil
+RectArc
+* Current, arc center, radius, width, height, angle, divisions, color-index
+1000.    0. 10. 0.   3.   7. 10.  90.   1   1    3  3
+* Rotation matrix (is applied before translation)
+1. 0. 0.   0. 1. 0.  0. 0. 1.
+
+*& Coil
+RectBar
+* Current, center,   length, width, height, divisions, color-index
+1000.      0. 10. 0.   100.   7.     10.      3  3        3
+* Rotation matrix (is applied before translation)
+1. 0. 0.   0. 1. 0.  0. 0. 1.
+
+*& Coil
+ThickWire
+* Current,   center,   length, radius divisions, color-index
+1000.      0. -10. 0.   100.     7.    3  3         2
+* Rotation matrix (is applied before translation)
+1. 0. 0.   0. 1. 0.  0. 0. 1.
+
+*& Coil
+CircArc
+* Current, arc center, arc radius, wire radius, angle, divisions, color-index
+   1000.    0. 10. 0.     30.           7.        360.   2 3 12     3
+* Rotation matrix (is applied before translation)
+1. 0. 0.   0. 1. 0.  0. 0. 1.
+
+& Coil
+RectWindings
+* $Current $Filling $nWinding $xCoil $ymCoil $zCoil $Vnx $Vny $Vnz $Ang
+* $xLenOut $zLenIn $zLenOut $RectRi $Height
+* $nDivHeight $nDivWind $nDivArc $nColor
+1. 0.9 1 -100. 20. -50.  0. 1. 0.  0. 10. 5. 7. 3. 1. 5 6 7 3
+

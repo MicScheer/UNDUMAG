@@ -1,0 +1,352 @@
+* Version 2.04/03
+ ! Name list file, to control UNDUMAG
+
+ $undumagn
+
+ nuthreads=-1 ! >0:   Number of CPU cores to be used
+              ! else: Use all cores
+
+ kechocalc=0 ! echo read lines of undumag.clc and undumag.in
+
+ kpreset=0 ! Initial magnetization is read from undumag.pre
+
+ matrix=1  ! Matrix mode: Fast, but can require much memory
+           ! >0: Matrix is calculated
+	   ! >1: Matrix is written to file undumag_matrix.pst	
+	   ! <0: Matrix is read from file undumag_matrix.pre
+	
+ ixsym=0 ! Mirror all magnets and poles in y-z plane at xsym
+ xsym=0. ! 9999: xsym is xcenter
+
+ iysym=0 ! Mirror all magnets and poles in x-z plane at origin
+ izsym=0 ! Mirror all magnets and poles in x-y plane at origin
+
+ kxcenter=1   ! Center magnetic structure
+ xcenter=0.   ! Magnetic structure is centered around xcenter
+
+ maxiter=1000 ! Maximum number of iterations of main loop
+ kprint=10    ! Test convergence and print progress every kprintth cycle
+              ! Must be > 0 for option kresiron
+
+ maxiterrec=5 ! Maximum number of iterations for magnets for each
+                ! cycle of the main loop
+ maxiteriron=100 ! Dito for iron poles
+                ! -9999: (1-dampiron)**(2*maxiteriron-1) = 0.001
+		
+ nchiiron=100   ! number of iterations on magnetization curve M(H) for iron
+ chicut=1.0e-8  ! Precision cut of Chi(H), -9999.: chicut = max(hconv,1.e-10)
+
+ dampiron=1.0   ! Damping factor for the relaxation of iron
+                ! 1: No damping
+	        ! >0: Damping
+	        ! 0 or missing: No damping
+
+ kbextern=0     ! superimpose external field (bxex,byex,bzex)
+ bxex=0.0       ! No symmetry operations are performed for this field
+ byex=0.0
+ bzex=0.0
+
+ isplinefm=0    ! spline M(H) table, linear interpolation otherwize
+
+ ibulk=0     ! bulk update of iron voxel
+
+ kdumpconv=0 ! dump progress of relaxation for iron
+
+ ! if dampfac.ne.0:
+ hconvbase=1.0d0 ! hconv -> hconvbase*dampiron**hconvexp
+                 ! and dampiron -> dampiron*dampfac
+ hconvexp=0.0d0  ! This is applied when the current hconv is reached
+ dampfac=0.0d0   !
+
+ kresiron=1   ! RMS of iron residuals used as convergence critirion
+              ! 1: UNDUMAG stops if resiron is reached
+              ! 2: UNDUMAG stops if resiron and hconv are reached
+	
+ resiron=3.0d-3 ! convergence critirion according to kresiron, CHECK kprint
+
+ hconv=1.0d-6 ! Convergence criterion,
+              ! i.e. the rel. change of B at the reference point
+	      ! hconv<0: Stop if deviation has reached a minimum
+	      ! hconv<-1000: Stop if deviation, when sign of deviation has
+	      ! changed (s.a. kresiron)
+
+ xconvmin=9999. ! reference points, where convergence is tested
+                ! is randomized according to randox
+		! 9999: automatic
+	
+ xconvmax=9999. ! reference points, where convergence is tested
+                ! is randomized according to randox
+	        ! 9999: automatic
+		
+ dxconv=-0.9  ! spacing of reference points
+              ! 9999: perlen/2.
+	      ! <0: abs(dxconv) is factor of intervall size, i.e.
+              ! exponential spacing between xconvmin and xconvmax,
+              ! nxconv must be greater 0
+	
+ nxconv=9999  ! number of reference points (must be < 100 ),
+              ! if dxconv is zero
+	      ! 9999: twice the number of periods between xconvmax and xconvmin
+
+ yconv=0.0
+ zconv=0.0    ! is randomized according to randoz if zero
+
+ killbadmag=0 ! To ignore problematic voxel listet in undumag.kll
+              ! undumag.bad is written for killbadmag<0 according to
+	      ! warnings of UNDUMAG
+	      ! killbadmag=-9999: Kill all but the bad voxel
+	
+ iwarn2pi=1   ! Warning and attempt to recover of 2 Pi jump in undumag_bpeq
+
+ rcvthron=0.1 ! allowed rel. deviation of the on-axis field from
+               ! neighbouring values before recovering starts
+
+ irecrepl=0   ! replace rectangular polyhedrons by blocks
+	
+ randox=0.001   ! add noise to x for field calculations to avoid boundary effects
+              ! <0: means offset, no randomization
+ randoy=0.0   ! add noise to y for field calculations to avoid boundary effects
+              ! <0: means offset, no randomization
+ randoz=0.001  ! add noise to z for field calculations to avoid boundary effects
+              ! <0: means offset, no randomization
+
+ irandmag=0   ! randomize calculation point inside voxel as well
+              ! <0: Real deposition of the voxel center
+	
+ kshuffle=0   ! shuffle the iron voxel for each main iteration cycle
+
+ corrtiny=0.123e-3 ! x,y,z-shift for corrections of boundary errors [mm]
+
+ cuttiny=0.1   ! minimum size of cut volume relative to volume to be cut
+               ! 0: will be set to 0.1
+	       ! (only for new input format of undumag.clc)
+	
+ hulltiny=1.e-6 ! precision parameter for routine util_convex_hull_3d
+                ! change may help in case of trouble
+		! 0: will be set to 1.e-6
+
+ iunduplot=1 ! Write Encapsulated PostScript files to show geometry
+	     ! iunduplot<0: stop UNDUMAG after writing undumag.eps
+
+ iundugeo=1  ! Write geometry file
+	     ! iundugeo<0: stop UNDUMAG after writing undumag.geo
+
+ ivrml=1     ! Write CAD file of setup
+             ! 1: Display items
+             ! 2: Display items with segmentation
+	     ! ivrml<0: stop UNDUMAG after writing undumag.wrl	
+	
+ kplsym=1    ! Plot symmetric items for ixsym, iysym, or izsym
+ kcomment=1  ! Print comment of input file undumag.clc to plots
+ krunnum=1  ! Print run number to plots
+ kdate=1  ! Print date to plots
+
+ unduplot_theta=0. ! Polar plotting angle
+ unduplot_phi=0.   ! Azimut plotting angle
+
+ ! Plotting window for set-up plots
+ xminpl=9999.      !9999.: Automatically
+ xmaxpl=9999.      !9999.: Automatically
+ yminpl=9999.      !9999.: Automatically
+ ymaxpl=9999.      !9999.: Automatically
+ zminpl=9999.      !9999.: Automatically
+ zmaxpl=9999.      !9999.: Automatically
+
+ uwindow=1000. ! Only items with x-uwindow <= x <= x-uwindow contribute
+               ! to field at x
+
+ kmapmode=0    ! Format of field map
+               ! 0: Field map includes material properties, magnetization etc.
+	       ! else: Only x y z Bx By Bz iFail are given
+
+ kmapnohead=0  ! No header line of map file
+
+ knointmap=1   ! no map of field integrals
+ 	
+ knomagmap=0   ! No field map inside magnets
+ knopolmap=0   ! No field map inside poles
+
+ intmaglis=0   ! Read magnets, that contribute to map from file undumag_magmap.lis
+               ! otherwize take all
+	
+ iforcegrid=1  ! write x,y,z of grid nodes to map, not the noisy
+               ! real position of calculation
+
+ xmapmin=-9999. ! xmin for field map
+                ! 9999.: Auto scaling
+		! 9000.: -PerLen / 2
+		! -9000.: -PerLen / 4
+ xmapmax=-9999. ! xmax for field map
+                ! 9999.: Auto scaling
+		! 9000.: PerLen / 2
+		! -9000.: +PerLen / 4
+	
+ dxmap=1.      ! Step size of field map in x
+               ! 9999.: Same as for Beff calculations, i.e. perlen/(nxbeff-1)
+	
+ nxmap=1       ! Number of steps in x, if dxmap is zero
+
+ ymapmin=-1.0  ! ymin for field map
+ ymapmax=1.0   ! ymax for field map
+ nymap=1       ! Number of steps for field map in y.
+               ! nymap=1 means y=(ymapmax+ymapmin)/2 is used
+
+ zmapmin=-20.0 ! zmin for field map
+ zmapmax=20.0  ! zmax for field map
+ nzmap=1       ! Number of steps for field map in z
+               ! nzmap=1 means z=(zmapmax+zmapmin)/2 is used
+
+ angmaprotx=0.0d0  ! rotation angle of map around x-axis
+ cenmaprotxy=0.0d0 ! y of center of rotation for angmaprotx
+ cenmaprotxz=0.0d0 ! z of center of rotation for angmaprotx
+
+ isimpson=0  ! Spline (0) or Simpson (1) integration for magnetic field
+             ! and force integrals
+	     ! See subroutine util_spline_or_simpson_integral
+
+ xbeff=-9999. ! Center for Beff calculations
+              ! 9999: xcenter
+              !-9999: (xmapmin+xmapmax)/2.
+	      ! This value is adjusted by UNDUMAG within half a period
+              ! around the original value
+	
+ xbeffy=-9999.0d0 ! if not -9999. xbeff for ByEff is forced to xbeffy
+ xbeffz=-9999.0d0 ! if not -9999. xbeff for BzEff is forced to xbeffz
+
+ perlen=9999.   ! Period-length for the calculation of the Beff
+              ! 9999: Read it from undumag.clc
+	
+ nxbeff=101   ! Number of points for the calculation of Beff
+
+ kbeffmode=9999  ! 0: Take full period for calculation
+                 ! else: Take half period,
+		 !       omit Abs(kbeffmode)*dx around Abs(perlen/4.),
+		 !       check undumag_beff.dat!
+		 !9999: automatic, i.e. if nperiods>0 is found in undumag.clc
+		 !      kbeffmode is set zero, else one.
+	
+ iforce=0     ! Calculation of forces and torques
+              ! iforce<0: Parameters for force calculations are taken
+	      ! from undumag.clc
+	      ! iforce=9999: The force box is calculated for chforcemag,
+	      ! used for iforcedip
+	
+ iplforce=0   ! Write fields of force box to file undumag_force.fbx
+
+ ubfcenx=0.0   ! center of box for forces and torques
+ ubfceny=0.0
+ ubfcenz=0.0
+
+ ubflenx=100.0   ! dimensions of box for forces and torques,
+                 ! dedgefb will be added
+ ubfleny=100.0
+ ubflenz=100.0
+
+ dedgefb=0.02 ! expansion of force box for numerical reasons,
+              ! is set to 0.02 if zero, should be greater than corrtiny,
+	      ! to avoid force calculations inside of the magnet
+
+ utorqcenx=9999.   ! reference point for torques, 9999.: box center
+ utorqceny=9999.
+ utorqcenz=9999.
+
+ mbforcex=10 ! number of integration points
+ mbforcey=10 ! number of integration points
+ mbforcez=10 ! number of integration points
+
+ ndivfboxy=1 ! Divide force box to calculate vertical force and torque
+             ! distribution. Ndivfboxy should be different from number of
+	     ! vertical division of the considered magnet or pole
+
+ mfcolor=1   ! color index of force box
+
+ idipoles=0      ! Calculate dipole representation of voxels
+
+ iforcedip=0     ! Calculation of forces using dipole approximation for magnets
+                 ! >0: Only the considered magnet or pole is approximated
+                 ! <0: All magnets and poles are approximated
+
+ chforcemag=''   ! Name of magnet for which forces are calculated
+                 ! If the magnet appears in different modules, check
+		 ! undumag_magnets.lis for the unique name (third column).
+
+ kurad=0     ! call urad to calculate trajectory and radiation
+ ebeam=1.722 ! Total beam energy in GeV
+
+ xelec=9999. !x at start (longitudinal coordinate)
+             !9999: xmapmin
+ yelec=0.0 !y at start (vertical coord.)
+ zelec=0.0 !z at start
+
+ !the velocity is internally normalized according to the beam energy
+ vxelec=1.0 !x comp. of velocity at start
+ vyelec=0.0 !y comp. of velocity at start
+ vzelec=0.0 !z comp. of velocity at start
+
+ ds=0.2  !step size
+ nstep=1 ! the trajectory is written for every nstepth tracking step
+         ! nstep.le.zero means no output
+
+ xf=9999. !x of end plane, where tracking stops
+         !9999: xmapmax
+ yf=0.0 !y of end plane, where tracking stops
+ zf=0.0 !z of end plane, where tracking stops
+
+ efx=1.0 !x of normal vector of end plane, where tracking stops
+ efy=0.0 !y of normal vector of end plane, where tracking stops
+ efz=0.0 !z of normal vector of end plane, where tracking stops
+
+ traxyz_theta=30. ! Polar plotting angle for 3D-trajectory
+ traxyz_phi=30.   ! Azimut plotting angle for 3D-trajectory
+
+ xobsv=10000. ! x of observation point in millimeter
+ yobsv=0.0    ! y of observation point in millimeter
+ zobsv=0.0    ! z of observation point in millimeter
+
+ phelow=1. ! lowest photon energy (eV)
+ phehig=1000. ! highest photon energy (eV)
+ nphener=1000 ! number of photon equidistant energies
+
+ ieneloss=-1 ! energy loss due to radiation
+            ! 0: no energy loss
+	    ! 1: continous energy loss
+	    !-1: discrete energy loss with quantum fluctuations
+	
+ ivelofield=0 ! to control the calculation of the velocity field
+              ! 0: velocity field is included
+              ! 1: velocity field is not included
+              !-1: velocity field is only
+
+ kudebug=0    ! debug flag
+
+ $end
+
+ $RANDOMN
+ ! Seeds to initialize the FORTRAN random generator.
+ ! Twelfe seed values are require; the first four seem to have no effect
+ ! under Linux and gfortran
+
+   irnmode=1 ! 1:  Seeds of this namelist are taken
+	     ! 2:  Seeds are taken from namelist, but runnumber is added to
+	     !     IRNSEED(12)
+	     ! <0: Seeds are read from file wave.seeds
+	     !
+	     ! else:
+	     !     Seed is initialize automatically, i.e. via
+	     !     call random_seed(isize) with isize=12
+	     !     giving reproducable seeds
+
+   IRNSEED(1)=287027030
+   IRNSEED(2)=-719361131
+   IRNSEED(3)=574274270
+   IRNSEED(4)=292048305
+   IRNSEED(5)=185733336
+   IRNSEED(6)=-1598963619
+   IRNSEED(7)=572469522
+   IRNSEED(8)=1446716853
+   IRNSEED(9)=437591706
+   IRNSEED(10)=1398099429
+   IRNSEED(11)=570932571
+   IRNSEED(12)=-1177695979
+
+ $END

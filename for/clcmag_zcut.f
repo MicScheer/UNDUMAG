@@ -1,4 +1,4 @@
-*CMZ :          29/03/2023  13.58.56  by  Michael Scheer
+*CMZ :  2.04/06 04/08/2023  11.22.11  by  Michael Scheer
 *CMZ :  2.04/03 05/03/2023  16.30.33  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.27.31  by  Michael Scheer
 *CMZ :  2.04/01 13/02/2023  13.19.45  by  Michael Scheer
@@ -37,6 +37,7 @@
 
       type(T_Magnet) :: tmag
       type(T_Voxel) :: tvox
+
 
       if (idebug.gt.0) call util_break
 
