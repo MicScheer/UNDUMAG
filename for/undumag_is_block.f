@@ -1,3 +1,4 @@
+*CMZ :  2.04/07 09/08/2023  15.51.02  by  Michael Scheer
 *CMZ :  2.03/00 31/07/2022  18.33.07  by  Michael Scheer
 *CMZ :  2.02/01 27/10/2021  12.44.25  by  Michael Scheer
 *-- Author :    Michael Scheer   26/10/2021
@@ -5,12 +6,12 @@
 
       implicit none
 
-      double precision tiny,x(8),y(8),z(8),v(3,6),p1(3),p2(3),p3(3),v3(3)
+      double precision tiny,x(8),y(8),z(8),v(3,6),p1(3),p2(3),p3(3)
 
       integer iundumag_is_block ! function
 
       integer, parameter :: npoip=8
-      integer khull(8),kedge(4,2*npoip-2),kface(5*npoip),ifail,iplan,k,kpoi,ipoi,
+      integer khull(8),kedge(4,2*npoip-2),kface(5*npoip),ifail,iplan,k,
      &  npoi,nhull,nedge,nface,kfacelast,jplan
 
       iundumag_is_block=0

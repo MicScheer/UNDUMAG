@@ -27414,7 +27414,167 @@ def utransrotcop():
     update_magnets()
   #endfor
 
-#  for mp in MagPolsTot: print(mp)
+
+#enddef utransrotcop()
+
+def checktransrotcop():
+
+  global TransRotCop,EchoCLC
+
+  global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
+  Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
+  NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
+  Nmat, Materials, Br, Rmu, Coating, PerLen, ChamfM, ChamfP, MCol, PCol, \
+  AirGap, KeeperGap, MspaceX, MoffY, Parameters, Variables, Npar, Ncalc, Nvar, \
+  CalcLines, Calcs, Pars, Ucomment, Modules, MagPolsTotOld, MagPolOld, \
+  EditMag_CheckMode,CopyMag_CheckMode, EditMagX, EditMagY,CopyMagX, CopyMagY,WWait, WError, \
+  CheckVars, CheckCalcs, CheckDictCalcs, CheckVarNum, VarNum, \
+  MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
+  S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
+
+  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
+
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
+  WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
+
+  global AppleII_Mode, AppleII, AppleIIOld, VAppleII, \
+  S_nPer_AppleII, S_FullGap_AppleII, \
+  S_Xlen_AppleII, S_Ylen_AppleII, S_Zlen_AppleII, \
+  S_DeadCoat_AppleII, S_AirGap_AppleII, S_Br_AppleII, S_Mu_AppleII, S_KsiPerp_AppleII, \
+  S_HorSlit_AppleII, S_S2Shift_AppleII, S_S3Shift_AppleII, \
+  S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
+
+  global V_CmagOld, V_CmothOld, V_XcenOld, V_YcenOld, V_ZcenOld, V_cornsOld, V_NcornOld, V_CornFileOld, \
+  V_nXdivOld, V_nYdivOld, V_nZdivOld, \
+  V_FracDivYOld,   V_FracDivZOld,  V_XlenOld, V_YlenOld, V_ZlenOld, V_KeyOld, V_MatTypeOld, V_MatOld, \
+  V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
+
+  global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
+  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
+  S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
+
+  global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
+  V_nXdiv, V_nYdiv, V_nZdiv, \
+  V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
+  V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
+
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  S_nXdiv, S_nYdiv, S_nZdiv, \
+  S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
+  S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
+  S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
+  S_Iron_FracDivY,S_Iron_FracDivZ,S_Iron_Xlen, S_Iron_Ylen, S_Iron_Zlen, S_Iron_Key, S_Iron_MatType, S_Iron_Mat, \
+  S_Iron_Bc, S_Iron_Bxn, S_Iron_Byn, S_Iron_Bzn, S_Iron_Ispec, S_Iron_Color
+
+  global LastCLC, LastNAM
+  global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
+  NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
+  global Ngeo
+
+  global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
+  S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
+  cIxSym, cIySym, cIzSym, KxCenter, cIxSym, Xcenter, Xsym
+
+  global GeoWaddVars, GeoWlistVars
+  global Mirror, VMirror, Hybrid, VHybrid, Hybrid_Mode
+
+  global WSetMap, \
+  S_xMapMin,S_yMapMin,S_zMapMin,S_xMapMax,S_yMapMax,S_zMapMax, S_MHmap, \
+  S_dxMap,S_NxMap,S_NyMap,S_NzMap,S_dxBeff,S_NxBeff, S_xMinBeff,S_xMaxBeff
+
+  global NCoil, Coils, Filaments, S_Current_Coil, S_Name_Coil, \
+  S_nWindings_Coil, S_Filling_Coil, \
+  S_Xcen_Coil,S_Ycen_Coil,S_Zcen_Coil,S_VnX_Coil,S_VnY_Coil,S_VnZ_Coil, \
+  S_AngRot_Coil,S_xLenOut_Coil,S_zLenIn_Coil,S_zLenOut_Coil,S_RadiusIn_Coil, \
+  S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
+  WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
+  WaddCoilRace,WaddCoilCirc
+
+
+  for trc in TransRotCop:
+
+    key = trc[0]
+
+    if key == 'Copy':
+
+      w = trc[1].split()
+      source = w[0]
+      tarmag = w[1]
+      tarmoth = w[2]
+
+      try:
+        kmoth = DictMoths[source]
+      except:
+        try:
+          kmag = DictMagPolsTot[source]
+        except:
+          print(NL,"*** Error for key Copy: Magnet or mother not found for:")
+          print("Copy", source, tarmag, tarmoth,NL)
+        #endtry
+      #endtry
+
+      try:
+        kmoth = DictMoths[tarmoth]
+        print(NL,"*** Error for key Copy: Target mother exists already ***")
+        print("Copy", source, tarmag, tarmoth,NL)
+      except:
+        try:
+          kmag = DictMagPolsTot[tarmag]
+          print(NL,"*** Error for key Copy: Target magnet exists already ***")
+          print("Copy", source, tarmag,NL)
+        except:
+          pass
+        #endtry
+      #endtry
+
+    elif key == 'Translate' or key == 'Rotate' or \
+    key == 'Rotate_Shape' or key == 'Remanence':
+
+      mp = trc[1]
+      tr = trc[2].split()
+
+      try:
+
+        kmoth = DictMoths[mp]
+
+        for mag in Moths[kmoth]:
+          kmag = DictMagPolsTot[mag]
+          mt = MagPolsTot[kmag]
+          ckey = mt[3]
+          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file ***")
+            print("\n*** Check",mag," ***")
+            continue
+          #endif
+        #endfor
+
+      except:
+
+        try:
+          kmag = DictMagPolsTot[mp]
+          mag = MagPolsTot[kmag]
+          ckey = mag[3]
+          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            print("\n*** Check",mag," ***")
+            continue
+          #endif
+        except:
+          print(NL,"*** Error for key",key,": Magnet or mother not found for:")
+          print(key,mp,NL)
+        #endtry
+      #endtry
+
+    #endif key
+
+  #endfor trc
+
+#enddef checktransrotcop()
 
 def undumag_wind_to_fila(coilin):
   global Filaments, Coils, CurrLoops, DictUnduColors,UnduColors
@@ -28572,10 +28732,10 @@ def ureadclc(callkey=''):
     mat = vmat[4]
 
     if mat[0] == '$':
-      mat = Variables[mat]
+      mat = int(Variables[mat])
     #endif mat[0] == '$'
 
-    tmat = Materials[mat-1][1]
+    tmat = Materials[int(mat)-1][1]
 
 
     if tmat == 'REC':
@@ -28611,12 +28771,12 @@ def ureadclc(callkey=''):
     if mat[0] == '$':
       mat = Variables[mat]
     #endif mat[0] == '$'
-    if mat < 1 or mat > Nmat:
+    if int(mat) < 1 or int(mat) > Nmat:
       print("*** Error in ureadclc: Bad Material index for",mp[0])
       Quit()
     #endif
 
-    tmat = Materials[mat-1][1]
+    tmat = Materials[int(mat)-1][1]
 
 
     if tmat == 'REC':
@@ -28838,11 +28998,13 @@ def ureadclc(callkey=''):
   NCoil = len(Coils)
   if NCoil: undu_coils_to_filaments()
 
-  if len(TransRotCop): utransrotcop()
+  #if len(TransRotCop): utransrotcop()
+  if len(TransRotCop): checktransrotcop()
 
   #debug("debug: Ende von ureadclc")
 
 #enddef ureadclc()
+
 
 def undu_coil(ntup='ncoil', fcoil='undumag.fil'):
   if fexist(fcoil):

@@ -1,3 +1,4 @@
+*CMZ :  2.04/07 09/08/2023  16.07.14  by  Michael Scheer
 *CMZ :  2.04/06 04/08/2023  11.26.53  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/00 24/12/2022  13.07.12  by  Michael Scheer
@@ -13,10 +14,9 @@
 
       implicit none
 
-      integer iundumag_is_block
+      integer i_tvoxel_is_block
       integer imag,ivox,icopy,imodul,kmag
 
-      type (T_Module) tmod
       type (T_Magnet) tmag
       type (T_Voxel) tv
       type (T_Voxel_Copy) tvc
@@ -63,9 +63,12 @@
         t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=tmag%IsBlock
         if (tmag%ctype.ne.'Cylinder'
      &      .and.tv%nhull.eq.8.and.tv%nedge.eq.12.and.tv%nface.eq.6
-     &      .and.irecrepl.gt.0) then
-          t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=
-     &      iundumag_is_block(tv%xhull,tv%yhull,tv%zhull,tiny)
+     &      .and.tmag%IsBlock.eq.0) then
+          if (irecrepl.eq.0) then
+            t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=-i_tvoxel_is_block(tv)
+          else
+            t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=i_tvoxel_is_block(tv)
+          endif
         endif
       enddo !ivox
 

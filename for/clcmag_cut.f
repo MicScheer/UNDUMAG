@@ -1,3 +1,4 @@
+*CMZ :  2.04/08 11/08/2023  13.56.20  by  Michael Scheer
 *CMZ :  2.04/06 04/08/2023  11.24.35  by  Michael Scheer
 *CMZ :  2.03/00 31/07/2022  18.33.07  by  Michael Scheer
 *CMZ :  2.02/01 19/01/2022  10.38.36  by  Michael Scheer
@@ -28,9 +29,7 @@
      &  kface(5*ncornmax*nplanmax))
 
       do imag=1,nmag_t+nspecmag_t
-        if (t_magnets(imag)%ctype.eq.'Cylinder') then
-          call clcmag_cut_cyl(imag)
-        else
+        if (t_magnets(imag)%ctype.ne.'Cylinder') then
           call clcmag_xcut(imag)
           call clcmag_ycut(imag)
           call clcmag_zcut(imag)
