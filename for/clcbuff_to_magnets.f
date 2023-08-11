@@ -1,3 +1,5 @@
+*CMZ :  2.04/08 11/08/2023  14.22.04  by  Michael Scheer
+*CMZ :  2.04/07 09/08/2023  16.11.22  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  12.23.20  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  16.43.57  by  Michael Scheer
@@ -16,8 +18,14 @@
 
       implicit none
 
-*KEEP,grarad.
-      include 'grarad.cmn'
+*KEEP,grarad,T=F77.
+c-----------------------------------------------------------------------
+c     grarad.cmn
+c-----------------------------------------------------------------------
+      double precision, parameter ::
+     &  PI1=3.141592653589793D0,
+     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
+     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
 *KEND.
 
       character(2048) cline,cbuff(5),cfile,cline1
@@ -25,7 +33,7 @@
 
       double precision, dimension (:), allocatable :: xp,yp,zp,xpc,ypc,zpc
 
-      double precision undumag_variable_getval
+      double precision undumag_variable_getval,size(3),dphi
 
       double precision x,dx,dy,dz,Br(5),xc,yc,zc,gcen(3),chamf,
      &  r,h,phi,radin,radout,height,angle,xyz(3),vol
@@ -206,7 +214,11 @@
 
         if (ckey.eq.'Block') then
 
-          if (irecrepl.ne.0) t_magnets(nmag)%IsBlock=1
+          if (irecrepl.ne.0) then
+            t_magnets(nmag)%IsBlock=1
+          else
+            t_magnets(nmag)%IsBlock=-1
+          endif
 
           cline=cbuff(4)
           call util_string_split(cline,1000,nwords,jpos,istat)
@@ -425,7 +437,10 @@
           if (cword(1:1).eq.'$') then
             t_magnets(nmag)%nydiv=nint(undumag_variable_getval(cword))
           else
-            read(cword,*)t_magnets(nmag)%nydiv
+            read(cword,*)nydiv
+            phi=t_magnets(nmag)%cylphi
+            nydiv=max(nydiv,int(phi/45.0))+2
+            t_magnets(nmag)%nydiv=nydiv
           endif
 
           cword=cline(jpos(1,3):jpos(2,3))
@@ -444,25 +459,47 @@
 
           if (radin.lt.tiny) radin=tiny
 
+          npoi=4*(nydiv+1)
+
+          if(npoi.gt.ncornmax) then
+            ncornmax=npoi
+            deallocate(xp,yp,zp,xpc,ypc,zpc,kface,kedge,khull,
+     &        xpuffer1,ypuffer1,zpuffer1,
+     &        xpuffer2,ypuffer2,zpuffer2,
+     &        xpuffer3,ypuffer3,zpuffer3
+     &        )
+            allocate(
+     &        xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
+     &        xpuffer2(ncornmax),ypuffer2(ncornmax),zpuffer2(ncornmax),
+     &        xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax),
+     &        xp(ncornmax),yp(ncornmax),zp(ncornmax),
+     &        xpc(ncornmax),ypc(ncornmax),zpc(ncornmax),
+     &        kface((npoi+1)*npoi),kedge(4,2*npoi-2),khull(ncornmax))
+          endif
+
           ip=0
           r=radin
+          npoi=0
+          dphi=angle/dble(nydiv)*grarad1
           do ir=1,2
             h=-height/2.0d0
             do ih=1,2
               phi=-angle/2.0d0*grarad1
-              do iphi=1,2
+              do iphi=1,nydiv+1
                 ip=ip+1
                 xp(ip)=r*sin(phi)+xc
                 yp(ip)=h+yc
                 zp(ip)=r*cos(phi)+zc
-                phi=angle/2.0d0*grarad1
+                phi=phi+dphi
               enddo
               h=height/2.0d0
             enddo
             r=radout
           enddo
 
-          npoi=8
+          npoi=ip
+
+          call clcmag_cut_cyl(nmag)
 
         else if (ckey.eq.'Corners'.or.ckey.eq.'File') then
 
@@ -675,12 +712,16 @@
           gcen=gcen+[xp(i),yp(i),zp(i)]
         enddo
 
-        call util_volume(npoi,xp,yp,zp,hulltiny,vol,kfail)
-
-        if (kfail.ne.0) then
-          write(lun6,*)"*** Error in clcbuff_to_magnets: Subroutine util_volume failed for ",
-     &      trim(t_magnets(nmag)%cnam)
-          stop
+        if (t_magnets(nmag)%ctype.eq.'Cylinder') then
+          size=t_magnets(nmag)%size
+          vol=(size(2)**2-size(1)**2)*size(3)*t_magnets(nmag)%cylphi/360.0d0*pi1
+        else
+          call util_volume(npoi,xp,yp,zp,hulltiny,vol,kfail)
+          if (kfail.ne.0) then
+            write(lun6,*)"*** Error in clcbuff_to_magnets: Subroutine util_volume failed for ",
+     &        trim(t_magnets(nmag)%cnam)
+            stop
+          endif
         endif
 
         t_magnets(nmag)%volume=vol
@@ -701,13 +742,14 @@
         nydiv=t_magnets(nmag)%nydiv
         nzdiv=t_magnets(nmag)%nzdiv
 
-        t_magnets(nmag)%nvoxels=0
-
-        allocate(t_magnets(nmag)%kvoxels(nxdiv,nydiv,nzdiv))
-        t_magnets(nmag)%kvoxels=0
-        allocate(t_magnets(nmag)%t_xyzcuts(nxdiv,nydiv,nzdiv))
-        allocate(t_magnets(nmag)%t_xycuts(nxdiv,nydiv))
-        allocate(t_magnets(nmag)%t_xcuts(nxdiv))
+        if (t_magnets(nmag)%ctype.ne.'Cylinder') then
+          t_magnets(nmag)%nvoxels=0
+          allocate(t_magnets(nmag)%kvoxels(nxdiv,nydiv,nzdiv))
+          t_magnets(nmag)%kvoxels=0
+          allocate(t_magnets(nmag)%t_xyzcuts(nxdiv,nydiv,nzdiv))
+          allocate(t_magnets(nmag)%t_xycuts(nxdiv,nydiv))
+          allocate(t_magnets(nmag)%t_xcuts(nxdiv))
+        endif
 
       enddo !nclcmag
 

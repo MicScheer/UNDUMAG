@@ -1,3 +1,5 @@
+*CMZ :  2.04/08 11/08/2023  12.58.25  by  Michael Scheer
+*CMZ :  2.04/07 09/08/2023  12.43.30  by  Michael Scheer
 *CMZ :  2.04/06 04/08/2023  11.32.02  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  19.30.13  by  Michael Scheer
@@ -13,12 +15,14 @@
       use magnets_structure
       use displacement
 
-
       implicit none
 
       double precision br(3),volmag,gcen(3)
       integer imag,ix,iy,iz,nvox,k,luno,npoi,l,ipoi,iface
       integer :: idebug=0
+c+self,if=voxcyl.
+      integer iv
+c+self.
       character(32) ctype
 
       if (iundugeo.ne.0) then
@@ -31,17 +35,23 @@
 
         ctype=t_magnets(imag)%ctype
 
+        if (ctype.ne.'Cylinder') then
           allocate(t_magnets(imag)%t_voxels(t_magnets(imag)%nvoxels))
+c+self,if=-voxcyl.
+c        endif
+c+self.
 
           nvox=0
           if (idebug.eq.1) then
-            print*,"ix, iy, iz, ixdiv, iydiv, izdiv, kvox, volume"
+            print*,"imag, ix, iy, iz, ixdiv, iydiv, izdiv, kvox, volume"
+          else if (idebug.ge.2) then
+            print*,"imag, nvoxels:",imag,t_magnets(imag)%nvoxels
           endif
           do iz=1,t_magnets(imag)%nzdiv
             do iy=1,t_magnets(imag)%nydiv
               do ix=1,t_magnets(imag)%nxdiv
                 if (idebug.eq.1) then
-                  print*,ix,iy,iz,
+                  print*,imag,ix,iy,iz,
      &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%ixdiv,
      &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%iydiv,
      &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%izdiv,
@@ -93,8 +103,12 @@
                   enddo
                 endif
                 volmag=volmag+t_magnets(imag)%t_voxels(nvox)%volume
-                call clcmag_br_inhom(imag,nvox,br)
-                t_magnets(imag)%t_voxels(nvox)%Br=br
+                if (t_magnets(imag)%IsInhom.ne.0) then
+                  call clcmag_br_inhom(imag,nvox,br)
+                  t_magnets(imag)%t_voxels(nvox)%Br=br
+                else
+                  t_magnets(imag)%t_voxels(nvox)%Br=t_magnets(imag)%Br
+                endif
                 t_magnets(imag)%t_voxels(nvox)%IsPole=t_magnets(imag)%IsPole
               enddo
             enddo
@@ -105,12 +119,59 @@
           deallocate(t_magnets(imag)%t_xcuts,t_magnets(imag)%t_xycuts,
      &      t_magnets(imag)%t_xyzcuts)
 
+c+self,if=voxcyl.
+        else !(ctype.ne.'Cylinder') then
 
-        if (abs((volmag-t_magnets(imag)%volume)/volmag).gt.1.0d-10) then
+          nvox=
+     &      t_magnets(imag)%nxdiv *
+     &      t_magnets(imag)%nydiv *
+     &      t_magnets(imag)%nzdiv
+
+          do iv=1,nvox
+            call clcmag_voxel_volume(imag,iv)
+            volmag=volmag+t_magnets(imag)%t_voxels(iv)%volume
+            if (t_magnets(imag)%IsInhom.ne.0) then
+              call clcmag_br_inhom(imag,iv,br)
+              t_magnets(imag)%t_voxels(iv)%Br=br
+            else
+              t_magnets(imag)%t_voxels(iv)%Br=t_magnets(imag)%Br
+            endif
+            t_magnets(imag)%t_voxels(iv)%IsPole=t_magnets(imag)%IsPole
+
+            l=0
+            if (iundugeo.ne.0) then
+              do iface=1,t_magnets(imag)%t_voxels(iv)%nface
+                l=l+1
+                npoi=t_magnets(imag)%t_voxels(iv)%kface(l)
+                gcen=t_magnets(imag)%t_voxels(iv)%gcen
+                do ipoi=1,npoi
+                  l=l+1
+                  k=t_magnets(imag)%t_voxels(iv)%kface(l)
+                  write(luno,*)imag,iv,ix,iy,iz,iface,ipoi,
+     &              t_magnets(imag)%t_voxels(iv)%xhull(k)+gcen(1),
+     &              t_magnets(imag)%t_voxels(iv)%yhull(k)+gcen(2),
+     &              t_magnets(imag)%t_voxels(iv)%zhull(k)+gcen(3),
+     &              gcen,
+     &              t_magnets(imag)%t_voxels(iv)%volume
+                enddo
+              enddo
+          endif
+
+          enddo !nvox
+
+        endif !(ctype.ne.'Cylinder') then
+
+        t_magnets(imag)%nvoxels=nvox
+        nvoxcopy_t=nvoxcopy_t+nvox
+
+        !call clcmag_check_orient(imag)
+c+self.
+
+        if (abs((volmag-t_magnets(imag)%volume)/volmag).gt.1.0d-10.and.
+     &      t_magnets(imag)%ctype.ne.'Cylinder') then
           write(lun6,*)'*** Warning in clcmag_voxels: Sum of volumes of voxels does not match the one of the magnet ',t_magnets(imag)%cnam
           write(lun6,*)"Rel. error :",(volmag-t_magnets(imag)%volume)/volmag
         endif
-
       enddo !imag
 
       if (iundugeo.ne.0) then

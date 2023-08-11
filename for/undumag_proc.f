@@ -1,4 +1,5 @@
-*CMZ :          22/05/2023  15.36.58  by  Michael Scheer
+*CMZ :  2.04/08 10/08/2023  09.28.20  by  Michael Scheer
+*CMZ :  2.04/06 22/05/2023  15.36.58  by  Michael Scheer
 *CMZ :  2.04/03 28/02/2023  10.11.37  by  Michael Scheer
 *CMZ :  2.03/00 24/07/2022  14.55.26  by  Michael Scheer
 *CMZ :  2.02/02 01/07/2022  18.10.55  by  Michael Scheer
@@ -755,7 +756,7 @@ c              write(lun6,*)"mag,ifail:",mag,ifail
      &    " errors while calculating convergence vector ***"
       endif
 
-      if (matrix.ne.0) then
+      if (matrix.gt.0) then
         allocate(wwmatrix4(3,3,nmag,nmag),stat=istat)
         if (istat.ne.0) then
           write(lun6,*)'*** Error in undumag_proc: Not enough memory for interaction matrix of size 3x3x',nmag,' x ',nmag

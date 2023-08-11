@@ -1,3 +1,5 @@
+*CMZ :  2.04/08 11/08/2023  13.51.34  by  Michael Scheer
+*CMZ :  2.04/07 09/08/2023  15.35.36  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/01 22/01/2023  13.28.01  by  Michael Scheer
 *CMZ :  2.02/01 10/02/2022  22.24.03  by  Michael Scheer
@@ -20,12 +22,18 @@
       double precision gcen(3),xyz(3),vspace(3),off(3),phi,shift(3),rot(3,3),
      &  scalmag(3),brn,xmin,xmax,ymin,ymax,zmin,zmax
 
-      integer imag,imodul,ic,i,ispole,k,kmag
+      integer imag,imodul,ic,i,ispole,k,kmag,nesti,kproto,istat
 
       character(32) cmod,ccop
 
-*KEEP,grarad.
-      include 'grarad.cmn'
+*KEEP,grarad,T=F77.
+c-----------------------------------------------------------------------
+c     grarad.cmn
+c-----------------------------------------------------------------------
+      double precision, parameter ::
+     &  PI1=3.141592653589793D0,
+     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
+     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
 *KEND.
 
       type (T_Module) tmod
@@ -87,12 +95,16 @@
             t_magnets(imag)%xhull(i)=xyz(1)
             t_magnets(imag)%yhull(i)=xyz(2)
             t_magnets(imag)%zhull(i)=xyz(3)
-            if (t_magnets(imag)%xhull(i).lt.xmin) xmin=t_magnets(imag)%xhull(i)
-            if (t_magnets(imag)%xhull(i).gt.xmax) xmax=t_magnets(imag)%xhull(i)
-            if (t_magnets(imag)%yhull(i).lt.ymin) ymin=t_magnets(imag)%yhull(i)
-            if (t_magnets(imag)%yhull(i).gt.ymax) ymax=t_magnets(imag)%yhull(i)
-            if (t_magnets(imag)%zhull(i).lt.zmin) zmin=t_magnets(imag)%zhull(i)
-            if (t_magnets(imag)%zhull(i).gt.zmax) zmax=t_magnets(imag)%zhull(i)
+            !if (t_magnets(imag)%ctype.ne.'Cylinder') then
+               if (t_magnets(imag)%xhull(i).lt.xmin) xmin=t_magnets(imag)%xhull(i)
+              if (t_magnets(imag)%xhull(i).gt.xmax) xmax=t_magnets(imag)%xhull(i)
+              if (t_magnets(imag)%yhull(i).lt.ymin) ymin=t_magnets(imag)%yhull(i)
+              if (t_magnets(imag)%yhull(i).gt.ymax) ymax=t_magnets(imag)%yhull(i)
+              if (t_magnets(imag)%zhull(i).lt.zmin) zmin=t_magnets(imag)%zhull(i)
+              if (t_magnets(imag)%zhull(i).gt.zmax) zmax=t_magnets(imag)%zhull(i)
+            !else
+            !  size=t_magnets(imag)%size
+            !endif
           enddo
 
           t_magnets(imag)%xmin=xmin
@@ -102,9 +114,11 @@
           t_magnets(imag)%zmin=zmin
           t_magnets(imag)%zmax=zmax
 
-          t_magnets(imag)%size(1)=xmax-xmin
-          t_magnets(imag)%size(2)=ymax-ymin
-          t_magnets(imag)%size(3)=zmax-zmin
+          if (t_magnets(imag)%ctype.ne.'Cylinder') then
+            t_magnets(imag)%size(1)=xmax-xmin
+            t_magnets(imag)%size(2)=ymax-ymin
+            t_magnets(imag)%size(3)=zmax-zmin
+          endif
 
           call util_mat_mul_vec_3x3(rot,t_magnets(imag)%gcen,t_magnets(imag)%gcen)
           call util_mat_mul_vec_3x3(rot,t_magnets(imag)%xyz,t_magnets(imag)%xyz)
@@ -178,9 +192,11 @@
         t_magnets(imag)%zmin=zmin
         t_magnets(imag)%zmax=zmax
 
-        t_magnets(imag)%size(1)=xmax-xmin
-        t_magnets(imag)%size(2)=ymax-ymin
-        t_magnets(imag)%size(3)=zmax-zmin
+        if (t_magnets(imag)%ctype.ne.'Cylinder') then
+          t_magnets(imag)%size(1)=xmax-xmin
+          t_magnets(imag)%size(2)=ymax-ymin
+          t_magnets(imag)%size(3)=zmax-zmin
+        endif
 
         nmagtot_t=nmagtot_t+1
         ksort_t(nmagtot_t)=nmagtot_t
@@ -232,19 +248,39 @@
 
       tmc=t_magcopy
       kmag=0
+      nesti=0
+
       do imag=1,nmagtot_t
         if (tmc(imag)%IsPole.ne.0) cycle
+        kproto=tmc(imag)%kproto
+        nesti=nesti+
+     &    t_magnets(kproto)%nxdiv*t_magnets(kproto)%nydiv*t_magnets(kproto)%nzdiv
         kmag=kmag+1
         t_magcopy(kmag)=tmc(imag)
       enddo
 
       do imag=1,nmagtot_t
         if (tmc(imag)%IsPole.eq.0) cycle
+        kproto=tmc(imag)%kproto
+        nesti=nesti+
+     &    t_magnets(kproto)%nxdiv*t_magnets(kproto)%nydiv*t_magnets(kproto)%nzdiv
         kmag=kmag+1
         t_magcopy(kmag)=tmc(imag)
       enddo
 
       deallocate(tmc)
+
+      if (matrix.ne.0) then
+        allocate(wwmatrix4(3,3,nesti,nesti),stat=istat)
+        if (istat.ne.0) then
+          write(lun6,*)'*** Warning in clcmag_copy_magnets: Not enough memory for interaction matrix of size 3 x 3 x',nesti,' x ',nesti
+          write(lun6,*) '** UNDUMAG will fail in undumag_proc ***'
+        else
+          deallocate(wwmatrix4)
+          write(lun6,*)
+          write(lun6,*)'--- Expected size of interaction matrix of size 3x3x',nesti,' x ',nesti
+        endif
+      endif
 
       return
       end
