@@ -29123,10 +29123,13 @@ def ureadclc(callkey=''):
     z = (zmin+zmax)/2.
 
     MagPolsTot[m].append([x,y,z])
-    hull,ifaces,faces = hull3d(corns)
+    verts,ifaces,faces = hull3d(corns)
+    if type(verts) != Tdf:
+      hull = pd.DataFrame(verts)
+    else:
+      hull=verts
+    #endif
     hull.columns = ['xr','yr','zr']
-    hull = hull3d(corns)
-    hull.columns = ['ipoi','iplan','xr','yr','zr']
     hull['x'] = hull.xr+xcen
     hull['y'] = hull.yr+ycen
     hull['z'] = hull.zr+zcen
