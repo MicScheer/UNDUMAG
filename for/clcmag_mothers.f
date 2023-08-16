@@ -1,3 +1,4 @@
+*CMZ :          15/08/2023  13.33.25  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.18.44  by  Michael Scheer
 *CMZ :  2.04/00 13/01/2023  11.54.35  by  Michael Scheer
 *CMZ :  2.03/00 31/07/2022  18.33.07  by  Michael Scheer
@@ -24,6 +25,8 @@
       character(32) cnam,cmoth
 
       allocate(t_mothers(nmag_t+nspecmag_t))
+
+      tol=hulltiny
 
       do imag=1,nmag_t+nspecmag_t
         cmoth=t_magnets(imag)%cmoth

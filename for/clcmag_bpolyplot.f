@@ -1,3 +1,4 @@
+*CMZ :          16/08/2023  09.50.47  by  Michael Scheer
 *CMZ :  2.04/07 07/08/2023  12.29.11  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  17.12.50  by  Michael Scheer
 *CMZ :  2.04/01 13/02/2023  14.10.28  by  Michael Scheer
@@ -61,7 +62,7 @@
       subroutine clcmag_bpolyplot(iplot,xmin,xmax,ymin,ymax,zmin,zmax,
      &  theta,phi,nwitems,ncwires,wire)
 
-*KEEP,bpolyederf90u.
+*KEEP,BPOLYEDERF90U.
 
       use bpolyederf90m
 
@@ -72,7 +73,7 @@
 
       implicit none
 
-*KEEP,mshplt.
+*KEEP,MSHPLT.
       real
      &  pttomm_ps,pttocm_ps, !convert from pt to mm or cm respectively
      &  scale_ps, isscale_ps, !current scale to convert from pt
@@ -264,7 +265,7 @@
 
       integer i,iplot,iplot1,iplot10,iplot100,idev,
      &  imag,icol,iplan,icorn,kpole,
-     &  iplano,ncorno,iline,nline,iallo,
+     &  iplano,ncorno,iline,iw,nline,iallo,
      &  ncorn,ncornmax,igird,imago,impl,izero,nfirst,nlast
 
       integer luncnf,lunmag
@@ -642,13 +643,13 @@ c y is vertical (WAVE-system)
         enddo !nline
 
         call mshplt_set_line_width(rlwidth*2.)
-        do iline=1,ncwires
-          rcol=sngl(wire(9,iline))
+        do iw=1,ncwires
+          rcol=sngl(wire(9,iw))
           call mgset('PLCI',rcol)
-          xpl(1)=sngl(wire(3,iline))
-          xpl(2)=sngl(wire(6,iline))
-          ypl(1)=sngl(wire(4,iline))
-          ypl(2)=sngl(wire(7,iline))
+          xpl(1)=sngl(wire(3,iw))
+          xpl(2)=sngl(wire(6,iw))
+          ypl(1)=sngl(wire(4,iw))
+          ypl(2)=sngl(wire(7,iw))
           call mpl(2,xpl,ypl)
         enddo
         call mshplt_set_line_width(rlwidth/2.)
@@ -744,15 +745,15 @@ c y is vertical (WAVE-system)
         enddo !nline
 
         call mshplt_set_line_width(rlwidth*2.)
-        do iline=1,ncwires
-          rcol=sngl(wire(9,iline))
+        do iw=1,ncwires
+          rcol=sngl(wire(9,iw))
           call mgset('PLCI',rcol)
-          xpl(1)=sngl(wire(3,iline))
-          xpl(2)=sngl(wire(6,iline))
-          ypl(1)=sngl(wire(4,iline))
-          ypl(2)=sngl(wire(7,iline))
-          zpl(1)=-sngl(wire(5,iline))
-          zpl(2)=-sngl(wire(8,iline))
+          xpl(1)=sngl(wire(3,iw))
+          xpl(2)=sngl(wire(6,iw))
+          ypl(1)=sngl(wire(4,iw))
+          ypl(2)=sngl(wire(7,iw))
+          zpl(1)=-sngl(wire(5,iw))
+          zpl(2)=-sngl(wire(8,iw))
           call mpl3(2,xpl,zpl,ypl)
         enddo
         call mshplt_set_line_width(rlwidth/2.)
@@ -853,15 +854,15 @@ c--- y vs z or z vs y {
       enddo !nline
 
       call mshplt_set_line_width(rlwidth*2.)
-      do iline=1,ncwires
-        rcol=sngl(wire(9,iline))
+      do iw=1,ncwires
+        rcol=sngl(wire(9,iw))
         call mgset('PLCI',rcol)
-        xpl(1)=sngl(wire(3,iline))
-        xpl(2)=sngl(wire(6,iline))
-        ypl(1)=sngl(wire(4,iline))
-        ypl(2)=sngl(wire(7,iline))
-        zpl(1)=sngl(wire(5,iline))
-        zpl(2)=sngl(wire(8,iline))
+        xpl(1)=sngl(wire(3,iw))
+        xpl(2)=sngl(wire(6,iw))
+        ypl(1)=sngl(wire(4,iw))
+        ypl(2)=sngl(wire(7,iw))
+        zpl(1)=sngl(wire(5,iw))
+        zpl(2)=sngl(wire(8,iw))
         call mpl(2,zpl,ypl)
       enddo
       call mshplt_set_line_width(rlwidth/2.)
@@ -890,7 +891,7 @@ c--- z vs x, y is vertical coordinate {
      &    call undumag_bpolypl2(forxpl,forzpl,forcol,13)
 
         if (nline.gt.0) then
-          imago=int(rmagb(iline))
+          imago=int(rmagb(nline))
           kpole=ispole(imago)
           iplano=1
           impl=0
@@ -1196,29 +1197,29 @@ c--- z vs x, y is vertical coordinate {
 
         if (igird.eq.1) then
           call mshplt_set_line_width(rlwidth*2.)
-          do iline=1,ncwires
-            rcol=sngl(wire(9,iline))
+          do iw=1,ncwires
+            rcol=sngl(wire(9,iw))
             call mgset('PLCI',rcol)
-            xpl(1)=sngl(wire(3,iline))
-            xpl(2)=sngl(wire(6,iline))
-            ypl(1)=sngl(wire(4,iline))
-            ypl(2)=sngl(wire(7,iline))
-            zpl(1)=sngl(wire(5,iline))
-            zpl(2)=sngl(wire(8,iline))
+            xpl(1)=sngl(wire(3,iw))
+            xpl(2)=sngl(wire(6,iw))
+            ypl(1)=sngl(wire(4,iw))
+            ypl(2)=sngl(wire(7,iw))
+            zpl(1)=sngl(wire(5,iw))
+            zpl(2)=sngl(wire(8,iw))
             if (ypl(1).gt.0.0.or.ypl(2).gt.0.0) call mpl(2,xpl,zpl)
           enddo
           call mshplt_set_line_width(rlwidth/2.)
         else
           call mshplt_set_line_width(rlwidth*2.)
-          do iline=1,ncwires
-            rcol=sngl(wire(9,iline))
+          do iw=1,ncwires
+            rcol=sngl(wire(9,iw))
             call mgset('PLCI',rcol)
-            xpl(1)=sngl(wire(3,iline))
-            xpl(2)=sngl(wire(6,iline))
-            ypl(1)=sngl(wire(4,iline))
-            ypl(2)=sngl(wire(7,iline))
-            zpl(1)=sngl(wire(5,iline))
-            zpl(2)=sngl(wire(8,iline))
+            xpl(1)=sngl(wire(3,iw))
+            xpl(2)=sngl(wire(6,iw))
+            ypl(1)=sngl(wire(4,iw))
+            ypl(2)=sngl(wire(7,iw))
+            zpl(1)=sngl(wire(5,iw))
+            zpl(2)=sngl(wire(8,iw))
             if (ypl(1).lt.0.0.or.ypl(2).lt.0.0) call mpl(2,xpl,zpl)
           enddo
           call mshplt_set_line_width(rlwidth/2.)
