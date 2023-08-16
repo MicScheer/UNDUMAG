@@ -182,7 +182,7 @@ def set_console_title(console='Python'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -585,7 +585,7 @@ def util_spline_coef(x,y,yp1=9999.,ypn=9999.):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -1163,6 +1163,10 @@ Nspline = pd.DataFrame(columns=['x','y','yp','ypp','yint'])
 Ninter = pd.DataFrame(columns=['x','y','yp','ypp','yint'])
 Nfitxy = pd.DataFrame(columns=['x','y','ey','fit'])
 Nfitint = pd.DataFrame(columns=['x','fit'])
+
+global Tnpa,Tnone
+Tnone = type(None)
+Tnpa = type(np.array([]))
 
 #+PATCH,//WAVES/PYTHON
 #+KEEP,plotglobal,T=PYTHON.
@@ -1746,6 +1750,8 @@ from scipy import *
 
 # begin of sequence mshimports
 
+
+# holla
 import tkinter as tk
 from tkinter import *
 from tkinter.font import Font
@@ -1777,6 +1783,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits import mplot3d
 from matplotlib import cm #color maps
+
+#import pyhull
+#from pyhull.convex_hull import ConvexHull
+from pyhull import qconvex, qdelaunay, qvoronoi
 
 
 global \
@@ -1889,6 +1899,192 @@ VlocDist = 0
 
 global Aspect
 Aspect = "auto"
+
+def plotqhull3d(vertices,ifaces,faces, isame=0,
+                facecolor='b',edgecolor='black',alpha=0.5,
+                linewidth=-1,markercolor='!',modus='faces',ishow=1):
+
+  global Isame,Iso,Ax,Markercolor,Linecolor,Linewidth
+
+  Iso = Isame
+
+  if not isame or modus != 'faces': xyz = vertices.T
+
+  if not isame:
+
+    xmn = xyz[0].min()
+    xmx = xyz[0].max()
+    ymn = xyz[1].min()
+    ymx = xyz[1].max()
+    zmn = xyz[2].min()
+    zmx = xyz[2].max()
+
+    dx = (xmx-xmn)*0.1
+    dy = (ymx-ymn)*0.1
+    dz = (zmx-zmn)*0.1
+
+    xmin = xmn - dx
+    xmax = xmx + dx
+    ymin = ymn - dy
+    ymax = ymx + dy
+    zmin = zmn - dz
+    zmax = zmx + dz
+
+    null3d(xmin,xmax,ymin,ymax,zmin,zmax)
+    Isame = 1
+
+  #endif
+
+  getzone('3d')
+
+  ax = Ax
+
+  if edgecolor == '!': edgecolor = Linecolor
+  if Markercolor == '!': Markercolor = Markercolor
+  if linewidth < 0: linewidth = Linewidth
+
+  if modus == 'points' or modus == 'vertices':
+
+    vplxyz(xyz[0],xyz[1],xyz[2])
+
+  else:
+
+    face = mplot3d.art3d.Poly3DCollection(faces)
+
+    face.set_color(facecolor)
+    face.set_linewidth(linewidth)
+    face.set_edgecolor(edgecolor)
+    face.set_alpha(alpha)
+
+    ax.add_collection3d(face)
+
+  #endif
+
+  if ishow: showplot()
+
+  Isame = Iso
+
+#enddef plotqhull3d
+
+def qhull3d(x,y=None,z=None):
+
+  global Hull3D,Tnpa,Tnone
+
+  if type(y) == Tnone:
+    xyz = np.array(x).T
+    x = xyz[0]
+    y = xyz[1]
+    z = xyz[2]
+  #endif
+
+  points = np.array([x,y,z]).T
+  lhull = qconvex('i p',points)
+
+  nface = int(lhull[0])
+  ivert = nface + 2
+  nvert = int(lhull[ivert])
+
+  ifaces = []
+  faces = []
+  for i in range(1,nface+1):
+    iface = np.fromstring(lhull[i],dtype=np.int,sep=' ')
+    ifaces.append(iface)
+    faces.append(points[iface])
+  #endfor
+
+  verts = []
+  for i in range(ivert+1,ivert+1+nvert):
+    verts.append(np.fromstring(lhull[i],sep=' '))
+  #endfor
+  verts = np.array(verts)
+
+  Hull3D = faces
+
+  return verts,ifaces,faces
+
+#enddef qhull3d(x,y,z)
+
+def nqhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,
+             facecolor='b',mcolor='!',edgecolor='!'):
+
+  if type(nt) == str and nt == '?':
+    print("\nUsage: hull = nqhull3d(nt,varlis,select,iplot=1)")
+    return
+  #endif type(nt) == str and nt == '?'
+
+  if type(nt) == Tdf:
+    pass
+  elif type(nt) == str:
+    ind = GetIndexN(nt)
+    if ind == -1:
+      print("*** Error in nqhull3d: Unknown Ntuple ***")
+      return -1
+    #endif
+    nt = Ntup[ind]
+  elif type(nt) == int and nt > 0:
+    nt = Ntup[idn]
+  else:
+    print("*** Error in nqhull3d: Unknown Ntuple ***")
+    return -2
+  #endif nt >= 0:
+
+  if len(select):
+    N = nt.query(select)
+    nt = N
+  #endif len(select)
+
+  if not len(nt):
+    print("*** Error in nqhull3d: No data, check ntuple and selection ***")
+    return -1
+  #endif
+
+  if mcolor != '!':
+    setlinecolor(mcolor)
+  #endif
+
+  varl = nlistcolon(varlis)
+
+  sx = eval(nparse(nt,varl[0]))
+  sy = eval(nparse(nt,varl[1]))
+  sz = eval(nparse(nt,varl[2]))
+
+  ntd = ncre("ntd","ntd","x:y:z",1)
+  var = nlistcolon(varlis)
+  ntd.x = sx
+  ntd.y = sy
+  ntd.z = sz
+  ntd = ntd.drop_duplicates()
+  ntd.index = range(len(ntd))
+
+  points = np.array([ntd.x,ntd.y,ntd.z]).T
+
+  vert,ifaces,faces = qhull3d(ntd.x,ntd.y,ntd.z)
+  nface = len(faces)
+
+  data = []
+  for i in range(nface):
+    for ipoi in ifaces[i]:
+      data.append([ipoi+1,i+1,points[ipoi][0],points[ipoi][1],points[ipoi][2]])
+    #endfor
+    iclo = ifaces[i][0]
+    data.append([iclo+1,i+1,points[iclo][0],points[iclo][1],points[iclo][2]])
+  #endfor
+
+  npd = pd.DataFrame(data,columns=['ipoi','iplan','x','y','z'])
+  nhull = ncre("Nhull3d","Nqhull3d","ipoi:iplan:x:y:z",ioverwrite=1)
+  nhull = nfill("Nhull3d",npd)
+
+  if iplot:
+    if edgecolor == '!': edgecolor = facecolor
+    plotqhull3d(vert,ifaces,faces,
+                facecolor=facecolor,edgecolor=edgecolor,alpha=0.5,
+                linewidth=-1,markercolor='!',
+                modus='faces')
+  #endif
+
+  if iretval: return vert,ifaces,faces
+
+#enddef nqhull3d(nt='?')
 
 def set_aspect(asp='!'):
   global Aspect
@@ -3094,69 +3290,116 @@ def getplotsize():
   return w*2.54,h*2.54
 #enddef getplotsize()
 
-def plothull3d(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1, mode='face'):
+from itertools import chain
+
+def vplothull3d(x,y,z,isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
+                ishow=1, mode='simplices'):
+
+  global Ax, Isame
+
+  vs = np.array([x,y,z]).T
+  hull = ConvexHull(vs)
+
+  if not isame:
+
+    xyzt = hull.points.T
+
+    xmn = xyzt[0].min()
+    xmx = xyzt[0].max()
+    ymn = xyzt[1].min()
+    ymx = xyzt[1].max()
+    zmn = xyzt[2].min()
+    zmx = xyzt[2].max()
+
+    dx = (xmx-xmn)*0.1
+    dy = (ymx-ymn)*0.1
+    dz = (zmx-zmn)*0.1
+
+    xmin = xmn - dx
+    xmax = xmx + dx
+    ymin = ymn - dy
+    ymax = ymx + dy
+    zmin = zmn - dz
+    zmax = zmx + dz
+
+    null3d(xmin,xmax,ymin,ymax,zmin,zmax)
+
+  #endif isame
+
+  ax = Ax
+
+  if mode == 'simplices':
+
+    faces = mplot3d.art3d.Poly3DCollection(vs[hull.simplices])
+
+    faces.set_color(facecolor)
+    faces.set_edgecolor(edgecolor)
+    faces.set_alpha(alpha)
+
+    ax.add_collection3d(faces)
+
+  elif mode == 'volume':
+
+    vsims = vs[hull.simplices]
+
+    faces = mplot3d.art3d.Poly3DCollection(vsims,linewidth=0)
+
+    faces.set_color(facecolor)
+    faces.set_alpha(alpha)
+
+    ax.add_collection3d(faces)
+
+  #endif
+
+  if ishow: showplot()
+
+#enddef vplothull3d()
+
+def plothull3d(isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
+               ishow=1, mode='face'):
   global Hull3D, Ax, Isame
 
   Isame = isame
   getzone('3d')
 
   if not isame:
-    xmina = []
-    xmaxa = []
-    ymina = []
-    ymaxa = []
-    zmina = []
-    zmaxa = []
-    for p in Hull3D:
-      xmin = amin(tuple(zip(p[0],p[1],p[2]))[0])
-      xmax = amax(tuple(zip(p[0],p[1],p[2]))[0])
-      ymin = amin(tuple(zip(p[0],p[1],p[2]))[1])
-      ymax = amax(tuple(zip(p[0],p[1],p[2]))[1])
-      zmin = amin(tuple(zip(p[0],p[1],p[2]))[2])
-      zmax = amax(tuple(zip(p[0],p[1],p[2]))[2])
-      xmina.append(xmin)
-      xmaxa.append(xmax)
-      zmina.append(zmin)
-      zmaxa.append(zmax)
-      ymina.append(ymin)
-      ymaxa.append(ymax)
+
+    pt = Hull3D.points.T
+
+    xmin = pt[0].min()
+    xmax = pt[0].max()
+    ymin = pt[1].min()
+    zmax = pt[1].max()
+    zmin = pt[2].min()
+    zmax = pt[2].max()
+
+    dx = (xmx-xmn)*0.1
+    dy = (ymx-ymn)*0.1
+    dz = (zmx-zmn)*0.1
+
+    xmin = xmn - dx
+    xmax = xmx + dx
+    ymin = ymn - dy
+    ymax = ymx + dy
+    zmin = zmn - dz
+    zmax = zmx + dz
+
+    null3d(xmin,xmax,ymin,ymax,zmin,zmax)
+
     #endfor p  in Hull3D
-    xmin = amin(xmina)
-    xmax = amax(xmaxa)
-    ymin = amin(ymina)
-    ymax = amax(ymaxa)
-    zmin = amin(zmina)
-    zmax = amax(zmaxa)
   #endif not isame:
 
-  if mode == 'face':
+  if not mode == 'face': alpha = 0
 
-    face = mplot3d.art3d.Poly3DCollection(Hull3D)
-    face.set_color(facecolor)
-    face.set_edgecolor(edgecolor)
-    face.set_alpha(alpha)
+  faces = mplot3d.art3d.Poly3DCollection(Hull3D)
+  faces.set_color(facecolor)
+  faces.set_edgecolor(edgecolor)
+  faces.set_alpha(alpha)
 
-    Ax.add_collection3d(face)
-
-  else:
-
-    for closed in Hull3D:
-      Ax.plot(*zip(*closed),edgecolor)
-    #endfor closed in Hull3D
-
-  #endif mode == 'face'
-
-  if not isame:
-    dx = xmax - xmin
-    Ax.set_xlim3d(xmin-dx/10.,xmax+dx/10.)
-    dy = ymax - ymin
-    Ax.set_ylim3d(ymin-dy/10.,ymax+dy/10.)
-    dz = zmax - zmin
-    Ax.set_zlim3d(zmin-dz/10.,zmax+dz/10.)
-  #endif not isame:
+  Ax.add_collection3d(faces)
 
   if ishow: showplot()
-#enddef plothull3d()
+#enddef plothull3()
 
 def nmerge(n1,n2,n12,vars1='',vars2='',vars12=''):
 
@@ -3364,7 +3607,7 @@ def hdump(hist='?',filh='hdump.dat'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -3452,7 +3695,7 @@ def hprint(hist='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -3529,7 +3772,7 @@ def hfun(hist='?',fun='x', nx=101, xmin=-0.5, xmax=100.5):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -3640,7 +3883,7 @@ def h1header_update(hist='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -3810,7 +4053,7 @@ def h1reset(h):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -3889,7 +4132,7 @@ def hdelete(h='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -3974,7 +4217,7 @@ def hmin(h='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -4057,7 +4300,7 @@ def hmax(h='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -4390,7 +4633,7 @@ def mhb_mkdir(chdir='!'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -4495,7 +4738,7 @@ def mhb_ldir():
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -4570,7 +4813,7 @@ def mhb_pwd(isilent=0,iretval=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -4640,7 +4883,7 @@ def mhb_cd(cdir='!'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -4897,7 +5140,7 @@ def h1pack(idh='?', data=None):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -4979,7 +5222,7 @@ def hcopn(idh='?', nt='', varlis='x:y:ey', ntit='!',kweedzero=1):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -5116,7 +5359,7 @@ def nrandom(nt='?',varlis='', n=100, mode='u', iplot=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -5203,7 +5446,7 @@ def nhull2d(nt='?',varlis='',select='', iplot=1, iretval=1):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -5445,7 +5688,7 @@ def vhull2d(vx,vy,varlis='',iplot=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -5487,7 +5730,7 @@ def vhull2d(vx,vy,varlis='',iplot=0):
 
 #enddef vhull2d(nt='?')
 
-def hull3d(points):
+def hull3dold(points):
 #+seq,mhbglobind.
   global Hull3D
 
@@ -5660,7 +5903,7 @@ def hull3d(points):
 
   return corns
 
-#enddef hull3d(points)
+#enddef hull3dold(points)
 
 def mhull3d(nt='?',varlis='',select='',isame=0,
             facecolor='blue',edgecolor='black', alpha=0.5, iplot=1):
@@ -5684,7 +5927,7 @@ def mhull3d(nt='?',varlis='',select='',isame=0,
   vx, vy, vz = ncopv(nt,varlis,select)
   points = np.array([vx,vy,vz]).T
 
-  vertices =  hull3d(points)
+  vertices,ifaces,faces =  hull3d(points)
 
   if iplot:
     plothull3d(isame,facecolor=facecolor,edgecolor=edgecolor,alpha=alpha)
@@ -5693,7 +5936,7 @@ def mhull3d(nt='?',varlis='',select='',isame=0,
 
 #enddef mhull3d(nt='?',varlis='',select='', plopt='',iplot=1)
 
-def nhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,color='!',
+def nhull3dbad(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,color='!',
            mcolor='!'):
 #+seq,mshimportsind.
 # +PATCH,//WAVES/PYTHON
@@ -5749,7 +5992,7 @@ def nhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,color='!',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -5757,7 +6000,7 @@ def nhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,color='!',
 
 
   if type(nt) == str and nt == '?':
-    print("\nUsage: hull = nhull3d(nt,varlis,select,iplot=1)")
+    print("\nUsage: hull = nhull3dbad(nt,varlis,select,iplot=1)")
     return
   #endif type(nt) == str and nt == '?'
 
@@ -6085,7 +6328,7 @@ def nhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,color='!',
   if iretval: return nhull
   else: return
 
-#enddef nhull3d(nt='?')
+#enddef nhull3dbad(nt='?')
 
 def nplothull3d(nt="Nhull3d",plopt=''):
 
@@ -6165,7 +6408,7 @@ def nappend(nt='?', nt2=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -6253,7 +6496,7 @@ def nfill(nt='?', data=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -6375,7 +6618,7 @@ def npeaksabs(nt='?', varlis='', select='', pkmin=0.5,nsmooth=0,isilent=0,iretva
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -6503,7 +6746,7 @@ def hpeaks(h='?', select='', pkmin=0.5,nsmooth=0,isilent=0,iretval=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -6582,7 +6825,7 @@ def npeaks(nt='?', varlis='', select='', pkmin=0.5,nsmooth=0,isilent=0,iretval=0
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -6705,7 +6948,7 @@ def nstat(nt='?',var='',select='', iretval=1, isilent=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -6869,7 +7112,7 @@ def nmax(nt='?',var='',select='',iretval=1):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -6980,7 +7223,7 @@ def nmin(nt='?',var='',select='', iretval=1):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -7091,7 +7334,7 @@ def nminmax(nt='?',var='',select='',iretval=1):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -7420,7 +7663,7 @@ def nrenvars(nt,varlis):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -7509,7 +7752,7 @@ def nparse(nt,varlis):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -7699,7 +7942,7 @@ def set_linecolor(lcol='r'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -7767,7 +8010,7 @@ def h2fill(idh='?', x=1.e30, y=1.e30, w=1.):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -7985,7 +8228,7 @@ def h1fill(idh=-1, x=1.e30, wei=1.):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -8145,7 +8388,7 @@ def hbook2(idh=-1, tit='Histogram2D',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -8310,7 +8553,7 @@ def h2reset(idh):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -8449,7 +8692,7 @@ def hbook1(idh=-1, tit='Histogram1D', nx=10, xmin=0., xmax=1., overwrite=False):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -8581,7 +8824,7 @@ def nscan(nt='?',varlis='',select='',isilent=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -8710,7 +8953,7 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -9006,7 +9249,7 @@ def nintern(nt='?',varlis='',select='',xint='!'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -9124,7 +9367,7 @@ def ninter(nt='?',varlis='',select='',xint='!'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -9288,7 +9531,7 @@ def nspline(nt='?',varlis='',select='',xspl='!',periodic=False):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -9422,7 +9665,7 @@ def nsolve(nt='?',varlis='',select='',val=0.0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -9546,7 +9789,7 @@ def ndump(nt='',varlis='',select='',fout='ndump.dat', sep=' ',floatform='%.5e',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -9705,7 +9948,7 @@ def nreset(nt='?', varlis=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -9815,7 +10058,7 @@ def ndelete(nt='?',isilent=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -9912,7 +10155,7 @@ def ncre(ntname='', nttit='', varlis='', ioverwrite=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -10063,7 +10306,7 @@ def GetIndexH2(idh='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -10164,7 +10407,7 @@ def GetIndexN(nt='?', isilent=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -10284,7 +10527,7 @@ def GetIndexNct(idh='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -10368,7 +10611,7 @@ def GetIndexH1(idh='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -10473,7 +10716,7 @@ def GetIndex(idh='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -10575,7 +10818,7 @@ def h1opt(idh):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -10703,7 +10946,7 @@ def voptpar(vx,vy):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -10819,7 +11062,7 @@ def h1print(idh='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -10899,7 +11142,7 @@ def H1Info(idh='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11001,7 +11244,7 @@ def H2Info(idh='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11124,7 +11367,7 @@ def H1List():
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11232,7 +11475,7 @@ def nentry(nt='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11314,7 +11557,7 @@ def ninfo(nt='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11416,7 +11659,7 @@ def nlist():
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11486,7 +11729,7 @@ def NctList():
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11555,7 +11798,7 @@ def ncolumns(fname='ntuple.dat', skiphead=-1, sep=' '):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11661,7 +11904,7 @@ def ncolumnsguess(fname='ntuple.dat'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11778,7 +12021,7 @@ silent=0, comment='*', sep=' ',iguessncols=1, iplot=1):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11865,7 +12108,7 @@ silent=0, comment='*', sep=' ', iguessncols=1, iplot=1):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -11949,7 +12192,7 @@ comment='*', sep=' '):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -12109,7 +12352,7 @@ comment='*', sep=' ',iguessncols=1, ioverwrite=1):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -12274,7 +12517,7 @@ def nproj2(nt='?', xy='', weight=1., select='',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -12613,7 +12856,7 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -12928,7 +13171,7 @@ def hstat1d(idh='?'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -13088,7 +13331,7 @@ def vstat(x='?',y=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -13239,7 +13482,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -13657,7 +13900,7 @@ def hplot(idh, plopt='!', Tit='!', xTit='', yTit='', zTit = '', legend='', block
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -13735,7 +13978,7 @@ def hplave(idh, plopt='!', Tit='!', xTit='', yTit='', zTit = '', legend='', bloc
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -14238,7 +14481,7 @@ def showplot(visible=True):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -14254,6 +14497,7 @@ def showplot(visible=True):
     plt.grid(Kgrid)
     if Igetconsole: get_console()
     plt.show(block=False)
+    Kplots[Kzone-1] = 1
     return
   #endif
 
@@ -14347,6 +14591,8 @@ def showplot(visible=True):
   if Igetconsole: get_console()
 #  getplotsize()
 
+  Kplots[Kzone-1] = 1
+
 #enddef showplot()
 
 def optconsole(con=True): global Igetconsole; Igetconsole = con
@@ -14410,7 +14656,7 @@ def hplot2d(idh, plopt='3d', block=False, scalex=1., scaley=1., scalez=1.,
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -15149,7 +15395,7 @@ def set_title(title='Title',tfs=-9.,titx=-9.,tity=-9):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -15225,7 +15471,7 @@ def set_x_title(xtit='xTit',pos=0.5):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -15292,7 +15538,7 @@ def set_y_title(ytit='yTit', pos=0.5):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -15359,7 +15605,7 @@ def set_z_title(ztit='zTit',pos=0.5):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -15428,7 +15674,7 @@ def set_titles(gtit='',pltit='Title',xtit='xTit', ytit='yTit', ztit=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -15499,7 +15745,7 @@ def set_global_title(gtit='', fontsize='!'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -15579,7 +15825,7 @@ def txyz(pltit='Title',xtit='', ytit='', ztit='', tfs=-9., xyzfs=-9,
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -16425,7 +16671,7 @@ def hcopy1d(idh,idnew,tit='',scalex=1.,scaley=1., reset=0, overwrite=True):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -16540,7 +16786,7 @@ def hcopy2d(idh,idnew,tit='',scalex=1.,scaley=1., scalez=1., reset=0, overwrite=
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -17089,7 +17335,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -17648,7 +17894,7 @@ def vprint(v):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -17715,7 +17961,7 @@ def vprintxy(x,y):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -17794,7 +18040,7 @@ def vplxy(x='!',y='!',plopt='',label='',color='!',fillcolor='none'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -17805,7 +18051,7 @@ def vplxy(x='!',y='!',plopt='',label='',color='!',fillcolor='none'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 
   if type(x) == str and x == '!':
@@ -18012,7 +18258,7 @@ def vplxyey(x,y,ey='',plopt='o',label='',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -18093,7 +18339,7 @@ def vplxyerr(x,y,ey='',ex='',plopt='o',label='',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -18176,7 +18422,7 @@ def vinter(x,y,xint='!'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -18284,7 +18530,7 @@ def vintern(x,y,xint='!'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -18295,7 +18541,7 @@ def vintern(x,y,xint='!'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 
   n = len(x)
@@ -18458,7 +18704,7 @@ def vspline_index(x,y,nspl=1001, periodic=False, ypp1=0.0, yppn=0.0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -18469,7 +18715,7 @@ def vspline_index(x,y,nspl=1001, periodic=False, ypp1=0.0, yppn=0.0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 
   if type(nspl) != int:
@@ -18578,7 +18824,7 @@ def vspline(x,y,xspl='!', periodic=False, ypp1=0.0, yppn=0.0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -18589,7 +18835,7 @@ def vspline(x,y,xspl='!', periodic=False, ypp1=0.0, yppn=0.0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 
   if SplineMode.lower() != 'new': return vspline_old(x,y,xspl,periodic)
@@ -18750,7 +18996,7 @@ def vspline_old(x,y,xspl='!', periodic=False):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -18761,7 +19007,7 @@ def vspline_old(x,y,xspl='!', periodic=False):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 
   import numpy as np
@@ -18967,7 +19213,7 @@ def nupdate_header(nt,reindex=1):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -19124,7 +19370,7 @@ def vsolve(x,y,val=0.0,xmin=-1.0e30,xmax=1.0e30):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -19250,7 +19496,7 @@ def vsolvelin(x,y,val=0.0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -19320,7 +19566,7 @@ def voptspl(x,y):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -19425,7 +19671,7 @@ def ncopn(nt,ncnam,varlis='',select='',ioverwrite=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -19532,7 +19778,7 @@ def ncopv(nt,varlis,select=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -19663,7 +19909,7 @@ def nclone(nt,ncnam,nctit='',ioverwrite=0):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -20566,7 +20812,7 @@ def getzone(projection=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -20575,16 +20821,23 @@ def getzone(projection=''):
 
   Fig = plt.gcf()
   Axes = Fig.get_axes()
+  #print("getzone 1:",Axes)
 
   if not len(Axes):
-    Ax = plt.gca()
-    Axes = Fig.get_axes()
+    #print("getzone 2:",Axes)
+    if projection.lower() == '3d':
+      Ax =  Axes3D(Fig)
+    else:
+      Ax = plt.gca()
+      Axes = Fig.get_axes()
+    #endif
     Nwins = 1
     Nxzone = 1
     Nyzone = 1
     Kzone = 1
     return
   #endif not len(Fig.get_axes())
+  #print("getzone 3:",Axes)
 
   if Nwins <= 0:
     window(projection=projection)
@@ -20714,7 +20967,7 @@ def set_console_title(console='Python'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -20787,7 +21040,7 @@ def get_console(console=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -20866,7 +21119,7 @@ def getax(visible=True):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -20939,7 +21192,7 @@ def vplbxy(x,y,u,v,scale=-9999.0,plopt='',tit='',xtit='',ytit='',ztit='',label='
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -21039,7 +21292,7 @@ def vplbxyz(x,y,z,u,v,w,scale,plopt='',tit='',xtit='',ytit='',ztit='',label='',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -21120,7 +21373,7 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -21130,8 +21383,8 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
   #if label: Klegend.set(1)
 
   if Nwins <=0: window()
-
   plotopt(plopt)
+
   if not Isame: getzone(projection='3d')
 
   iplot = 0
@@ -21150,7 +21403,6 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
     cbar.set_label(ztit, rotation=90)
     showplot()
 
-    return
   #endif Iscatter
 
   if Iclosed:
@@ -21262,7 +21514,7 @@ def vplxyzt(x,y,z,t,plopt='',tit='',xtit='',ytit='',ztit='', label='',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -21419,7 +21671,7 @@ def vfitpoly(nord,x,y, ey='', cov='default', isilent=0, ninter=101, iretval=1,
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -21741,7 +21993,7 @@ def hfit(idh, fitfun, select='',absolute_sigma='default', parstart=None,
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -21890,7 +22142,7 @@ def vfit(fitfun, x, y, ey = '', absolute_sigma='default', parstart=None,
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -22100,7 +22352,7 @@ def vfitexp(x,y, ey = '', absolute_sigma='default', parstart=None,
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -22174,7 +22426,7 @@ def vfitexp2(x,y, ey = '', absolute_sigma='default', parstart=None,
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -22254,7 +22506,7 @@ def vfitgauss(x,y, ey = '', absolute_sigma='default',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -22326,7 +22578,7 @@ def vfitcosh(x,y, ey = '', absolute_sigma='default',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -22398,7 +22650,7 @@ def vfitcos(x,y, ey = '', absolute_sigma='default',
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -22467,7 +22719,7 @@ def hget(idh=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -22545,7 +22797,7 @@ def nget(idn=''):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -23776,6 +24028,9 @@ setxstat = set_x_stat
 setystat = set_y_stat
 getxstat = get_x_stat
 getystat = get_y_stat
+
+nhull3d = nqhull3d
+hull3d = qhull3d
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -26665,7 +26920,7 @@ def undu_b():
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -28868,10 +29123,10 @@ def ureadclc(callkey=''):
     z = (zmin+zmax)/2.
 
     MagPolsTot[m].append([x,y,z])
-
+    hull,ifaces,faces = hull3d(corns)
+    hull.columns = ['xr','yr','zr']
     hull = hull3d(corns)
     hull.columns = ['ipoi','iplan','xr','yr','zr']
-
     hull['x'] = hull.xr+xcen
     hull['y'] = hull.yr+ycen
     hull['z'] = hull.zr+zcen
@@ -29203,7 +29458,7 @@ def undu_geo(plopt='sameline'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
@@ -29258,7 +29513,7 @@ def undu_geo(plopt='sameline'):
   if zmin-dz < xyzmin: xyzmin=zmin-dz
 
   yzmin=min(ymin,zmin)
-  yzmax=min(ymax,zmax)
+  yzmax=max(ymax,zmax)
 
   null3d(xmin-dx,xmax+dx,yzmin,yzmax,yzmin,yzmax)
 
@@ -29401,7 +29656,7 @@ def undu_mags(plopt='sameline'):
 
   global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
   VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
-  VxyzX,VxyzY,VxyzZ
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
 
 #+KEEP,nxyzglobind,T=PYTHON.
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer

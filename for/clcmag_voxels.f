@@ -1,3 +1,4 @@
+*CMZ :          16/08/2023  09.30.26  by  Michael Scheer
 *CMZ :  2.04/08 11/08/2023  12.58.25  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  12.43.30  by  Michael Scheer
 *CMZ :  2.04/06 04/08/2023  11.32.02  by  Michael Scheer
@@ -31,9 +32,9 @@ c+self.
 
       do imag=1,nmag_t+nspecmag_t
 
-        volmag=0.0d0
-
         ctype=t_magnets(imag)%ctype
+
+        volmag=0.0d0
 
         if (ctype.ne.'Cylinder') then
           allocate(t_magnets(imag)%t_voxels(t_magnets(imag)%nvoxels))
@@ -77,12 +78,13 @@ c+self.
                   cycle
                 endif
                 nvox=nvox+1
-                !print*,ix,iy,iz,kvox,nvox
                 t_magnets(imag)%t_voxels(nvox)=
      &            t_magnets(imag)%t_xyzcuts(ix,iy,iz)
                 t_magnets(imag)%t_voxels(nvox)%ixdiv=ix
                 t_magnets(imag)%t_voxels(nvox)%iydiv=iy
                 t_magnets(imag)%t_voxels(nvox)%izdiv=iz
+                t_magnets(imag)%t_voxels(nvox)%isBlock=
+     &            t_magnets(imag)%isBlock
                 call clcmag_voxel_volume(imag,nvox)
                 l=0
                 if (iundugeo.ne.0) then

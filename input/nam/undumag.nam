@@ -1,4 +1,4 @@
-* Version 2.04/03
+* Version 2.04/08
  ! Name list file, to control UNDUMAG
 
  $undumagn
@@ -172,11 +172,11 @@
  iforcegrid=1  ! write x,y,z of grid nodes to map, not the noisy
                ! real position of calculation
 
- xmapmin=-9999. ! xmin for field map
+ xmapmin=9999. ! xmin for field map
                 ! 9999.: Auto scaling
 		! 9000.: -PerLen / 2
 		! -9000.: -PerLen / 4
- xmapmax=-9999. ! xmax for field map
+ xmapmax=9999. ! xmax for field map
                 ! 9999.: Auto scaling
 		! 9000.: PerLen / 2
 		! -9000.: +PerLen / 4
