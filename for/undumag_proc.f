@@ -1,4 +1,4 @@
-*CMZ :          16/08/2023  09.39.18  by  Michael Scheer
+*CMZ :  2.04/09 16/08/2023  11.17.32  by  Michael Scheer
 *CMZ :  2.04/08 10/08/2023  09.28.20  by  Michael Scheer
 *CMZ :  2.04/06 22/05/2023  15.36.58  by  Michael Scheer
 *CMZ :  2.04/03 28/02/2023  10.11.37  by  Michael Scheer
@@ -100,7 +100,7 @@
 
       save nmaxth,ith
 
-      if (nrec.eq.0.and.ncwire.eq.0) then
+      if (nrec.eq.0.and.ncwires.eq.0) then
         write(lun6,*)
         write(lun6,*)"*** Nothing to solve in undumag_proc, i.e. no magnets no coils  ***"
         write(lun6,*)

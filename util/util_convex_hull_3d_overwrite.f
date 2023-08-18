@@ -1,3 +1,4 @@
+*CMZ :  2.04/09 15/08/2023  12.14.13  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  09.47.47  by  Michael Scheer
 *CMZ :  2.04/03 02/03/2023  07.55.42  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  16.23.46  by  Michael Scheer
@@ -45,6 +46,12 @@
         print*,"*** Bad return from util_convex_hull_3d"
         print*,"*** Giving up"
         print*,""
+        open(newunit=lunbad,file='hull.bad')
+        do i=1,nin
+          write(lunbad,*) xin(i),yin(i),zin(i),i
+        enddo
+        flush(lunbad)
+        close(lunbad)
         return
       endif
 

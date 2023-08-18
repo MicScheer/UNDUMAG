@@ -1,3 +1,4 @@
+*CMZ :  2.04/09 16/08/2023  14.39.00  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/03 28/02/2023  12.18.17  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  10.01.47  by  Michael Scheer
@@ -35,7 +36,7 @@
       open(newunit=lunvox,file="undumag.geo")
 
       write(lunvox,'(a)')
-     &  "* mag type xcen ycen zcen mother ixdiv iydiv izdiv mate color bcx bcy bcz bc plane corn x y z magnam mothname"
+     &  "* mag ityp xc yc zc moth ix iy iz mat icol mx my mz bc iplan icorn x y z cmag cmoth"
 
       nmag=nvoxcopy_t
       motho=0

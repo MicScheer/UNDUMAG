@@ -1,3 +1,4 @@
+*CMZ :  2.04/09 16/08/2023  07.59.23  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  09.45.40  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  11.50.12  by  Michael Scheer
 *CMZ :  2.03/00 30/08/2022  21.37.01  by  Michael Scheer
@@ -395,9 +396,12 @@ c18Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
 
         if (i.eq.ifirst.or.i.eq.isecond.or.kveto(i).ne.0) cycle
 
-        p3(1)=x(i)-p21(1)
-        p3(2)=y(i)-p21(2)
-        p3(3)=z(i)-p21(3)
+c16.8.2023        p3(1)=x(i)-p21(1)
+c16.8.2023        p3(2)=y(i)-p21(2)
+c16.8.2023        p3(3)=z(i)-p21(3)
+        p3(1)=x(i)-p1(1)
+        p3(2)=y(i)-p1(2)
+        p3(3)=z(i)-p1(3)
         pn=sqrt(p3(1)**2+p3(3)**2)
 c18Feb2020        pn=sqrt(p3(1)**2+p3(2)**2+p3(3)**2)
         if (pn.lt.tiny) then
