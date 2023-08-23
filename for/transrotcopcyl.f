@@ -1,4 +1,4 @@
-*CMZ :  2.04/10 23/08/2023  08.05.44  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  08.07.21  by  Michael Scheer
 *CMZ :  2.04/08 11/08/2023  14.49.50  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  09.15.04  by  Michael Scheer
 *CMZ :  2.04/06 01/08/2023  15.05.17  by  Michael Scheer
@@ -7,7 +7,7 @@
 *CMZ :  2.04/00 16/01/2023  15.35.00  by  Michael Scheer
 *CMZ :  2.02/01 26/01/2022  11.22.41  by  Michael Scheer
 *-- Author :    Michael Scheer   29/12/2021
-      subroutine clctransrotcop
+      subroutine transrotcopcyl
 
       use commandlinef90m
       use bpolyederf90m
@@ -27,67 +27,27 @@ c-----------------------------------------------------------------------
 *KEND.
 
       type(T_magnet) tmag
-      double precision rm(3,3),t8(8),r(3),xmin,xmax,ymin,ymax,zmin,zmax
-      integer imag,itr,ipoi,istat,ifound,iold,i,key,ipos(2,100),nwords,iv
-      integer :: ndim=100,j,nvar
-      character(2048) cline
-      character(128) ctrans,cvar
-
-      double precision undumag_variable_getval
+      double precision rm(3,3),t8(8),r(3)
+      integer imag,itr,ipoi,istat,ifound,iold,iv
 
 
-      do itr=1,ntransrotcop
-
-        t8=transrotcop(:,itr)
-        key=int(t8(8))
-        i=int(t8(1))
-
-        if (i.le.0) cycle
-
-        nvar=3
-        if (key.eq.3) nvar=6
-
-        cline=clcbuff(i)
-        call util_string_split(cline,ndim,nwords,ipos,istat)
-
-        do j=1,nvar
-          cvar=cline(ipos(1,j):ipos(2,j))
-          if (cvar(1:1).eq.'$') then
-            transrotcop(j,itr)=undumag_variable_getval(trim(cvar))
-          else
-            read(cvar,*) transrotcop(j,itr)
-          endif
-        enddo !nvar
-
-        if (key.eq.2) then
-          ! Rotation
-          cline=clcbuff(i+1)
-          call util_string_split(cline,ndim,nwords,ipos,istat)
-          do j=1,4
-            cvar=cline(ipos(1,j):ipos(2,j))
-            if (cvar(1:1).eq.'$') then
-              transrotcop(3+j,itr)=undumag_variable_getval(trim(cvar))
-            else
-              read(cvar,*) transrotcop(3+j,itr)
-            endif
-          enddo
-        endif !key
-
-      enddo !ntransrotcop
+      if(nmagcyl.eq.0) return
 
       iold=0
-      ctrans=''
       do itr=1,ntransrotcop
         ifound=0
         do imag=1,nmagtot_t
           tmag=t_magnets(imag)
-          if (tmag%ctype.eq.'Cylinder') cycle
           t8=transrotcop(:,itr)
           if(
      &        tmag%cmoth.eq.ctransrotcop(itr).or.
      &        tmag%cnam.eq.ctransrotcop(itr)
      &        ) then
             ifound=itr
+            if (tmag%ctype.ne.'Cylinder') then
+              ifound=-itr
+              cycle
+            endif
             if (t8(8).eq.0.0d0) then
               t_magnets(imag)%xmin=t_magnets(imag)%xmin+t8(1)
               t_magnets(imag)%xmax=t_magnets(imag)%xmax+t8(1)
@@ -103,14 +63,14 @@ c-----------------------------------------------------------------------
                 t_magnets(imag)%zhull(ipoi)=t_magnets(imag)%zhull(ipoi)+t8(3)
               enddo
               do iv=1,t_magnets(imag)%nvoxels
-                t_magnets(imag)%t_voxels(iv)%xmin=t_magnets(imag)%t_voxels(iv)%xmin+t8(1)
-                t_magnets(imag)%t_voxels(iv)%xmax=t_magnets(imag)%t_voxels(iv)%xmax+t8(1)
-                t_magnets(imag)%t_voxels(iv)%ymin=t_magnets(imag)%t_voxels(iv)%ymin+t8(2)
-                t_magnets(imag)%t_voxels(iv)%ymax=t_magnets(imag)%t_voxels(iv)%ymax+t8(2)
-                t_magnets(imag)%t_voxels(iv)%zmin=t_magnets(imag)%t_voxels(iv)%zmin+t8(3)
-                t_magnets(imag)%t_voxels(iv)%zmax=t_magnets(imag)%t_voxels(iv)%zmax+t8(3)
-                t_magnets(imag)%t_voxels(iv)%xyz=t_magnets(imag)%t_voxels(iv)%xyz+t8(1:3)
-                t_magnets(imag)%t_voxels(iv)%gcen=t_magnets(imag)%t_voxels(iv)%gcen+t8(1:3)
+c                t_magnets(imag)%t_voxels(iv)%xmin=t_magnets(imag)%t_voxels(iv)%xmin+t8(1)
+c                t_magnets(imag)%t_voxels(iv)%xmax=t_magnets(imag)%t_voxels(iv)%xmax+t8(1)
+c                t_magnets(imag)%t_voxels(iv)%ymin=t_magnets(imag)%t_voxels(iv)%ymin+t8(2)
+c                t_magnets(imag)%t_voxels(iv)%ymax=t_magnets(imag)%t_voxels(iv)%ymax+t8(2)
+c                t_magnets(imag)%t_voxels(iv)%zmin=t_magnets(imag)%t_voxels(iv)%zmin+t8(3)
+c                t_magnets(imag)%t_voxels(iv)%zmax=t_magnets(imag)%t_voxels(iv)%zmax+t8(3)
+c                t_magnets(imag)%t_voxels(iv)%xyz=t_magnets(imag)%t_voxels(iv)%xyz+t8(1:3)
+c                t_magnets(imag)%t_voxels(iv)%gcen=t_magnets(imag)%t_voxels(iv)%gcen+t8(1:3)
                 do ipoi=1,t_magnets(imag)%t_voxels(iv)%nhull
                   t_magnets(imag)%t_voxels(iv)%xhull(ipoi)=t_magnets(imag)%t_voxels(iv)%xhull(ipoi)+t8(1)
                   t_magnets(imag)%t_voxels(iv)%yhull(ipoi)=t_magnets(imag)%t_voxels(iv)%yhull(ipoi)+t8(2)
@@ -199,18 +159,15 @@ c-----------------------------------------------------------------------
             endif
           endif
         enddo !imag
-c        if (ifound.eq.0.and.itr.ne.iold.and.ctrans.ne.ctransrotcop(itr)) then
+
         if (ifound.eq.0) then
-          write(lun6,*)"*** Warning in clctransrotcop: No magnet found or undefined action ***"
+          write(lun6,*)"*** Warning in transrotcopcyl: No magnet found or undefined action ***"
           write(lun6,*)"Action, Magnet:",itr,ctransrotcop(itr)
           write(lun6,*)
           iold=itr
-          ctrans=ctransrotcop(itr)
         endif
       enddo !ntransrotcop
 
-
-      call transrotcopcyl
 
       return
       end

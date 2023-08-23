@@ -1,4 +1,4 @@
-*CMZ :  2.04/08 11/08/2023  14.22.04  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  08.02.18  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  16.11.22  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  12.23.20  by  Michael Scheer
@@ -211,6 +211,7 @@ c-----------------------------------------------------------------------
 
         t_magnets(nmag)%ctype=ckey(1:32)
         t_magnets(nmag)%IsBlock=0
+        t_magnets(nmag)%IsRotated=0
 
         if (ckey.eq.'Block') then
 
@@ -742,14 +743,13 @@ c-----------------------------------------------------------------------
         nydiv=t_magnets(nmag)%nydiv
         nzdiv=t_magnets(nmag)%nzdiv
 
-        if (t_magnets(nmag)%ctype.ne.'Cylinder') then
-          t_magnets(nmag)%nvoxels=0
-          allocate(t_magnets(nmag)%kvoxels(nxdiv,nydiv,nzdiv))
-          t_magnets(nmag)%kvoxels=0
-          allocate(t_magnets(nmag)%t_xyzcuts(nxdiv,nydiv,nzdiv))
-          allocate(t_magnets(nmag)%t_xycuts(nxdiv,nydiv))
-          allocate(t_magnets(nmag)%t_xcuts(nxdiv))
-        endif
+        t_magnets(nmag)%nvoxels=0
+
+        allocate(t_magnets(nmag)%kvoxels(nxdiv,nydiv,nzdiv))
+        t_magnets(nmag)%kvoxels=0
+        allocate(t_magnets(nmag)%t_xyzcuts(nxdiv,nydiv,nzdiv))
+        allocate(t_magnets(nmag)%t_xycuts(nxdiv,nydiv))
+        allocate(t_magnets(nmag)%t_xcuts(nxdiv))
 
       enddo !nclcmag
 

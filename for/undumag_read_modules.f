@@ -1,4 +1,4 @@
-*CMZ :  2.02/01 28/12/2021  09.10.09  by  Michael Scheer
+*CMZ :  2.02/01 22/08/2023  09.03.52  by  Michael Scheer
 *-- Author :    Michael Scheer   15/10/2021
       subroutine undumag_read_modules
 
@@ -15,8 +15,14 @@
 
       character(512) cword
 
-*KEEP,grarad.
-      include 'grarad.cmn'
+*KEEP,grarad,T=F77.
+c-----------------------------------------------------------------------
+c     grarad.cmn
+c-----------------------------------------------------------------------
+      double precision, parameter ::
+     &  PI1=3.141592653589793D0,
+     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
+     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
 *KEND.
 
 

@@ -1,4 +1,4 @@
-*CMZ :  2.03/00 01/09/2022  16.08.12  by  Michael Scheer
+*CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/02 26/02/2022  12.52.35  by  Michael Scheer
 *CMZ :  2.02/01 10/11/2021  10.13.19  by  Michael Scheer
 *CMZ :  2.02/00 29/03/2021  09.45.50  by  Michael Scheer
@@ -93,9 +93,15 @@
       implicit none
 
 *KEEP,seqdebug.
-      include 'seqdebug.cmn'
+      integer iseqdebug
+      common/seqdebugc/iseqdebug
 *KEEP,random.
-      include 'random.cmn'
+      integer*8 irancalls
+      integer, parameter :: irnsize=64
+      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
+      common /randomc/ irancalls,irnseed,irnmode,irnseedi
+
+      namelist /randomn/ irnmode,irnseed
 *KEND.
 
       double precision, dimension (:,:,:,:), allocatable :: bmap

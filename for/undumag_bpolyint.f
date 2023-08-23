@@ -1,4 +1,4 @@
-*CMZ :  2.02/00 21/10/2020  09.46.44  by  Michael Scheer
+*CMZ :  2.02/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  1.22/02 02/08/2017  09.10.57  by  Michael Scheer
 *CMZ :  1.17/08 24/05/2017  15.33.47  by  Michael Scheer
 *CMZ :  1.17/07 23/05/2017  15.39.11  by  Michael Scheer
@@ -34,7 +34,9 @@ c xint,yint,zint given in meter
 c bxint,byint,bzint given in Tm
 
 *KEEP,bpolyederf90u.
-      include 'bpolyederf90u.cmn'
+
+      use bpolyederf90m
+
 *KEND.
       use undumagf90m
 

@@ -1,4 +1,4 @@
-*CMZ :  2.02/01 25/10/2021  11.20.54  by  Michael Scheer
+*CMZ :  2.02/01 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/00 21/10/2020  09.46.44  by  Michael Scheer
 *CMZ :  2.01/08 14/08/2020  07.33.39  by  Michael Scheer
 *-- Author :    Michael Scheer   13/08/2020
@@ -12,7 +12,8 @@
 
       implicit none
 *KEEP,seqdebug.
-      include 'seqdebug.cmn'
+      integer iseqdebug
+      common/seqdebugc/iseqdebug
 *KEND.
 
       double precision xin,yin,zin,bxout,byout,bzout,bo(3,nthreadp)

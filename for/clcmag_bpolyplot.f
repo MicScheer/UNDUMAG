@@ -1,3 +1,4 @@
+*CMZ :  2.04/10 23/08/2023  16.06.46  by  Michael Scheer
 *CMZ :  2.04/09 16/08/2023  09.50.47  by  Michael Scheer
 *CMZ :  2.04/07 07/08/2023  12.29.11  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  17.12.50  by  Michael Scheer
@@ -62,7 +63,7 @@
       subroutine clcmag_bpolyplot(iplot,xmin,xmax,ymin,ymax,zmin,zmax,
      &  theta,phi,nwitems,ncwires,wire)
 
-*KEEP,BPOLYEDERF90U.
+*KEEP,bpolyederf90u.
 
       use bpolyederf90m
 
@@ -73,7 +74,7 @@
 
       implicit none
 
-*KEEP,MSHPLT.
+*KEEP,mshplt.
       real
      &  pttomm_ps,pttocm_ps, !convert from pt to mm or cm respectively
      &  scale_ps, isscale_ps, !current scale to convert from pt
@@ -252,10 +253,10 @@
       integer, dimension (:), allocatable :: ispole
 
       real
-     &  xplb(2),yplb(2),zplb(2),
+     &  xplb(2),yplb(2),zplb(2),xt(1),yt(1),zt(1),
      &  xplbo(2),yplbo(2),zplbo(2),rmtyp31,rmtyp24,rmtyp20,rlwidth,rlwidtho
 
-      real xmin,xmax,ymin,ymax,zmin,zmax,theta,phi,
+      real xyzmin,xyzmax,xmin,xmax,ymin,ymax,zmin,zmax,theta,phi,
      &  x,y,z,bx,by,bz,dx,dy,dz,bxo,byo,bzo,bo,eps,
      &  xmn,xmx,ymn,ymx,zmn,zmx,
      &  xmmn,xmmx,ymmn,ymmx,zmmn,zmmx,
@@ -284,7 +285,11 @@
       iallo=0
 
       write(lun6,*)
-      write(lun6,*) "Reading file undumag.mag and writing geometry to plotfile undumag.eps"
+      if (kunduplot_mode.eq.0) then
+        write(lun6,*) "Reading file undumag.mag and writing geometry to plotfile undumag.eps"
+      else
+        write(lun6,*) "Reading file undumag.mag and writing geometry to plotfile undumag_3d.eps"
+      endif
       write(lun6,*)
 
       open(newunit=luncnf,file='.mshplt.cnf')
@@ -293,7 +298,11 @@
       write(luncnf,'(a)')"-20. -20. !plot size in cm, negative values indicate HIGZ compatible mode"
       write(luncnf,'(a)')"0.8 !rescaling factor; if not one, plot files are copied and rescaled"
       write(luncnf,'(a)')"0 0 800 800 !bounding box"
-      write(luncnf,'(a)')"undumag.eps !base name of plotfiles"
+      if (kunduplot_mode.ne.0) then
+        write(luncnf,'(a)')"undumag_3d.eps !base name of plotfiles"
+      else
+        write(luncnf,'(a)')"undumag.eps !base name of plotfiles"
+      endif
       write(luncnf,'(a)')"$UNDUMAG/shell/undumag_viewer.sh"
       write(luncnf,'(a)')"$UNDUMAG/shell/undumag_kill_viewer.sh"
 
@@ -525,21 +534,104 @@ c--- 3D, top and side views {
 
       if (jcomment.ne.0) call mtitle(trim(ctitle))
 
-      call mplset('YMGL',0.5)
-      call mplzon(1,1,1,' ')
-      call mplfra(0.,10.,0.,10.,'AB')
-      call mgset('CHHE',0.4)
-      call mtx(4.1,5.,'upper magnets')
-      call mtx(4.1,2.3,'lower magnets')
-      call mtx(4.6,0.1,'x[mm]')
-      call mshplt_set_text_angle(90.)
-      call mtx(-1.,2.4,'z[mm]')
-      call mshplt_set_text_angle(0.)
-      call mgset('CHHE',0.3)
-      call mplset('YMGL',2.)
-      call muwk(0,0)
+      if (kunduplot_mode.eq.0) then
+        call mplset('YMGL',0.5)
+        call mplzon(1,1,1,' ')
+        call mplfra(0.,10.,0.,10.,'AB')
 
-      call mplzon(2,2,1,'S')
+        call mgset('CHHE',0.4)
+        xpl(1)=0.2
+        ypl(1)=6.
+
+        xpl(2)=xpl(1)+cosd(phi)*cosd(theta)*0.8
+        ypl(2)=ypl(1)+sind(phi)*cosd(theta)*0.8
+        call mpl(2,xpl,ypl)
+        dx=xpl(2)-xpl(1)
+        dy=ypl(2)-ypl(1)
+        call mtx(xpl(1)+dx*1.2,ypl(1)+dy*1.2,'x')
+
+        xpl(2)=xpl(1)
+        ypl(2)=ypl(1)+cosd(theta)*0.8
+        call mpl(2,xpl,ypl)
+        dx=xpl(2)-xpl(1)
+        dy=ypl(2)-ypl(1)
+        call mtx(xpl(1)+dx*1.2,ypl(1)+dy*1.2,'y')
+
+        xpl(2)=xpl(1)+sind(phi)*cosd(theta)*0.8
+        ypl(2)=ypl(1)-cosd(phi)*cosd(theta)*0.8
+        call mpl(2,xpl,ypl)
+        dx=xpl(2)-xpl(1)
+        dy=ypl(2)-ypl(1)
+        call mtx(xpl(1)+dx*1.2,ypl(1)+dy*1.2,'z')
+
+        call mgset('CHHE',0.5)
+        call mtx(4.1,4.7,'upper magnets')
+        call mtx(4.1,1.8,'lower magnets')
+        call mgset('CHHE',0.4)
+        call mtx(4.6,-0.75,'x[mm]')
+        call mshplt_set_text_angle(90.)
+        call mtx(-1.,2.4,'z[mm]')
+        call mshplt_set_text_angle(0.)
+        call mplset('YMGL',2.)
+        call mplset('YMGL',0.5)
+        call mgset('CHHE',0.4)
+        call muwk(0,0)
+        call mplzon(2,2,1,'S')
+      else
+        call mplset('YMGL',0.5)
+        call mplzon(1,1,1,' ')
+        call mgset('CHHE',0.4)
+        if (theta.ne.0.0.or.phi.ne.0.0) then
+
+          call mplfr3(0.,1.,0.,1.,0.,1.,theta,phi,'W')
+          call mplfra(0.,1.,0.,1.,'AB')
+
+          xpl(1)=0.2
+          xpl(2)=0.3
+          ypl(1)=0.0
+          ypl(2)=0.0
+          zpl(1)=0.0
+          zpl(2)=0.0
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'x')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+
+          xpl(1)=0.2
+          xpl(2)=0.2
+          ypl(1)=0.0
+          ypl(2)=0.1
+          zpl(1)=0.0
+          zpl(2)=0.0
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'y')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+
+          xpl(1)=0.2
+          xpl(2)=0.2
+          ypl(1)=0.0
+          ypl(2)=0.0
+          zpl(1)=0.0
+          zpl(2)=0.1
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'z')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+          call muwk(0,0)
+
+        endif
+        call mplzon(1,1,1,'S')
+      endif
 
       iplano=1
 
@@ -656,7 +748,17 @@ c y is vertical (WAVE-system)
 
       else !:if (theta.eq.0.0.and.phi.eq.0.0) then
 
-        call mplfr3(xplmin,xplmax,-zplmax,-zplmin,yplmin,yplmax,theta,phi,'W')
+        xyzmin=min(xplmin,yplmin,zplmin)*0.8
+        xyzmax=max(xplmax,yplmax,zplmax)*0.8
+
+        !dx=(xyzmax-xyzmin)*0.1*0.0
+c        call mplfr3(xyzmin,xyzmax,
+c     &    -xyzmax,-xyzmin,
+c     &    xyzmin,xyzmax,theta,phi,'W')
+
+        !call mplfr3(xplmin,xplmax,zplmin,zplmax,yplmin,yplmax,theta,phi,'W')
+        call mplfr3(xyzmin,xyzmax,xyzmin,xyzmax,xyzmin,xyzmax,theta,phi,'W')
+        !goto 9999
 
         do iline=1,nline
 
@@ -759,6 +861,10 @@ c y is vertical (WAVE-system)
         call mshplt_set_line_width(rlwidth/2.)
 
       endif !(theta.eq.0.0.and.phi.eq.0.0) then
+
+      call muwk(0,0)
+
+      if (kunduplot_mode.ne.0) goto 9999
 
 c--- 3D }
 

@@ -1,4 +1,4 @@
-*CMZ :  2.04/08 11/08/2023  13.51.34  by  Michael Scheer
+*CMZ :  2.04/08 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  15.35.36  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/01 22/01/2023  13.28.01  by  Michael Scheer
@@ -26,7 +26,7 @@
 
       character(32) cmod,ccop
 
-*KEEP,GRARAD.
+*KEEP,grarad,T=F77.
 c-----------------------------------------------------------------------
 c     grarad.cmn
 c-----------------------------------------------------------------------

@@ -1,9 +1,11 @@
-*CMZ :  2.01/03 13/06/2019  16.05.33  by  Michael Scheer
+*CMZ :  2.01/03 22/08/2023  09.03.52  by  Michael Scheer
 *-- Author :    Michael Scheer   02/12/2003
       subroutine undumag_bpolyeder1_sym(imag,x,y,z,bxout,byout,bzout,ifail)
 
 *KEEP,bpolyederf90u.
-      include 'bpolyederf90u.cmn'
+
+      use bpolyederf90m
+
 *KEND.
       use undumagf90m
 

@@ -1,4 +1,4 @@
-*CMZ :          01/05/2023  14.04.35  by  Michael Scheer
+*CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  20.27.45  by  Michael Scheer
 *CMZ :  2.02/00 21/10/2020  09.46.44  by  Michael Scheer
 *CMZ :  2.01/03 30/04/2019  13.33.26  by  Michael Scheer
@@ -69,7 +69,14 @@
       double precision vnor,vx,vy,vz
 
 *KEEP,bcbuff.
-      include 'bcbuff.cmn'
+      integer nbcbuffp
+      parameter (nbcbuffp=3)
+
+      double precision
+     &  hbuff(nbcbuffp),bcbuff(nbcbuffp),bcbuffspl(nbcbuffp),hhbuff(nbcbuffp),
+     &  bcbuffmin,bcbuffmax,dbcbuff
+
+c      common/bcbuffc/hbuff,bcbuff,bcbuffspl,bcbuffmin,bcbuffmax,dbcbuff
 *KEND.
 
       integer kfail,ifail,imoth,lmag,kmag,imag,iter,k,i,iron1,iron2,

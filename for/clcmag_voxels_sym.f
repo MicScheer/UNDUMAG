@@ -1,4 +1,4 @@
-*CMZ :  2.02/01 20/10/2021  15.30.24  by  Michael Scheer
+*CMZ :  2.02/01 22/08/2023  09.03.52  by  Michael Scheer
 *-- Author :    Michael Scheer   01/10/2021
       subroutine clcmag_voxels_sym
 

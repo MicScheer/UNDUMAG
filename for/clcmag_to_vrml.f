@@ -1,4 +1,4 @@
-*CMZ :  2.04/00 16/01/2023  15.35.00  by  Michael Scheer
+*CMZ :  2.04/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/01 03/02/2022  12.01.28  by  Michael Scheer
 *-- Author :    Michael Scheer   22/10/2021
       subroutine clcmag_to_vrml(kxsym,kysym,kzsym,lunvrml)

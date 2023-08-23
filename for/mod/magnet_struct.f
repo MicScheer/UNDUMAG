@@ -1,3 +1,4 @@
+*CMZ :          23/08/2023  08.17.05  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  19.31.25  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  16.41.34  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  16.37.47  by  Michael Scheer
@@ -17,7 +18,8 @@
      &  zmin_t=1.0d30,zmax_t=-1.0d30,
      &  xsymmm_t
 
-      integer nclcbuff,nclcspec,nclcmag,nclccoil,nclcvar,nclcmod,nclcmat
+      integer nclcbuff,nclcspec,nclcmag,nclccoil,nclcvar,nclcmod,nclcmat,
+     &  kunduplot_mode
 
       integer :: nvar_t=0,nmag_t=0,nvox_t=0,niron_t=0,kvox=0,kfirstiron_t=0,
      &  nspecmag_t=0,kfirstiron_spec_t=0,ncoils_t=0,ncwires_t=0,nmagtot_t=0,
@@ -89,7 +91,7 @@
 
         integer :: nface,nhull,icol,imat,nxdiv,nydiv,nzdiv,matindex,mattype,
      &    kfacelast,nedge,nvoxels,IsPole,IsSpecial,IsBlock,nhull0,IsPart,
-     &    ncopy=0,kmodule=0,IsInhom=0,mxdiv,mydiv,mzdiv
+     &    ncopy=0,kmodule=0,IsInhom=0,mxdiv,mydiv,mzdiv,IsRotated
 
         character(32) ctype,cnam,cmoth
         character(1024) cfile

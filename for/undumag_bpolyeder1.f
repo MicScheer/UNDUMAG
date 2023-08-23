@@ -1,4 +1,4 @@
-*CMZ :  2.02/00 21/10/2020  09.46.44  by  Michael Scheer
+*CMZ :  2.02/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.00/00 11/04/2018  11.32.22  by  Michael Scheer
 *CMZ :  1.25/00 16/03/2018  13.34.14  by  Michael Scheer
 *CMZ :  1.22/01 20/07/2017  14.46.06  by  Michael Scheer
@@ -39,14 +39,17 @@ c                          determinant is -1, which yields to errors??.
 
 
 *KEEP,bpolyederf90u.
-      include 'bpolyederf90u.cmn'
+
+      use bpolyederf90m
+
 *KEND.
       use undumagf90m
       use commandlinef90m
 
       implicit none
 *KEEP,seqdebug.
-      include 'seqdebug.cmn'
+      integer iseqdebug
+      common/seqdebugc/iseqdebug
 *KEND.
       double precision xin,yin,zin
      &  ,bxout,byout,bzout

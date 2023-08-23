@@ -1,4 +1,5 @@
-*CMZ :  2.04/07 09/08/2023  16.16.46  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  08.09.00  by  Michael Scheer
+*CMZ :  2.04/07 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  19.29.01  by  Michael Scheer
 *CMZ :  2.04/02 26/02/2023  21.47.15  by  Michael Scheer
@@ -26,10 +27,10 @@
 
       tvox=t_magnets(imag)%t_voxels(ivox)
 
-      if (tvox%isblock.eq.0) then
+      if (tvox%isblock.eq.0.or.t_magnets(imag)%IsRotated.ne.0) then
         call util_volume(tvox%nhull,tvox%xhull,tvox%yhull,tvox%zhull,hulltiny,vol,kfail)
       else
-        vol=tvox%size(1)*tvox%size(2)*tvox%size(3)
+        vol=t_magnets(imag)%volume/t_magnets(imag)%nvoxels
       endif
 
       t_magnets(imag)%t_voxels(ivox)%volume=vol

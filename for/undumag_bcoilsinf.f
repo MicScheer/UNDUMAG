@@ -1,4 +1,4 @@
-*CMZ :  1.25/03 03/04/2018  08.31.11  by  Michael Scheer
+*CMZ :  1.25/03 22/08/2023  09.03.52  by  Michael Scheer
 *-- Author :    Michael Scheer   26/03/2018
       subroutine undumag_bcoilsinf(yin,zin,byint,bzint,istat)
 

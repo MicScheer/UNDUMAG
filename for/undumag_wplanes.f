@@ -1,4 +1,4 @@
-*CMZ :  1.25/01 19/03/2018  20.05.26  by  Michael Scheer
+*CMZ :  1.25/01 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  1.25/00 16/03/2018  10.05.19  by  Michael Scheer
 *-- Author :    Michael Scheer   08/03/2018
       subroutine undumag_wplanes(k,xin,yin,zin,bxout,byout,bzout)
