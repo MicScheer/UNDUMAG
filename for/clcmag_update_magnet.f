@@ -1,4 +1,4 @@
-*CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
+*CMZ :  2.04/05 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.13.46  by  Michael Scheer
 *CMZ :  2.04/01 21/01/2023  11.47.09  by  Michael Scheer
 *CMZ :  2.04/00 17/01/2023  09.24.20  by  Michael Scheer
@@ -17,8 +17,14 @@
 
       implicit none
 
-*KEEP,grarad.
-      include 'grarad.cmn'
+*KEEP,grarad,T=F77.
+c-----------------------------------------------------------------------
+c     grarad.cmn
+c-----------------------------------------------------------------------
+      double precision, parameter ::
+     &  PI1=3.141592653589793D0,
+     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
+     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
 *KEND.
 
       Type(T_Magnet) tmag

@@ -1,3 +1,4 @@
+*CMZ :          22/08/2023  08.57.29  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  19.31.25  by  Michael Scheer
 *CMZ :  2.04/03 05/03/2023  15.03.22  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2022  12.27.43  by  Michael Scheer
@@ -147,7 +148,7 @@ c      real*4, dimension (:,:,:), allocatable :: wwmatrix
      &  nwarnbound, iwarnin,iwarn2pi,iwarnbound,ndipoles,killbadmag,irecrepl,kwarncom,irandmag,kshuffle,
      &  kforcemag,kurad,kbextern,kresiron,kprint,ndivfboxy,
      &  ncwires,nrace,nwind,ncrace,ncfila,narc,ncarc,nwcarc,nwrace,nwwind,
-     &  nwcrace,nwarc,ncoil,newclc,
+     &  nwcrace,nwarc,ncoil,newclc,iunduplot_mode,
      &  nrbar,nwrbar,nthwir,nwthwir,nmagcyl,kwave,iforcegrid,modegui,nbrnmat
 
       character(256) unducomment
@@ -163,7 +164,7 @@ c      real*4, dimension (:,:,:), allocatable :: wwmatrix
      &  maxiter,maxiterrec,maxiteriron,nchiiron,ibulk,iunduplot,kcomment,
      &  krunnum,kdate,ktetmesh,kesti,
      &  kplsym,nxmap,intmaglis,noduplis,nymap,nzmap
-     &  ,mode,kdumpconv,dxmap,
+     &  ,mode,kdumpconv,dxmap,iunduplot_mode,
      &  unduplot_phi,unduplot_theta,traxyz_theta,traxyz_phi,
      &  xmapmin,xmapmax,ymapmin,ymapmax,zmapmin,zmapmax,
      &  xconvmin,xconvmax,dxconv,nxconv,yconv,zconv,hconv,kpreset,uwindow,matrix,nuthreads,

@@ -1,4 +1,4 @@
-*CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
+*CMZ :  2.04/05 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/01 26/01/2022  11.19.15  by  Michael Scheer
 *-- Author :    Michael Scheer   20/04/2021
       subroutine clcmag_copy(kcopy)

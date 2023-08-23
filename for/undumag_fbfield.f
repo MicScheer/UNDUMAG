@@ -1,4 +1,4 @@
-*CMZ :  1.24/01 16/10/2017  16.04.30  by  Michael Scheer
+*CMZ :  1.24/01 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  1.23/03 19/09/2017  19.32.15  by  Michael Scheer
 *CMZ :  1.23/02 18/09/2017  14.10.42  by  Michael Scheer
 *CMZ :  1.15/11 19/04/2017  14.47.22  by  Michael Scheer
@@ -26,7 +26,8 @@ c force box
       implicit none
 
 *KEEP,seqdebug.
-      include 'seqdebug.cmn'
+      integer iseqdebug
+      common/seqdebugc/iseqdebug
 *KEND.
 
       double precision x,y,z,bxout,byout,bzout,bc(3)

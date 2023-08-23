@@ -1,4 +1,4 @@
-*CMZ :  2.03/00 24/07/2022  15.30.17  by  Michael Scheer
+*CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/00 26/10/2020  14.56.48  by  Michael Scheer
 *CMZ :  2.01/08 13/08/2020  12.32.35  by  Michael Scheer
 *CMZ :  2.01/03 15/07/2019  15.03.51  by  Michael Scheer
@@ -60,7 +60,8 @@ c oder Reduce olegqz.red, qxqyqz.red, rec_int.red etc.
 
       implicit none
 *KEEP,seqdebug.
-      include 'seqdebug.cmn'
+      integer iseqdebug
+      common/seqdebugc/iseqdebug
 *KEND.
 
       double precision xin,yin,zin,bxout,byout,bzout

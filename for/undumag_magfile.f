@@ -1,4 +1,4 @@
-*CMZ :  2.02/01 30/01/2022  08.23.18  by  Michael Scheer
+*CMZ :  2.02/01 22/08/2023  09.03.52  by  Michael Scheer
 *-- Author :    Michael Scheer   20/10/2021
       subroutine undumag_magfile
 

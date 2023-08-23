@@ -1,4 +1,4 @@
-*CMZ :  2.02/01 19/10/2021  09.09.31  by  Michael Scheer
+*CMZ :  2.02/01 22/08/2023  09.03.52  by  Michael Scheer
 *-- Author :    Michael Scheer   19/10/2021
       subroutine undumag_ini_random
 
@@ -9,7 +9,12 @@
       implicit none
 
 *KEEP,random.
-      include 'random.cmn'
+      integer*8 irancalls
+      integer, parameter :: irnsize=64
+      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
+      common /randomc/ irancalls,irnseed,irnmode,irnseedi
+
+      namelist /randomn/ irnmode,irnseed
 *KEND.
 
       integer lunio,i,k

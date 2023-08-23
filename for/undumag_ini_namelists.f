@@ -1,4 +1,4 @@
-*CMZ :  2.04/03 05/03/2023  15.06.24  by  Michael Scheer
+*CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/02 25/02/2022  09.54.41  by  Michael Scheer
 *CMZ :  2.02/01 09/02/2022  18.49.27  by  Michael Scheer
 *-- Author :    Michael Scheer   19/10/2021
@@ -12,7 +12,12 @@
       implicit none
 
 *KEEP,random.
-      include 'random.cmn'
+      integer*8 irancalls
+      integer, parameter :: irnsize=64
+      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
+      common /randomc/ irancalls,irnseed,irnmode,irnseedi
+
+      namelist /randomn/ irnmode,irnseed
 *KEND.
 
       integer lunnam,istat

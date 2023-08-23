@@ -1,4 +1,4 @@
-*CMZ :  2.02/00 26/10/2020  14.56.48  by  Michael Scheer
+*CMZ :  2.02/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.01/03 15/07/2019  11.55.46  by  Michael Scheer
 *CMZ :  2.01/02 27/04/2018  13.35.13  by  Michael Scheer
 *CMZ :  1.22/01 20/07/2017  14.55.33  by  Michael Scheer
@@ -45,7 +45,8 @@ c                          determinant is -1, which yields to errors??.
 
       implicit none
 *KEEP,seqdebug.
-      include 'seqdebug.cmn'
+      integer iseqdebug
+      common/seqdebugc/iseqdebug
 *KEND.
 
       double precision xin,yin,zin,bxout,byout,bzout

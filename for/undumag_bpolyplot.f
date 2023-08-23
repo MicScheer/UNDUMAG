@@ -1,4 +1,5 @@
-*CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
+*CMZ :          22/08/2023  12.11.10  by  Michael Scheer
+*CMZ :  2.04/05 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  17.04.30  by  Michael Scheer
 *CMZ :  2.02/02 29/06/2022  10.35.26  by  Michael Scheer
 *CMZ :  2.02/01 30/01/2022  08.37.21  by  Michael Scheer
@@ -30,6 +31,10 @@
         if (ymaxpl.eq.9999.0d0) yplmax=ymax_t+(ymax_t-ymin_t)*0.1
         if (zminpl.eq.9999.0d0) zplmin=zmin_t-(zmax_t-zmin_t)*0.1
         if (zmaxpl.eq.9999.0d0) zplmax=zmax_t+(zmax_t-zmin_t)*0.1
+        kunduplot_mode=1
+        call clcmag_bpolyplot(iunduplot,xplmin,xplmax,yplmin,yplmax,zplmin,zplmax,
+     &    theta,pphi,nwitems,ncwires,wire)
+        kunduplot_mode=0
         call clcmag_bpolyplot(iunduplot,xplmin,xplmax,yplmin,yplmax,zplmin,zplmax,
      &    theta,pphi,nwitems,ncwires,wire)
       endif !iplot
