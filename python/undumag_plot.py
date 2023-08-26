@@ -36,6 +36,8 @@ from scipy.stats import *
 from scipy.interpolate import interp1d
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
 
+from PIL import Image
+
 from copy import *
 ###################################################
 
@@ -1662,7 +1664,8 @@ if System != 'WINDOWS':
 Gdebug = 0
 import m_hbook as m
 
-global TransRotCop, EchoCLC
+global TransRotCop, EchoCLC,DictTransRotCop
+global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
 
 global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
 Magnets, Pols, SpecMags, SpecPols, NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -1683,9 +1686,11 @@ S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
 WaddCoil,WaddCoils, Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
 WaddCoilRace,WaddCoilCirc
 
-global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
+global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
 MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
-global UMain,  Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+global UMain,  Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
 global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
 WallListMags, WlistVars, WAddVars, WlistMat,Wmirror, WsetMirror
 
@@ -1701,6 +1706,8 @@ S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
 global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
 S_nXdiv, S_nYdiv, S_nZdiv, S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
 S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color
+
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
 global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
 S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv,S_Iron_FracDivY, S_Iron_FracDivZ, S_Iron_Xlen, S_Iron_Ylen, S_Iron_Zlen, S_Iron_Key, S_Iron_MatType, S_Iron_Mat, \
@@ -1722,6 +1729,8 @@ V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
 S_nXdivOld, S_nYdivOld, S_nZdivOld, S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
 S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
+
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi, DictHulls
 
 global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
 V_nXdiv, V_nYdiv, V_nZdiv, V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -2001,14 +2010,27 @@ def qhull3d(x,y=None,z=None):
   #endfor
 
   verts = []
+  xmin = 1.0e30
+  xmax = -1.0e30
+  ymin = 1.0e30
+  ymax = -1.0e30
+  zmin = 1.0e30
+  zmax = -1.0e30
   for i in range(ivert+1,ivert+1+nvert):
-    verts.append(np.fromstring(lhull[i],sep=' '))
+    dv = np.fromstring(lhull[i],sep=' ')
+    if dv[0] < xmin: xmin = dv[0]
+    if dv[0] > xmax: xmax = dv[0]
+    if dv[1] < ymin: ymin = dv[1]
+    if dv[1] > ymax: ymax = dv[1]
+    if dv[2] < zmin: zmin = dv[2]
+    if dv[2] > zmax: zmax = dv[2]
+    verts.append(dv)
   #endfor
   verts = np.array(verts)
 
   Hull3D = faces
 
-  return verts,ifaces,faces
+  return verts,ifaces,faces,[xmin,xmax,ymin,ymax,zmin,zmax]
 
 #enddef qhull3d(x,y,z)
 
@@ -2068,7 +2090,7 @@ def nqhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,
 
   points = np.array([ntd.x,ntd.y,ntd.z]).T
 
-  vert,ifaces,faces = qhull3d(ntd.x,ntd.y,ntd.z)
+  vert,ifaces,faces,bounds = qhull3d(ntd.x,ntd.y,ntd.z)
   nface = len(faces)
 
   data = []
@@ -2112,8 +2134,8 @@ def set_aspect(asp='!'):
 
 NL = "\n"
 
-def sind(phi): return sin(phi/180.*np.pi)
-def cosd(phi): return cos(phi/180.*np.pi)
+def sind(phi): return np.sin(phi/180.*np.pi)
+def cosd(phi): return np.cos(phi/180.*np.pi)
 def tand(phi): return tan(phi/180.*np.pi)
 def asind(x): return asin(x)/np.pi*180.
 def acosd(x): return acos(x)/np.pi*180.
@@ -2178,17 +2200,17 @@ def get_y_stat():
 
 def ellipse(x0,y0,a,b,alpha=0.0,n=1000):
 
-  cosa = cos(alpha)
-  sina = sin(alpha)
+  cosa = np.cos(alpha)
+  sina = np.sin(alpha)
 
   phi =vcre(n,0.,2.0*pi)
 
-  x = x0 + cosa*a*cos(phi) - sina*b*sin(phi)
-  y = y0 + sina*a*cos(phi) + cosa*b*sin(phi)
+  x = x0 + cosa*a*np.cos(phi) - sina*b*np.sin(phi)
+  y = y0 + sina*a*np.cos(phi) + cosa*b*np.sin(phi)
 
   istat,area,pathlen = polygon2d(x,y)
 
-  return x,y,phi,area[:-1],pathlen[:-1]
+  return x,y,phi/pi*180.,area[:-1],pathlen[:-1]
 
 #enddef ellipse
 
@@ -2235,20 +2257,166 @@ def polygon2d(x="?",y="?"):
   for i in range(n1):
 #    dx = x[i+1]-x[i]
 #    dy = y[i+1]-y[i]
-#    dl =  sqrt(dx**2+dy**2)
+#    dl =  np.sqrt(dx**2+dy**2)
 #    print(i,dx,dy,dl)
 #    pathlen[i+1] = pathlen[i] + dl
-    pathlen[i+1] = pathlen[i] + sqrt((x[i+1]-x[i])**2 + (y[i+1]-y[i])**2)
+    pathlen[i+1] = pathlen[i] + np.sqrt((x[i+1]-x[i])**2 + (y[i+1]-y[i])**2)
     area[i+1] = area[i] - (x[i+1]-x[i]) * (y[i+1]+y[i])/2.0
   #endfor
 
   n2 = n -2
 
-  pathlen[n] = pathlen[n1] + sqrt((x[0]-x[n1])**2 + (y[0]-y[n1])**2)
+  pathlen[n] = pathlen[n1] + np.sqrt((x[0]-x[n1])**2 + (y[0]-y[n1])**2)
   area[n] = area[n1] - (x[0]-x[n1]) * (y[0]+y[n1])/2.0
 
   return istat,area,pathlen
 #enddef
+
+def arc(x0=0.,y0=0.,a=1.,b=1.,alpha=0.0,phi=90.,dphi=360.,n=1000):
+
+  cosa = np.cos(alpha)
+  sina = np.sin(alpha)
+
+  phi1 = phi - dphi/2.0
+  phi2 = phi1 + dphi
+
+  phi1 = phi1*pi/180.
+  phi2 = phi2*pi/180.
+
+  phi =vcre(n,phi1,phi2)
+
+  x = x0 + cosa*a*np.cos(phi) - sina*b*np.sin(phi)
+  y = y0 + sina*a*np.cos(phi) + cosa*b*np.sin(phi)
+
+  istat,area,pathlen = polygon2d(x,y)
+
+  return x,y,phi/pi*180,area[:-1],pathlen[:-1]
+#enddef arc
+
+def narc(nt='narc',x0=0.,y0=0.,a=1.,b=1.,alpha=0.0,phi=90.,dphi=360.,n=1000):
+  nt = ncre(nt,nt,"x:y:phi:area:path")
+  nt.x,nt.y,nt.phi,nt.area,nt.path = arc(x0,y0,a,b,alpha,phi,dphi,n)
+  nupdate_header(nt)
+  return nt
+#enddef
+
+def cylinder(x0=0.0,y0=0.0,z0=0,width=0.1,
+             a=1.0,b=1.0,h=1.0,alpha=0.0,phi=90.,dphi=360.,n=1000):
+
+  xi,zi,phii,ai,pathi = arc(x0,z0,a,b,alpha,phi,dphi,n)
+  xo,zo,phio,ao,patho = arc(x0,z0,a+width,b+width,alpha,phi,dphi,n)
+
+  yl = xi*0.0 - h/2.
+  yh = yl + h
+
+  return xi,zi,xo,zo,yl,yh,phio
+
+#enddef cylinder
+
+def ncylinder(nt='ncyl',x0=0.0,y0=0.0,z0=0,width=0.1,
+             a=1.0,b=1.0,h=1.0,alpha=0.0,phi=90.,dphi=360.,n=1000,ioverwrite=1):
+  nt = ncre(nt,nt,"xi:zi:xo:zo:yl:yh:phi",ioverwrite=ioverwrite)
+  nt.xi,nt.zi,nt.xo,nt.zo,nt.yl,nt.yh,nt.phi = \
+  cylinder(x0,y0,z0,width,a,b,h,alpha,phi,dphi,n)
+  nupdate_header(nt)
+  return nt
+#enddef ncylinder
+
+def cylinderpoly(nt='ncyl'):
+  global Nhead
+
+  nt = nget(nt)
+  nphi = len(nt)
+
+  xi = nt.xi
+  zi = nt.zi
+  yl = nt.yl
+
+  xo = nt.xo
+  zo = nt.zo
+  yh = nt.yh
+
+  poly = []
+
+  plow = []
+  for k in range(nphi):
+    i = k
+    plow.append([xi[i],zi[i],yl[i]])
+  #endfor
+  for k in range(nphi):
+    i = nphi - k - 1
+    plow.append([xo[i],zo[i],yl[i]])
+  #endfor
+  plow.append(plow[0])
+
+  ph = []
+  for k in range(nphi):
+    i = k
+    ph.append([xi[i],zi[i],yh[i]])
+  #endfor
+  for k in range(nphi):
+    i = nphi - k - 1
+    ph.append([xo[i],zo[i],yh[i]])
+  #endfor
+  ph.append(ph[0])
+
+  nh = Nhead[Ind]
+  ximin = nh[4][1]
+  ximax = nh[4][2]
+  zimin = nh[5][1]
+  zimax = nh[5][2]
+  xomin = nh[6][1]
+  xomax = nh[6][2]
+  zomin = nh[7][1]
+  zomax = nh[7][2]
+  ymin = nh[8][1]
+  ymax = nh[9][2]
+
+  bounds = [min(ximin,xomin),max(ximax,xomax),ymin,ymax,
+            min(zimin,zomin),max(zimax,zomax)]
+
+  phi1 = nh[3+nh[3]][1]
+  phi2 = nh[3+nh[3]][2]
+  dphi = phi2-phi1
+  dphi12 = dphi/(nphi-1)
+
+  angs = np.arange(phi1,phi2+dphi12,dphi12)
+  epsphi = dphi / 1000.
+
+  for ang in angs:
+    sel = "abs(phi-" + str(ang) + ")<" + str(epsphi)
+    na = nt.query(sel)
+    na.index = range(len(na))
+    xi = na.xi[0]
+    zi = na.zi[0]
+    xo = na.xo[0]
+    zo = na.zo[0]
+    yl = na.yl[0]
+    yh = na.yh[0]
+    poly.append([[xi,zi,yl],[xo,zo,yl],[xo,zo,yh],[xi,zi,yh]])
+  #endfor
+
+  poly.append(plow)
+  poly.append(ph)
+
+  return poly,bounds
+#enddef cylinderpoly
+
+def plotncylinder(nt='ncyl',isame=0,linecolor='r',ishow=1):
+  nc = nget(nt)
+  poly,bounds = cylinderpoly(nc)
+  pt = np.array(poly[0]).T
+  if isame:
+    vplxyz(pt[0],pt[1],pt[2],'samelineclosed',color=linecolor)
+  else:
+    vplxyz(pt[0],pt[1],pt[2],'line',color=linecolor)
+  #endif
+  for ip in range(1,len(poly)):
+    pt = np.array(poly[ip]).T
+    vplxyz(pt[0],pt[1],pt[2],'samelineclosed',color=linecolor)
+  #endfor
+  return poly,bounds
+#enddef plotncyl
 
 def get_master():
   wmain = plt.gcf()
@@ -2411,8 +2579,8 @@ def rotate2d(x,y,phi=0.0, x0=0.0, y0=0.0, mode='grad'):
 
   if mode.lower() == 'grad': phi = phi / 180. * pi
 
-  cosphi = cos(phi)
-  sinphi = sin(phi)
+  cosphi = np.cos(phi)
+  sinphi = np.sin(phi)
 
   xx0 = x - x0
   yy0 = y - y0
@@ -3368,6 +3536,7 @@ def vplothull3d(x,y,z,isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
 
 def plothull3d(isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
                ishow=1, mode='face'):
+
   global Hull3D, Ax, Isame
 
   Isame = isame
@@ -4467,7 +4636,10 @@ def plotoptions(plopt=''):
 
   Iplotopt = 0
 
-  if type(plopt) != str: return
+  if type(plopt) != str:
+    print('\n*** Warning in plotoptions: plopt must be a string ***')
+    return
+  #endif
 
   if plopt.lower() == '2d' or plopt == '': plopt = Mode2d
   elif plopt.lower() == '3d' or plopt == '': plopt = Mode3d
@@ -4492,7 +4664,8 @@ def plotoptions(plopt=''):
   Inoempty = 0
   Iclosed = 0
 
-  if not Fig: window()
+  if not Fig:
+    window()
 
   if type(Klegend) == int or type(Klegend) == bool:
     iledg = Klegend
@@ -4521,8 +4694,11 @@ def plotoptions(plopt=''):
     Iplotopt = 1;  Imarker = 1
   if re.search('spline',plopt) or re.search('C',plopt):
     Iplotopt = 1;  Ispline = 1; plopt = re.sub("spline","",plopt)
+
   if re.search('same',plopt) or re.search('S',plopt) or IsameGlobal.get() == 1:
-    Iplotopt = 1;  Isame = 1
+    Iplotopt = 1
+    Isame = 1
+
   if re.search('scatter',plopt):
     Iplotopt = 1;  Iscatter = 1
 
@@ -21428,7 +21604,6 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
     txyz(tit,xtit,ytit)
     cbar.set_label(ztit, rotation=90)
     showplot()
-
   #endif Iscatter
 
   if Iclosed:
@@ -21439,9 +21614,9 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
       z.append(z[0])
     else:
       l = len(x)
-      x[l] = x[0]
-      y[l] = y[0]
-      z[l] = z[0]
+      x = np.append(x,x[0])
+      y = np.append(y,y[0])
+      z = np.append(z,z[0])
     #endif
 
     Iline = 1
@@ -21452,6 +21627,7 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
     if color == 'default': color = Linecolor
     plt.plot(x,y,z,c=color,ls=Linestyle,lw=Linewidth,label=label)
     txyz(tit,xtit,ytit,ztit)
+    Kplots[Kzone-1] = 1
     return
     iplot=1
 
@@ -21809,7 +21985,7 @@ def gauss(x, A=0.3989422804014, mu=0.0, sig=1.0):
 def fcos(x, A=1., x0=0.0, L=6.283185307179586):
   import numpy as np
   k = 2.*pi/L
-  return A * cos(k*(x-x0))
+  return A * np.cos(k*(x-x0))
 
 def fcosh(x, A=1., x0=0.0, L=6.283185307179586):
   import numpy as np
@@ -23256,10 +23432,20 @@ def getisame():
   return Isame
 #enddef getisame()
 
-def setisame():
+def getishow():
+  global Ishow
+  return Ishow
+#enddef getishow()
+
+def setisame(isa=1):
   global Isame
-  Isame = 1
+  Isame = isa
 #enddef getisame()
+
+def setishow(isho=1):
+  global Ishow
+  Ishow = isho
+#enddef setisame()
 
 def settextcolor(tc='black'):
   global Textcolor
@@ -23461,6 +23647,11 @@ def optgrid(g=True):
     plt.grid(g)
     showplot()
 #enddef optgrid(g=True)
+
+def getgrid(g=True):
+    global Kgrid
+    return Kgrid
+#enddef getgrid
 
 def grid(g=True):
     global Kgrid
@@ -24067,6 +24258,7 @@ getystat = get_y_stat
 
 nhull3d = nqhull3d
 hull3d = qhull3d
+plotncyl = plotncylinder
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -27294,7 +27486,8 @@ def undu_overview():
 #from undumag_plot import *
 import m_hbook as m
 
-global TransRotCop, EchoCLC
+global TransRotCop, EchoCLC,DictTransRotCop
+global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
 
 global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
 Magnets, Pols, SpecMags, SpecPols, NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -27315,9 +27508,11 @@ S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
 WaddCoil,WaddCoils, Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
 WaddCoilRace,WaddCoilCirc
 
-global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
+global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
 MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
-global UMain,  Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+global UMain,  Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
 global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
 WallListMags, WlistVars, WAddVars, WlistMat,Wmirror, WsetMirror
 
@@ -27333,6 +27528,8 @@ S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
 global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
 S_nXdiv, S_nYdiv, S_nZdiv, S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
 S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color
+
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
 global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
 S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv,S_Iron_FracDivY, S_Iron_FracDivZ, S_Iron_Xlen, S_Iron_Ylen, S_Iron_Zlen, S_Iron_Key, S_Iron_MatType, S_Iron_Mat, \
@@ -27354,6 +27551,8 @@ V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
 S_nXdivOld, S_nYdivOld, S_nZdivOld, S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
 S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
+
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi, DictHulls
 
 global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
 V_nXdiv, V_nYdiv, V_nZdiv, V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -27392,8 +27591,8 @@ for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
 def utransrotcop():
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -27405,10 +27604,10 @@ def utransrotcop():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -27429,6 +27628,8 @@ def utransrotcop():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -27438,6 +27639,8 @@ def utransrotcop():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -27467,6 +27670,8 @@ def utransrotcop():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   for trc in TransRotCop:
@@ -27504,18 +27709,6 @@ def utransrotcop():
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
-#          ckey = mag[3]
-#          if ckey == 'File' or ckey == 'Corners':
-#            corns = mag[7]
-#            cc = []
-#            for corn in corns:
-#              c1 = corn[0] + calc_var(tr[0])
-#              c2 = corn[1] + calc_var(tr[1])
-#              c3 = corn[2] + calc_var(tr[2])
-#              cc.append([c1,c2,c3])
-#            #endfor
-#            mag[7] = cc
-          #endif
         #endfor
       except:
         try:
@@ -27529,18 +27722,6 @@ def utransrotcop():
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
-#          ckey = mag[3]
-#          if ckey == 'File' or ckey == 'Corners':
-#            corns = mag[7]
-#            cc = []
-#            for corn in corns:
-#              c1 = corn[0] + calc_var(tr[0])
-#              c2 = corn[1] + calc_var(tr[1])
-#              c3 = corn[2] + calc_var(tr[2])
-#              cc.append([c1,c2,c3])
-#            #endfor
-#            mag[7] = cc
-          #endif
         except:
           print(NL,"*** Error for key Translate: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
@@ -27707,13 +27888,63 @@ def utransrotcop():
     update_magnets()
   #endfor
 
-
 #enddef utransrotcop()
+
+def TransRot(cmag,cmoth,x,y,z):
+
+  global TransRotCop,DictTransRotCop
+
+  if not (cmag in DictTransRotCop or cmoth in DictTransRotCop) : return [x,y,z]
+
+  if not cmag in DictTransRotCop: cmm = cmoth
+  else: cmm = cmag
+
+  xt = x
+  yt = y
+  zt = z
+
+  for itrc in DictTransRotCop[cmm]:
+
+    trc = TransRotCop[itrc]
+
+    if trc[0] == 'Translate':
+
+      xyz = trc[2].split()
+
+      xt = xt  + calc_var(xyz[0])
+      yt = yt  + calc_var(xyz[1])
+      zt = zt  + calc_var(xyz[2])
+
+    elif trc[0] == 'Rotate' or trc[0] == 'Rotate_Shape':
+
+      tr = trc[2].split()
+      rot = trc[3].split()
+
+      xr = calc_var(tr[0])
+      yr = calc_var(tr[1])
+      zr = calc_var(tr[2])
+
+      vrx = calc_var(rot[0])
+      vry = calc_var(rot[1])
+      vrz = calc_var(rot[2])
+
+      phi = calc_var(rot[3]) * np.pi/180.
+
+      istat, crot, rm = util_rotate([xr,yr,zr],[vrx,vry,vrz],phi,[xt,yt,zt])
+
+      xt = crot[0]
+      yt = crot[1]
+      zt = crot[2]
+
+  #endfor
+
+  return [xt,yt,zt]
+#enddef TransRot
 
 def checktransrotcop():
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -27725,10 +27956,10 @@ def checktransrotcop():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -27749,6 +27980,8 @@ def checktransrotcop():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -27758,6 +27991,8 @@ def checktransrotcop():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -27787,6 +28022,8 @@ def checktransrotcop():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   for trc in TransRotCop:
@@ -27839,11 +28076,11 @@ def checktransrotcop():
           kmag = DictMagPolsTot[mag]
           mt = MagPolsTot[kmag]
           ckey = mt[3]
-          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
-            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file ***")
-            print("\n*** Check",mag," ***")
-            continue
-          #endif
+#          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+#            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file ***")
+#            print("\n*** Check",mag," ***")
+#            continue
+#          #endif
         #endfor
 
       except:
@@ -27852,11 +28089,11 @@ def checktransrotcop():
           kmag = DictMagPolsTot[mp]
           mag = MagPolsTot[kmag]
           ckey = mag[3]
-          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
-            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file***")
-            print("\n*** Check",mag," ***")
-            continue
-          #endif
+#          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+#            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file***")
+#            print("\n*** Check",mag," ***")
+#            continue
+#          #endif
         except:
           print(NL,"*** Error for key",key,": Magnet or mother not found for:")
           print(key,mp,NL)
@@ -27866,6 +28103,8 @@ def checktransrotcop():
     #endif key
 
   #endfor trc
+
+  TRCtoDTRC()
 
 #enddef checktransrotcop()
 
@@ -28275,8 +28514,8 @@ def util_rotate_vector_to_y_axis(vin):
 #enddef util_rotate_vector_to_y_axis(vin,rotmat,istat)
 
 def undu_coils_to_filaments(kcoil=-1,callkey=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -28288,10 +28527,10 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -28312,6 +28551,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -28321,6 +28562,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -28351,6 +28594,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
 
 
   if len(Coils) == 0:
@@ -28371,7 +28616,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
 
   Fclc.close()
 
-  Rmode = 'FILAMENTS STDOUT=undumag.lun6'
+  Rmodus = 'FILAMENTS STDOUT=undumag.lun6'
   _undumag("Filaments")
 
   #Quit("Ende nach undumag")
@@ -28464,8 +28709,8 @@ def blockcorners(mp):
 #enddef blockcorners(mp)
 
 def ureadclc(callkey=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -28477,10 +28722,10 @@ def ureadclc(callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -28501,6 +28746,8 @@ def ureadclc(callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -28510,6 +28757,8 @@ def ureadclc(callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -28539,6 +28788,8 @@ def ureadclc(callkey=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   NL = "\n"
@@ -28718,6 +28969,7 @@ def ureadclc(callkey=''):
         div = [nxdiv,nydiv,nzdiv,yfracdiv,zfracdiv]
 
         corns = []
+
         if key.upper() == 'CORNERS':
 
           iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
@@ -29124,8 +29376,21 @@ def ureadclc(callkey=''):
 
     if typ.upper().find('BLOCK') > -1:
       corns = blockcorners(mp)
-    elif typ.upper() == 'CYL':
-      Quit("Cyl hier einfügen")
+    elif typ.upper() == 'CYLINDER':
+      DictCyls[cnam] = Ncylinder
+      size = mp[6]
+      rin = float(size[0])
+      rout = float(size[1])
+      h = float(size[2])
+      dphi = float(size[3])
+      nphi = int(mp[7][2])
+      if nphi < int(dphi/45.)+3: nphi = int(dphi/45.)+3
+      Ncylinder += 1
+      ccyl = 'ncyl_' + str(Ncylinder)
+      ncyl = ncylinder(ccyl,
+                       xcen,ycen,zcen,rout-rin,rin,rin,h,0.0,90.,dphi,nphi,1)
+      poly = cylinderpoly(ccyl)
+      Ntcyls.append([imp,mp,ccyl,poly])
     elif typ.upper() == 'FILE' or typ.upper() == 'CORNERS':
       corns = []
       for ic in range(len(mp[7])):
@@ -29137,6 +29402,11 @@ def ureadclc(callkey=''):
     else:
       print("*** Bad key " + typ + " in ureadclc ***")
     #endif typ == 'Block'
+
+    if typ.upper() == 'CYLINDER':
+      MagPolsTot[m].append(mp[4])
+      continue
+    #endif
 
     xmin = 1.e30
     xmax = -1.e30
@@ -29162,20 +29432,32 @@ def ureadclc(callkey=''):
     z = (zmin+zmax)/2.
 
     MagPolsTot[m].append([x,y,z])
-    verts,ifaces,faces = hull3d(corns)
+
+    verts,ifaces,faces,bounds = hull3d(corns)
     if type(verts) != Tdf:
       hull = pd.DataFrame(verts)
     else:
       hull=verts
     #endif
     hull.columns = ['xr','yr','zr']
+
     hull['x'] = hull.xr+xcen
     hull['y'] = hull.yr+ycen
     hull['z'] = hull.zr+zcen
 
+    DictHulls[cnam] = len(Hulls)
+    #print(NL,"Hulls ------",cnam,NL,DictHulls[cnam],NL,hull)
     Hulls.append(hull)
 
   #endfor m in range(NMagPolTot)
+
+
+  Xmin = 1.0e30
+  Xmax = -1.0e30
+  Ymin = 1.0e30
+  Ymax = -1.0e30
+  Zmin = 1.0e30
+  Zmax = -1.0e30
 
   if NMagPolTot:
 
@@ -29203,30 +29485,81 @@ def ureadclc(callkey=''):
       zmin = 1.e30
       zmax = -1.e30
 
-      for mmag in moth:
-        mag = DictMagPolsTot[mmag]
-        xmn = Hulls[mag].x.min()
-        xmx = Hulls[mag].x.max()
+      xmins = 1.e30
+      xmaxs = -1.e30
+      ymins = 1.e30
+      ymaxs = -1.e30
+      zmins = 1.e30
+      zmaxs = -1.e30
+
+      for cmag in moth:
+        mag = DictMagPolsTot[cmag]
+        mp = MagPolsTot[mag]
+        typ = mp[3]
+        if typ == 'Cylinder':
+          cyl = Ntcyls[DictCyls[cmag]]
+          nc = nget(cyl[2])
+          nh = Nhead[Ind]
+          xmn = nh[6][1]
+          xmx = nh[6][2]
+          zmn = nh[5][1]
+          zmx = nh[7][2]
+          ymn = nh[8][1]
+          ymx = nh[9][2]
+        else:
+          nhu = DictHulls[cmag]
+          xmn = Hulls[nhu].x.min()
+          xmx = Hulls[nhu].x.max()
+          ymn = Hulls[nhu].y.min()
+          ymx = Hulls[nhu].y.max()
+          zmn = Hulls[nhu].z.min()
+          zmx = Hulls[nhu].z.max()
+        #endif Cyl
+
         if xmn < xmin: xmin = xmn
         if xmx > xmax: xmax = xmx
-        ymn = Hulls[mag].y.min()
-        ymx = Hulls[mag].y.max()
         if ymn < ymin: ymin = ymn
         if ymx > ymax: ymax = ymx
-        zmn = Hulls[mag].z.min()
-        zmx = Hulls[mag].z.max()
         if zmn < zmin: zmin = zmn
         if zmx > zmax: zmax = zmx
-        if MagPolsTot[mag][2] == 1:
+
+        if mp[2] == 'yes' or str(mp[2]) == '1':
           if xmn < xmins: xmins = xmn
           if xmx > xmaxs: xmaxs = xmx
           if ymn < ymins: ymins = ymn
           if ymx > ymaxs: ymaxs = ymx
           if zmn < zmins: zmins = zmn
           if zmx > zmaxs: zmaxs = zmx
-          ispec = 1
         #endif MagPolsTot[mag][2] == 'yes'
+
+        if xmins < Xmin: Xmin = xmins
+        if xmaxs > Xmax: Xmax = xmaxs
+        if ymins < Ymin: Ymin = ymins
+        if ymaxs > Ymax: Ymax = ymaxs
+        if zmins < Zmin: Zmin = zmins
+        if zmaxs > Zmax: Zmax = zmaxs
+        if xmin < Xmin: Xmin = xmin
+        if xmax > Xmax: Xmax = xmax
+        if ymin < Ymin: Ymin = ymin
+        if ymax > Ymax: Ymax = ymax
+        if zmin < Zmin: Zmin = zmin
+        if zmax > Zmax: Zmax = zmax
+
       #endfor mag in moth
+
+      dx = Xmax - Xmin
+      Xmin -= dx*0.1
+      Xmax += dx*0.1
+
+      dy = Ymax - Ymin
+      Ymin -= dy*0.1
+      Ymax += dy*0.1
+
+      dz = Zmax - Zmin
+      Zmin -= dz*0.1
+      Zmax += dz*0.1
+
+      #print(xmin,xmax,ymin,ymax,zmin,zmax)
       moli.append([mo,
                    xmin,xmax,(xmin+xmax)/2.,
                    ymin,ymax,(ymin+ymax)/2.,
@@ -29238,17 +29571,8 @@ def ureadclc(callkey=''):
                         'xmin','xmax','x',
                         'ymin','ymax','y',
                         'zmin','zmax','z']
-    MothsXYZ = MothsXYZ.sort_values(by=['x','y','z']).reset_index()
 
-    if not ispec:
-      xmins = MothsXYZ.xmin.min()
-      xmaxs = MothsXYZ.xmax.max()
-      ymins = MothsXYZ.ymin.min()
-      ymaxs = MothsXYZ.ymax.max()
-      zmins = MothsXYZ.zmin.min()
-      zmaxs = MothsXYZ.zmax.max()
-    #endif not ispec
-
+    MothsXYZ = MothsXYZ.sort_values(by=['x','y','z'])
     SpecXYZ = [xmins,xmaxs,ymins,ymaxs,zmins,zmaxs]
 
     mocop = deepcopy(Moths)
@@ -29717,7 +30041,11 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
 
   print('\nSelection for ',select)
 
-  nt = ngeo.query(select)
+  if len(select) > 0:
+    nt = ngeo.query(select)
+  else:
+    nt = ngeo
+  #endif
 
   print('\nStart plotting')
 
