@@ -46,6 +46,8 @@ from scipy.stats import *
 from scipy.interpolate import interp1d
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
 
+from PIL import Image
+
 from copy import *
 ###################################################
 
@@ -1672,7 +1674,8 @@ if System != 'WINDOWS':
 Gdebug = 0
 import m_hbook as m
 
-global TransRotCop, EchoCLC
+global TransRotCop, EchoCLC,DictTransRotCop
+global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
 
 global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
 Magnets, Pols, SpecMags, SpecPols, NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -1693,9 +1696,11 @@ S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
 WaddCoil,WaddCoils, Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
 WaddCoilRace,WaddCoilCirc
 
-global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
+global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
 MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
-global UMain,  Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+global UMain,  Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
 global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
 WallListMags, WlistVars, WAddVars, WlistMat,Wmirror, WsetMirror
 
@@ -1711,6 +1716,8 @@ S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
 global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
 S_nXdiv, S_nYdiv, S_nZdiv, S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
 S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color
+
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
 global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
 S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv,S_Iron_FracDivY, S_Iron_FracDivZ, S_Iron_Xlen, S_Iron_Ylen, S_Iron_Zlen, S_Iron_Key, S_Iron_MatType, S_Iron_Mat, \
@@ -1732,6 +1739,8 @@ V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
 S_nXdivOld, S_nYdivOld, S_nZdivOld, S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
 S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
+
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi, DictHulls
 
 global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
 V_nXdiv, V_nYdiv, V_nZdiv, V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -2011,14 +2020,27 @@ def qhull3d(x,y=None,z=None):
   #endfor
 
   verts = []
+  xmin = 1.0e30
+  xmax = -1.0e30
+  ymin = 1.0e30
+  ymax = -1.0e30
+  zmin = 1.0e30
+  zmax = -1.0e30
   for i in range(ivert+1,ivert+1+nvert):
-    verts.append(np.fromstring(lhull[i],sep=' '))
+    dv = np.fromstring(lhull[i],sep=' ')
+    if dv[0] < xmin: xmin = dv[0]
+    if dv[0] > xmax: xmax = dv[0]
+    if dv[1] < ymin: ymin = dv[1]
+    if dv[1] > ymax: ymax = dv[1]
+    if dv[2] < zmin: zmin = dv[2]
+    if dv[2] > zmax: zmax = dv[2]
+    verts.append(dv)
   #endfor
   verts = np.array(verts)
 
   Hull3D = faces
 
-  return verts,ifaces,faces
+  return verts,ifaces,faces,[xmin,xmax,ymin,ymax,zmin,zmax]
 
 #enddef qhull3d(x,y,z)
 
@@ -2078,7 +2100,7 @@ def nqhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,
 
   points = np.array([ntd.x,ntd.y,ntd.z]).T
 
-  vert,ifaces,faces = qhull3d(ntd.x,ntd.y,ntd.z)
+  vert,ifaces,faces,bounds = qhull3d(ntd.x,ntd.y,ntd.z)
   nface = len(faces)
 
   data = []
@@ -2122,8 +2144,8 @@ def set_aspect(asp='!'):
 
 NL = "\n"
 
-def sind(phi): return sin(phi/180.*np.pi)
-def cosd(phi): return cos(phi/180.*np.pi)
+def sind(phi): return np.sin(phi/180.*np.pi)
+def cosd(phi): return np.cos(phi/180.*np.pi)
 def tand(phi): return tan(phi/180.*np.pi)
 def asind(x): return asin(x)/np.pi*180.
 def acosd(x): return acos(x)/np.pi*180.
@@ -2188,17 +2210,17 @@ def get_y_stat():
 
 def ellipse(x0,y0,a,b,alpha=0.0,n=1000):
 
-  cosa = cos(alpha)
-  sina = sin(alpha)
+  cosa = np.cos(alpha)
+  sina = np.sin(alpha)
 
   phi =vcre(n,0.,2.0*pi)
 
-  x = x0 + cosa*a*cos(phi) - sina*b*sin(phi)
-  y = y0 + sina*a*cos(phi) + cosa*b*sin(phi)
+  x = x0 + cosa*a*np.cos(phi) - sina*b*np.sin(phi)
+  y = y0 + sina*a*np.cos(phi) + cosa*b*np.sin(phi)
 
   istat,area,pathlen = polygon2d(x,y)
 
-  return x,y,phi,area[:-1],pathlen[:-1]
+  return x,y,phi/pi*180.,area[:-1],pathlen[:-1]
 
 #enddef ellipse
 
@@ -2245,20 +2267,166 @@ def polygon2d(x="?",y="?"):
   for i in range(n1):
 #    dx = x[i+1]-x[i]
 #    dy = y[i+1]-y[i]
-#    dl =  sqrt(dx**2+dy**2)
+#    dl =  np.sqrt(dx**2+dy**2)
 #    print(i,dx,dy,dl)
 #    pathlen[i+1] = pathlen[i] + dl
-    pathlen[i+1] = pathlen[i] + sqrt((x[i+1]-x[i])**2 + (y[i+1]-y[i])**2)
+    pathlen[i+1] = pathlen[i] + np.sqrt((x[i+1]-x[i])**2 + (y[i+1]-y[i])**2)
     area[i+1] = area[i] - (x[i+1]-x[i]) * (y[i+1]+y[i])/2.0
   #endfor
 
   n2 = n -2
 
-  pathlen[n] = pathlen[n1] + sqrt((x[0]-x[n1])**2 + (y[0]-y[n1])**2)
+  pathlen[n] = pathlen[n1] + np.sqrt((x[0]-x[n1])**2 + (y[0]-y[n1])**2)
   area[n] = area[n1] - (x[0]-x[n1]) * (y[0]+y[n1])/2.0
 
   return istat,area,pathlen
 #enddef
+
+def arc(x0=0.,y0=0.,a=1.,b=1.,alpha=0.0,phi=90.,dphi=360.,n=1000):
+
+  cosa = np.cos(alpha)
+  sina = np.sin(alpha)
+
+  phi1 = phi - dphi/2.0
+  phi2 = phi1 + dphi
+
+  phi1 = phi1*pi/180.
+  phi2 = phi2*pi/180.
+
+  phi =vcre(n,phi1,phi2)
+
+  x = x0 + cosa*a*np.cos(phi) - sina*b*np.sin(phi)
+  y = y0 + sina*a*np.cos(phi) + cosa*b*np.sin(phi)
+
+  istat,area,pathlen = polygon2d(x,y)
+
+  return x,y,phi/pi*180,area[:-1],pathlen[:-1]
+#enddef arc
+
+def narc(nt='narc',x0=0.,y0=0.,a=1.,b=1.,alpha=0.0,phi=90.,dphi=360.,n=1000):
+  nt = ncre(nt,nt,"x:y:phi:area:path")
+  nt.x,nt.y,nt.phi,nt.area,nt.path = arc(x0,y0,a,b,alpha,phi,dphi,n)
+  nupdate_header(nt)
+  return nt
+#enddef
+
+def cylinder(x0=0.0,y0=0.0,z0=0,width=0.1,
+             a=1.0,b=1.0,h=1.0,alpha=0.0,phi=90.,dphi=360.,n=1000):
+
+  xi,zi,phii,ai,pathi = arc(x0,z0,a,b,alpha,phi,dphi,n)
+  xo,zo,phio,ao,patho = arc(x0,z0,a+width,b+width,alpha,phi,dphi,n)
+
+  yl = xi*0.0 - h/2.
+  yh = yl + h
+
+  return xi,zi,xo,zo,yl,yh,phio
+
+#enddef cylinder
+
+def ncylinder(nt='ncyl',x0=0.0,y0=0.0,z0=0,width=0.1,
+             a=1.0,b=1.0,h=1.0,alpha=0.0,phi=90.,dphi=360.,n=1000,ioverwrite=1):
+  nt = ncre(nt,nt,"xi:zi:xo:zo:yl:yh:phi",ioverwrite=ioverwrite)
+  nt.xi,nt.zi,nt.xo,nt.zo,nt.yl,nt.yh,nt.phi = \
+  cylinder(x0,y0,z0,width,a,b,h,alpha,phi,dphi,n)
+  nupdate_header(nt)
+  return nt
+#enddef ncylinder
+
+def cylinderpoly(nt='ncyl'):
+  global Nhead
+
+  nt = nget(nt)
+  nphi = len(nt)
+
+  xi = nt.xi
+  zi = nt.zi
+  yl = nt.yl
+
+  xo = nt.xo
+  zo = nt.zo
+  yh = nt.yh
+
+  poly = []
+
+  plow = []
+  for k in range(nphi):
+    i = k
+    plow.append([xi[i],zi[i],yl[i]])
+  #endfor
+  for k in range(nphi):
+    i = nphi - k - 1
+    plow.append([xo[i],zo[i],yl[i]])
+  #endfor
+  plow.append(plow[0])
+
+  ph = []
+  for k in range(nphi):
+    i = k
+    ph.append([xi[i],zi[i],yh[i]])
+  #endfor
+  for k in range(nphi):
+    i = nphi - k - 1
+    ph.append([xo[i],zo[i],yh[i]])
+  #endfor
+  ph.append(ph[0])
+
+  nh = Nhead[Ind]
+  ximin = nh[4][1]
+  ximax = nh[4][2]
+  zimin = nh[5][1]
+  zimax = nh[5][2]
+  xomin = nh[6][1]
+  xomax = nh[6][2]
+  zomin = nh[7][1]
+  zomax = nh[7][2]
+  ymin = nh[8][1]
+  ymax = nh[9][2]
+
+  bounds = [min(ximin,xomin),max(ximax,xomax),ymin,ymax,
+            min(zimin,zomin),max(zimax,zomax)]
+
+  phi1 = nh[3+nh[3]][1]
+  phi2 = nh[3+nh[3]][2]
+  dphi = phi2-phi1
+  dphi12 = dphi/(nphi-1)
+
+  angs = np.arange(phi1,phi2+dphi12,dphi12)
+  epsphi = dphi / 1000.
+
+  for ang in angs:
+    sel = "abs(phi-" + str(ang) + ")<" + str(epsphi)
+    na = nt.query(sel)
+    na.index = range(len(na))
+    xi = na.xi[0]
+    zi = na.zi[0]
+    xo = na.xo[0]
+    zo = na.zo[0]
+    yl = na.yl[0]
+    yh = na.yh[0]
+    poly.append([[xi,zi,yl],[xo,zo,yl],[xo,zo,yh],[xi,zi,yh]])
+  #endfor
+
+  poly.append(plow)
+  poly.append(ph)
+
+  return poly,bounds
+#enddef cylinderpoly
+
+def plotncylinder(nt='ncyl',isame=0,linecolor='r',ishow=1):
+  nc = nget(nt)
+  poly,bounds = cylinderpoly(nc)
+  pt = np.array(poly[0]).T
+  if isame:
+    vplxyz(pt[0],pt[1],pt[2],'samelineclosed',color=linecolor)
+  else:
+    vplxyz(pt[0],pt[1],pt[2],'line',color=linecolor)
+  #endif
+  for ip in range(1,len(poly)):
+    pt = np.array(poly[ip]).T
+    vplxyz(pt[0],pt[1],pt[2],'samelineclosed',color=linecolor)
+  #endfor
+  return poly,bounds
+#enddef plotncyl
 
 def get_master():
   wmain = plt.gcf()
@@ -2421,8 +2589,8 @@ def rotate2d(x,y,phi=0.0, x0=0.0, y0=0.0, mode='grad'):
 
   if mode.lower() == 'grad': phi = phi / 180. * pi
 
-  cosphi = cos(phi)
-  sinphi = sin(phi)
+  cosphi = np.cos(phi)
+  sinphi = np.sin(phi)
 
   xx0 = x - x0
   yy0 = y - y0
@@ -3378,6 +3546,7 @@ def vplothull3d(x,y,z,isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
 
 def plothull3d(isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
                ishow=1, mode='face'):
+
   global Hull3D, Ax, Isame
 
   Isame = isame
@@ -4477,7 +4646,10 @@ def plotoptions(plopt=''):
 
   Iplotopt = 0
 
-  if type(plopt) != str: return
+  if type(plopt) != str:
+    print('\n*** Warning in plotoptions: plopt must be a string ***')
+    return
+  #endif
 
   if plopt.lower() == '2d' or plopt == '': plopt = Mode2d
   elif plopt.lower() == '3d' or plopt == '': plopt = Mode3d
@@ -4502,7 +4674,8 @@ def plotoptions(plopt=''):
   Inoempty = 0
   Iclosed = 0
 
-  if not Fig: window()
+  if not Fig:
+    window()
 
   if type(Klegend) == int or type(Klegend) == bool:
     iledg = Klegend
@@ -4531,8 +4704,11 @@ def plotoptions(plopt=''):
     Iplotopt = 1;  Imarker = 1
   if re.search('spline',plopt) or re.search('C',plopt):
     Iplotopt = 1;  Ispline = 1; plopt = re.sub("spline","",plopt)
+
   if re.search('same',plopt) or re.search('S',plopt) or IsameGlobal.get() == 1:
-    Iplotopt = 1;  Isame = 1
+    Iplotopt = 1
+    Isame = 1
+
   if re.search('scatter',plopt):
     Iplotopt = 1;  Iscatter = 1
 
@@ -21438,7 +21614,6 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
     txyz(tit,xtit,ytit)
     cbar.set_label(ztit, rotation=90)
     showplot()
-
   #endif Iscatter
 
   if Iclosed:
@@ -21449,9 +21624,9 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
       z.append(z[0])
     else:
       l = len(x)
-      x[l] = x[0]
-      y[l] = y[0]
-      z[l] = z[0]
+      x = np.append(x,x[0])
+      y = np.append(y,y[0])
+      z = np.append(z,z[0])
     #endif
 
     Iline = 1
@@ -21462,6 +21637,7 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
     if color == 'default': color = Linecolor
     plt.plot(x,y,z,c=color,ls=Linestyle,lw=Linewidth,label=label)
     txyz(tit,xtit,ytit,ztit)
+    Kplots[Kzone-1] = 1
     return
     iplot=1
 
@@ -21819,7 +21995,7 @@ def gauss(x, A=0.3989422804014, mu=0.0, sig=1.0):
 def fcos(x, A=1., x0=0.0, L=6.283185307179586):
   import numpy as np
   k = 2.*pi/L
-  return A * cos(k*(x-x0))
+  return A * np.cos(k*(x-x0))
 
 def fcosh(x, A=1., x0=0.0, L=6.283185307179586):
   import numpy as np
@@ -23266,10 +23442,20 @@ def getisame():
   return Isame
 #enddef getisame()
 
-def setisame():
+def getishow():
+  global Ishow
+  return Ishow
+#enddef getishow()
+
+def setisame(isa=1):
   global Isame
-  Isame = 1
+  Isame = isa
 #enddef getisame()
+
+def setishow(isho=1):
+  global Ishow
+  Ishow = isho
+#enddef setisame()
 
 def settextcolor(tc='black'):
   global Textcolor
@@ -23471,6 +23657,11 @@ def optgrid(g=True):
     plt.grid(g)
     showplot()
 #enddef optgrid(g=True)
+
+def getgrid(g=True):
+    global Kgrid
+    return Kgrid
+#enddef getgrid
 
 def grid(g=True):
     global Kgrid
@@ -24077,6 +24268,7 @@ getystat = get_y_stat
 
 nhull3d = nqhull3d
 hull3d = qhull3d
+plotncyl = plotncylinder
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -27304,7 +27496,8 @@ def undu_overview():
 #from undumag_plot import *
 import m_hbook as m
 
-global TransRotCop, EchoCLC
+global TransRotCop, EchoCLC,DictTransRotCop
+global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
 
 global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
 Magnets, Pols, SpecMags, SpecPols, NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -27325,9 +27518,11 @@ S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
 WaddCoil,WaddCoils, Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
 WaddCoilRace,WaddCoilCirc
 
-global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
+global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
 MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
-global UMain,  Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+global UMain,  Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
 global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
 WallListMags, WlistVars, WAddVars, WlistMat,Wmirror, WsetMirror
 
@@ -27343,6 +27538,8 @@ S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
 global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
 S_nXdiv, S_nYdiv, S_nZdiv, S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
 S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color
+
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
 global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
 S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv,S_Iron_FracDivY, S_Iron_FracDivZ, S_Iron_Xlen, S_Iron_Ylen, S_Iron_Zlen, S_Iron_Key, S_Iron_MatType, S_Iron_Mat, \
@@ -27365,6 +27562,8 @@ global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_
 S_nXdivOld, S_nYdivOld, S_nZdivOld, S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
 S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi, DictHulls
+
 global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
 V_nXdiv, V_nYdiv, V_nZdiv, V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
 V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
@@ -27382,11 +27581,17 @@ MrunOld = -1
 Kover = 0
 Kurad = 0
 Nreload = 0
+
+global Ntcyls, Ncylinder
+Ntcyls = []
+Ncylinder = 0
+DictCyls = {}
+DictHulls = {}
 #=============================================================================
 
 def undugui_clean(key=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -27398,10 +27603,10 @@ def undugui_clean(key=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -27422,6 +27627,8 @@ def undugui_clean(key=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -27431,6 +27638,8 @@ def undugui_clean(key=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -27461,10 +27670,13 @@ def undugui_clean(key=''):
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
 
   Ucomment = ""
 
   TransRotCop = []
+  DictTransRotCop = {}
 
   DictCornFiles = {}
   Uclcorig = []
@@ -27563,8 +27775,8 @@ def undugui_clean(key=''):
 undugui_clean('init')
 
 def calc_var(svar):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -27576,10 +27788,10 @@ def calc_var(svar):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -27600,6 +27812,8 @@ def calc_var(svar):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -27609,6 +27823,8 @@ def calc_var(svar):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -27638,6 +27854,8 @@ def calc_var(svar):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   svar = str(svar)
@@ -27670,8 +27888,8 @@ def calc_var(svar):
 #enddef calc_var(svar)
 
 def ugui_get_clc_line(iline,nlines,icomm):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -27683,10 +27901,10 @@ def ugui_get_clc_line(iline,nlines,icomm):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -27707,6 +27925,8 @@ def ugui_get_clc_line(iline,nlines,icomm):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -27716,6 +27936,8 @@ def ugui_get_clc_line(iline,nlines,icomm):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -27745,6 +27967,8 @@ def ugui_get_clc_line(iline,nlines,icomm):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   iline += 1
@@ -27827,8 +28051,8 @@ def usortvars(varis):
 #enddef usortvars(varis)
 
 def ugui_calc():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -27840,10 +28064,10 @@ def ugui_calc():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -27864,6 +28088,8 @@ def ugui_calc():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -27873,6 +28099,8 @@ def ugui_calc():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -27902,6 +28130,8 @@ def ugui_calc():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   Ncalc = len(CalcLines)
@@ -28008,8 +28238,8 @@ def ugui_calc_check(variables,calcs,dictcalcs):
 #def ugui_calc_check()
 
 def ugui_calc_line(cline):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -28021,10 +28251,10 @@ def ugui_calc_line(cline):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -28045,6 +28275,8 @@ def ugui_calc_line(cline):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -28054,6 +28286,8 @@ def ugui_calc_line(cline):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -28083,6 +28317,8 @@ def ugui_calc_line(cline):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
 
@@ -28123,8 +28359,8 @@ def ugui_calc_line(cline):
 #enddef ugui_calc_line()
 
 def ugui_ini():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -28136,10 +28372,10 @@ def ugui_ini():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -28160,6 +28396,8 @@ def ugui_ini():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -28169,6 +28407,8 @@ def ugui_ini():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -28198,6 +28438,8 @@ def ugui_ini():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   Debug = 0
@@ -28304,8 +28546,8 @@ def ugui_get_clc_line_com(iline,nlines,icomm):
 
 def utransrotcop():
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -28317,10 +28559,10 @@ def utransrotcop():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -28341,6 +28583,8 @@ def utransrotcop():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -28350,6 +28594,8 @@ def utransrotcop():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -28379,6 +28625,8 @@ def utransrotcop():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   for trc in TransRotCop:
@@ -28416,18 +28664,6 @@ def utransrotcop():
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
-#          ckey = mag[3]
-#          if ckey == 'File' or ckey == 'Corners':
-#            corns = mag[7]
-#            cc = []
-#            for corn in corns:
-#              c1 = corn[0] + calc_var(tr[0])
-#              c2 = corn[1] + calc_var(tr[1])
-#              c3 = corn[2] + calc_var(tr[2])
-#              cc.append([c1,c2,c3])
-#            #endfor
-#            mag[7] = cc
-          #endif
         #endfor
       except:
         try:
@@ -28441,18 +28677,6 @@ def utransrotcop():
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
-#          ckey = mag[3]
-#          if ckey == 'File' or ckey == 'Corners':
-#            corns = mag[7]
-#            cc = []
-#            for corn in corns:
-#              c1 = corn[0] + calc_var(tr[0])
-#              c2 = corn[1] + calc_var(tr[1])
-#              c3 = corn[2] + calc_var(tr[2])
-#              cc.append([c1,c2,c3])
-#            #endfor
-#            mag[7] = cc
-          #endif
         except:
           print(NL,"*** Error for key Translate: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
@@ -28619,13 +28843,63 @@ def utransrotcop():
     update_magnets()
   #endfor
 
-
 #enddef utransrotcop()
+
+def TransRot(cmag,cmoth,x,y,z):
+
+  global TransRotCop,DictTransRotCop
+
+  if not (cmag in DictTransRotCop or cmoth in DictTransRotCop) : return [x,y,z]
+
+  if not cmag in DictTransRotCop: cmm = cmoth
+  else: cmm = cmag
+
+  xt = x
+  yt = y
+  zt = z
+
+  for itrc in DictTransRotCop[cmm]:
+
+    trc = TransRotCop[itrc]
+
+    if trc[0] == 'Translate':
+
+      xyz = trc[2].split()
+
+      xt = xt  + calc_var(xyz[0])
+      yt = yt  + calc_var(xyz[1])
+      zt = zt  + calc_var(xyz[2])
+
+    elif trc[0] == 'Rotate' or trc[0] == 'Rotate_Shape':
+
+      tr = trc[2].split()
+      rot = trc[3].split()
+
+      xr = calc_var(tr[0])
+      yr = calc_var(tr[1])
+      zr = calc_var(tr[2])
+
+      vrx = calc_var(rot[0])
+      vry = calc_var(rot[1])
+      vrz = calc_var(rot[2])
+
+      phi = calc_var(rot[3]) * np.pi/180.
+
+      istat, crot, rm = util_rotate([xr,yr,zr],[vrx,vry,vrz],phi,[xt,yt,zt])
+
+      xt = crot[0]
+      yt = crot[1]
+      zt = crot[2]
+
+  #endfor
+
+  return [xt,yt,zt]
+#enddef TransRot
 
 def checktransrotcop():
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -28637,10 +28911,10 @@ def checktransrotcop():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -28661,6 +28935,8 @@ def checktransrotcop():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -28670,6 +28946,8 @@ def checktransrotcop():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -28699,6 +28977,8 @@ def checktransrotcop():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   for trc in TransRotCop:
@@ -28751,11 +29031,11 @@ def checktransrotcop():
           kmag = DictMagPolsTot[mag]
           mt = MagPolsTot[kmag]
           ckey = mt[3]
-          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
-            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file ***")
-            print("\n*** Check",mag," ***")
-            continue
-          #endif
+#          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+#            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file ***")
+#            print("\n*** Check",mag," ***")
+#            continue
+#          #endif
         #endfor
 
       except:
@@ -28764,11 +29044,11 @@ def checktransrotcop():
           kmag = DictMagPolsTot[mp]
           mag = MagPolsTot[kmag]
           ckey = mag[3]
-          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
-            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file***")
-            print("\n*** Check",mag," ***")
-            continue
-          #endif
+#          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+#            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file***")
+#            print("\n*** Check",mag," ***")
+#            continue
+#          #endif
         except:
           print(NL,"*** Error for key",key,": Magnet or mother not found for:")
           print(key,mp,NL)
@@ -28778,6 +29058,8 @@ def checktransrotcop():
     #endif key
 
   #endfor trc
+
+  TRCtoDTRC()
 
 #enddef checktransrotcop()
 
@@ -29187,8 +29469,8 @@ def util_rotate_vector_to_y_axis(vin):
 #enddef util_rotate_vector_to_y_axis(vin,rotmat,istat)
 
 def undu_coils_to_filaments(kcoil=-1,callkey=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -29200,10 +29482,10 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -29224,6 +29506,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -29233,6 +29517,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -29263,6 +29549,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
 
 
   if len(Coils) == 0:
@@ -29283,7 +29571,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
 
   Fclc.close()
 
-  Rmode = 'FILAMENTS STDOUT=undumag.lun6'
+  Rmodus = 'FILAMENTS STDOUT=undumag.lun6'
   _undumag("Filaments")
 
   #Quit("Ende nach undumag")
@@ -29376,8 +29664,8 @@ def blockcorners(mp):
 #enddef blockcorners(mp)
 
 def ureadclc(callkey=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -29389,10 +29677,10 @@ def ureadclc(callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -29413,6 +29701,8 @@ def ureadclc(callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -29422,6 +29712,8 @@ def ureadclc(callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -29451,6 +29743,8 @@ def ureadclc(callkey=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   NL = "\n"
@@ -29630,6 +29924,7 @@ def ureadclc(callkey=''):
         div = [nxdiv,nydiv,nzdiv,yfracdiv,zfracdiv]
 
         corns = []
+
         if key.upper() == 'CORNERS':
 
           iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
@@ -30036,8 +30331,21 @@ def ureadclc(callkey=''):
 
     if typ.upper().find('BLOCK') > -1:
       corns = blockcorners(mp)
-    elif typ.upper() == 'CYL':
-      Quit("Cyl hier einfügen")
+    elif typ.upper() == 'CYLINDER':
+      DictCyls[cnam] = Ncylinder
+      size = mp[6]
+      rin = float(size[0])
+      rout = float(size[1])
+      h = float(size[2])
+      dphi = float(size[3])
+      nphi = int(mp[7][2])
+      if nphi < int(dphi/45.)+3: nphi = int(dphi/45.)+3
+      Ncylinder += 1
+      ccyl = 'ncyl_' + str(Ncylinder)
+      ncyl = ncylinder(ccyl,
+                       xcen,ycen,zcen,rout-rin,rin,rin,h,0.0,90.,dphi,nphi,1)
+      poly = cylinderpoly(ccyl)
+      Ntcyls.append([imp,mp,ccyl,poly])
     elif typ.upper() == 'FILE' or typ.upper() == 'CORNERS':
       corns = []
       for ic in range(len(mp[7])):
@@ -30049,6 +30357,11 @@ def ureadclc(callkey=''):
     else:
       print("*** Bad key " + typ + " in ureadclc ***")
     #endif typ == 'Block'
+
+    if typ.upper() == 'CYLINDER':
+      MagPolsTot[m].append(mp[4])
+      continue
+    #endif
 
     xmin = 1.e30
     xmax = -1.e30
@@ -30074,20 +30387,32 @@ def ureadclc(callkey=''):
     z = (zmin+zmax)/2.
 
     MagPolsTot[m].append([x,y,z])
-    verts,ifaces,faces = hull3d(corns)
+
+    verts,ifaces,faces,bounds = hull3d(corns)
     if type(verts) != Tdf:
       hull = pd.DataFrame(verts)
     else:
       hull=verts
     #endif
     hull.columns = ['xr','yr','zr']
+
     hull['x'] = hull.xr+xcen
     hull['y'] = hull.yr+ycen
     hull['z'] = hull.zr+zcen
 
+    DictHulls[cnam] = len(Hulls)
+    #print(NL,"Hulls ------",cnam,NL,DictHulls[cnam],NL,hull)
     Hulls.append(hull)
 
   #endfor m in range(NMagPolTot)
+
+
+  Xmin = 1.0e30
+  Xmax = -1.0e30
+  Ymin = 1.0e30
+  Ymax = -1.0e30
+  Zmin = 1.0e30
+  Zmax = -1.0e30
 
   if NMagPolTot:
 
@@ -30115,30 +30440,81 @@ def ureadclc(callkey=''):
       zmin = 1.e30
       zmax = -1.e30
 
-      for mmag in moth:
-        mag = DictMagPolsTot[mmag]
-        xmn = Hulls[mag].x.min()
-        xmx = Hulls[mag].x.max()
+      xmins = 1.e30
+      xmaxs = -1.e30
+      ymins = 1.e30
+      ymaxs = -1.e30
+      zmins = 1.e30
+      zmaxs = -1.e30
+
+      for cmag in moth:
+        mag = DictMagPolsTot[cmag]
+        mp = MagPolsTot[mag]
+        typ = mp[3]
+        if typ == 'Cylinder':
+          cyl = Ntcyls[DictCyls[cmag]]
+          nc = nget(cyl[2])
+          nh = Nhead[Ind]
+          xmn = nh[6][1]
+          xmx = nh[6][2]
+          zmn = nh[5][1]
+          zmx = nh[7][2]
+          ymn = nh[8][1]
+          ymx = nh[9][2]
+        else:
+          nhu = DictHulls[cmag]
+          xmn = Hulls[nhu].x.min()
+          xmx = Hulls[nhu].x.max()
+          ymn = Hulls[nhu].y.min()
+          ymx = Hulls[nhu].y.max()
+          zmn = Hulls[nhu].z.min()
+          zmx = Hulls[nhu].z.max()
+        #endif Cyl
+
         if xmn < xmin: xmin = xmn
         if xmx > xmax: xmax = xmx
-        ymn = Hulls[mag].y.min()
-        ymx = Hulls[mag].y.max()
         if ymn < ymin: ymin = ymn
         if ymx > ymax: ymax = ymx
-        zmn = Hulls[mag].z.min()
-        zmx = Hulls[mag].z.max()
         if zmn < zmin: zmin = zmn
         if zmx > zmax: zmax = zmx
-        if MagPolsTot[mag][2] == 1:
+
+        if mp[2] == 'yes' or str(mp[2]) == '1':
           if xmn < xmins: xmins = xmn
           if xmx > xmaxs: xmaxs = xmx
           if ymn < ymins: ymins = ymn
           if ymx > ymaxs: ymaxs = ymx
           if zmn < zmins: zmins = zmn
           if zmx > zmaxs: zmaxs = zmx
-          ispec = 1
         #endif MagPolsTot[mag][2] == 'yes'
+
+        if xmins < Xmin: Xmin = xmins
+        if xmaxs > Xmax: Xmax = xmaxs
+        if ymins < Ymin: Ymin = ymins
+        if ymaxs > Ymax: Ymax = ymaxs
+        if zmins < Zmin: Zmin = zmins
+        if zmaxs > Zmax: Zmax = zmaxs
+        if xmin < Xmin: Xmin = xmin
+        if xmax > Xmax: Xmax = xmax
+        if ymin < Ymin: Ymin = ymin
+        if ymax > Ymax: Ymax = ymax
+        if zmin < Zmin: Zmin = zmin
+        if zmax > Zmax: Zmax = zmax
+
       #endfor mag in moth
+
+      dx = Xmax - Xmin
+      Xmin -= dx*0.1
+      Xmax += dx*0.1
+
+      dy = Ymax - Ymin
+      Ymin -= dy*0.1
+      Ymax += dy*0.1
+
+      dz = Zmax - Zmin
+      Zmin -= dz*0.1
+      Zmax += dz*0.1
+
+      #print(xmin,xmax,ymin,ymax,zmin,zmax)
       moli.append([mo,
                    xmin,xmax,(xmin+xmax)/2.,
                    ymin,ymax,(ymin+ymax)/2.,
@@ -30150,17 +30526,8 @@ def ureadclc(callkey=''):
                         'xmin','xmax','x',
                         'ymin','ymax','y',
                         'zmin','zmax','z']
-    MothsXYZ = MothsXYZ.sort_values(by=['x','y','z']).reset_index()
 
-    if not ispec:
-      xmins = MothsXYZ.xmin.min()
-      xmaxs = MothsXYZ.xmax.max()
-      ymins = MothsXYZ.ymin.min()
-      ymaxs = MothsXYZ.ymax.max()
-      zmins = MothsXYZ.zmin.min()
-      zmaxs = MothsXYZ.zmax.max()
-    #endif not ispec
-
+    MothsXYZ = MothsXYZ.sort_values(by=['x','y','z'])
     SpecXYZ = [xmins,xmaxs,ymins,ymaxs,zmins,zmaxs]
 
     mocop = deepcopy(Moths)
@@ -30227,8 +30594,8 @@ def _nTopLevel(title='TopLevel',att='-topmost',attn=1):
 #enddef _nTopLevel
 
 def _MbLeave(ev):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30240,10 +30607,10 @@ def _MbLeave(ev):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -30264,6 +30631,8 @@ def _MbLeave(ev):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -30273,6 +30642,8 @@ def _MbLeave(ev):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -30302,14 +30673,16 @@ def _MbLeave(ev):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   Mgeo.unpost()
   Mmat.unpost()
 #enddef _MbLeave(ev)
 
 def _MenuBar(ev):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30321,10 +30694,10 @@ def _MenuBar(ev):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -30345,6 +30718,8 @@ def _MenuBar(ev):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -30354,6 +30729,8 @@ def _MenuBar(ev):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -30383,6 +30760,8 @@ def _MenuBar(ev):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   item = Umaster.call(ev.widget, "index", "active")
@@ -30562,8 +30941,8 @@ def uwritetrc(filename):
 #enddef uwritetrc(filename)
 def write_variables(Fclc):
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30575,10 +30954,10 @@ def write_variables(Fclc):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -30599,6 +30978,8 @@ def write_variables(Fclc):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -30608,6 +30989,8 @@ def write_variables(Fclc):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -30637,6 +31020,8 @@ def write_variables(Fclc):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   if not '$Mcoating' in Variables and not '$Mcoating' in Pars:
@@ -30783,8 +31168,8 @@ def write_coils_old(coils,Fclc):
 #enddef write_coils_old(coils,fileclc)
 
 def uwriteclc(callkey=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30796,10 +31181,10 @@ def uwriteclc(callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -30820,6 +31205,8 @@ def uwriteclc(callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -30829,6 +31216,8 @@ def uwriteclc(callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -30858,6 +31247,8 @@ def uwriteclc(callkey=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
 
@@ -32609,8 +33000,8 @@ def uwriteclc(callkey=''):
 
 def ureadfil(callkey=''):
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -32622,10 +33013,10 @@ def ureadfil(callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -32646,6 +33037,8 @@ def ureadfil(callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -32655,6 +33048,8 @@ def ureadfil(callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -32685,31 +33080,35 @@ def ureadfil(callkey=''):
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
 
   #debug("debug: Filaments")
 
 
   IUNDUMAGisRunning = 1
-  os.system(RunUndu + " " + Rmode)
+  os.system(RunUndu + " " + Rmodus)
   IUNDUMAGisRunning = 0
 
   undu_get_runnumber()
 
-  try:
-    Fsta = open("undumag.sta","r")
-    cline = Fsta.readline().strip()
-    cline = Fsta.readline().strip()
-    if cline != 'Calculation of coil filaments finished':
-      wError("\n*** UNDUMAG run for filaments failed ***")
-    #endif trim(cline) != ' Segmentation finished'
-  except:
-    wError("\n*** UNDUMAG run for filaments failed ***")
-  #endtry
+  if NCoil > 0:
 
-  #Filaments = []
-  if not fexist("undumag.fil"):
-    return
-  #endif
+    try:
+      Fsta = open("undumag.sta","r")
+      cline = Fsta.readline().strip()
+      cline = Fsta.readline().strip()
+      if cline != 'Calculation of coil filaments finished':
+        wError("\n*** UNDUMAG run for filaments failed ***")
+      #endif trim(cline) != ' Segmentation finished'
+    except:
+      wError("\n*** UNDUMAG run for filaments failed ***")
+    #endtry
+
+    if not fexist("undumag.fil"):
+      return
+    #endif
+  #endif NCoil
 
   Ffil = open("undumag.fil","r")
   fils = Ffil.readlines()
@@ -32751,8 +33150,8 @@ def ureadfil(callkey=''):
 
 def _undumag(callkey=''):
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -32764,10 +33163,10 @@ def _undumag(callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -32788,6 +33187,8 @@ def _undumag(callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -32797,6 +33198,8 @@ def _undumag(callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -32827,7 +33230,10 @@ def _undumag(callkey=''):
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
+
+  print("_undumag:Rmodus",Rmodus)
 
   if IUNDUMAGisRunning:
     wError("UNDUNMAG IS RUNNING!")
@@ -32836,10 +33242,9 @@ def _undumag(callkey=''):
 
   if NMagPolTot <= 0 and NCoil <= 0:
     wError("No magnetic items set-up so far...!")
-    return
   #endif IUNDUMAGisRunning
 
-  if type(Rmode) == str and len(Rmode):
+  if type(Rmodus) == str and len(Rmodus) and NCoil > 0:
     ureadfil("_undumag")
     return
     #Quit("Ende in _undumag")
@@ -32865,7 +33270,7 @@ def _undumag(callkey=''):
   lwarn.pack(fill=X)
   uwait.update()
 
-  if len(Rmode) == 0:
+  if len(Rmodus) == 0:
 
     IUNDUMAGisRunning = 1
     ifail = os.system(RunUndu)
@@ -32900,10 +33305,10 @@ def _undumag(callkey=''):
     if cline == '0': ifail = 0
     if ifail: wError("\n*** UNDUMAG run failed ***")
 
-  elif Rmode.split()[0] == 'SEGMENTATION':
+  elif Rmodus.split()[0] == 'SEGMENTATION':
 
     IUNDUMAGisRunning = 1
-    os.system(RunUndu + " " + Rmode)
+    os.system(RunUndu + " " + Rmodus)
     uwait.destroy()
     IUNDUMAGisRunning = 0
 
@@ -32921,14 +33326,14 @@ def _undumag(callkey=''):
       wError("\n*** UNDUMAG run for segmentation failed ***")
     #endtry
 
-  #endif len(Rmode) == 0
+  #endif len(Rmodus) == 0
 
 #enddef _undumag()
 
 def _runundumag(callkey='',mode=''):
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -32940,10 +33345,10 @@ def _runundumag(callkey='',mode=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -32964,6 +33369,8 @@ def _runundumag(callkey='',mode=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -32973,6 +33380,8 @@ def _runundumag(callkey='',mode=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -33003,9 +33412,11 @@ def _runundumag(callkey='',mode=''):
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  Rmode = mode
+
+  Rmodus = mode
   _undumag('_rundunmag')
 
 #enddef
@@ -33042,7 +33453,7 @@ if os.path.exists("undugui.cfg"):
 
 
 NL = "\n"
-Rmode = ''
+Rmodus = ''
 
 AppleII = {}
 
@@ -33131,8 +33542,8 @@ for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
 def utransrotcop():
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -33144,10 +33555,10 @@ def utransrotcop():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -33168,6 +33579,8 @@ def utransrotcop():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -33177,6 +33590,8 @@ def utransrotcop():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -33206,6 +33621,8 @@ def utransrotcop():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   for trc in TransRotCop:
@@ -33243,18 +33660,6 @@ def utransrotcop():
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
-#          ckey = mag[3]
-#          if ckey == 'File' or ckey == 'Corners':
-#            corns = mag[7]
-#            cc = []
-#            for corn in corns:
-#              c1 = corn[0] + calc_var(tr[0])
-#              c2 = corn[1] + calc_var(tr[1])
-#              c3 = corn[2] + calc_var(tr[2])
-#              cc.append([c1,c2,c3])
-#            #endfor
-#            mag[7] = cc
-          #endif
         #endfor
       except:
         try:
@@ -33268,18 +33673,6 @@ def utransrotcop():
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
-#          ckey = mag[3]
-#          if ckey == 'File' or ckey == 'Corners':
-#            corns = mag[7]
-#            cc = []
-#            for corn in corns:
-#              c1 = corn[0] + calc_var(tr[0])
-#              c2 = corn[1] + calc_var(tr[1])
-#              c3 = corn[2] + calc_var(tr[2])
-#              cc.append([c1,c2,c3])
-#            #endfor
-#            mag[7] = cc
-          #endif
         except:
           print(NL,"*** Error for key Translate: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
@@ -33446,13 +33839,63 @@ def utransrotcop():
     update_magnets()
   #endfor
 
-
 #enddef utransrotcop()
+
+def TransRot(cmag,cmoth,x,y,z):
+
+  global TransRotCop,DictTransRotCop
+
+  if not (cmag in DictTransRotCop or cmoth in DictTransRotCop) : return [x,y,z]
+
+  if not cmag in DictTransRotCop: cmm = cmoth
+  else: cmm = cmag
+
+  xt = x
+  yt = y
+  zt = z
+
+  for itrc in DictTransRotCop[cmm]:
+
+    trc = TransRotCop[itrc]
+
+    if trc[0] == 'Translate':
+
+      xyz = trc[2].split()
+
+      xt = xt  + calc_var(xyz[0])
+      yt = yt  + calc_var(xyz[1])
+      zt = zt  + calc_var(xyz[2])
+
+    elif trc[0] == 'Rotate' or trc[0] == 'Rotate_Shape':
+
+      tr = trc[2].split()
+      rot = trc[3].split()
+
+      xr = calc_var(tr[0])
+      yr = calc_var(tr[1])
+      zr = calc_var(tr[2])
+
+      vrx = calc_var(rot[0])
+      vry = calc_var(rot[1])
+      vrz = calc_var(rot[2])
+
+      phi = calc_var(rot[3]) * np.pi/180.
+
+      istat, crot, rm = util_rotate([xr,yr,zr],[vrx,vry,vrz],phi,[xt,yt,zt])
+
+      xt = crot[0]
+      yt = crot[1]
+      zt = crot[2]
+
+  #endfor
+
+  return [xt,yt,zt]
+#enddef TransRot
 
 def checktransrotcop():
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -33464,10 +33907,10 @@ def checktransrotcop():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -33488,6 +33931,8 @@ def checktransrotcop():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -33497,6 +33942,8 @@ def checktransrotcop():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -33526,6 +33973,8 @@ def checktransrotcop():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   for trc in TransRotCop:
@@ -33578,11 +34027,11 @@ def checktransrotcop():
           kmag = DictMagPolsTot[mag]
           mt = MagPolsTot[kmag]
           ckey = mt[3]
-          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
-            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file ***")
-            print("\n*** Check",mag," ***")
-            continue
-          #endif
+#          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+#            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file ***")
+#            print("\n*** Check",mag," ***")
+#            continue
+#          #endif
         #endfor
 
       except:
@@ -33591,11 +34040,11 @@ def checktransrotcop():
           kmag = DictMagPolsTot[mp]
           mag = MagPolsTot[kmag]
           ckey = mag[3]
-          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
-            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file***")
-            print("\n*** Check",mag," ***")
-            continue
-          #endif
+#          if key != 'Translate' and ckey != 'File' and ckey != 'Corners':
+#            print("\n*** Error in checktransrotcop: Rotation only allowed for magnets of type Corners or file***")
+#            print("\n*** Check",mag," ***")
+#            continue
+#          #endif
         except:
           print(NL,"*** Error for key",key,": Magnet or mother not found for:")
           print(key,mp,NL)
@@ -33605,6 +34054,8 @@ def checktransrotcop():
     #endif key
 
   #endfor trc
+
+  TRCtoDTRC()
 
 #enddef checktransrotcop()
 
@@ -34014,8 +34465,8 @@ def util_rotate_vector_to_y_axis(vin):
 #enddef util_rotate_vector_to_y_axis(vin,rotmat,istat)
 
 def undu_coils_to_filaments(kcoil=-1,callkey=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -34027,10 +34478,10 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -34051,6 +34502,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -34060,6 +34513,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -34090,6 +34545,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
 
 
   if len(Coils) == 0:
@@ -34110,7 +34567,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
 
   Fclc.close()
 
-  Rmode = 'FILAMENTS STDOUT=undumag.lun6'
+  Rmodus = 'FILAMENTS STDOUT=undumag.lun6'
   _undumag("Filaments")
 
   #Quit("Ende nach undumag")
@@ -34203,8 +34660,8 @@ def blockcorners(mp):
 #enddef blockcorners(mp)
 
 def ureadclc(callkey=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -34216,10 +34673,10 @@ def ureadclc(callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -34240,6 +34697,8 @@ def ureadclc(callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -34249,6 +34708,8 @@ def ureadclc(callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -34278,6 +34739,8 @@ def ureadclc(callkey=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   NL = "\n"
@@ -34457,6 +34920,7 @@ def ureadclc(callkey=''):
         div = [nxdiv,nydiv,nzdiv,yfracdiv,zfracdiv]
 
         corns = []
+
         if key.upper() == 'CORNERS':
 
           iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
@@ -34863,8 +35327,21 @@ def ureadclc(callkey=''):
 
     if typ.upper().find('BLOCK') > -1:
       corns = blockcorners(mp)
-    elif typ.upper() == 'CYL':
-      Quit("Cyl hier einfügen")
+    elif typ.upper() == 'CYLINDER':
+      DictCyls[cnam] = Ncylinder
+      size = mp[6]
+      rin = float(size[0])
+      rout = float(size[1])
+      h = float(size[2])
+      dphi = float(size[3])
+      nphi = int(mp[7][2])
+      if nphi < int(dphi/45.)+3: nphi = int(dphi/45.)+3
+      Ncylinder += 1
+      ccyl = 'ncyl_' + str(Ncylinder)
+      ncyl = ncylinder(ccyl,
+                       xcen,ycen,zcen,rout-rin,rin,rin,h,0.0,90.,dphi,nphi,1)
+      poly = cylinderpoly(ccyl)
+      Ntcyls.append([imp,mp,ccyl,poly])
     elif typ.upper() == 'FILE' or typ.upper() == 'CORNERS':
       corns = []
       for ic in range(len(mp[7])):
@@ -34876,6 +35353,11 @@ def ureadclc(callkey=''):
     else:
       print("*** Bad key " + typ + " in ureadclc ***")
     #endif typ == 'Block'
+
+    if typ.upper() == 'CYLINDER':
+      MagPolsTot[m].append(mp[4])
+      continue
+    #endif
 
     xmin = 1.e30
     xmax = -1.e30
@@ -34901,20 +35383,32 @@ def ureadclc(callkey=''):
     z = (zmin+zmax)/2.
 
     MagPolsTot[m].append([x,y,z])
-    verts,ifaces,faces = hull3d(corns)
+
+    verts,ifaces,faces,bounds = hull3d(corns)
     if type(verts) != Tdf:
       hull = pd.DataFrame(verts)
     else:
       hull=verts
     #endif
     hull.columns = ['xr','yr','zr']
+
     hull['x'] = hull.xr+xcen
     hull['y'] = hull.yr+ycen
     hull['z'] = hull.zr+zcen
 
+    DictHulls[cnam] = len(Hulls)
+    #print(NL,"Hulls ------",cnam,NL,DictHulls[cnam],NL,hull)
     Hulls.append(hull)
 
   #endfor m in range(NMagPolTot)
+
+
+  Xmin = 1.0e30
+  Xmax = -1.0e30
+  Ymin = 1.0e30
+  Ymax = -1.0e30
+  Zmin = 1.0e30
+  Zmax = -1.0e30
 
   if NMagPolTot:
 
@@ -34942,30 +35436,81 @@ def ureadclc(callkey=''):
       zmin = 1.e30
       zmax = -1.e30
 
-      for mmag in moth:
-        mag = DictMagPolsTot[mmag]
-        xmn = Hulls[mag].x.min()
-        xmx = Hulls[mag].x.max()
+      xmins = 1.e30
+      xmaxs = -1.e30
+      ymins = 1.e30
+      ymaxs = -1.e30
+      zmins = 1.e30
+      zmaxs = -1.e30
+
+      for cmag in moth:
+        mag = DictMagPolsTot[cmag]
+        mp = MagPolsTot[mag]
+        typ = mp[3]
+        if typ == 'Cylinder':
+          cyl = Ntcyls[DictCyls[cmag]]
+          nc = nget(cyl[2])
+          nh = Nhead[Ind]
+          xmn = nh[6][1]
+          xmx = nh[6][2]
+          zmn = nh[5][1]
+          zmx = nh[7][2]
+          ymn = nh[8][1]
+          ymx = nh[9][2]
+        else:
+          nhu = DictHulls[cmag]
+          xmn = Hulls[nhu].x.min()
+          xmx = Hulls[nhu].x.max()
+          ymn = Hulls[nhu].y.min()
+          ymx = Hulls[nhu].y.max()
+          zmn = Hulls[nhu].z.min()
+          zmx = Hulls[nhu].z.max()
+        #endif Cyl
+
         if xmn < xmin: xmin = xmn
         if xmx > xmax: xmax = xmx
-        ymn = Hulls[mag].y.min()
-        ymx = Hulls[mag].y.max()
         if ymn < ymin: ymin = ymn
         if ymx > ymax: ymax = ymx
-        zmn = Hulls[mag].z.min()
-        zmx = Hulls[mag].z.max()
         if zmn < zmin: zmin = zmn
         if zmx > zmax: zmax = zmx
-        if MagPolsTot[mag][2] == 1:
+
+        if mp[2] == 'yes' or str(mp[2]) == '1':
           if xmn < xmins: xmins = xmn
           if xmx > xmaxs: xmaxs = xmx
           if ymn < ymins: ymins = ymn
           if ymx > ymaxs: ymaxs = ymx
           if zmn < zmins: zmins = zmn
           if zmx > zmaxs: zmaxs = zmx
-          ispec = 1
         #endif MagPolsTot[mag][2] == 'yes'
+
+        if xmins < Xmin: Xmin = xmins
+        if xmaxs > Xmax: Xmax = xmaxs
+        if ymins < Ymin: Ymin = ymins
+        if ymaxs > Ymax: Ymax = ymaxs
+        if zmins < Zmin: Zmin = zmins
+        if zmaxs > Zmax: Zmax = zmaxs
+        if xmin < Xmin: Xmin = xmin
+        if xmax > Xmax: Xmax = xmax
+        if ymin < Ymin: Ymin = ymin
+        if ymax > Ymax: Ymax = ymax
+        if zmin < Zmin: Zmin = zmin
+        if zmax > Zmax: Zmax = zmax
+
       #endfor mag in moth
+
+      dx = Xmax - Xmin
+      Xmin -= dx*0.1
+      Xmax += dx*0.1
+
+      dy = Ymax - Ymin
+      Ymin -= dy*0.1
+      Ymax += dy*0.1
+
+      dz = Zmax - Zmin
+      Zmin -= dz*0.1
+      Zmax += dz*0.1
+
+      #print(xmin,xmax,ymin,ymax,zmin,zmax)
       moli.append([mo,
                    xmin,xmax,(xmin+xmax)/2.,
                    ymin,ymax,(ymin+ymax)/2.,
@@ -34977,17 +35522,8 @@ def ureadclc(callkey=''):
                         'xmin','xmax','x',
                         'ymin','ymax','y',
                         'zmin','zmax','z']
-    MothsXYZ = MothsXYZ.sort_values(by=['x','y','z']).reset_index()
 
-    if not ispec:
-      xmins = MothsXYZ.xmin.min()
-      xmaxs = MothsXYZ.xmax.max()
-      ymins = MothsXYZ.ymin.min()
-      ymaxs = MothsXYZ.ymax.max()
-      zmins = MothsXYZ.zmin.min()
-      zmaxs = MothsXYZ.zmax.max()
-    #endif not ispec
-
+    MothsXYZ = MothsXYZ.sort_values(by=['x','y','z'])
     SpecXYZ = [xmins,xmaxs,ymins,ymaxs,zmins,zmaxs]
 
     mocop = deepcopy(Moths)
@@ -35456,7 +35992,11 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
 
   print('\nSelection for ',select)
 
-  nt = ngeo.query(select)
+  if len(select) > 0:
+    nt = ngeo.query(select)
+  else:
+    nt = ngeo
+  #endif
 
   print('\nStart plotting')
 
@@ -35672,7 +36212,7 @@ def undu_mags(plopt='sameline'):
 
 #enddef undu_mags()
 
-def _ucoilplot(view='3d', mode='same', item=-1,callkey=''):
+def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   global Coils, Filaments, UnduColors, CurrLoops, NMagPolTot
 
@@ -35724,7 +36264,7 @@ def _ucoilplot(view='3d', mode='same', item=-1,callkey=''):
 
   if view.lower() == 'xz' or view.lower() == 'top':
 
-    if not mode == 'same':
+    if not modus == 'same':
       null(xmin-dx,xmax+dx,zmin-dz,zmax+dz)
       txyz(coiltit,"x/mm","z/mm")
     #endif
@@ -35741,7 +36281,7 @@ def _ucoilplot(view='3d', mode='same', item=-1,callkey=''):
 
   elif view.lower() == 'xy' or view.lower() == 'side':
 
-    if not mode == 'same':
+    if not modus == 'same':
       null(xmin-dx,xmax+dx,ymin-dy,ymax+dy)
       txyz(coiltit,"x/mm","y/mm")
     #endif
@@ -35758,7 +36298,7 @@ def _ucoilplot(view='3d', mode='same', item=-1,callkey=''):
 
   elif view.lower() == 'yz' or view.lower() == 'beam':
 
-    if not mode == 'same':
+    if not modus == 'same':
       null(zmin-dz,zmax+dz,ymin-dy,ymax+dy)
       txyz(coiltit,"z/mm","y/mm")
     #endif
@@ -35775,8 +36315,9 @@ def _ucoilplot(view='3d', mode='same', item=-1,callkey=''):
 
   else:
 
-    if not mode == 'same':
-      null3d(xmin-dx,xmax+dx,zmin-dx,zmax+dz,ymin-dy,ymax+dy)
+    if not modus == 'same':
+      #null3d(xmin-dx,xmax+dx,zmin-dx,zmax+dz,ymin-dy,ymax+dy)
+      null3d(Xmin,Xmax,Zmin,Zmax,Ymin,Ymax)
       txyz(coiltit,"x/mm","z/mm","y/mm")
     #endif
 
@@ -35796,10 +36337,10 @@ def _ucoilplot(view='3d', mode='same', item=-1,callkey=''):
 #              color)
     #endfor
 
-  #endif mode
+  #endif modus
 
 
-#enddef _ucoilplot(view='3d', mode='same')
+#enddef _ucoilplot(view='3d', modus='same')
 
 def _h3d(h3d,sx,sy,sz):
   global Hull3D
@@ -35814,9 +36355,9 @@ def _h3d(h3d,sx,sy,sz):
   #endfor p in plan
 #enddef _h3d(h3d,sx,sy,sz)
 
-def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,mode='line'):
-  global TransRotCop,EchoCLC
-
+def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,modus='line'):
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -35828,10 +36369,10 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -35852,6 +36393,8 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -35861,6 +36404,8 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -35891,97 +36436,71 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
 
   h3d =deepcopy(Hull3D)
 
   if cIxSym == 'yes' and cIySym == 'yes' and cIzSym == 'yes':
-    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,-1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,-1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,-1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,-1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,-1.,-1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
+    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,-1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,-1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,-1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,-1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,-1.,-1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   elif cIxSym == 'no' and cIySym == 'yes' and cIzSym == 'yes':
-    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,-1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
+    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,-1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   elif cIxSym == 'yes' and cIySym == 'no' and cIzSym == 'yes':
-    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,-1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,-1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
+    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,-1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,-1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   elif cIxSym == 'yes' and cIySym == 'yes' and cIzSym == 'no':
-    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,-1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,-1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
+    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,-1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,-1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   elif cIxSym == 'no' and cIySym == 'no' and cIzSym == 'yes':
-    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
+    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,1.,-1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   elif cIxSym == 'no' and cIySym == 'yes' and cIzSym == 'no':
-    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
+    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,-1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   elif cIxSym == 'yes' and cIySym == 'no' and cIzSym == 'no':
-    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
-    _h3d(h3d,-1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
+    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,-1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   elif cIxSym == 'no' and cIySym == 'no' and cIzSym == 'no':
-    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,mode)
+    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   #endif cIxSym == 'yes' and cIySym == 'yes' and if cIzSym == 'yes'
 
 #enddef plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1)
-def _plotMag(imp,key='3d'):
+
+def _plotMag(imp,key='3dselected'):
 
   if imp>=0:
     cmag = MagPolsTot[imp][0][0]
     if not cmag in DictMagPolsSel: _selectMag(cmag)
   #endif
 
-  #print('plotMag()?\n',imp,key,'\n',DictMothsSel,'\n',DictMagPolsSel)
+  #print('plotMag()?\n',imp,key,'\nDictMothsSel:\n',DictMothsSel,\
+  #'\nDictMagPolsSel:\n',DictMagPolsSel)
 
   if len(DictMagPolsSel) == 0:
-    print('_plotMag: Nothing selected')
+    wError(" Nothing selected! ")
     return
   #endif
 
   setisame(0)
 
-  if key == '3d' or key == '3dseleted':
-    _showGeoPython(mode='3dselected',item=-2,callkey='plotMoth')
+  if key == '3d' or key == '3dselected':
+    _showGeoPython(modus='3dselected',item=-4,callkey='plotMag')
   else:
-    for cmag in DictMagPolsSel:
-      imag = DictMagPolsSel[cmag]
-      cmoth = MagPolsTot[imag][0][1]
-      imoth = DictMoths[cmoth]
-      sel = "imoth==" + str(imoth)
-      xyz =  MothsXYZ.query(sel)
-      xmin = xyz.xmin[0]
-      xmax = xyz.xmax[0]
-      ymin = xyz.ymin[0]
-      ymax = xyz.ymax[0]
-      zmin = xyz.zmin[0]
-      zmax = xyz.zmax[0]
-      dx = (xmax - xmin) / 10.
-      dy = (ymax - ymin) / 10.
-      dz = (zmax - zmin) / 10.
-      if key == 'xy':
-        null(xmin-dx,xmax+dx,ymin-dy,ymax+dy)
-        txyz(cmoth,"x [mm]","y [mm]")
-      elif key == 'xz':
-        null(xmin-dx,xmax+dx,zmin-dz,zmax+dz)
-        txyz(cmoth,"x [mm]","z [mm]")
-      elif key == 'zy':
-        null(zmin-dz,zmax+dz,ymin-dy,ymax+dy)
-        txyz(cmoth,"z [mm]","y [mm]")
-      #endif
-    #endfor
-
-    for cmag in DictMagPolsSel:
-      i = DictMagPolsSel[cmag]
-      _plotSingleMag(imp,key=key,imoth=1)
-      #endfor
+    _showGeoPythonXYZ(modus=key,item=-2,callkey='plotMag')
   #endif
 
 #enddef _plotMag(imp,key='3d'):
@@ -35989,7 +36508,7 @@ def _plotMag(imp,key='3d'):
 def _plotSingleMag(imp,key='3d',imoth=0):
 
   global MagPolsTot,WallListMags,Isame
-  WallListMags.attributes('-topmost', 0)
+#  WallListMags.attributes('-topmost', 0)
 
   if imoth == 0:
     plopt = ''
@@ -36133,8 +36652,9 @@ def _plotSingleMag(imp,key='3d',imoth=0):
     #endfor
     txyz(cmag,"z[mm]","y[mm]")
   else:
-    _showGeoPython(mode='3d',item=imp,callkey='plotMag')
-    txyz(cmag,"x[mm]", "z[mm]","y[mm]")
+    print(NL,"Unknown key",key,'in _plotSingleMag',NL)
+#    _showGeoPython(modus='3d',item=imp,callkey='plotMag')
+#    txyz(cmag,"x[mm]", "z[mm]","y[mm]")
   #endif
 
   if imoth == 0:
@@ -36144,16 +36664,17 @@ def _plotSingleMag(imp,key='3d',imoth=0):
 
 #enddef _plotSingleMag(imp)
 
-def _showGeo(mode='3d',item=-1,kseg=0,callkey=''):
-  if mode == 'undu3d' or mode == 'eps':
-    _showGeoUndu(mode,item,kseg,callkey='showGeo')
+def _showGeo(modus='3d',item=-1,kseg=0,callkey=''):
+  if modus == 'undu3d' or modus == 'eps':
+    _showGeoUndu(modus,item,1,callkey='showGeo')
   else:
-    _showGeoPython(mode,item,callkey='showGeo')
-#enddef _showGeo(mode='3d',item=-1,kseg=0)
+    _showGeoPython(modus,item,callkey='showGeo')
+#enddef _showGeo(modus='3d',item=-1,kseg=0)
 
-def _showGeoPython(mode='3d',item=-1,callkey=''):
-  global TransRotCop,EchoCLC
+def _showGeoPython(modus='3d',item=-1,callkey=''):
 
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -36165,10 +36686,10 @@ def _showGeoPython(mode='3d',item=-1,callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -36189,6 +36710,8 @@ def _showGeoPython(mode='3d',item=-1,callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -36198,6 +36721,8 @@ def _showGeoPython(mode='3d',item=-1,callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -36227,6 +36752,917 @@ def _showGeoPython(mode='3d',item=-1,callkey=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
+  DictUnduColors = {}
+  UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
+  for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
+
+  print(NL,"trace:: _showGeoPython:",modus,item,callkey)
+  #return
+
+  isameo = getisame()
+
+  if not isameo: zone(1,1)
+
+  if NMagPolTot == 0 and len(Filaments) == 0:
+    print("Nothing to plot!")
+    return
+  #endif NMagPolTot == 0
+
+  xplmin = 1.e30
+  xplmax = -1.e30
+  yplmin = 1.e30
+  yplmax = -1.e30
+  zplmin = 1.e30
+  zplmax = -1.e30
+
+  if not NMagPolTot:
+    _ucoilplot('3d','notsame',callkey='ShowGeoPython')
+  #endif not NMagPolTot
+
+
+  if item == -4 and len(DictMagPolsSel) == 0:
+    wError(" Nothing selected! ")
+    return
+  #endif
+
+  plopt = ''
+
+  Kpdf = False
+  Kdump = False
+  Kecho = False
+
+  dot()
+  getzone('3d')
+
+  null3d(Xmin,Xmax,Zmin,Zmax,Ymin,Ymax)
+  setisame(1)
+
+  if item == -1: # modus 3d
+
+    if len(Filaments) and modus == '3d': _ucoilplot(callkey='ShowGeoPython')
+
+    for mm in range(Nmodul):
+
+      mo = Modules[mm]
+
+      lcen = mo[0]
+      w = lcen.split()
+
+      offx = ugui_calc_line(w[0])
+      offy = ugui_calc_line(w[1])
+      offz = ugui_calc_line(w[2])
+
+      nper = ugui_calc_line(mo[1])
+      s = mo[2].split()
+
+      perlen = ugui_calc_line(s[0])
+
+      vspace = [float(s[1]),float(s[2]),float(s[3])]
+      ang = float(s[4])
+
+      cen = [0.0,0.0,0.0]
+      vin = [1.0,0.0,0.0]
+      istat, vdum, rm = util_rotate(cen,vspace,ang,vin)
+
+      rot11 = rm[0][0]; rot12 = rm[0][1]; rot13 = rm[0][2]
+      rot21 = rm[1][0]; rot22 = rm[1][1]; rot23 = rm[1][2]
+      rot31 = rm[2][0]; rot32 = rm[2][1]; rot33 = rm[2][2]
+
+      tx = vspace[0] * perlen
+      ty = vspace[1] * perlen
+      tz = vspace[2] * perlen
+
+      w = mo[3].split()
+      bsx = ugui_calc_line(w[0])
+      bsy = ugui_calc_line(w[1])
+      bsz = ugui_calc_line(w[2])
+
+      nmp = NMagPolTot
+
+      #print("nmp:",nmp)
+
+      for imp in range(nmp):
+
+        mp = MagPolsTot[imp]
+
+        cmag = mp[0][0]
+        cmoth = mp[0][1]
+
+        col = mp[5][5]
+
+        if not col in DictUnduColors:
+          kcol = int(ugui_calc_line(col))
+          col = UnduColors[kcol]
+        #endif col not in UnduColors
+
+        points = []
+        iscyl = 0
+
+        cen = mp[4]
+
+        xc = ugui_calc_line(cen[0]) + tx
+        yc = ugui_calc_line(cen[1]) + ty
+        zc = ugui_calc_line(cen[2]) + tz
+
+        if mp[3].find('Block') > -1:
+
+          corns = blockcorners(mp)
+
+          for corn in corns:
+
+            xx = corn[0]; yy = corn[1]; zz = corn[2]
+
+            if callkey != 'plotMag':
+              if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                t = TransRot(cmag,cmoth,xx,yy,zz)
+                xx = t[0]
+                yy = t[1]
+                zz = t[2]
+                #print("t:",cmag,yy,t[2])
+              #endif
+            #endif
+
+            x = xc + rot11*xx + rot12*yy + rot13*zz
+            y = yc + rot21*xx + rot22*yy + rot23*zz
+            z = zc + rot31*xx + rot32*yy + rot33*zz
+
+            points.append([x,y,z])
+
+          #endfor corn in corns
+
+        elif mp[3] == 'File' or mp[3] == 'Corners':
+
+          for ic in range(len(mp[7])):
+
+            xx = xc + calc_var(mp[7][ic][0])
+            yy = yc + calc_var(mp[7][ic][1])
+            zz = zc + calc_var(mp[7][ic][2])
+
+            if callkey != 'plotMag':
+              if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                t = TransRot(cmag,cmoth,c1,c2,c3)
+                xx = t[0]
+                yy = t[1]
+                zz = t[2]
+              #endif
+            #endif
+
+            x = xc + rot11*xx + rot12*yy + rot13*zz
+            y = yc + rot21*xx + rot22*yy + rot23*zz
+            z = zc + rot31*xx + rot32*yy + rot33*zz
+
+            points.append([x,y,z])
+
+          #endfor ic in range(len(mp[7]))
+
+        elif mp[3] == 'Cylinder':
+          iscyl = 1
+        else:
+          Quit("_showGeoPython: " + mp[3] + " hier einfügen")
+        #endif mp[3] == 'Block'
+
+        dtx = -tx; dty = -ty; dtz = -tz
+
+        mper = nper
+
+        for iper in range(mper):
+
+          if not iscyl:
+
+            pp = []
+
+            for p in points:
+              pp.append([p[0]+dtx,p[1]+dty,p[2]+dtz])
+            #endfor p in points
+
+            verts,ifaces,faces,bounds = hull3d(pp)
+            plothull3dxzy(isame=1,edgecolor=col,ishow=0,modus='line')
+
+            if bounds[0] < xplmin: xplmin = bounds[0]
+            if bounds[1] > xplmax: xplmax = bounds[1]
+            if bounds[2] < yplmin: yplmin = bounds[2]
+            if bounds[3] > yplmax: yplmax = bounds[3]
+            if bounds[4] < zplmin: zplmin = bounds[4]
+            if bounds[5] > zplmax: zplmax = bounds[5]
+
+          else: #iscyl
+
+            for ntc in Ntcyls:
+              if ntc[1][0][0] == cmag:
+                poly,bounds = cylinderpoly(ntc[2])
+                for pgn in poly:
+                  pp = []
+                  for p in pgn:
+                    if callkey != 'plotMag':
+                      if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                        p = TransRot(cmag,cmoth,p[0],p[2],p[1])
+                      #endif
+                    #endif
+                    xx = p[0]
+                    yy = p[1]
+                    zz = p[2]
+                    x = xc + rot11*xx + rot12*yy + rot13*zz + dtx
+                    y = yc + rot21*xx + rot22*yy + rot23*zz + dty
+                    z = zc + rot31*xx + rot32*yy + rot33*zz + dtz
+                    if x < xplmin: xplmin = x
+                    if x > xplmax: xplmax = x
+                    if y < yplmin: yplmin = y
+                    if y > yplmax: yplmax = y
+                    if z < zplmin: zplmin = z
+                    if z > zplmax: zplmax = z
+                    pp.append([x,y,z])
+                  #endfor
+                  pt = np.array(pp).T
+                  #print(pt[0])
+                  vplxyz(pt[0],pt[2],pt[1],'samelineclosed',color=col)
+                #endfor
+                break
+              #endif
+            #endfor
+
+          #endif iscyl
+
+          dtx += tx; dty += ty; dtz += tz
+
+        #enddofor iper in range(1,nper+1):
+
+      #endfor mag in range(nmag)
+
+    #endfor mm in range(Nmodul)
+
+    dx = (xplmax - xplmin) * 0.05
+    dy = (yplmax - yplmin) * 0.05
+    dz = (zplmax - zplmin) * 0.05
+
+    ax = plt.gca()
+
+    ax.set_xlim(xplmin-dx,xplmax+dx)
+    ax.set_zlim(yplmin-dy,yplmax+dy)
+    ax.set_ylim(zplmin-dz,zplmax+dz)
+
+    txyz(Ucomment,"x [mm]","z [mm]","y [mm]")
+
+  #endif item == -1
+
+  if item == -2: # modus 3dperiodic
+
+    for mm in range(Nmodul):
+
+      mo = Modules[mm]
+
+      lcen = mo[0]
+      w = lcen.split()
+
+      offx = ugui_calc_line(w[0])
+      offy = ugui_calc_line(w[1])
+      offz = ugui_calc_line(w[2])
+
+      nper = ugui_calc_line(mo[1])
+      s = mo[2].split()
+
+      perlen = ugui_calc_line(s[0])
+
+      vspace = [float(s[1]),float(s[2]),float(s[3])]
+      ang = float(s[4])
+
+      cen = [0.0,0.0,0.0]
+      vin = [1.0,0.0,0.0]
+      istat, vdum, rm = util_rotate(cen,vspace,ang,vin)
+
+      rot11 = rm[0][0]; rot12 = rm[0][1]; rot13 = rm[0][2]
+      rot21 = rm[1][0]; rot22 = rm[1][1]; rot23 = rm[1][2]
+      rot31 = rm[2][0]; rot32 = rm[2][1]; rot33 = rm[2][2]
+
+      tx = vspace[0] * perlen
+      ty = vspace[1] * perlen
+      tz = vspace[2] * perlen
+
+      w = mo[3].split()
+      bsx = ugui_calc_line(w[0])
+      bsy = ugui_calc_line(w[1])
+      bsz = ugui_calc_line(w[2])
+
+      nmp = NMagPolTot
+
+      #print("nmp:",nmp)
+
+      for imp in range(nmp):
+
+        mp = MagPolsTot[imp]
+
+        cmag = mp[0][0]
+        cmoth = mp[0][1]
+
+        sspec = str(mp[2])
+
+        if sspec == '1' or sspec == 'yes': continue
+
+        col = mp[5][5]
+
+        if not col in DictUnduColors:
+          kcol = int(ugui_calc_line(col))
+          col = UnduColors[kcol]
+        #endif col not in UnduColors
+
+        points = []
+        iscyl = 0
+
+        cen = mp[4]
+
+        xc = ugui_calc_line(cen[0]) + tx
+        yc = ugui_calc_line(cen[1]) + ty
+        zc = ugui_calc_line(cen[2]) + tz
+
+        if mp[3].find('Block') > -1:
+
+          corns = blockcorners(mp)
+
+          for corn in corns:
+
+            xx = corn[0]; yy = corn[1]; zz = corn[2]
+
+            if callkey != 'plotMag':
+              if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                t = TransRot(cmag,cmoth,xx,yy,zz)
+                xx = t[0]
+                yy = t[1]
+                zz = t[2]
+                #print("t:",cmag,yy,t[2])
+              #endif
+            #endif
+
+            x = xc + rot11*xx + rot12*yy + rot13*zz
+            y = yc + rot21*xx + rot22*yy + rot23*zz
+            z = zc + rot31*xx + rot32*yy + rot33*zz
+            points.append([x,y,z])
+
+          #endfor corn in corns
+
+        elif mp[3] == 'File' or mp[3] == 'Corners':
+
+          for ic in range(len(mp[7])):
+
+            c1 = xc + calc_var(mp[7][ic][0])
+            c2 = yc + calc_var(mp[7][ic][1])
+            c3 = zc + calc_var(mp[7][ic][2])
+
+            if callkey != 'plotMag':
+              if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                t = TransRot(cmag,cmoth,c1,c2,c3)
+                c1 = t[0]
+                c2 = t[1]
+                c3 = t[2]
+              #endif
+            #endif
+
+            points.append([c1,c2,c3])
+
+          #endfor ic in range(len(mp[7]))
+
+        elif mp[3] == 'Cylinder':
+          iscyl = 1
+        else:
+          Quit("_showGeoPython: " + mp[3] + " hier einfügen")
+        #endif mp[3] == 'Block'
+
+        dtx = -tx; dty = -ty; dtz = -tz
+
+        mper = nper
+
+        for iper in range(mper):
+
+          if not iscyl:
+
+            pp = []
+
+            for p in points:
+              pp.append([p[0]+dtx,p[1]+dty,p[2]+dtz])
+            #endfor p in points
+
+            verts,ifaces,faces,bounds = hull3d(pp)
+
+            if bounds[0] < xplmin: xplmin = bounds[0]
+            if bounds[1] > xplmax: xplmax = bounds[1]
+            if bounds[2] < yplmin: yplmin = bounds[2]
+            if bounds[3] > yplmax: yplmax = bounds[3]
+            if bounds[4] < zplmin: zplmin = bounds[4]
+            if bounds[5] > zplmax: zplmax = bounds[5]
+
+            plothull3dxzy(isame=1,edgecolor=col,ishow=0,modus='line')
+
+          else: #iscyl
+
+            for ntc in Ntcyls:
+              if ntc[1][0][0] == cmag:
+                poly,bounds = cylinderpoly(ntc[2])
+                for pgn in poly:
+                  pp = []
+                  for p in pgn:
+                    if callkey != 'plotMag':
+                      if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                        p = TransRot(cmag,cmoth,p[0],p[2],p[1])
+                      #endif
+                    #endif
+                    xx = p[0]
+                    yy = p[1]
+                    zz = p[2]
+                    x = xc + rot11*xx + rot12*yy + rot13*zz + dtx
+                    y = yc + rot21*xx + rot22*yy + rot23*zz + dty
+                    z = zc + rot31*xx + rot32*yy + rot33*zz + dtz
+                    if x < xplmin: xplmin = x
+                    if x > xplmax: xplmax = x
+                    if y < yplmin: yplmin = y
+                    if y > yplmax: yplmax = y
+                    if z < zplmin: zplmin = z
+                    if z > zplmax: zplmax = z
+                    pp.append([x,y,z])
+                  #endfor
+                  pt = np.array(pp).T
+                  #print(pt[0])
+                  vplxyz(pt[0],pt[2],pt[1],'samelineclosed',color=col)
+                #endfor
+                break
+              #endif
+            #endfor
+
+          #endif iscyl
+
+          dtx += tx; dty += ty; dtz += tz
+
+        #enddofor iper in range(1,nper+1):
+
+      #endfor mag in range(nmag)
+
+    #endfor mm in range(Nmodul)
+
+    dx = (xplmax - xplmin) * 0.05
+    dy = (yplmax - yplmin) * 0.05
+    dz = (zplmax - zplmin) * 0.05
+
+    ax = plt.gca()
+
+    ax.set_xlim(xplmin-dx,xplmax+dx)
+    ax.set_zlim(yplmin-dy,yplmax+dy)
+    ax.set_ylim(zplmin-dz,zplmax+dz)
+
+    txyz(Ucomment,"x [mm]","z [mm]","y [mm]")
+
+  #endif item == -2
+
+  if item == -3: # modus 3dspecials
+
+    nmp = NspecMagPol
+
+    #print("nmp:",nmp)
+
+    for imp in range(nmp):
+
+      mp = SpecMagPols[imp]
+
+      cmag = mp[0][0]
+      cmoth = mp[0][1]
+
+      col = mp[5][5]
+
+      if not col in DictUnduColors:
+        kcol = int(ugui_calc_line(col))
+        col = UnduColors[kcol]
+      #endif col not in UnduColors
+
+      points = []
+      iscyl = 0
+
+      cen = mp[4]
+
+      xc = ugui_calc_line(cen[0])
+      yc = ugui_calc_line(cen[1])
+      zc = ugui_calc_line(cen[2])
+
+      if mp[3].find('Block') > -1:
+
+        corns = blockcorners(mp)
+
+        for corn in corns:
+
+          xx = corn[0]; yy = corn[1]; zz = corn[2]
+
+          if callkey != 'plotMag':
+            if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+              t = TransRot(cmag,cmoth,xx,yy,zz)
+              xx = t[0]
+              yy = t[1]
+              zz = t[2]
+              #print("t:",cmag,yy,t[2])
+            #endif
+          #endif
+
+          points.append([xx,yy,zz])
+
+        #endfor corn in corns
+
+      elif mp[3] == 'File' or mp[3] == 'Corners':
+
+        for ic in range(len(mp[7])):
+
+          c1 = xc + calc_var(mp[7][ic][0])
+          c2 = yc + calc_var(mp[7][ic][1])
+          c3 = zc + calc_var(mp[7][ic][2])
+
+          if callkey != 'plotMag':
+            if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+              t = TransRot(cmag,cmoth,c1,c2,c3)
+              c1 = t[0]
+              c2 = t[1]
+              c3 = t[2]
+            #endif
+          #endif
+
+          points.append([c1,c2,c3])
+
+        #endfor ic in range(len(mp[7]))
+
+      elif mp[3] == 'Cylinder':
+        iscyl = 1
+      else:
+        Quit("_showGeoPython: " + mp[3] + " hier einfügen")
+      #endif mp[3] == 'Block'
+
+      if not iscyl:
+
+        pp = []
+
+        for p in points:
+          pp.append([p[0],p[1],p[2]])
+        #endfor p in points
+
+        verts,ifaces,faces,bounds = hull3d(pp)
+
+        if bounds[0] < xplmin: xplmin = bounds[0]
+        if bounds[1] > xplmax: xplmax = bounds[1]
+        if bounds[2] < yplmin: yplmin = bounds[2]
+        if bounds[3] > yplmax: yplmax = bounds[3]
+        if bounds[4] < zplmin: zplmin = bounds[4]
+        if bounds[5] > zplmax: zplmax = bounds[5]
+
+        plothull3dxzy(isame=1,edgecolor=col,ishow=0,modus='line')
+
+      else: #iscyl
+
+        for ntc in Ntcyls:
+          if ntc[1][0][0] == cmag:
+            poly,bounds = cylinderpoly(ntc[2])
+            for pgn in poly:
+              pp = []
+              for p in pgn:
+                if callkey != 'plotMag':
+                  if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                    p = TransRot(cmag,cmoth,p[0],p[2],p[1])
+                  #endif
+                #endif
+                x = p[0]
+                y = p[1]
+                z = p[2]
+                if x < xplmin: xplmin = x
+                if x > xplmax: xplmax = x
+                if y < yplmin: yplmin = y
+                if y > yplmax: yplmax = y
+                if z < zplmin: zplmin = z
+                if z > zplmax: zplmax = z
+                pp.append([x,y,z])
+              #endfor
+              pt = np.array(pp).T
+              #print(pt[0])
+              vplxyz(pt[0],pt[2],pt[1],'samelineclosed',color=col)
+            #endfor
+            break
+          #endif
+        #endfor
+
+      #endif iscyl
+
+    #endfor mag in range(nmp)
+
+    dx = (xplmax - xplmin) * 0.05
+    dy = (yplmax - yplmin) * 0.05
+    dz = (zplmax - zplmin) * 0.05
+
+    ax = plt.gca()
+
+    ax.set_xlim(xplmin-dx,xplmax+dx)
+    ax.set_zlim(yplmin-dy,yplmax+dy)
+    ax.set_ylim(zplmin-dz,zplmax+dz)
+
+    txyz(Ucomment + ", special items","x [mm]","z [mm]","y [mm]")
+
+  #endif item == -3
+
+  if item == -4: # modus 3dselected
+
+    for mm in range(Nmodul):
+
+      mo = Modules[mm]
+
+      lcen = mo[0]
+      w = lcen.split()
+
+      offx = ugui_calc_line(w[0])
+      offy = ugui_calc_line(w[1])
+      offz = ugui_calc_line(w[2])
+
+      nper = ugui_calc_line(mo[1])
+      s = mo[2].split()
+
+      perlen = ugui_calc_line(s[0])
+
+      vspace = [float(s[1]),float(s[2]),float(s[3])]
+      ang = float(s[4])
+
+      cen = [0.0,0.0,0.0]
+      vin = [1.0,0.0,0.0]
+      istat, vdum, rm = util_rotate(cen,vspace,ang,vin)
+
+      rot11 = rm[0][0]; rot12 = rm[0][1]; rot13 = rm[0][2]
+      rot21 = rm[1][0]; rot22 = rm[1][1]; rot23 = rm[1][2]
+      rot31 = rm[2][0]; rot32 = rm[2][1]; rot33 = rm[2][2]
+
+      tx = vspace[0] * perlen
+      ty = vspace[1] * perlen
+      tz = vspace[2] * perlen
+
+      w = mo[3].split()
+      bsx = ugui_calc_line(w[0])
+      bsy = ugui_calc_line(w[1])
+      bsz = ugui_calc_line(w[2])
+
+      nmp = len(MagPolsSel)
+
+      if nmp == 0:
+        wError(" Nothing selected! ")
+        return
+      #endif
+
+      #print("nmp:",nmp)
+
+      for imp in range(nmp):
+
+        cmag = MagPolsSel[imp]
+        imag = DictMagPolsTot[cmag]
+
+        mp = MagPolsTot[imag]
+        cmoth = mp[0][1]
+
+        col = mp[5][5]
+
+        if not col in DictUnduColors:
+          kcol = int(ugui_calc_line(col))
+          col = UnduColors[kcol]
+        #endif col not in UnduColors
+
+        points = []
+        iscyl = 0
+
+        cen = mp[4]
+
+        xc = ugui_calc_line(cen[0]) + tx
+        yc = ugui_calc_line(cen[1]) + ty
+        zc = ugui_calc_line(cen[2]) + tz
+
+        if mp[3].find('Block') > -1:
+
+          corns = blockcorners(mp)
+
+          for corn in corns:
+
+            xx = corn[0]; yy = corn[1]; zz = corn[2]
+            if callkey != 'plotMag':
+              if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                t = TransRot(cmag,cmoth,xx,yy,zz)
+                xx = t[0]
+                yy = t[1]
+                zz = t[2]
+                #print("t:",cmag,yy,t[2])
+              #endif
+            #endif
+
+            x = xc + rot11*xx + rot12*yy + rot13*zz
+            y = yc + rot21*xx + rot22*yy + rot23*zz
+            z = zc + rot31*xx + rot32*yy + rot33*zz
+
+            points.append([x,y,z])
+
+          #endfor corn in corns
+
+        elif mp[3] == 'File' or mp[3] == 'Corners':
+
+          for ic in range(len(mp[7])):
+
+            c1 = xc + calc_var(mp[7][ic][0])
+            c2 = yc + calc_var(mp[7][ic][1])
+            c3 = zc + calc_var(mp[7][ic][2])
+
+            if callkey != 'plotMag':
+              if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                t = TransRot(cmag,cmoth,c1,c2,c3)
+                c1 = t[0]
+                c2 = t[1]
+                c3 = t[2]
+              #endif
+            #endif
+
+            points.append([c1,c2,c3])
+
+          #endfor ic in range(len(mp[7]))
+
+        elif mp[3] == 'Cylinder':
+          iscyl = 1
+        else:
+          Quit("_showGeoPython: " + mp[3] + " hier einfügen")
+        #endif mp[3] == 'Block'
+
+        dtx = -tx; dty = -ty; dtz = -tz
+
+        mper = nper
+
+        for iper in range(mper):
+
+          if not iscyl:
+
+            pp = []
+
+            for p in points:
+              pp.append([p[0]+dtx,p[1]+dty,p[2]+dtz])
+            #endfor p in points
+
+            verts,ifaces,faces,bounds = hull3d(pp)
+            plothull3dxzy(isame=1,edgecolor=col,ishow=0,modus='line')
+
+            if bounds[0] < xplmin: xplmin = bounds[0]
+            if bounds[1] > xplmax: xplmax = bounds[1]
+            if bounds[2] < yplmin: yplmin = bounds[2]
+            if bounds[3] > yplmax: yplmax = bounds[3]
+            if bounds[4] < zplmin: zplmin = bounds[4]
+            if bounds[5] > zplmax: zplmax = bounds[5]
+
+          else: #iscyl
+
+            for ntc in Ntcyls:
+              if ntc[1][0][0] == cmag:
+
+                poly,bounds = cylinderpoly(ntc[2])
+
+                for pgn in poly:
+                  pp = []
+                  for p in pgn:
+
+                    if callkey != 'plotMag':
+                      if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                        p = TransRot(cmag,cmoth,p[0],p[2],p[1])
+                      #endif
+                      xx = p[0]
+                      yy = p[1]
+                      zz = p[2]
+                    else:
+                      xx = p[0]
+                      yy = p[2]
+                      zz = p[1]
+                    #endif
+
+                    x = xc + rot11*xx + rot12*yy + rot13*zz + dtx
+                    y = yc + rot21*xx + rot22*yy + rot23*zz + dty
+                    z = zc + rot31*xx + rot32*yy + rot33*zz + dtz
+
+                    if x < xplmin: xplmin = x
+                    if x > xplmax: xplmax = x
+                    if y < yplmin: yplmin = y
+                    if y > yplmax: yplmax = y
+                    if z < zplmin: zplmin = z
+                    if z > zplmax: zplmax = z
+
+                    pp.append([x,y,z])
+                  #endfor
+                  pt = np.array(pp).T
+                  #print(pt[0])
+                  vplxyz(pt[0],pt[2],pt[1],'samelineclosed',color=col)
+                #endfor
+                break
+              #endif
+            #endfor
+
+          #endif iscyl
+
+          if callkey != 'plotMag': break
+
+          dtx += tx; dty += ty; dtz += tz
+
+        #enddofor iper in range(1,nper+1):
+
+      #endfor mag in range(nmag)
+
+    #endfor mm in range(Nmodul)
+
+    dx = (xplmax - xplmin) * 0.05
+    dy = (yplmax - yplmin) * 0.05
+    dz = (zplmax - zplmin) * 0.05
+
+    ax = plt.gca()
+
+    ax.set_xlim(xplmin-dx,xplmax+dx)
+    ax.set_zlim(yplmin-dy,yplmax+dy)
+    ax.set_ylim(zplmin-dz,zplmax+dz)
+
+    txyz(Ucomment + " ,selected items","x [mm]","z [mm]","y [mm]")
+
+  #endif item == -4
+
+  setisame(isameo)
+
+#enddef _showGeoPython(modus='3d',item=-1)
+
+def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
+  Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
+  NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
+  Nmat, Materials, Br, Rmu, Coating, PerLen, ChamfM, ChamfP, MCol, PCol, \
+  AirGap, KeeperGap, MspaceX, MoffY, Parameters, Variables, Npar, Ncalc, Nvar, \
+  CalcLines, Calcs, Pars, Ucomment, Modules, MagPolsTotOld, MagPolOld, \
+  EditMag_CheckMode,CopyMag_CheckMode, EditMagX, EditMagY,CopyMagX, CopyMagY,WWait, WError, \
+  CheckVars, CheckCalcs, CheckDictCalcs, CheckVarNum, VarNum, \
+  MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
+  S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
+
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
+
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
+  global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
+  WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
+
+  global AppleII_Mode, AppleII, AppleIIOld, VAppleII, \
+  S_nPer_AppleII, S_FullGap_AppleII, \
+  S_Xlen_AppleII, S_Ylen_AppleII, S_Zlen_AppleII, \
+  S_DeadCoat_AppleII, S_AirGap_AppleII, S_Br_AppleII, S_Mu_AppleII, S_KsiPerp_AppleII, \
+  S_HorSlit_AppleII, S_S2Shift_AppleII, S_S3Shift_AppleII, \
+  S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
+
+  global V_CmagOld, V_CmothOld, V_XcenOld, V_YcenOld, V_ZcenOld, V_cornsOld, V_NcornOld, V_CornFileOld, \
+  V_nXdivOld, V_nYdivOld, V_nZdivOld, \
+  V_FracDivYOld,   V_FracDivZOld,  V_XlenOld, V_YlenOld, V_ZlenOld, V_KeyOld, V_MatTypeOld, V_MatOld, \
+  V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
+
+  global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
+  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
+  S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
+  global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
+  V_nXdiv, V_nYdiv, V_nZdiv, \
+  V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
+  V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
+
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  S_nXdiv, S_nYdiv, S_nZdiv, \
+  S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
+  S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
+
+  global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
+  S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
+  S_Iron_FracDivY,S_Iron_FracDivZ,S_Iron_Xlen, S_Iron_Ylen, S_Iron_Zlen, S_Iron_Key, S_Iron_MatType, S_Iron_Mat, \
+  S_Iron_Bc, S_Iron_Bxn, S_Iron_Byn, S_Iron_Bzn, S_Iron_Ispec, S_Iron_Color
+
+  global LastCLC, LastNAM
+  global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
+  NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
+  global Ngeo
+
+  global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
+  S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
+  cIxSym, cIySym, cIzSym, KxCenter, cIxSym, Xcenter, Xsym
+
+  global GeoWaddVars, GeoWlistVars
+  global Mirror, VMirror, Hybrid, VHybrid, Hybrid_Mode
+
+  global WSetMap, \
+  S_xMapMin,S_yMapMin,S_zMapMin,S_xMapMax,S_yMapMax,S_zMapMax, S_MHmap, \
+  S_dxMap,S_NxMap,S_NyMap,S_NzMap,S_dxBeff,S_NxBeff, S_xMinBeff,S_xMaxBeff
+
+  global NCoil, Coils, Filaments, S_Current_Coil, S_Name_Coil, \
+  S_nWindings_Coil, S_Filling_Coil, \
+  S_Xcen_Coil,S_Ycen_Coil,S_Zcen_Coil,S_VnX_Coil,S_VnY_Coil,S_VnZ_Coil, \
+  S_AngRot_Coil,S_xLenOut_Coil,S_zLenIn_Coil,S_zLenOut_Coil,S_RadiusIn_Coil, \
+  S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
+  WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
+  WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   DictUnduColors = {}
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
@@ -36242,102 +37678,153 @@ def _showGeoPython(mode='3d',item=-1,callkey=''):
     return
   #endif NMagPolTot == 0
 
-  xmin = 1.0e30
-  xmax = -1.0e30
-  ymin = 1.0e30
-  ymax = -1.0e30
-  zmin = 1.0e30
-  zmax = -1.0e30
+  if item == -1: # Plot all
 
-  xMinCoil = 1.0e30
-  xMaxCoil = -1.0e30
-  yMinCoil = 1.0e30
-  yMaxCoil = -1.0e30
-  zMinCoil = 1.0e30
-  zMaxCoil = -1.0e30
+    xmin = 1.0e30
+    xmax = -1.0e30
+    ymin = 1.0e30
+    ymax = -1.0e30
+    zmin = 1.0e30
+    zmax = -1.0e30
 
-  if len(Filaments):
-    for f in Filaments:
-      for w in f:
-        x1 = float(w[0])
-        y1 = float(w[1])
-        z1 = float(w[2])
-        x2 = float(w[3])
-        y2 = float(w[4])
-        z2 = float(w[5])
-        if x2 < xMinCoil: xMinCoil = x2
-        if x2 > xMaxCoil: xMaxCoil = x2
-        if y2 < yMinCoil: yMinCoil = y2
-        if y2 > yMaxCoil: yMaxCoil = y2
-        if z2 < zMinCoil: zMinCoil = z2
-        if z2 > zMaxCoil: zMaxCoil = z2
-        if x1 < xMinCoil: xMinCoil = x1
-        if x1 > xMaxCoil: xMaxCoil = x1
-        if y1 < yMinCoil: yMinCoil = y1
-        if y1 > yMaxCoil: yMaxCoil = y1
-        if z1 < zMinCoil: zMinCoil = z1
-        if z1 > zMaxCoil: zMaxCoil = z1
-      #endfor w in f
-    #endfor f in Filaments
-  #endif len(Filaments)
+    xMinCoil = 1.0e30
+    xMaxCoil = -1.0e30
+    yMinCoil = 1.0e30
+    yMaxCoil = -1.0e30
+    zMinCoil = 1.0e30
+    zMaxCoil = -1.0e30
 
-  if not NMagPolTot:
-    _ucoilplot('3d','notsame',callkey='ShowGeoPython')
-    return
-  #endif not NMagPolTot
+    if len(Filaments):
+      for f in Filaments:
+        for w in f:
+          x1 = float(w[0])
+          y1 = float(w[1])
+          z1 = float(w[2])
+          x2 = float(w[3])
+          y2 = float(w[4])
+          z2 = float(w[5])
+          if x2 < xMinCoil: xMinCoil = x2
+          if x2 > xMaxCoil: xMaxCoil = x2
+          if y2 < yMinCoil: yMinCoil = y2
+          if y2 > yMaxCoil: yMaxCoil = y2
+          if z2 < zMinCoil: zMinCoil = z2
+          if z2 > zMaxCoil: zMaxCoil = z2
+          if x1 < xMinCoil: xMinCoil = x1
+          if x1 > xMaxCoil: xMaxCoil = x1
+          if y1 < yMinCoil: yMinCoil = y1
+          if y1 > yMaxCoil: yMaxCoil = y1
+          if z1 < zMinCoil: zMinCoil = z1
+          if z1 > zMaxCoil: zMaxCoil = z1
+        #endfor w in f
+      #endfor f in Filaments
+    #endif len(Filaments)
 
-  xmin = min(xmin,xMinCoil)
-  xmax = max(xmax,xMaxCoil)
-  ymin = min(ymin,yMinCoil)
-  ymax = max(ymax,yMaxCoil)
-  zmin = min(zmin,zMinCoil)
-  zmax = max(zmax,zMaxCoil)
+    if not NMagPolTot:
+      _ucoilplot(modus,'notsame',callkey='ShowGeoPython')
+    #endif not NMagPolTot
 
-  #print("_showGeoPython:",NMagPolTot,NspecMagPol,item)
+    xmin = min(xmin,xMinCoil)
+    xmax = max(xmax,xMaxCoil)
+    ymin = min(ymin,yMinCoil)
+    ymax = max(ymax,yMaxCoil)
+    zmin = min(zmin,zMinCoil)
+    zmax = max(zmax,zMaxCoil)
 
-  if NMagPolTot > NspecMagPol:
+    if NMagPolTot > NspecMagPol:
 
-    tranMaxX = -1.0e30
-    tranMaxY = -1.0e30
-    tranMaxZ = -1.0e30
+      tranMaxX = -1.0e30
+      tranMaxY = -1.0e30
+      tranMaxZ = -1.0e30
 
-    for mm in range(Nmodul):
+      for mm in range(Nmodul):
 
-      mo = Modules[mm]
-      mo2 = mo[1]
+        mo = Modules[mm]
+        mo2 = mo[1]
 
-      nper = ugui_calc_line(mo2)
-      w = mo[2].split()
-      perlen = ugui_calc_line(w[0])
+        nper = ugui_calc_line(mo2)
+        w = mo[2].split()
+        perlen = ugui_calc_line(w[0])
 
-      tx = ugui_calc_line(w[1]) * (nper-1) * perlen
-      ty = ugui_calc_line(w[2]) * (nper-1) * perlen
-      tz = ugui_calc_line(w[3]) * (nper-1) * perlen
+        tx = ugui_calc_line(w[1]) * (nper-1) * perlen
+        ty = ugui_calc_line(w[2]) * (nper-1) * perlen
+        tz = ugui_calc_line(w[3]) * (nper-1) * perlen
 
-      if tx > tranMaxX: tranMaxX = tx
-      if ty > tranMaxY: tranMaxY = ty
-      if tz > tranMaxZ: tranMaxZ = tz
+        if tx > tranMaxX: tranMaxX = tx
+        if ty > tranMaxY: tranMaxY = ty
+        if tz > tranMaxZ: tranMaxZ = tz
 
-    #endfor mm in range(Nmodul)
+      #endfor mm in range(Nmodul)
 
-  else:
+    else:
 
-    tranMaxX = 0.0
-    tranMaxY = 0.0
-    tranMaxZ = 0.0
+      tranMaxX = 0.0
+      tranMaxY = 0.0
+      tranMaxZ = 0.0
 
-  #endif NMagPolTot > NspecMagPol
+    #endif NMagPolTot > NspecMagPol
 
-  Ysym = 0.0
-  Zsym = 0.0
-  ical = 0
+    if NspecMagPol > 0:
+      xmin = min(MothsXYZ.xmin.min()+tranMaxX,SpecXYZ[0])
+      xmax = max(MothsXYZ.xmax.max()+tranMaxX,SpecXYZ[1])
+      ymin = min(MothsXYZ.ymin.min()+tranMaxY,SpecXYZ[2])
+      ymax = max(MothsXYZ.ymax.max()+tranMaxY,SpecXYZ[3])
+      zmin = min(MothsXYZ.zmin.min()+tranMaxZ,SpecXYZ[4])
+      zmax = max(MothsXYZ.zmax.max()+tranMaxZ,SpecXYZ[5])
+    else:
+      xmin = MothsXYZ.xmin.min()+tranMaxX
+      xmax = MothsXYZ.xmax.max()+tranMaxX
+      ymin = MothsXYZ.ymin.min()+tranMaxY
+      ymax = MothsXYZ.ymax.max()+tranMaxY
+      zmin = MothsXYZ.zmin.min()+tranMaxZ
+      zmax = MothsXYZ.zmax.max()+tranMaxZ
+    #endif NspecMagPol > 0
 
-  if item < 0:
+    Ysym = 0.0
+    Zsym = 0.0
+    ical = 0
 
-    if item == -2 and len(DictMagPolsSel) == 0:
-      wError(" Nothing selected! ")
-      return
+    xmn = xmin
+    xmx = xmax
+    ymn = ymin
+    ymx = ymax
+    zmn = zmin
+    zmx = zmax
+
+    if cIzSym == 'yes':
+      dzsym = max(abs(Zsym-zmin),abs(Zsym-zmax))
+      zmn = Zsym - dzsym
+      zmx = Zsym + dzsym
     #endif
+
+    if cIySym == 'yes':
+      dysym = max(abs(Ysym-ymin),abs(Ysym-ymax))
+      ymn = Ysym - dysym
+      ymx = Ysym + dysym
+    #endif
+
+    if cIxSym == 'yes':
+      dxsym = max(abs(Xsym-xmin),abs(Xsym-xmax))
+      xmn = Xsym - dxsym
+      xmx = Xsym + dxsym
+    #endif
+
+    xmin = min(xmn,xmx)
+    xmax = max(xmn,xmx)
+    ymin = min(ymn,ymx)
+    ymax = max(ymn,ymx)
+    zmin = min(zmn,zmx)
+    zmax = max(zmn,zmx)
+
+    xmin = min(xmin,xMinCoil)
+    xmax = max(xmax,xMaxCoil)
+    ymin = min(ymin,yMinCoil)
+    ymax = max(ymax,yMaxCoil)
+    zmin = min(zmin,zMinCoil)
+    zmax = max(zmax,zMaxCoil)
+
+    dx = xmax - xmin
+    dy = ymax - ymin
+    dz = zmax - zmin
 
     plopt = ''
 
@@ -36346,432 +37833,707 @@ def _showGeoPython(mode='3d',item=-1,callkey=''):
     Kecho = False
 
     dot()
-    getzone('3d')
+    getzone()
 
-    if mode == '3d' or mode == '3dselected':
-
-      if item == -1:
-
-        if NspecMagPol > 0:
-          xmin = min(MothsXYZ.xmin.min()+tranMaxX,SpecXYZ[0])
-          xmax = max(MothsXYZ.xmax.max()+tranMaxX,SpecXYZ[1])
-          ymin = min(MothsXYZ.ymin.min()+tranMaxY,SpecXYZ[2])
-          ymax = max(MothsXYZ.ymax.max()+tranMaxY,SpecXYZ[3])
-          zmin = min(MothsXYZ.zmin.min()+tranMaxZ,SpecXYZ[4])
-          zmax = max(MothsXYZ.zmax.max()+tranMaxZ,SpecXYZ[5])
-        else:
-          xmin = MothsXYZ.xmin.min()+tranMaxX
-          xmax = MothsXYZ.xmax.max()+tranMaxX
-          ymin = MothsXYZ.ymin.min()+tranMaxY
-          ymax = MothsXYZ.ymax.max()+tranMaxY
-          zmin = MothsXYZ.zmin.min()+tranMaxZ
-          zmax = MothsXYZ.zmax.max()+tranMaxZ
-        #endif NspecMagPol > 0
-
-      else:
-
-        for mpnam in MagPolsSel:
-          mp = MagPolsTot[DictMagPolsSel[mpnam]]
-          mothnam = mp[0][1]
-          imoth = DictMoths[mothnam]
-          sel = 'index==' + str(imoth)
-          if MothsXYZ.query(sel).xmin[0] < xmin: xmin = MothsXYZ.query(sel).xmin[0]
-          if MothsXYZ.query(sel).xmax[0] > xmax: xmax = MothsXYZ.query(sel).xmax[0]
-          if MothsXYZ.query(sel).ymin[0] < ymin: ymin = MothsXYZ.query(sel).ymin[0]
-          if MothsXYZ.query(sel).ymax[0] > ymax: ymax = MothsXYZ.query(sel).ymax[0]
-          if MothsXYZ.query(sel).zmin[0] < zmin: zmin = MothsXYZ.query(sel).zmin[0]
-          if MothsXYZ.query(sel).zmax[0] > zmax: zmax = MothsXYZ.query(sel).zmax[0]
-        #endfor
-
-        xmin += tranMaxX
-        xmax += tranMaxX
-        ymin += tranMaxY
-        ymax += tranMaxY
-        zmin += tranMaxZ
-        zmax += tranMaxZ
-
-      #endif item
-
-      xmn = xmin
-      xmx = xmax
-      ymn = ymin
-      ymx = ymax
-      zmn = zmin
-      zmx = zmax
-
-      if cIzSym == 'yes':
-        dzsym = max(abs(Zsym-zmin),abs(Zsym-zmax))
-        zmn = Zsym - dzsym
-        zmx = Zsym + dzsym
-      #endif
-
-      if cIySym == 'yes':
-        dysym = max(abs(Ysym-ymin),abs(Ysym-ymax))
-        ymn = Ysym - dysym
-        ymx = Ysym + dysym
-      #endif
-
-      if cIxSym == 'yes':
-        dxsym = max(abs(Xsym-xmin),abs(Xsym-xmax))
-        xmn = Xsym - dxsym
-        xmx = Xsym + dxsym
-      #endif
-
-      xmin = min(xmn,xmx)
-      xmax = max(xmn,xmx)
-      ymin = min(ymn,ymx)
-      ymax = max(ymn,ymx)
-      zmin = min(zmn,zmx)
-      zmax = max(zmn,zmx)
-
-      xmin = min(xmin,xMinCoil)
-      xmax = max(xmax,xMaxCoil)
-      ymin = min(ymin,yMinCoil)
-      ymax = max(ymax,yMaxCoil)
-      zmin = min(zmin,zMinCoil)
-      zmax = max(zmax,zMaxCoil)
-
-#      print(tranMaxX,tranMaxY)
-#      print(xmin,xmax,ymin,ymax,zmin,zmax)
-
-    elif mode == '3dperiodic':
-
-      xmin = MothsXYZ.xmin.min()+tranMaxX - tx
-      xmax = MothsXYZ.xmax.max()+tranMaxX - tx
-      ymin = MothsXYZ.ymin.min()+tranMaxY - ty
-      ymax = MothsXYZ.ymax.max()+tranMaxY - ty
-      zmin = MothsXYZ.zmin.min()+tranMaxZ - tz
-      zmax = MothsXYZ.zmax.max()+tranMaxZ - tz
-
-      if cIxSym == 'yes':
-        xmn = Xsym + (Xsym - xmin)
-        xmx = Xsym + (Xsym - xmax)
-      #endif
-
-      if cIySym == 'yes':
-        ymn = Ysym + (Ysym - ymin)
-        ymx = Ysym + (Ysym - ymax)
-      #endif
-
-      if cIzSym == 'yes':
-        zmn = Zsym + (Zsym - zmin)
-        zmx = Zsym + (Zsym - zmax)
-      #endif
-
-      xmin = min(xmn,xmx)
-      xmax = max(xmn,xmx)
-      ymin = min(ymn,ymx)
-      ymax = max(ymn,ymx)
-      zmin = min(zmn,zmx)
-      zmax = max(zmn,zmx)
-
-    elif mode == '3dnoper':
-
-      if NspecMagPol > 0:
-        xmin = min(MothsXYZ.xmin.min()+tranMaxX,SpecXYZ[0])
-        xmax = max(MothsXYZ.xmax.max()+tranMaxX,SpecXYZ[1])
-        ymin = min(MothsXYZ.ymin.min()+tranMaxY,SpecXYZ[2])
-        ymax = max(MothsXYZ.ymax.max()+tranMaxY,SpecXYZ[3])
-        zmin = min(MothsXYZ.zmin.min()+tranMaxZ,SpecXYZ[4])
-        zmax = max(MothsXYZ.zmax.max()+tranMaxZ,SpecXYZ[5])
-      #endif NspecMagPol > 0
-
-      if cIxSym == 'yes':
-        xmn = Xsym + (Xsym - xmin)
-        xmx = Xsym + (Xsym - xmax)
-      #endif
-
-      if cIySym == 'yes':
-        ymn = Ysym + (Ysym - ymin)
-        ymx = Ysym + (Ysym - ymax)
-      #endif
-
-      if cIzSym == 'yes':
-        zmn = Zsym + (Zsym - zmin)
-        zmx = Zsym + (Zsym - zmax)
-      #endif
-
-      xmin = min(xmn,xmx)
-      xmax = max(xmn,xmx)
-      ymin = min(ymn,ymx)
-      ymax = max(ymn,ymx)
-      zmin = min(zmn,zmx)
-      zmax = max(zmn,zmx)
-
-      xmin = min(xmin,xMinCoil)
-      xmax = max(xmax,xMaxCoil)
-      ymin = min(ymin,yMinCoil)
-      ymax = max(ymax,yMaxCoil)
-      zmin = min(zmin,zMinCoil)
-      zmax = max(zmax,zMaxCoil)
-
+    if modus == 'xy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      #null(xmin-dx*0.1,xmax+dx*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      #for imag in range(NMagPolTot):
+      #  _plotSingleMag(imag,modus,imoth=1)
+      setishow(1)
+      txyz(Ucomment,"x [mm]","y [mm]")
+    elif modus == 'zy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(zmin-dz*0.1,zmax+dz*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      for imag in range(NMagPolTot):
+        _plotSingleMag(imag,modus,imoth=1)
+      setishow(1)
+      txyz(Ucomment,"z [mm]","y [mm]")
+    elif modus == 'xz':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(xmin-dx*0.1,xmax+dx*0.1,zmin-dz*0.1,zmax+dz*0.1)
+      for imag in range(NMagPolTot):
+        _plotSingleMag(imag,modus,imoth=1)
+      setishow(1)
+      txyz(Ucomment,"x [mm]","z [mm]")
     else:
-      print("_showGeoPython: ",mode, " not yet implemented!")
+      print("\nModus ",modus,' in _showGeoPythonXYZ not available\n')
       return
-    #endif mode == '3d'
+    #endif
 
-    dx = (xmax - xmin) / 10.
-    dy = (ymax - ymin) / 10.
-    dz = (zmax - zmin) / 10.
+    xmin = 1.0e30
+    xmax = -1.0e30
+    ymin = 1.0e30
+    ymax = -1.0e30
+    zmin = 1.0e30
+    zmax = -1.0e30
 
-    #print("min,max:",xmin-dx,xmax+dx,zmin-dz,zmax+dz,ymin-dy,ymax+dy)
-    null3d(xmin-dx,xmax+dx,zmin-dz,zmax+dz,ymin-dy,ymax+dy)
-    txyz(Ucomment,"x [mm]","z [mm]", "y [mm]")
+    xMinCoil = 1.0e30
+    xMaxCoil = -1.0e30
+    yMinCoil = 1.0e30
+    yMaxCoil = -1.0e30
+    zMinCoil = 1.0e30
+    zMaxCoil = -1.0e30
 
-    if mode == '3d' or mode == '3dperiodic' or mode == '3dselected':
+    if len(Filaments):
+      for f in Filaments:
+        for w in f:
+          x1 = float(w[0])
+          y1 = float(w[1])
+          z1 = float(w[2])
+          x2 = float(w[3])
+          y2 = float(w[4])
+          z2 = float(w[5])
+          if x2 < xMinCoil: xMinCoil = x2
+          if x2 > xMaxCoil: xMaxCoil = x2
+          if y2 < yMinCoil: yMinCoil = y2
+          if y2 > yMaxCoil: yMaxCoil = y2
+          if z2 < zMinCoil: zMinCoil = z2
+          if z2 > zMaxCoil: zMaxCoil = z2
+          if x1 < xMinCoil: xMinCoil = x1
+          if x1 > xMaxCoil: xMaxCoil = x1
+          if y1 < yMinCoil: yMinCoil = y1
+          if y1 > yMaxCoil: yMaxCoil = y1
+          if z1 < zMinCoil: zMinCoil = z1
+          if z1 > zMaxCoil: zMaxCoil = z1
+        #endfor w in f
+      #endfor f in Filaments
+    #endif len(Filaments)
 
-      if len(Filaments) and mode == '3d': _ucoilplot(callkey='ShowGeoPython')
+    if not NMagPolTot:
+      _ucoilplot(modus,'notsame',callkey='ShowGeoPython')
+    #endif not NMagPolTot
+
+    xmin = min(xmin,xMinCoil)
+    xmax = max(xmax,xMaxCoil)
+    ymin = min(ymin,yMinCoil)
+    ymax = max(ymax,yMaxCoil)
+    zmin = min(zmin,zMinCoil)
+    zmax = max(zmax,zMaxCoil)
+
+    if NMagPolTot > NspecMagPol:
+
+      tranMaxX = -1.0e30
+      tranMaxY = -1.0e30
+      tranMaxZ = -1.0e30
 
       for mm in range(Nmodul):
 
         mo = Modules[mm]
+        mo2 = mo[1]
 
-        lcen = mo[0]
-        w = lcen.split()
+        nper = ugui_calc_line(mo2)
+        w = mo[2].split()
+        perlen = ugui_calc_line(w[0])
 
-        offx = ugui_calc_line(w[0])
-        offy = ugui_calc_line(w[1])
-        offz = ugui_calc_line(w[2])
+        tx = ugui_calc_line(w[1]) * (nper-1) * perlen
+        ty = ugui_calc_line(w[2]) * (nper-1) * perlen
+        tz = ugui_calc_line(w[3]) * (nper-1) * perlen
 
-        nper = ugui_calc_line(mo[1])
-        s = mo[2].split()
-
-        perlen = ugui_calc_line(s[0])
-
-        vspace = [float(s[1]),float(s[2]),float(s[3])]
-        ang = float(s[4])
-
-        cen = [0.0,0.0,0.0]
-        vin = [1.0,0.0,0.0]
-        istat, vdum, rm = util_rotate(cen,vspace,ang,vin)
-
-        rot11 = rm[0][0]; rot12 = rm[0][1]; rot13 = rm[0][2]
-        rot21 = rm[1][0]; rot22 = rm[1][1]; rot23 = rm[1][2]
-        rot31 = rm[2][0]; rot32 = rm[2][1]; rot33 = rm[2][2]
-
-        tx = vspace[0] * perlen
-        ty = vspace[1] * perlen
-        tz = vspace[2] * perlen
-
-        w = mo[3].split()
-        bsx = ugui_calc_line(w[0])
-        bsy = ugui_calc_line(w[1])
-        bsz = ugui_calc_line(w[2])
-
-        nmp = NMagPolTot
-        if item == -2: nmp = NMagPolSel
-
-        #print("nmp:",nmp)
-
-        for imp in range(nmp):
-
-          if item == -1:
-            mp = MagPolsTot[imp]
-            cmag = mp[0][0]
-          elif item == -2:
-            cmag = MagPolsSel[imp]
-            mp = MagPolsTot[DictMagPolsSel[cmag]]
-          #endif
-
-          #print("cmag:",cmag,':\n',mp)
-
-          ispec = mp[2]
-#          if ispec == 'yes' or str(ispec) == '1': continue
-          if item == -2 and cmag not in DictMagPolsSel: continue
-
-          col = mp[5][5]
-          if not col in DictUnduColors:
-            kcol = int(ugui_calc_line(col))
-            col = UnduColors[kcol]
-          #endif col not in UnduColors
-
-          points = []
-
-          cen = mp[4]
-
-          xc = ugui_calc_line(cen[0]) + tx
-          yc = ugui_calc_line(cen[1]) + ty
-          zc = ugui_calc_line(cen[2]) + tz
-
-          if mp[3].find('Block') > -1:
-
-            corns = blockcorners(mp)
-
-            for corn in corns:
-              xx = corn[0]; yy = corn[1]; zz = corn[2]
-              x = xc + rot11*xx + rot12*yy + rot13*zz
-              y = yc + rot21*xx + rot22*yy + rot23*zz
-              z = zc + rot31*xx + rot32*yy + rot33*zz
-              points.append([x,y,z])
-            #endfor corn in corns
-
-          elif mp[3] == 'File' or mp[3] == 'Corners':
-
-#            Quit(mp[7])
-            for ic in range(len(mp[7])):
-              c1 = xc + calc_var(mp[7][ic][0])
-              c2 = yc + calc_var(mp[7][ic][1])
-              c3 = zc + calc_var(mp[7][ic][2])
-              points.append([c1,c2,c3])
-            #endfor ic in range(len(mp[7]))
-
-          else:
-            Quit("_showGeoPython: " + mp[3] + " hier einfügen")
-          #endif mp[3] == 'Block'
-
-          dtx = -tx; dty = -ty; dtz = -tz
-
-          if mode == '3d' or mode == '3dperiodic': mper = nper
-          else: mper = 1
-
-          for iper in range(mper):
-            pp = []
-            for p in points:
-              pp.append([p[0]+dtx,p[1]+dty,p[2]+dtz])
-            #endfor p in points
-            verts,ifaces,faces = hull3d(pp)
-            if type(verts) != Tdf:
-              corns = pd.DataFrame(verts)
-            else:
-              corns = verts
-            #endif
-            plothull3dxzy(isame=1,edgecolor=col,ishow=0,mode='line')
-            dtx += tx; dty += ty; dtz += tz
-          #enddofor iper in range(1,nper+1):
-
-        #endfor mag in range(nmag)
+        if tx > tranMaxX: tranMaxX = tx
+        if ty > tranMaxY: tranMaxY = ty
+        if tz > tranMaxZ: tranMaxZ = tz
 
       #endfor mm in range(Nmodul)
 
-    #endif mode == '3d' or mode == '3dperiodic'
-
-    if mode == '3d' or mode == '3dnoper' or mode == '3dselected':
-
-      if mode != '3dselected': _ucoilplot(callkey='showGeoPython')
-
-      nmp = NMagPolTot
-      if item == -2: nmp = NMagPolSel
-
-      for imp in range(nmp):
-
-        if item == -1:
-          mp = MagPolsTot[imp]
-          cmag = mp[0][0]
-        elif item == -2:
-          cmag = MagPolsSel[imp]
-          mp = MagPolsTot[DictMagPolsSel[cmag]]
-        #endif
-
-        cmag = mp[0][0]
-        ispec = mp[2]
-
-        if ispec == 'no' or str(ispec) == '0': continue
-
-        if item == -2 and cmag not in DictMagPolsSel: continue
-
-        col = mp[5][5]
-        if not col in DictUnduColors:
-          kcol = int(ugui_calc_line(col))
-          col = UnduColors[kcol]
-        #endif col not in UnduColors
-
-        points = []
-
-        cen = mp[4]
-
-        xc = ugui_calc_line(cen[0])
-        yc = ugui_calc_line(cen[1])
-        zc = ugui_calc_line(cen[2])
-
-        if mp[3].find('Block') > -1:
-
-          corns = blockcorners(mp)
-          for c in corns: points.append([xc+c[0],yc+c[1],zc+c[2]])
-
-        elif mp[3] == 'File' or mp[3] == 'Corners':
-
-          for ic in range(len(mp[7])):
-            c1 = xc + calc_var(mp[7][ic][0])
-            c2 = yc + calc_var(mp[7][ic][1])
-            c3 = zc + calc_var(mp[7][ic][2])
-            points.append([c1,c2,c3])
-          #endfor ic in range(len(mp[7]))
-
-        else:
-          Quit("_showGeoPython: " + mp[3] + " hier einfügen")
-          #Quit(mp[3] + " hier einfügen")
-        #endif mp[3] == 'Block'
-
-        verts,ifaces,faces = hull3d(points)
-        if type(verts) != Tdf:
-          corns = pd.DataFrame(verts)
-        else:
-          corns = verts
-        #endif
-        plothull3dxzy(isame=1,edgecolor=col,ishow=0,mode='line')
-
-      #endfor mag in range(nmag)
-
-    #endif mode == '3d'
-
-  else: # item=imp{
-
-    mp = MagPolsTot[item]
-
-    cmag = mp[0][0]
-    ispec = mp[2]
-
-    col = mp[5][5]
-    if not col in DictUnduColors:
-      kcol = int(ugui_calc_line(col))
-      col = UnduColors[kcol]
-    #endif col not in UnduColors
-
-    points = []
-
-    cen = mp[4]
-
-    xc = ugui_calc_line(cen[0])
-    yc = ugui_calc_line(cen[1])
-    zc = ugui_calc_line(cen[2])
-
-    if mp[3].find('Block') > -1:
-
-      corns = blockcorners(mp)
-      for c in corns: points.append([xc+c[0],yc+c[1],zc+c[2]])
-
-    elif mp[3] == 'File' or mp[3] == 'Corners':
-
-      for ic in range(len(mp[7])):
-        c1 = xc + calc_var(mp[7][ic][0])
-        c2 = yc + calc_var(mp[7][ic][1])
-        c3 = zc + calc_var(mp[7][ic][2])
-        points.append([c1,c2,c3])
-      #endfor ic in range(len(mp[7]))
-
     else:
-      Quit("_showGeoPython: " + mp[3] + " hier einfügen")
-      #Quit(mp[3] + " hier einfügen")
-    #endif mp[3] == 'Block'
 
-    verts,ifaces,faces = hull3d(points)
-    if type(verts) != Tdf:
-      corns = pd.DataFrame(verts)
+      tranMaxX = 0.0
+      tranMaxY = 0.0
+      tranMaxZ = 0.0
+
+    #endif NMagPolTot > NspecMagPol
+
+    if NspecMagPol > 0:
+      xmin = min(MothsXYZ.xmin.min()+tranMaxX,SpecXYZ[0])
+      xmax = max(MothsXYZ.xmax.max()+tranMaxX,SpecXYZ[1])
+      ymin = min(MothsXYZ.ymin.min()+tranMaxY,SpecXYZ[2])
+      ymax = max(MothsXYZ.ymax.max()+tranMaxY,SpecXYZ[3])
+      zmin = min(MothsXYZ.zmin.min()+tranMaxZ,SpecXYZ[4])
+      zmax = max(MothsXYZ.zmax.max()+tranMaxZ,SpecXYZ[5])
     else:
-      corns = verts
+      xmin = MothsXYZ.xmin.min()+tranMaxX
+      xmax = MothsXYZ.xmax.max()+tranMaxX
+      ymin = MothsXYZ.ymin.min()+tranMaxY
+      ymax = MothsXYZ.ymax.max()+tranMaxY
+      zmin = MothsXYZ.zmin.min()+tranMaxZ
+      zmax = MothsXYZ.zmax.max()+tranMaxZ
+    #endif NspecMagPol > 0
+
+    Ysym = 0.0
+    Zsym = 0.0
+    ical = 0
+
+    xmn = xmin
+    xmx = xmax
+    ymn = ymin
+    ymx = ymax
+    zmn = zmin
+    zmx = zmax
+
+    if cIzSym == 'yes':
+      dzsym = max(abs(Zsym-zmin),abs(Zsym-zmax))
+      zmn = Zsym - dzsym
+      zmx = Zsym + dzsym
     #endif
-    plothull3dxzy(isame=0,edgecolor=col,ishow=0,mode='line')
 
-  #endif item < 0
+    if cIySym == 'yes':
+      dysym = max(abs(Ysym-ymin),abs(Ysym-ymax))
+      ymn = Ysym - dysym
+      ymx = Ysym + dysym
+    #endif
 
-  Isame = isameo
+    if cIxSym == 'yes':
+      dxsym = max(abs(Xsym-xmin),abs(Xsym-xmax))
+      xmn = Xsym - dxsym
+      xmx = Xsym + dxsym
+    #endif
+
+    xmin = min(xmn,xmx)
+    xmax = max(xmn,xmx)
+    ymin = min(ymn,ymx)
+    ymax = max(ymn,ymx)
+    zmin = min(zmn,zmx)
+    zmax = max(zmn,zmx)
+
+    xmin = min(xmin,xMinCoil)
+    xmax = max(xmax,xMaxCoil)
+    ymin = min(ymin,yMinCoil)
+    ymax = max(ymax,yMaxCoil)
+    zmin = min(zmin,zMinCoil)
+    zmax = max(zmax,zMaxCoil)
+
+    dx = xmax - xmin
+    dy = ymax - ymin
+    dz = zmax - zmin
+
+    plopt = ''
+
+    Kpdf = False
+    Kdump = False
+    Kecho = False
+
+    dot()
+    getzone()
+
+    if modus == 'xy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(xmin-dx*0.1,xmax+dx*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      for imag in range(NMagPolTot):
+        _plotSingleMag(imag,modus,imoth=1)
+      setishow(1)
+      txyz(Ucomment,"x [mm]","y [mm]")
+    elif modus == 'zy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(zmin-dz*0.1,zmax+dz*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      for imag in range(NMagPolTot):
+        _plotSingleMag(imag,modus,imoth=1)
+      setishow(1)
+      txyz(Ucomment,"z [mm]","y [mm]")
+    elif modus == 'xz':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(xmin-dx*0.1,xmax+dx*0.1,zmin-dz*0.1,zmax+dz*0.1)
+      for imag in range(NMagPolTot):
+        _plotSingleMag(imag,modus,imoth=1)
+      setishow(1)
+      txyz(Ucomment,"x [mm]","z [mm]")
+    else:
+      print("\nModus ",modus,' in _showGeoPythonXYZ not available\n')
+      return
+    #endif
+
+  elif item == -2: # Plot selected items
+
+    xmin = 1.0e30
+    xmax = -1.0e30
+    ymin = 1.0e30
+    ymax = -1.0e30
+    zmin = 1.0e30
+    zmax = -1.0e30
+
+    if  NMagPolSel<= 0:
+      wError(" Nothing selected! ")
+      return
+    #endif
+
+    for smag in MagPolsSel:
+      isel = DictMagPolsSel[smag]
+      cmag = MagPolsSel[isel]
+      imag = DictMagPolsTot[cmag]
+      mp = MagPolsTot[imag]
+      cmoth = mp[0][1]
+      imoth = DictMoths[cmoth]
+      sel = "imoth==" + str(imoth)
+      xyz =  MothsXYZ.query(sel).reset_index()
+      xmn = xyz.xmin[0]
+      xmx = xyz.xmax[0]
+      ymn = xyz.ymin[0]
+      ymx = xyz.ymax[0]
+      zmn = xyz.zmin[0]
+      zmx = xyz.zmax[0]
+      if xmn < xmin: xmin = xmn
+      if xmx > xmax: xmax = xmx
+      if ymn < ymin: ymin = ymn
+      if ymx > ymax: ymax = ymx
+      if zmn < zmin: zmin = zmn
+      if zmx > zmax: zmax = zmx
+    #endfor
 
 
-#enddef _showGeoPython(mode='3d',item=-1)
 
-def _showGeoUndu(mode='3d',item=-1,kseg=0,callkey=''):
-  global TransRotCop,EchoCLC
+    Ysym = 0.0
+    Zsym = 0.0
+    ical = 0
 
+    xmn = xmin
+    xmx = xmax
+    ymn = ymin
+    ymx = ymax
+    zmn = zmin
+    zmx = zmax
+
+    if cIzSym == 'yes':
+      dzsym = max(abs(Zsym-zmin),abs(Zsym-zmax))
+      zmn = Zsym - dzsym
+      zmx = Zsym + dzsym
+    #endif
+
+    if cIySym == 'yes':
+      dysym = max(abs(Ysym-ymin),abs(Ysym-ymax))
+      ymn = Ysym - dysym
+      ymx = Ysym + dysym
+    #endif
+
+    if cIxSym == 'yes':
+      dxsym = max(abs(Xsym-xmin),abs(Xsym-xmax))
+      xmn = Xsym - dxsym
+      xmx = Xsym + dxsym
+    #endif
+
+    xmin = min(xmn,xmx)
+    xmax = max(xmn,xmx)
+    ymin = min(ymn,ymx)
+    ymax = max(ymn,ymx)
+    zmin = min(zmn,zmx)
+    zmax = max(zmn,zmx)
+
+    dx = xmax - xmin
+    dy = ymax - ymin
+    dz = zmax - zmin
+
+    plopt = ''
+
+    Kpdf = False
+    Kdump = False
+    Kecho = False
+
+    dot()
+    getzone()
+
+    if modus == 'xy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(xmin-dx*0.1,xmax+dx*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      for smag in MagPolsSel:
+        isel = DictMagPolsSel[smag]
+        cmag = MagPolsSel[isel]
+        imag = DictMagPolsTot[cmag]
+        _plotSingleMag(imag,modus,imoth=1)
+      #endfor
+      setishow(1)
+      txyz(Ucomment + ", Selected Items","x [mm]","y [mm]")
+    elif modus == 'zy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(zmin-dz*0.1,zmax+dz*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      for smag in MagPolsSel:
+        isel = DictMagPolsSel[smag]
+        cmag = MagPolsSel[isel]
+        imag = DictMagPolsTot[cmag]
+        _plotSingleMag(imag,modus,imoth=1)
+      #endfor
+      setishow(1)
+      txyz(Ucomment + ", Selected Items","z [mm]","y [mm]")
+    elif modus == 'xz':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(xmin-dx*0.1,xmax+dx*0.1,zmin-dz*0.1,zmax+dz*0.1)
+      for smag in MagPolsSel:
+        isel = DictMagPolsSel[smag]
+        cmag = MagPolsSel[isel]
+        imag = DictMagPolsTot[cmag]
+        _plotSingleMag(imag,modus,imoth=1)
+      #endfor
+      setishow(1)
+      txyz(Ucomment + ", Selected Items","x [mm]","z [mm]")
+    else:
+      print("\nModus ",modus,' in _showGeoPythonXYZ not available\n')
+      return
+    #endif
+  elif item == -3:
+    # periodic part
+
+    xmin = 1.0e30
+    xmax = -1.0e30
+    ymin = 1.0e30
+    ymax = -1.0e30
+    zmin = 1.0e30
+    zmax = -1.0e30
+
+    xMinCoil = 1.0e30
+    xMaxCoil = -1.0e30
+    yMinCoil = 1.0e30
+    yMaxCoil = -1.0e30
+    zMinCoil = 1.0e30
+    zMaxCoil = -1.0e30
+
+    if len(Filaments):
+      for f in Filaments:
+        for w in f:
+          x1 = float(w[0])
+          y1 = float(w[1])
+          z1 = float(w[2])
+          x2 = float(w[3])
+          y2 = float(w[4])
+          z2 = float(w[5])
+          if x2 < xMinCoil: xMinCoil = x2
+          if x2 > xMaxCoil: xMaxCoil = x2
+          if y2 < yMinCoil: yMinCoil = y2
+          if y2 > yMaxCoil: yMaxCoil = y2
+          if z2 < zMinCoil: zMinCoil = z2
+          if z2 > zMaxCoil: zMaxCoil = z2
+          if x1 < xMinCoil: xMinCoil = x1
+          if x1 > xMaxCoil: xMaxCoil = x1
+          if y1 < yMinCoil: yMinCoil = y1
+          if y1 > yMaxCoil: yMaxCoil = y1
+          if z1 < zMinCoil: zMinCoil = z1
+          if z1 > zMaxCoil: zMaxCoil = z1
+        #endfor w in f
+      #endfor f in Filaments
+    #endif len(Filaments)
+
+    if not NMagPolTot:
+      _ucoilplot(modus,'notsame',callkey='ShowGeoPython')
+    #endif not NMagPolTot
+
+    xmin = min(xmin,xMinCoil)
+    xmax = max(xmax,xMaxCoil)
+    ymin = min(ymin,yMinCoil)
+    ymax = max(ymax,yMaxCoil)
+    zmin = min(zmin,zMinCoil)
+    zmax = max(zmax,zMaxCoil)
+
+    if NMagPolTot > NspecMagPol:
+
+      tranMaxX = -1.0e30
+      tranMaxY = -1.0e30
+      tranMaxZ = -1.0e30
+
+      for mm in range(Nmodul):
+
+        mo = Modules[mm]
+        mo2 = mo[1]
+
+        nper = ugui_calc_line(mo2)
+        w = mo[2].split()
+        perlen = ugui_calc_line(w[0])
+
+        tx = ugui_calc_line(w[1]) * (nper-1) * perlen
+        ty = ugui_calc_line(w[2]) * (nper-1) * perlen
+        tz = ugui_calc_line(w[3]) * (nper-1) * perlen
+
+        if tx > tranMaxX: tranMaxX = tx
+        if ty > tranMaxY: tranMaxY = ty
+        if tz > tranMaxZ: tranMaxZ = tz
+
+      #endfor mm in range(Nmodul)
+
+    else:
+
+      tranMaxX = 0.0
+      tranMaxY = 0.0
+      tranMaxZ = 0.0
+
+    #endif NMagPolTot > NspecMagPol
+
+    xmin = MothsXYZ.xmin.min()+tranMaxX
+    xmax = MothsXYZ.xmax.max()+tranMaxX
+    ymin = MothsXYZ.ymin.min()+tranMaxY
+    ymax = MothsXYZ.ymax.max()+tranMaxY
+    zmin = MothsXYZ.zmin.min()+tranMaxZ
+    zmax = MothsXYZ.zmax.max()+tranMaxZ
+
+    Ysym = 0.0
+    Zsym = 0.0
+    ical = 0
+
+    xmn = xmin
+    xmx = xmax
+    ymn = ymin
+    ymx = ymax
+    zmn = zmin
+    zmx = zmax
+
+    if cIzSym == 'yes':
+      dzsym = max(abs(Zsym-zmin),abs(Zsym-zmax))
+      zmn = Zsym - dzsym
+      zmx = Zsym + dzsym
+    #endif
+
+    if cIySym == 'yes':
+      dysym = max(abs(Ysym-ymin),abs(Ysym-ymax))
+      ymn = Ysym - dysym
+      ymx = Ysym + dysym
+    #endif
+
+    if cIxSym == 'yes':
+      dxsym = max(abs(Xsym-xmin),abs(Xsym-xmax))
+      xmn = Xsym - dxsym
+      xmx = Xsym + dxsym
+    #endif
+
+    xmin = min(xmn,xmx)
+    xmax = max(xmn,xmx)
+    ymin = min(ymn,ymx)
+    ymax = max(ymn,ymx)
+    zmin = min(zmn,zmx)
+    zmax = max(zmn,zmx)
+
+    dx = xmax - xmin
+    dy = ymax - ymin
+    dz = zmax - zmin
+
+    plopt = ''
+
+    Kpdf = False
+    Kdump = False
+    Kecho = False
+
+    dot()
+    getzone()
+
+    if modus == 'xy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(xmin-dx*0.1,xmax+dx*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      for imag in range(NMagPolTot):
+        if MagPolsTot[imag][2] == 'yes' or str(MagPolsTot[imag][2]) == '1':
+          continue
+        _plotSingleMag(imag,modus,imoth=1)
+      setishow(1)
+      txyz(Ucomment,"x [mm]","y [mm]")
+    elif modus == 'zy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(zmin-dz*0.1,zmax+dz*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      for imag in range(NMagPolTot):
+        if MagPolsTot[imag][2] == 'yes' or str(MagPolsTot[imag][2]) == '1':
+          continue
+        _plotSingleMag(imag,modus,imoth=1)
+      setishow(1)
+      txyz(Ucomment,"z [mm]","y [mm]")
+    elif modus == 'xz':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(xmin-dx*0.1,xmax+dx*0.1,zmin-dz*0.1,zmax+dz*0.1)
+      for imag in range(NMagPolTot):
+        if MagPolsTot[imag][2] == 'yes' or str(MagPolsTot[imag][2]) == '1':
+          continue
+        _plotSingleMag(imag,modus,imoth=1)
+      setishow(1)
+      txyz(Ucomment,"x [mm]","z [mm]")
+    else:
+      print("\nModus ",modus,' in _showGeoPythonXYZ not available\n')
+      return
+    #endif
+    pass
+  elif item == -4:
+    #special magnets
+
+    xmin = 1.0e30
+    xmax = -1.0e30
+    ymin = 1.0e30
+    ymax = -1.0e30
+    zmin = 1.0e30
+    zmax = -1.0e30
+
+    xMinCoil = 1.0e30
+    xMaxCoil = -1.0e30
+    yMinCoil = 1.0e30
+    yMaxCoil = -1.0e30
+    zMinCoil = 1.0e30
+    zMaxCoil = -1.0e30
+
+    if len(Filaments):
+      for f in Filaments:
+        for w in f:
+          x1 = float(w[0])
+          y1 = float(w[1])
+          z1 = float(w[2])
+          x2 = float(w[3])
+          y2 = float(w[4])
+          z2 = float(w[5])
+          if x2 < xMinCoil: xMinCoil = x2
+          if x2 > xMaxCoil: xMaxCoil = x2
+          if y2 < yMinCoil: yMinCoil = y2
+          if y2 > yMaxCoil: yMaxCoil = y2
+          if z2 < zMinCoil: zMinCoil = z2
+          if z2 > zMaxCoil: zMaxCoil = z2
+          if x1 < xMinCoil: xMinCoil = x1
+          if x1 > xMaxCoil: xMaxCoil = x1
+          if y1 < yMinCoil: yMinCoil = y1
+          if y1 > yMaxCoil: yMaxCoil = y1
+          if z1 < zMinCoil: zMinCoil = z1
+          if z1 > zMaxCoil: zMaxCoil = z1
+        #endfor w in f
+      #endfor f in Filaments
+    #endif len(Filaments)
+
+    if NspecMagPol == 0 and len(Filaments) == 0:
+      print(NL,"*** Nothing to plot, no special items ***",NL)
+      return
+    #endif
+
+    if not NMagPolTot:
+      _ucoilplot(modus,'notsame',callkey='ShowGeoPython')
+    #endif not NMagPolTot
+
+    xmin = min(xmin,xMinCoil)
+    xmax = max(xmax,xMaxCoil)
+    ymin = min(ymin,yMinCoil)
+    ymax = max(ymax,yMaxCoil)
+    zmin = min(zmin,zMinCoil)
+    zmax = max(zmax,zMaxCoil)
+
+    xmin = SpecXYZ[0]
+    xmax = SpecXYZ[1]
+    ymin = SpecXYZ[2]
+    ymax = SpecXYZ[3]
+    zmin = SpecXYZ[4]
+    zmax = SpecXYZ[5]
+
+    Ysym = 0.0
+    Zsym = 0.0
+    ical = 0
+
+    xmn = xmin
+    xmx = xmax
+    ymn = ymin
+    ymx = ymax
+    zmn = zmin
+    zmx = zmax
+
+    if cIzSym == 'yes':
+      dzsym = max(abs(Zsym-zmin),abs(Zsym-zmax))
+      zmn = Zsym - dzsym
+      zmx = Zsym + dzsym
+    #endif
+
+    if cIySym == 'yes':
+      dysym = max(abs(Ysym-ymin),abs(Ysym-ymax))
+      ymn = Ysym - dysym
+      ymx = Ysym + dysym
+    #endif
+
+    if cIxSym == 'yes':
+      dxsym = max(abs(Xsym-xmin),abs(Xsym-xmax))
+      xmn = Xsym - dxsym
+      xmx = Xsym + dxsym
+    #endif
+
+    xmin = min(xmn,xmx)
+    xmax = max(xmn,xmx)
+    ymin = min(ymn,ymx)
+    ymax = max(ymn,ymx)
+    zmin = min(zmn,zmx)
+    zmax = max(zmn,zmx)
+
+    xmin = min(xmin,xMinCoil)
+    xmax = max(xmax,xMaxCoil)
+    ymin = min(ymin,yMinCoil)
+    ymax = max(ymax,yMaxCoil)
+    zmin = min(zmin,zMinCoil)
+    zmax = max(zmax,zMaxCoil)
+
+    dx = xmax - xmin
+    dy = ymax - ymin
+    dz = zmax - zmin
+
+    plopt = ''
+
+    Kpdf = False
+    Kdump = False
+    Kecho = False
+
+    dot()
+    getzone()
+
+    if modus == 'xy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(xmin-dx*0.1,xmax+dx*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      for smag in SpecMagPols:
+        imag = DictMagPolsTot[smag[0][0]]
+        _plotSingleMag(imag,modus,imoth=1)
+      #endfor
+      _ucoilplot(view=modus, modus='same', item=-1,callkey=callkey)
+      setishow(1)
+      txyz(Ucomment,"x [mm]","y [mm]")
+    elif modus == 'zy':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(zmin-dz*0.1,zmax+dz*0.1,ymin-dy*0.1,ymax+dy*0.1)
+      for cmag in SpecMagPols:
+        imag = DictMagPolsTot[smag[0][0]]
+        _plotSingleMag(imag,modus,imoth=1)
+      #endfor
+      _ucoilplot(view=modus, modus='same', item=-1,callkey=callkey)
+      setishow(1)
+      txyz(Ucomment,"z [mm]","y [mm]")
+    elif modus == 'xz':
+      kgo = getgrid()
+      if kgo: optgrid()
+      setishow(0)
+      null(xmin-dx*0.1,xmax+dx*0.1,zmin-dz*0.1,zmax+dz*0.1)
+      for cmag in SpecMagPols:
+        imag = DictMagPolsTot[smag[0][0]]
+        _plotSingleMag(imag,modus,imoth=1)
+      #endfor
+      _ucoilplot(view=modus, modus='same', item=-1,callkey=callkey)
+      setishow(1)
+      txyz(Ucomment,"x [mm]","z [mm]")
+    else:
+      print("\nModus ",modus,' in _showGeoPythonXYZ not available\n')
+      return
+    #endif
+    pass
+  #endif item
+
+#enddef _showGeoPythonXYZ(modus='3d',item=-1)
+
+def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -36783,10 +38545,10 @@ def _showGeoUndu(mode='3d',item=-1,kseg=0,callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -36807,6 +38569,8 @@ def _showGeoUndu(mode='3d',item=-1,kseg=0,callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -36816,6 +38580,8 @@ def _showGeoUndu(mode='3d',item=-1,kseg=0,callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -36846,13 +38612,17 @@ def _showGeoUndu(mode='3d',item=-1,kseg=0,callkey=''):
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
   DictUnduColors = {}
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
   isameo = get_isame()
+  print("_showGeoUndu:",modus,item,kseg,callkey)
+  print("_showGeoUndu:MustUpdate:",MustUpdate)
 
-  Rmode = 'SEGMENTATION STDOUT=undumag.lun6'
+  Rmodus = 'SEGMENTATION STDOUT=undumag.lun6'
 
   if NMagPolTot == 0:
     print("Nothing to plot!")
@@ -36860,13 +38630,16 @@ def _showGeoUndu(mode='3d',item=-1,kseg=0,callkey=''):
   #endif NMagPolTot == 0
 
   if MustUpdate:
+
     _undumag("showGeoUndu")  #run undumag
+
     if nexist("Ngeo"): Ngeo = ndelete("Ngeo")
     Ngeo = ncread("Ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
     MustUpdate = 0
+
   #endif MustUpdate
 
-  if mode == 'undu3d':
+  if modus == 'undu3d':
 
     if item < 0:
 
@@ -36896,7 +38669,8 @@ def _showGeoUndu(mode='3d',item=-1,kseg=0,callkey=''):
       dy = (ymax - ymin) / 10.
       dz = (zmax - zmin) / 10.
 
-      null3d(xmin-dx,xmax+dx,zmin-dz,zmax+dz,ymin-dy,ymax+dy)
+      #null3d(xmin-dx,xmax+dx,zmin-dz,zmax+dz,ymin-dy,ymax+dy)
+      null3d(Xmin,Xmax,Zmin,Zmax,Ymin,Ymax)
       txyz(Ucomment,"x [mm]","z [mm]", "y [mm]")
 
       for mag in range(nmag):
@@ -36904,28 +38678,19 @@ def _showGeoUndu(mode='3d',item=-1,kseg=0,callkey=''):
         kcol = Ngeo.query(selmag + ' and iplan==1 and icorn==1').icol.max()
         col = UnduColors[kcol]
         mhull3d(Ngeo,"x:z:y",selmag,edgecolor=col,isame=1)
-#        nplan = Ngeo.query(selmag + ' and icorn==1').iplan.max()
-#        kcol = Ngeo.query(selmag + ' and iplan==1 and icorn==1').icol.max()
-#        col = UnduColors[kcol]
-#        for ipl in range(nplan):
-#          sel = selmag + " and iplan==" + str(ipl+1)
-#          nplot(Ngeo,"x:z:y",sel,"","sameline",color=col)
-#        #endfor ipl in range(nplan)
       #endfor mag in range(nmag)
-
-      #undu_geo('line')
 
     #endif item < 0
 
-  elif mode == 'eps':
-    eps = image.open('undumag.eps')
+  elif modus == 'eps':
+    eps = Image.open('undumag.eps')
     eps.show()
-  #endif mode == '3d'
+  #endif modus == '3d'
 
   Isame = isameo
 
 
-#enddef _showGeoUndu(mode)
+#enddef _showGeoUndu(modus)
 
 
 global nPer_Hybrid, FullGap_Hybrid, \
@@ -36988,8 +38753,8 @@ S_FracDivY_Pol_Mirror, S_FracDivZ_Pol_Mirror
 
 
 def _GetMirror(key=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -37001,10 +38766,10 @@ def _GetMirror(key=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -37025,6 +38790,8 @@ def _GetMirror(key=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -37034,6 +38801,8 @@ def _GetMirror(key=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -37063,6 +38832,8 @@ def _GetMirror(key=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global nPer_Hybrid, FullGap_Hybrid, \
@@ -37212,8 +38983,8 @@ def _GetMirror(key=''):
 #enddef _GetMirror()
 
 def _GetHybrid():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -37225,10 +38996,10 @@ def _GetHybrid():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -37249,6 +39020,8 @@ def _GetHybrid():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -37258,6 +39031,8 @@ def _GetHybrid():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -37287,6 +39062,8 @@ def _GetHybrid():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global nPer_Hybrid, FullGap_Hybrid, \
@@ -37460,8 +39237,8 @@ def _cnWhyEnd():
 #enddef _cnhybrid()
 
 def GetHybridEnd():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -37473,10 +39250,10 @@ def GetHybridEnd():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -37497,6 +39274,8 @@ def GetHybridEnd():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -37506,6 +39285,8 @@ def GetHybridEnd():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -37535,6 +39316,8 @@ def GetHybridEnd():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global nPer_Hybrid, FullGap_Hybrid, \
@@ -37682,8 +39465,8 @@ def _cnWmirror():
 #enddef _cnhybrid()
 
 def _EndPoles_Whybrid():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -37695,10 +39478,10 @@ def _EndPoles_Whybrid():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -37719,6 +39502,8 @@ def _EndPoles_Whybrid():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -37728,6 +39513,8 @@ def _EndPoles_Whybrid():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -37757,6 +39544,8 @@ def _EndPoles_Whybrid():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global nPer_Hybrid, FullGap_Hybrid, \
@@ -37859,8 +39648,8 @@ def _EndPoles_Whybrid():
 
 def _mirror():
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -37872,10 +39661,10 @@ def _mirror():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -37896,6 +39685,8 @@ def _mirror():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -37905,6 +39696,8 @@ def _mirror():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -37934,6 +39727,8 @@ def _mirror():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global nPer_Hybrid, FullGap_Hybrid, \
@@ -38058,8 +39853,8 @@ def _mirror():
 
 def _hybrid():
 
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -38071,10 +39866,10 @@ def _hybrid():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -38095,6 +39890,8 @@ def _hybrid():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -38104,6 +39901,8 @@ def _hybrid():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -38133,6 +39932,8 @@ def _hybrid():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global nPer_Hybrid, FullGap_Hybrid, \
@@ -38254,8 +40055,8 @@ def _hybrid():
 #enddef _hybrid()
 
 def _updateMenu(menu):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -38267,10 +40068,10 @@ def _updateMenu(menu):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -38291,6 +40092,8 @@ def _updateMenu(menu):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -38300,6 +40103,8 @@ def _updateMenu(menu):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -38329,13 +40134,15 @@ def _updateMenu(menu):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   pass
 #def _updateMenu(ev,menu)
 
 def _enterMenu(ev,menu):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -38347,10 +40154,10 @@ def _enterMenu(ev,menu):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -38371,6 +40178,8 @@ def _enterMenu(ev,menu):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -38380,6 +40189,8 @@ def _enterMenu(ev,menu):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -38409,6 +40220,8 @@ def _enterMenu(ev,menu):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   ew = ev.widget
   key=ev.keysym
@@ -38416,8 +40229,8 @@ def _enterMenu(ev,menu):
 #def _enterMenu(ev,menu)
 
 def _keypressMenu(ev,menu):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -38429,10 +40242,10 @@ def _keypressMenu(ev,menu):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -38453,6 +40266,8 @@ def _keypressMenu(ev,menu):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -38462,6 +40277,8 @@ def _keypressMenu(ev,menu):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -38491,6 +40308,8 @@ def _keypressMenu(ev,menu):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   ew = ev.widget
   key=ev.keysym
@@ -38498,8 +40317,8 @@ def _keypressMenu(ev,menu):
 #def _keypressMenu(ev,menu)
 
 def _leaveMenu(ev,menu):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -38511,10 +40330,10 @@ def _leaveMenu(ev,menu):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -38535,6 +40354,8 @@ def _leaveMenu(ev,menu):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -38544,6 +40365,8 @@ def _leaveMenu(ev,menu):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -38573,6 +40396,8 @@ def _leaveMenu(ev,menu):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   ew = ev.widget
   key=ev.keysym
@@ -38585,8 +40410,8 @@ def _ccWfclc():
 #enddef _ccWfclc()
 
 def _clWfclc(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -38598,10 +40423,10 @@ def _clWfclc(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -38622,6 +40447,8 @@ def _clWfclc(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -38631,6 +40458,8 @@ def _clWfclc(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -38660,6 +40489,8 @@ def _clWfclc(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   FileCLC = S_FileCLC.get()
@@ -38733,7 +40564,6 @@ def _clWfclc(key):
       #endif keyclc == 'AppleII':
 
       WFileCLC.destroy()
-
       _showGeo('3d')
 
     except:
@@ -38770,8 +40600,8 @@ S_FileCLC.set(FileCLC)
 S_Ucomment = StringVar()
 
 def _uclc(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -38783,10 +40613,10 @@ def _uclc(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -38807,6 +40637,8 @@ def _uclc(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -38816,6 +40648,8 @@ def _uclc(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -38845,6 +40679,8 @@ def _uclc(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   WFileCLC = Toplevel()
@@ -38898,8 +40734,8 @@ def _uclc(key):
 #enddef _uclc()
 
 def ugui_ini_mirror(mode=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -38911,10 +40747,10 @@ def ugui_ini_mirror(mode=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -38935,6 +40771,8 @@ def ugui_ini_mirror(mode=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -38944,6 +40782,8 @@ def ugui_ini_mirror(mode=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -38973,6 +40813,8 @@ def ugui_ini_mirror(mode=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global nPer_Hybrid, FullGap_Hybrid, \
@@ -39227,8 +41069,8 @@ def ugui_ini_mirror(mode=''):
 #enddef ugui_ini_mirror()
 
 def ugui_ini_hybrid(mode=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -39240,10 +41082,10 @@ def ugui_ini_hybrid(mode=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -39264,6 +41106,8 @@ def ugui_ini_hybrid(mode=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -39273,6 +41117,8 @@ def ugui_ini_hybrid(mode=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -39302,6 +41148,8 @@ def ugui_ini_hybrid(mode=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global nPer_Hybrid, FullGap_Hybrid, \
@@ -39597,8 +41445,8 @@ def ugui_ini_hybrid(mode=''):
 #enddef ugui_ini_hybrid()
 
 def ugui_ini_appleII(mode=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -39610,10 +41458,10 @@ def ugui_ini_appleII(mode=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -39634,6 +41482,8 @@ def ugui_ini_appleII(mode=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -39643,6 +41493,8 @@ def ugui_ini_appleII(mode=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -39672,6 +41524,8 @@ def ugui_ini_appleII(mode=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
 
@@ -39905,8 +41759,8 @@ def ugui_ini_appleII(mode=''):
 #enddef ugui_ini_appleII()
 
 def _cnWappleII():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -39918,10 +41772,10 @@ def _cnWappleII():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -39942,6 +41796,8 @@ def _cnWappleII():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -39951,6 +41807,8 @@ def _cnWappleII():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -39980,13 +41838,15 @@ def _cnWappleII():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   WappleII.destroy()
 #enddef _cnappleII()
 
 def _clWappleII(callkey=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -39998,10 +41858,10 @@ def _clWappleII(callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -40022,6 +41882,8 @@ def _clWappleII(callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -40031,6 +41893,8 @@ def _clWappleII(callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -40060,6 +41924,8 @@ def _clWappleII(callkey=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
 
@@ -40094,8 +41960,8 @@ def _clWappleII(callkey=''):
 #enddef _clappleII()
 
 def _appleII(callkey=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -40107,10 +41973,10 @@ def _appleII(callkey=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -40131,6 +41997,8 @@ def _appleII(callkey=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -40140,6 +42008,8 @@ def _appleII(callkey=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -40169,6 +42039,8 @@ def _appleII(callkey=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
 
@@ -40347,14 +42219,37 @@ ugui_ini_hybrid()
 MpreDefs = Menu(Mgeo,tearoff=1,font=MyFont)
 
 MShowGeo = Menu(Mgeo,tearoff=1,font=MyFont)
-MShowGeo.add_command(label='3D view', command= lambda mode='3d', item=-1: _showGeo(mode,item),font=MyFont)
-MShowGeo.add_command(label='3D periodic', command= lambda mode='3dperiodic', item=-1: _showGeo(mode,item),font=MyFont)
-MShowGeo.add_command(label='3D specials', command= lambda mode='3dnoper', item=-1: _showGeo(mode,item),font=MyFont)
-MShowGeo.add_command(label='3D view, selected', command= lambda mode='3dselected', item=-2: _showGeo(mode,item),font=MyFont)
-MShowGeo.add_command(label='3D periodic, selected', command= lambda mode='3dpersel', item=-2: _showGeo(mode,item),font=MyFont)
-MShowGeo.add_command(label='3D specials, selected', command= lambda mode='3dnopersel', item=-2: _showGeo(mode,item),font=MyFont)
-MShowGeo.add_command(label='3D UNDUMAG', command= lambda mode='undu3d', item=-1: _showGeo(mode,item),font=MyFont)
-MShowGeo.add_command(label='eps', command= lambda mode='eps', item=-1: _showGeo(mode,item),font=MyFont)
+MShowGeo2d = Menu(Mgeo,tearoff=1,font=MyFont)
+
+MShowGeo.add_cascade(label='2D views', menu=MShowGeo2d,font=MyFont)
+
+MShowGeo2d.add_command(label='XY view', command= lambda modus='xy', item=-1: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='XZ view', command= lambda modus='xz', item=-1: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='ZY view', command= lambda modus='zy', item=-1: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_separator()
+
+MShowGeo2d.add_command(label='XY periodic', command= lambda modus='xy', item=-3: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='XZ periodic', command= lambda modus='xz', item=-3: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='ZY periodic', command= lambda modus='zy', item=-3: _showGeoPythonXYZ(modus,item),font=MyFont)
+
+MShowGeo2d.add_separator()
+MShowGeo2d.add_command(label='XY specials', command= lambda modus='xy', item=-4: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='XZ specials', command= lambda modus='xz', item=-4: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='ZY specials', command= lambda modus='zy', item=-4: _showGeoPythonXYZ(modus,item),font=MyFont)
+
+MShowGeo2d.add_separator()
+MShowGeo2d.add_command(label='XY selected', command= lambda modus='xy', item=-2: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='XZ selected', command= lambda modus='xz', item=-2: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='ZY selected', command= lambda modus='zy', item=-2: _showGeoPythonXYZ(modus,item),font=MyFont)
+
+MShowGeo.add_command(label='3D view', command= lambda modus='3d', item=-1: _showGeo(modus,item),font=MyFont)
+MShowGeo.add_command(label='3D periodic', command= lambda modus='3dperiodic', item=-2: _showGeo(modus,item),font=MyFont)
+MShowGeo.add_command(label='3D specials', command= lambda modus='3dspecials', item=-3: _showGeo(modus,item),font=MyFont)
+MShowGeo.add_command(label='3D selected', command= lambda modus='3dselected', item=-4: _showGeo(modus,item),font=MyFont)
+#MShowGeo.add_command(label='3D periodic, selected', command= lambda modus='3dpersel', item=-2: _showGeo(modus,item),font=MyFont)
+#MShowGeo.add_command(label='3D specials, selected', command= lambda modus='3dnopersel', item=-2: _showGeo(modus,item),font=MyFont)
+MShowGeo.add_command(label='3D UNDUMAG', command= lambda modus='undu3d', item=-1: _showGeo(modus,item),font=MyFont)
+MShowGeo.add_command(label='Show undumag.eps', command= lambda modus='eps', item=-1: _showGeo(modus,item),font=MyFont)
 
 MVariables = Menu(Mgeo,tearoff=1,font=MyFont)
 MenuMagPols = Menu(Mgeo,tearoff=1,font=MyFont)
@@ -40368,7 +42263,7 @@ MpreDefs.add_command(label='Apple II',command=_appleII,font=MyFont)
 MpreDefs.add_command(label='Hybrid',command=_hybrid,font=MyFont)
 MpreDefs.add_command(label='Infinited Hybrid',command=_mirror,font=MyFont)
 
-Mgeo.add_command(label='Load file', command= lambda mode='LoadCLC': _uclc(mode),font=MyFont)
+Mgeo.add_command(label='Load file', command= lambda modus='LoadCLC': _uclc(modus),font=MyFont)
 Mgeo.add_cascade(label='Predefined settings',  menu=MpreDefs,font=MyFont)
 Mgeo.add_cascade(label='Variables', menu=MVariables,font=MyFont)
 Mgeo.add_cascade(label='Magnets and poles', menu=MenuMagPols,font=MyFont)
@@ -40376,12 +42271,17 @@ Mgeo.add_cascade(label='Operations', menu=MenuTRC,font=MyFont)
 Mgeo.add_cascade(label='Coils', menu=MenuCoils,font=MyFont)
 Mgeo.add_cascade(label='Modules', menu=MenuModules,font=MyFont)
 Mgeo.add_cascade(label='Show', menu=MShowGeo,font=MyFont)
-Mgeo.add_command(label='Save', command= lambda mode='WriteCLC': _uclc(mode),font=MyFont)
+Mgeo.add_command(label='Save', command= lambda modus='WriteCLC': _uclc(modus),font=MyFont)
 
 MenuMagPols.add_cascade(label='Add', menu=MaddMag,font=MyFont)
 MenuMagPols.add_command(label='List items', command= lambda key='all': _listMags(key),font=MyFont)
 #MenuMagPols.add_command(label='List selected items', command= lambda key='selected': _listMags(key),font=MyFont)
 MenuMagPols.add_command(label='Deleted items', command= lambda key='deleted': _listMags(key),font=MyFont)
+
+S_CylrIn = StringVar()
+S_CylrOut = StringVar()
+S_CylHeight = StringVar()
+S_CyldPhi = StringVar()
 
 S_Current_Coil = StringVar()
 S_Name_Coil = StringVar()
@@ -40403,6 +42303,11 @@ S_nDivHeight_Coil = StringVar()
 S_nDivWidth_Coil = StringVar()
 S_nDivArc_Coil = StringVar()
 S_Color_Coil = StringVar()
+
+S_CylrIn.set('0.0')
+S_CylrOut.set('40.')
+S_CylHeight.set('40.')
+S_CyldPhi.set('360.')
 
 S_Current_Coil.set('1.0')
 S_Name_Coil.set('CoilName')
@@ -40439,8 +42344,8 @@ def _Check_Coil(coil):
 #enddef _Check_Coil()
 
 def Set_Coil(k):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -40452,10 +42357,10 @@ def Set_Coil(k):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -40476,6 +42381,8 @@ def Set_Coil(k):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -40485,6 +42392,8 @@ def Set_Coil(k):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -40514,6 +42423,8 @@ def Set_Coil(k):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   color = S_Color_Coil.get()
@@ -40548,8 +42459,8 @@ def Set_Coil(k):
 #enddef Set_Coil(k)
 
 def Get_Coil(k):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -40561,10 +42472,10 @@ def Get_Coil(k):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -40585,6 +42496,8 @@ def Get_Coil(k):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -40594,6 +42507,8 @@ def Get_Coil(k):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -40623,6 +42538,8 @@ def Get_Coil(k):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global Coils
 
@@ -40663,8 +42580,8 @@ def Get_Coil(k):
 global WediCoil
 
 def update_coils():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -40676,10 +42593,10 @@ def update_coils():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -40700,6 +42617,8 @@ def update_coils():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -40709,6 +42628,8 @@ def update_coils():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -40738,6 +42659,8 @@ def update_coils():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   NCoil = len(Coils)
@@ -40754,8 +42677,8 @@ def update_coils():
 #enddef updatecoils()
 
 def _WaddCoils(key=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -40767,10 +42690,10 @@ def _WaddCoils(key=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -40791,6 +42714,8 @@ def _WaddCoils(key=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -40800,6 +42725,8 @@ def _WaddCoils(key=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -40829,6 +42756,8 @@ def _WaddCoils(key=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   WaddCoils = Toplevel()
@@ -40856,8 +42785,8 @@ def _WaddCoils(key=''):
 #enddef _WaddCoils(key)
 
 def _WaddCoilRace():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -40869,10 +42798,10 @@ def _WaddCoilRace():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -40893,6 +42822,8 @@ def _WaddCoilRace():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -40902,6 +42833,8 @@ def _WaddCoilRace():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -40931,6 +42864,8 @@ def _WaddCoilRace():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   WaddCoilRace = Toplevel()
@@ -41121,8 +43056,8 @@ def _WaddCoilRace():
 #enddef _WaddCoilRace(key)
 
 def _WeditCoil():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41134,10 +43069,10 @@ def _WeditCoil():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -41158,6 +43093,8 @@ def _WeditCoil():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -41167,6 +43104,8 @@ def _WeditCoil():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -41196,6 +43135,8 @@ def _WeditCoil():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global WediCoil
@@ -41392,8 +43333,8 @@ def _WeditCoil():
 #enddef _WeditCoil(key)
 
 def _clWaddCoils(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41405,10 +43346,10 @@ def _clWaddCoils(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -41429,6 +43370,8 @@ def _clWaddCoils(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -41438,6 +43381,8 @@ def _clWaddCoils(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -41467,6 +43412,8 @@ def _clWaddCoils(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   color = S_Color_Coil.get()
@@ -41510,8 +43457,8 @@ def _clWediCoil(key):
 #enddef _clWediCoil()
 
 def _cnWaddCoilRace():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41523,10 +43470,10 @@ def _cnWaddCoilRace():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -41547,6 +43494,8 @@ def _cnWaddCoilRace():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -41556,6 +43505,8 @@ def _cnWaddCoilRace():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -41585,13 +43536,15 @@ def _cnWaddCoilRace():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   WaddCoilRace.destroy()
 #enddef _cnWaddCoilRace()
 
 def _cnWaddCoil():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41603,10 +43556,10 @@ def _cnWaddCoil():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -41627,6 +43580,8 @@ def _cnWaddCoil():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -41636,6 +43591,8 @@ def _cnWaddCoil():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -41665,13 +43622,15 @@ def _cnWaddCoil():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   WaddCoil.destroy()
 #enddef _clWaddCoils()
 
 def _cnWaddCoils():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41683,10 +43642,10 @@ def _cnWaddCoils():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -41707,6 +43666,8 @@ def _cnWaddCoils():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -41716,6 +43677,8 @@ def _cnWaddCoils():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -41745,6 +43708,8 @@ def _cnWaddCoils():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   WaddCoils.destroy()
 #enddef _clWaddCoils()
@@ -41759,8 +43724,8 @@ def _addCoils(key):
 #enddef _addCoils()
 
 def _clWlistCoils():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41772,10 +43737,10 @@ def _clWlistCoils():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -41796,6 +43761,8 @@ def _clWlistCoils():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -41805,6 +43772,8 @@ def _clWlistCoils():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -41834,14 +43803,16 @@ def _clWlistCoils():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global WlistCoils
   WlistCoils.destroy()
 #enddef _clWlistCoils()
 
 def _listCoils(modecoil='first'):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41853,10 +43824,10 @@ def _listCoils(modecoil='first'):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -41877,6 +43848,8 @@ def _listCoils(modecoil='first'):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -41886,6 +43859,8 @@ def _listCoils(modecoil='first'):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -41915,6 +43890,8 @@ def _listCoils(modecoil='first'):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global WlistCoils
@@ -42575,8 +44552,10 @@ S_Color = StringVar()
 
 MaddMag.add_command(label='REC block', command= lambda key='Block': _WaddMag(key), font=MyFont)
 MaddMag.add_command(label='REC polyhedron', command= lambda key='File': _WaddMag(key), font=MyFont)
+MaddMag.add_command(label='REC cylinder', command= lambda key='Cylinder': _WaddMag(key), font=MyFont)
 MaddMag.add_command(label='Iron block', command= lambda key='Block': _WaddPol(key), font=MyFont)
 MaddMag.add_command(label='Iron polyhedron', command= lambda key='File': _WaddPol(key), font=MyFont)
+MaddMag.add_command(label='Iron cylinder', command= lambda key='Cylinder': _WaddPol(key), font=MyFont)
 
 def varlis_to_num(varlis):
   vnum = []
@@ -42630,7 +44609,7 @@ def read_cornfile(cornfile):
       c3 = calc_var(c[2])
       cornsnum.append([c1,c2,c3])
     #endfor
-    verts,ifaces,faces = hull3d(cornsnum)
+    verts,ifaces,faces,bounds = hull3d(cornsnum)
     if type(verts) != Tdf:
       hull = pd.DataFrame(verts)
     else:
@@ -42644,8 +44623,8 @@ def read_cornfile(cornfile):
 #enddef read_cornfile()
 
 def update_magnets():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -42657,10 +44636,10 @@ def update_magnets():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -42681,6 +44660,8 @@ def update_magnets():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -42690,6 +44671,8 @@ def update_magnets():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -42719,6 +44702,8 @@ def update_magnets():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   if MagPolsTot == MagPolsUpdate: return
@@ -42777,8 +44762,10 @@ def update_magnets():
 
     if typ.find('Block') > -1:
       corns = blockcorners(mp)
-    elif typ == 'Cyl':
-      Quit("update_magnets: Cyl hier einfügen")
+    elif typ == 'Cylinder':
+      #print("update_magnets: Cyl hier einfügen")
+      MagPolsTot[m][-1] = [xcen,ycen,zcen]
+      continue
     elif typ == 'Corners':
       corns = []
       for corn in mp[7]:
@@ -42824,8 +44811,7 @@ def update_magnets():
 
     MagPolsTot[m][-1] = [x,y,z]
 
-
-    verts,ifaces,faces = hull3d(corns)
+    verts,ifaces,faces,bounds = hull3d(corns)
     if type(verts) != Tdf:
       hull = pd.DataFrame(verts)
     else:
@@ -42853,29 +44839,55 @@ def update_magnets():
     zmaxs = -1.e30
 
     moli = []
+
     for mo in range(Nmoth):
+
       moth = Moths[mo]
+
       xmin = 1.e30
       xmax = -1.e30
       ymin = 1.e30
       ymax = -1.e30
       zmin = 1.e30
       zmax = -1.e30
-      for mag in moth:
-        mag = DictMagPolsTot[mag]
-        xmn = Hulls[mag].x.min()
-        xmx = Hulls[mag].x.max()
+
+      xmins = 1.e30
+      xmaxs = -1.e30
+      ymins = 1.e30
+      ymaxs = -1.e30
+      zmins = 1.e30
+      zmaxs = -1.e30
+
+      for cmag in moth:
+        mag = DictMagPolsTot[cmag]
+        mp = MagPolsTot[mag]
+        typ = mp[3]
+        if typ == 'Cylinder':
+          cyl = Ntcyls[DictCyls[cmag]]
+          nc = nget(cyl[2])
+          nh = Nhead[Ind]
+          xmn = nh[6][1]
+          xmx = nh[6][2]
+          zmn = nh[5][1]
+          zmx = nh[7][2]
+          ymn = nh[8][1]
+          ymx = nh[9][2]
+        else:
+          nhu = DictHulls[cmag]
+          xmn = Hulls[nhu].x.min()
+          xmx = Hulls[nhu].x.max()
+          ymn = Hulls[nhu].y.min()
+          ymx = Hulls[nhu].y.max()
+          zmn = Hulls[nhu].z.min()
+          zmx = Hulls[nhu].z.max()
+        #endif Cyl
         if xmn < xmin: xmin = xmn
         if xmx > xmax: xmax = xmx
-        ymn = Hulls[mag].y.min()
-        ymx = Hulls[mag].y.max()
         if ymn < ymin: ymin = ymn
         if ymx > ymax: ymax = ymx
-        zmn = Hulls[mag].z.min()
-        zmx = Hulls[mag].z.max()
         if zmn < zmin: zmin = zmn
         if zmx > zmax: zmax = zmx
-        if MagPolsTot[mag][2] == 'yes':
+        if mp[2] == 'yes' or str(mp[2]) == '1':
           if xmn < xmins: xmins = xmn
           if xmx > xmaxs: xmaxs = xmx
           if ymn < ymins: ymins = ymn
@@ -42884,20 +44896,24 @@ def update_magnets():
           if zmx > zmaxs: zmaxs = zmx
         #endif MagPolsTot[mag][2] == 'yes'
       #endfor mag in moth
+
       moli.append([mo,
                    xmin,xmax,(xmin+xmax)/2.,
                    ymin,ymax,(ymin+ymax)/2.,
                    zmin,zmax,(zmin+zmax)/2.])
-    #endfor mo in range(len(Moths))
 
-    SpecXYZ = [xmins,xmaxs,ymins,ymaxs,zmins,zmaxs]
+    #endfor mo in range(len(Moths))
 
     MothsXYZ = pd.DataFrame(moli)
     MothsXYZ.columns = ['imoth',
                         'xmin','xmax','x',
                         'ymin','ymax','y',
                         'zmin','zmax','z']
-    MothsXYZ = MothsXYZ.sort_values(by=['x','y','z']).reset_index()
+    MothsXYZ = MothsXYZ.sort_values(by=['x','y','z'])
+    #print("lima:,MothsXYZ",MothsXYZ.query("imoth==0"))
+    #print(MothsXYZ)
+
+    SpecXYZ = [xmins,xmaxs,ymins,ymaxs,zmins,zmaxs]
 
     mocop = Moths
     Moths = []
@@ -42926,25 +44942,6 @@ def update_magnets():
     NspecMagPol = len(SpecMagPols)
 
   #endif NMagPolTot
-
-  xmin = 1.e30
-  xmax = -1.e30
-  ymin = 1.e30
-  ymax = -1.e30
-  zmin = 1.e30
-  zmax = -1.e30
-
-  for mp in SpecMagPols:
-    xyz = mp[-1]
-    if xyz[0] < xmin: xmin = xyz[0]
-    if xyz[0] > xmax: xmax = xyz[0]
-    if xyz[1] < ymin: ymin = xyz[1]
-    if xyz[1] > ymax: ymax = xyz[1]
-    if xyz[2] < zmin: zmin = xyz[2]
-    if xyz[2] > zmax: zmax = xyz[2]
-  #endfor mp in range(SpecMagPols)
-
-  SpecXYZ = [xmin,xmax,ymin,ymax,zmin,zmax]
 
   MagPolsUpdate = deepcopy(MagPolsTot)
 
@@ -42977,8 +44974,8 @@ def update_magnets():
 #enddef update_magnets()
 
 def default_mag(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -42990,10 +44987,10 @@ def default_mag(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -43014,6 +45011,8 @@ def default_mag(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -43023,6 +45022,8 @@ def default_mag(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -43052,6 +45053,8 @@ def default_mag(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   Npol = 0
@@ -43163,6 +45166,113 @@ def default_mag(key):
       S_FracDivZ.set("1.")
     #endif NMagPols > 0
 
+  elif key == 'Cylinder':
+
+    ifound = -1
+    l = NMagPol
+
+    for i in range(NMagPol):
+
+      l -= 1
+
+      mp = MagPolsTot[l]
+      cnam = mp[0][0]
+      cmoth = mp[0][1]
+      mattype = mp[1]
+      magkey = mp[3]
+
+      if mattype == 'REC' and key == 'Cylinder':
+
+        ispec = mp[2]
+        cen = mp[4]
+        xcen = cen[0]
+        ycen = cen[1]
+        zcen = cen[2]
+        vmat = mp[5]
+        bc = calc_var(vmat[0])
+        bxn = calc_var(vmat[1])
+        byn = calc_var(vmat[2])
+        bzn = calc_var(vmat[3])
+        mat = vmat[4]
+        col = vmat[5]
+
+        size = mp[6]
+        rin = float(size[0])
+        rout = float(size[1])
+        h = float(size[2])
+        dphi = float(size[3])
+        nphi = int(size[6])+1
+        if nphi < int(dphi/45.)+3: nphi = int(dphi/45.)+3
+
+        size = mp[6]
+        rin = float(size[0])
+        rout = float(size[1])
+        h = float(size[2])
+        dphi = float(size[3])
+        nphi = int(size[6])+1
+        if nphi < int(dphi/45.)+3: nphi = int(dphi/45.)+3
+        div = mp[7]
+        nxdiv = div[0]
+        nydiv = div[1]
+        nzdiv = nphi
+        fracdivy = div[3]
+        fracdivz = div[4]
+        ifound = l
+        break
+
+      #endif mattype == 'REC' and magkey == 'Block'
+
+    #endfor i in range(NMagPlot)
+
+    if ifound > -1:
+      S_Cmag.set(cnam)
+      S_Cmoth.set(cmoth)
+      S_Mat.set(mat)
+      S_Color.set(col)
+      S_Bc.set(bc)
+      S_Bxn.set(bxn)
+      S_Byn.set(byn)
+      S_Bzn.set(bzn)
+      S_Ispec.set(ispec)
+      S_Xcen.set(xcen)
+      S_Ycen.set(ycen)
+      S_Zcen.set(zcen)
+
+      S_CylrIn.set(rin)
+      S_CylrOut.set(rout)
+      S_CylHeight.set(h)
+      S_CyldPhi.set(dphi)
+
+      S_nXdiv.set(nxdiv)
+      S_nYdiv.set(nydiv)
+      S_nZdiv.set(nzdiv)
+      S_FracDivY.set(fracdivy)
+      S_FracDivZ.set(fracdivz)
+      #endif ifound > -1
+    else:
+      S_Mat.set("1")
+      S_Color.set("red")
+      S_Bc.set("1.62")
+      S_Bxn.set("0.0")
+      S_Byn.set("1.0")
+      S_Bzn.set("0.0")
+      S_Ispec.set("yes")
+      S_Xcen.set("-15.0")
+      S_Ycen.set("-25.0")
+      S_Zcen.set("-20.0")
+
+      S_CylrIn.set('0.0')
+      S_CylrOut.set('40')
+      S_CylHeight.set('40.')
+      S_CyldPhi.set('360.')
+
+      S_nXdiv.set('1')
+      S_nYdiv.set('1')
+      S_nZdiv.set('5')
+      S_FracDivY.set("1.")
+      S_FracDivZ.set("1.")
+    #endif NMagPols > 0
+
   elif key == 'File':
 
     if NMagPol > 0:
@@ -43250,8 +45360,8 @@ def default_mag(key):
 #enddef default_mag(key)
 
 def default_pol(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -43263,10 +45373,10 @@ def default_pol(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -43287,6 +45397,8 @@ def default_pol(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -43296,6 +45408,8 @@ def default_pol(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -43325,6 +45439,8 @@ def default_pol(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   if key == 'Block':
@@ -43509,8 +45625,8 @@ def default_pol(key):
 #enddef default_pol(key)
 
 def _WaddMag(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -43522,10 +45638,10 @@ def _WaddMag(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -43546,6 +45662,8 @@ def _WaddMag(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -43555,6 +45673,8 @@ def _WaddMag(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -43584,6 +45704,8 @@ def _WaddMag(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   #print("_WaddMag")
@@ -43743,6 +45865,42 @@ def _WaddMag(key):
     eChamfDS.pack(side=RIGHT,fill=X)
     fChamfDS.pack(fill=X)
 
+  elif key == 'Cylinder':
+
+    WaddMag.title("Add Magnet Cylinder")
+
+    fXlen = Frame(WaddMag)
+    tXlen = 'R_inner'
+    lXlen = Label(fXlen,text=tXlen,font=MyFont)
+    eXlen = Entry(fXlen,text=S_CylrIn,justify=CENTER,font=MyFont,width=ewid)
+    lXlen.pack(side=LEFT,fill=X)
+    eXlen.pack(side=RIGHT,fill=X)
+    fXlen.pack(fill=X)
+
+    fYlen = Frame(WaddMag)
+    tYlen = 'R_outer'
+    lYlen = Label(fYlen,text=tYlen,font=MyFont)
+    eYlen = Entry(fYlen,text=S_CylrOut,justify=CENTER,font=MyFont,width=ewid)
+    lYlen.pack(side=LEFT,fill=X)
+    eYlen.pack(side=RIGHT,fill=X)
+    fYlen.pack(fill=X)
+
+    fZlen = Frame(WaddMag)
+    tZlen = 'Height'
+    lZlen = Label(fZlen,text=tZlen,font=MyFont)
+    eZlen = Entry(fZlen,text=S_CylHeight,justify=CENTER,font=MyFont,width=ewid)
+    lZlen.pack(side=LEFT,fill=X)
+    eZlen.pack(side=RIGHT,fill=X)
+    fZlen.pack(fill=X)
+
+    fPhi = Frame(WaddMag)
+    tPhi = 'Angle range'
+    lPhi = Label(fPhi,text=tPhi,font=MyFont)
+    ePhi = Entry(fPhi,text=S_CyldPhi,justify=CENTER,font=MyFont,width=ewid)
+    lPhi.pack(side=LEFT,fill=X)
+    ePhi.pack(side=RIGHT,fill=X)
+    fPhi.pack(fill=X)
+
   elif key == 'File':
 
     WaddMag.title("Add REC Polyhedron")
@@ -43760,46 +45918,92 @@ def _WaddMag(key):
     return
   #endif key == 'Block'
 
-  fnXdiv = Frame(WaddMag)
-  tnXdiv = 'nXdiv'
-  lnXdiv = Label(fnXdiv,text=tnXdiv,font=MyFont)
-  enXdiv = Entry(fnXdiv,text=S_nXdiv,justify=CENTER,font=MyFont,width=ewid)
-  lnXdiv.pack(side=LEFT,fill=X)
-  enXdiv.pack(side=RIGHT,fill=X)
-  fnXdiv.pack(fill=X)
+  if key != 'Cylinder':
 
-  fnYdiv = Frame(WaddMag)
-  tnydiv = 'nYdiv'
-  lnYdiv = Label(fnYdiv,text=tnydiv,font=MyFont)
-  enYdiv = Entry(fnYdiv,text=S_nYdiv,justify=CENTER,font=MyFont,width=ewid)
-  lnYdiv.pack(side=LEFT,fill=X)
-  enYdiv.pack(side=RIGHT,fill=X)
-  fnYdiv.pack(fill=X)
+    fnXdiv = Frame(WaddMag)
+    tnXdiv = 'nXdiv'
+    lnXdiv = Label(fnXdiv,text=tnXdiv,font=MyFont)
+    enXdiv = Entry(fnXdiv,text=S_nXdiv,justify=CENTER,font=MyFont,width=ewid)
+    lnXdiv.pack(side=LEFT,fill=X)
+    enXdiv.pack(side=RIGHT,fill=X)
+    fnXdiv.pack(fill=X)
 
-  fnZdiv = Frame(WaddMag)
-  tnzdiv = 'nZdiv'
-  lnZdiv = Label(fnZdiv,text=tnzdiv,font=MyFont)
-  enZdiv = Entry(fnZdiv,text=S_nZdiv,justify=CENTER,font=MyFont,width=ewid)
-  lnZdiv.pack(side=LEFT,fill=X)
-  enZdiv.pack(side=RIGHT,fill=X)
-  fnZdiv.pack(fill=X)
+    fnYdiv = Frame(WaddMag)
+    tnydiv = 'nYdiv'
+    lnYdiv = Label(fnYdiv,text=tnydiv,font=MyFont)
+    enYdiv = Entry(fnYdiv,text=S_nYdiv,justify=CENTER,font=MyFont,width=ewid)
+    lnYdiv.pack(side=LEFT,fill=X)
+    enYdiv.pack(side=RIGHT,fill=X)
+    fnYdiv.pack(fill=X)
 
-  fFracDivY = Frame(WaddMag)
-  tfracdivy = 'FracDivY'
-  lFracDivY = Label(fFracDivY,text=tfracdivy,font=MyFont)
-  eFracDivY = Entry(fFracDivY,text=S_FracDivY,justify=CENTER,font=MyFont,width=ewid)
-  lFracDivY.pack(side=LEFT,fill=X)
-  eFracDivY.pack(side=RIGHT,fill=X)
-  fFracDivY.pack(fill=X)
-  fFracDivY = Frame(WaddMag)
+    fnZdiv = Frame(WaddMag)
+    tnzdiv = 'nZdiv'
+    lnZdiv = Label(fnZdiv,text=tnzdiv,font=MyFont)
+    enZdiv = Entry(fnZdiv,text=S_nZdiv,justify=CENTER,font=MyFont,width=ewid)
+    lnZdiv.pack(side=LEFT,fill=X)
+    enZdiv.pack(side=RIGHT,fill=X)
+    fnZdiv.pack(fill=X)
 
-  fFracDivZ = Frame(WaddMag)
-  tfracdivz = 'FracDivZ'
-  lFracDivZ = Label(fFracDivZ,text=tfracdivz,font=MyFont)
-  eFracDivZ = Entry(fFracDivZ,text=S_FracDivZ,justify=CENTER,font=MyFont,width=ewid)
-  lFracDivZ.pack(side=LEFT,fill=X)
-  eFracDivZ.pack(side=RIGHT,fill=X)
-  fFracDivZ.pack(fill=X)
+    fFracDivY = Frame(WaddMag)
+    tfracdivy = 'FracDivY'
+    lFracDivY = Label(fFracDivY,text=tfracdivy,font=MyFont)
+    eFracDivY = Entry(fFracDivY,text=S_FracDivY,justify=CENTER,font=MyFont,width=ewid)
+    lFracDivY.pack(side=LEFT,fill=X)
+    eFracDivY.pack(side=RIGHT,fill=X)
+    fFracDivY.pack(fill=X)
+    fFracDivY = Frame(WaddMag)
+
+    fFracDivZ = Frame(WaddMag)
+    tfracdivz = 'FracDivZ'
+    lFracDivZ = Label(fFracDivZ,text=tfracdivz,font=MyFont)
+    eFracDivZ = Entry(fFracDivZ,text=S_FracDivZ,justify=CENTER,font=MyFont,width=ewid)
+    lFracDivZ.pack(side=LEFT,fill=X)
+    eFracDivZ.pack(side=RIGHT,fill=X)
+    fFracDivZ.pack(fill=X)
+  else:
+
+    fnXdiv = Frame(WaddMag)
+    tnXdiv = 'nR_div'
+    lnXdiv = Label(fnXdiv,text=tnXdiv,font=MyFont)
+    enXdiv = Entry(fnXdiv,text=S_nXdiv,justify=CENTER,font=MyFont,width=ewid)
+    lnXdiv.pack(side=LEFT,fill=X)
+    enXdiv.pack(side=RIGHT,fill=X)
+    fnXdiv.pack(fill=X)
+
+    fnYdiv = Frame(WaddMag)
+    tnydiv = 'nH_div'
+    lnYdiv = Label(fnYdiv,text=tnydiv,font=MyFont)
+    enYdiv = Entry(fnYdiv,text=S_nYdiv,justify=CENTER,font=MyFont,width=ewid)
+    lnYdiv.pack(side=LEFT,fill=X)
+    enYdiv.pack(side=RIGHT,fill=X)
+    fnYdiv.pack(fill=X)
+
+    fnZdiv = Frame(WaddMag)
+    tnzdiv = 'nAng_div'
+    lnZdiv = Label(fnZdiv,text=tnzdiv,font=MyFont)
+    enZdiv = Entry(fnZdiv,text=S_nZdiv,justify=CENTER,font=MyFont,width=ewid)
+    lnZdiv.pack(side=LEFT,fill=X)
+    enZdiv.pack(side=RIGHT,fill=X)
+    fnZdiv.pack(fill=X)
+
+    #fFracDivY = Frame(WaddMag)
+    #tfracdivy = 'FracDivY'
+    #lFracDivY = Label(fFracDivY,text=tfracdivy,font=MyFont)
+    #eFracDivY = Entry(fFracDivY,text=S_FracDivY,justify=CENTER,font=MyFont,width=ewid)
+    #lFracDivY.pack(side=LEFT,fill=X)
+    #eFracDivY.pack(side=RIGHT,fill=X)
+    #fFracDivY.pack(fill=X)
+    #fFracDivY = Frame(WaddMag)
+
+    #fFracDivZ = Frame(WaddMag)
+    #tfracdivz = 'FracDivZ'
+    #lFracDivZ = Label(fFracDivZ,text=tfracdivz,font=MyFont)
+    #eFracDivZ = Entry(fFracDivZ,text=S_FracDivZ,justify=CENTER,font=MyFont,width=ewid)
+    #lFracDivZ.pack(side=LEFT,fill=X)
+    #eFracDivZ.pack(side=RIGHT,fill=X)
+    #fFracDivZ.pack(fill=X)
+
+  #endif Cylinder
 
   WaddMag.attributes('-topmost', 1)
 
@@ -43829,8 +46033,8 @@ def _WaddMag(key):
 #enddef _WaddMag(key)
 
 def _WaddPol(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -43842,10 +46046,10 @@ def _WaddPol(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -43866,6 +46070,8 @@ def _WaddPol(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -43875,6 +46081,8 @@ def _WaddPol(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -43904,6 +46112,8 @@ def _WaddPol(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   #print("_WaddPol")
@@ -44123,8 +46333,8 @@ def _cnWaddPol():
 #enddef _cnWaddPol()
 
 def _clWaddPol(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -44136,10 +46346,10 @@ def _clWaddPol(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -44160,6 +46370,8 @@ def _clWaddPol(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -44169,6 +46381,8 @@ def _clWaddPol(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -44198,6 +46412,8 @@ def _clWaddPol(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   mp = []
@@ -44339,8 +46555,8 @@ def _clWaddPol(key):
 #enddef _clWaddPol()
 
 def _clWaddMag(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -44352,10 +46568,10 @@ def _clWaddMag(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -44376,6 +46592,8 @@ def _clWaddMag(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -44385,6 +46603,8 @@ def _clWaddMag(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -44414,6 +46634,8 @@ def _clWaddMag(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global UnduColors, DictUnduColors
 
@@ -44463,6 +46685,10 @@ def _clWaddMag(key):
     elif chamfus != 0.0: mp.append('BlockUsChamf')
     elif chamdus != 0.0: mp.append('BlockDsChamf')
     #endif
+
+  elif key == 'Cylinder':
+
+    mp.append('Cylinder')
 
   elif key == 'File':
     mp.append('File')
@@ -44534,6 +46760,19 @@ def _clWaddMag(key):
     elif chamfus != 0.0: mp.append([sxlen,sylen,szlen,schamfus])
     else: mp.append([sxlen,sylen,szlen,schamfds])
 
+  elif key == 'Cylinder':
+
+    srin = S_CylrIn.get().strip()
+    if try_calc_var(srin) != 'ok': return
+    srout = S_CylrOut.get().strip()
+    if try_calc_var(srout) != 'ok': return
+    shig = S_CylHeight.get().strip()
+    if try_calc_var(shig) != 'ok': return
+    sdphi = S_CyldPhi.get().strip()
+    if try_calc_var(sdphi) != 'ok': return
+
+    mp.append([srin,srout,shig,sdphi])
+
   elif key == 'File':
     cfile = S_CornFile.get().strip()
     if cfile == "": wError("Filename must be given!")
@@ -44562,17 +46801,37 @@ def _clWaddMag(key):
   xloc=None
   yloc = None
   zloc = None
+
   mp.append([xloc,yloc,zloc])
   MagPolsTot.append(mp)
+
+  if mp[3] == 'Cylinder':
+    size = mp[6]
+    Quit(mp,'\n',size)
+    rin = float(size[0])
+    rout = float(size[1])
+    h = float(size[2])
+    dphi = float(size[3])
+    nphi = int(size[4][3])+1
+    if nphi < int(dphi/45.)+3: nphi = int(dphi/45.)+3
+    Ncylinder += 1
+    ccyl = 'ncyl_' + str(Ncylinder)
+    ncyl = ncylinder(ccyl,
+                     xcen,ycen,zcen,rout-rin,rin,rin,h,0.0,90.,dphi,nphi,1)
+    poly = cylinderpoly(ccyl)
+    Ntcyls.append([imp,mp,ccyl,poly])
+  #endif
+
   NMagPolTot += 1
+
   update_magnets()
 
   WaddMag.destroy()
 #enddef _clWaddMag()
 
 def _EditMagGet(mag):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -44584,10 +46843,10 @@ def _EditMagGet(mag):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -44608,6 +46867,8 @@ def _EditMagGet(mag):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -44617,6 +46878,8 @@ def _EditMagGet(mag):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -44646,6 +46909,8 @@ def _EditMagGet(mag):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   #print("Baustelle _EditMagGet")
@@ -44767,7 +47032,7 @@ def _EditMagGet(mag):
             c3 = calc_var(c[2])
             cornsnum.append([c1,c2,c3])
           #endfor
-          verts,ifaces,faces = hull3d(cornsnum)
+          verts,ifaces,faces,bounds = hull3d(cornsnum)
           if type(verts) != Tdf:
             hull = pd.DataFrame(verts)
           else:
@@ -44999,8 +47264,8 @@ def _crWEditMag(mag):
 #def _crWEditMag(mag)
 
 def _clWEditMag(mag):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45012,10 +47277,10 @@ def _clWEditMag(mag):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -45036,6 +47301,8 @@ def _clWEditMag(mag):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -45045,6 +47312,8 @@ def _clWEditMag(mag):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -45074,6 +47343,8 @@ def _clWEditMag(mag):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   EditMagX = -1
@@ -45088,8 +47359,8 @@ def _clWEditMag(mag):
 #def _clWEditMag(mag)
 
 def _focoEditMag(ev,imp,idx,kdx):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45101,10 +47372,10 @@ def _focoEditMag(ev,imp,idx,kdx):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -45125,6 +47396,8 @@ def _focoEditMag(ev,imp,idx,kdx):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -45134,6 +47407,8 @@ def _focoEditMag(ev,imp,idx,kdx):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -45163,13 +47438,15 @@ def _focoEditMag(ev,imp,idx,kdx):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   print(ev,imp,idx,kdx)
 #enddef focoEditMag(imp,idx,kdx)
 
 def _editMag(imp):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45181,10 +47458,10 @@ def _editMag(imp):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -45205,6 +47482,8 @@ def _editMag(imp):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -45214,6 +47493,8 @@ def _editMag(imp):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -45243,6 +47524,8 @@ def _editMag(imp):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global SgeoWeditMag, VariablesOld, CalcsOld
 
@@ -45961,8 +48244,8 @@ def _deselectAll():
 #enddef _deselectAll()
 
 def _listMags(mode='all'):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45974,10 +48257,10 @@ def _listMags(mode='all'):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -45998,6 +48281,8 @@ def _listMags(mode='all'):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -46007,6 +48292,8 @@ def _listMags(mode='all'):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -46036,6 +48323,8 @@ def _listMags(mode='all'):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global WselListMags, WdelListMags
@@ -46209,7 +48498,7 @@ def _listMags(mode='all'):
       buttdel.pack(side=TOP,fill=X)
 
       buttplot = Button(all_fplot,text='Plot 3d',
-                       command= lambda mag = imp, key = '3d': _plotMag(mag,key))
+                       command= lambda mag = imp, key = '3dselected': _plotMag(mag,key))
       buttplot.pack(side=TOP,fill=X)
 
       buttplotxy = Button(all_fplotxy,text='XY',
@@ -46858,8 +49147,8 @@ def _listMags(mode='all'):
 # +KEEP,mlistvars,T=PYTHON.
 
 def _searchVariable(key='first'):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -46871,10 +49160,10 @@ def _searchVariable(key='first'):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -46895,6 +49184,8 @@ def _searchVariable(key='first'):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -46904,6 +49195,8 @@ def _searchVariable(key='first'):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -46933,6 +49226,8 @@ def _searchVariable(key='first'):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   if key == 'first':
@@ -47063,8 +49358,8 @@ def wError(errtxt='Error',mode='widget'):
 
 
 def _EntryVarGet(stvar):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -47076,10 +49371,10 @@ def _EntryVarGet(stvar):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -47100,6 +49395,8 @@ def _EntryVarGet(stvar):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -47109,6 +49406,8 @@ def _EntryVarGet(stvar):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -47138,6 +49437,8 @@ def _EntryVarGet(stvar):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   sline = stvar.get()
@@ -47154,8 +49455,8 @@ def _EntryVarGet(stvar):
 #enddef _EntryVarGet()
 
 def _listVarsGet():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -47167,10 +49468,10 @@ def _listVarsGet():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -47191,6 +49492,8 @@ def _listVarsGet():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -47200,6 +49503,8 @@ def _listVarsGet():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -47229,6 +49534,8 @@ def _listVarsGet():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global S_Variables, var_firstvar, var_lastvar, var_Vars, var_Good, var_Bad, \
@@ -47359,8 +49666,8 @@ def framelablablablab(win,snam,sdef,sval,scom,font,widlab,wident,widcom):
 #enddef framelablablablab():
 
 def _listVariables(mode='first'):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -47372,10 +49679,10 @@ def _listVariables(mode='first'):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -47396,6 +49703,8 @@ def _listVariables(mode='first'):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -47405,6 +49714,8 @@ def _listVariables(mode='first'):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -47434,6 +49745,8 @@ def _listVariables(mode='first'):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global ndvar, var_firstvar, var_lastvar, var_butts, var_frames, modeold, \
@@ -47873,8 +50186,8 @@ def _addVar(mode='add'):
 #enddef _addVar()
 
 def delParameter(vnam):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -47886,10 +50199,10 @@ def delParameter(vnam):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -47910,6 +50223,8 @@ def delParameter(vnam):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -47919,6 +50234,8 @@ def delParameter(vnam):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -47948,6 +50265,8 @@ def delParameter(vnam):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   if vnam[0] != '$': vnam = '$' + vnam
@@ -47968,8 +50287,8 @@ def delParameter(vnam):
 #enddef delParameters
 
 def delVariable(vnam):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -47981,10 +50300,10 @@ def delVariable(vnam):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -48005,6 +50324,8 @@ def delVariable(vnam):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -48014,6 +50335,8 @@ def delVariable(vnam):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -48043,6 +50366,8 @@ def delVariable(vnam):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   if vnam[0] != '$': vnam = '$' + vnam
@@ -48063,8 +50388,8 @@ def delVariable(vnam):
 #enddef delVariable
 
 def checkVariable(vnam,vdef):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -48076,10 +50401,10 @@ def checkVariable(vnam,vdef):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -48100,6 +50425,8 @@ def checkVariable(vnam,vdef):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -48109,6 +50436,8 @@ def checkVariable(vnam,vdef):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -48138,6 +50467,8 @@ def checkVariable(vnam,vdef):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   if type(vnam) != str:
@@ -48161,8 +50492,8 @@ def checkVariable(vnam,vdef):
 #enddef checkVariable(vnam,vdef)
 
 def addVariable(vnam,vdef,vcom):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -48174,10 +50505,10 @@ def addVariable(vnam,vdef,vcom):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -48198,6 +50529,8 @@ def addVariable(vnam,vdef,vcom):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -48207,6 +50540,8 @@ def addVariable(vnam,vdef,vcom):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -48236,6 +50571,8 @@ def addVariable(vnam,vdef,vcom):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   if type(vnam) != str:
@@ -48274,8 +50611,8 @@ def addVariable(vnam,vdef,vcom):
 #enddef addVariable
 
 def _addVariables(mode='first'):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -48287,10 +50624,10 @@ def _addVariables(mode='first'):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -48311,6 +50648,8 @@ def _addVariables(mode='first'):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -48320,6 +50659,8 @@ def _addVariables(mode='first'):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -48349,6 +50690,8 @@ def _addVariables(mode='first'):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global ndaddvar, modeoldadd, S_AddVariables, S_Variables, var_Vars, ndvar, \
@@ -48573,6 +50916,7 @@ def _listTRC(key='list'):
   if sgeo == "": sgeo = '+' + str(x) + '+' + str(y)
 
   if key == 'refresh':
+    TRCtoDTRC()
     WlistTRC.destroy()
     WlistTRC = Toplevel()
     WlistTRC.title("List of Operations")
@@ -48631,6 +50975,19 @@ MenuTRC.add_command(label='List', command= lambda key='list': _listTRC(key),font
 
 # }+KEEP,listtrc,T=PYTHON
 
+def TRCtoDTRC():
+  global TransRotCop,DictTransRotCop
+  DictTransRotCop = {}
+  for it in range(len(TransRotCop)):
+    cmm = TransRotCop[it][1]
+    if cmm in DictTransRotCop:
+      DictTransRotCop[cmm].append(it)
+    else:
+      DictTransRotCop[cmm] = [it]
+    #endif
+  #endfor
+#enddef TRCtoDTRC
+
 def _EdiTRC(ied):
 
   global TransRotCop
@@ -48649,6 +51006,7 @@ def _EdiTRC(ied):
     for it in range(len(trc)):
       if it != ied: TransRotCop.append(trc[it])
     #endfor
+    TRCtoDTRC()
     _listTRC('refresh')
     return
   #endif
@@ -49210,7 +51568,7 @@ def _clWaddTRC():
 
 
 global S_MateType, S_MateMode, S_MuPar, S_KsiPerp, S_FileMat
-global WaddMatIron, S_RmodeIron, S_FileIron, FileIron, RmodeIron
+global WaddMatIron, S_RmodusIron, S_FileIron, FileIron, RmodusIron
 
 S_MateMode = StringVar()
 S_MateType = StringVar()
@@ -49221,9 +51579,9 @@ S_KsiPerp = StringVar()
 S_KsiPerp.set("0.17")
 S_FileMat = StringVar()
 
-S_RmodeIron = StringVar()
-RmodeIron = "2"
-S_RmodeIron.set(RmodeIron)
+S_RmodusIron = StringVar()
+RmodusIron = "2"
+S_RmodusIron.set(RmodusIron)
 
 S_FileIron = StringVar()
 FileIron = "Vanadium_Permendur_Radia.dat"
@@ -49235,7 +51593,7 @@ def _cnWaddMatIron():
 
 def addMatIron(fileiron='Vanadium_Permendur_Radia.dat',rmodeiron=2,iwidget=0):
 
-  global FileIron, RmodeIron, Nmat, Materials
+  global FileIron, RmodusIron, Nmat, Materials
 
   if not os.path.exists(fileiron):
     if iwidget: print(" File not found ")
@@ -49247,7 +51605,7 @@ def addMatIron(fileiron='Vanadium_Permendur_Radia.dat',rmodeiron=2,iwidget=0):
     if iwidget: wError(" Relaxation mode must be 2 or 3!")
     else: print("*** Error: Relaxation mode must be 2 or 3!")
     return
-  #endif S_RmodeIron.get() != "2" and S_RmodeIron.get() != "3"
+  #endif S_RmodusIron.get() != "2" and S_RmodusIron.get() != "3"
 
   Nmat = len(Materials)
 
@@ -49270,17 +51628,17 @@ def addMatIron(fileiron='Vanadium_Permendur_Radia.dat',rmodeiron=2,iwidget=0):
   Nmat += 1
 
   FileIron = fileiron
-  RmodeIron = str(rmodeiron)
+  RmodusIron = str(rmodeiron)
 
   S_FileIron.set(FileIron)
-  S_RmodeIron.set(RmodeIron)
+  S_RmodusIron.set(RmodusIron)
 #enddef addMatIron()
 
 def _clWaddMatIron():
-  global WaddMatIron, S_FileIron, S_RmodeIron
+  global WaddMatIron, S_FileIron, S_RmodusIron
 
   fileiron = S_FileIron.get()
-  rmodeiron = S_RmodeIron.get()
+  rmodeiron = S_RmodusIron.get()
 
   addMatIron(fileiron,rmodeiron,iwidget=1)
 
@@ -49288,8 +51646,8 @@ def _clWaddMatIron():
 #enddef _clWaddMatIron()
 
 def _MaddMatIron():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -49301,10 +51659,10 @@ def _MaddMatIron():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -49325,6 +51683,8 @@ def _MaddMatIron():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -49334,6 +51694,8 @@ def _MaddMatIron():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -49364,8 +51726,10 @@ def _MaddMatIron():
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-  global WaddMatIron, S_RmodeIron, S_FileIron, FileIron, RmodeIron
+
+  global WaddMatIron, S_RmodusIron, S_FileIron, FileIron, RmodusIron
 
   try: WaddMatIron.destroy()
   except: pass
@@ -49374,7 +51738,7 @@ def _MaddMatIron():
   WaddMatIron.attributes('-topmost', 1)
 
   S_FileIron.set(FileIron)
-  S_RmodeIron.set(RmodeIron)
+  S_RmodusIron.set(RmodusIron)
 
   widlab = 20
   wident = len(FileIron)+10
@@ -49389,7 +51753,7 @@ def _MaddMatIron():
   frmode = Frame(WaddMatIron)
   lrmode = Label(frmode,text="Relaxation mode [2/3]",font=MyFont,width=widlab)
   lrmode.pack(side=LEFT)
-  ermode = Entry(frmode,text=S_RmodeIron,justify=CENTER,font=MyFont,width=wident)
+  ermode = Entry(frmode,text=S_RmodusIron,justify=CENTER,font=MyFont,width=wident)
   ermode.pack(side=LEFT)
   frmode.pack()
 
@@ -49414,8 +51778,8 @@ def _MaddMatIron():
 #enddef _MaddMatIron()
 
 def _MaddMatREClin():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -49427,10 +51791,10 @@ def _MaddMatREClin():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -49451,6 +51815,8 @@ def _MaddMatREClin():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -49460,6 +51826,8 @@ def _MaddMatREClin():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -49489,6 +51857,8 @@ def _MaddMatREClin():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global S_MuPar, S_KsiPerp, S_FileMat, WaddMat, S_MateType, S_MateMode
@@ -49557,8 +51927,8 @@ def _cnWaddMat():
 #enddef _cnWaddMat()
 
 def _clWaddMatREClin():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -49570,10 +51940,10 @@ def _clWaddMatREClin():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -49594,6 +51964,8 @@ def _clWaddMatREClin():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -49603,6 +51975,8 @@ def _clWaddMatREClin():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -49632,6 +52006,8 @@ def _clWaddMatREClin():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global S_MuPar, S_KsiPerp, S_FileMat, WaddMat
 
@@ -49645,8 +52021,8 @@ def _clWaddMatREClin():
 #enddef _clWaddMatREClin()
 
 def addMatREClin(recfile='undugui_1.06_0.17.dat',rmu=1.06,rksi=0.17,iwdiget=0):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -49658,10 +52034,10 @@ def addMatREClin(recfile='undugui_1.06_0.17.dat',rmu=1.06,rksi=0.17,iwdiget=0):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -49682,6 +52058,8 @@ def addMatREClin(recfile='undugui_1.06_0.17.dat',rmu=1.06,rksi=0.17,iwdiget=0):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -49691,6 +52069,8 @@ def addMatREClin(recfile='undugui_1.06_0.17.dat',rmu=1.06,rksi=0.17,iwdiget=0):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -49720,6 +52100,8 @@ def addMatREClin(recfile='undugui_1.06_0.17.dat',rmu=1.06,rksi=0.17,iwdiget=0):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global S_MuPar, S_KsiPerp, S_FileMat, S_MateMode, S_MateType, Nmat
@@ -49779,8 +52161,8 @@ def _delMat(im):
 #enddef _delMat(im)
 
 def _MlistMat(sgeo=""):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -49792,10 +52174,10 @@ def _MlistMat(sgeo=""):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -49816,6 +52198,8 @@ def _MlistMat(sgeo=""):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -49825,6 +52209,8 @@ def _MlistMat(sgeo=""):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -49854,6 +52240,8 @@ def _MlistMat(sgeo=""):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global WlistMat
 
@@ -50075,8 +52463,8 @@ def _ushow_beff():
 #enddef _ushow_beff()
 
 def uwritenam(key=''):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -50088,10 +52476,10 @@ def uwritenam(key=''):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -50112,6 +52500,8 @@ def uwritenam(key=''):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -50121,6 +52511,8 @@ def uwritenam(key=''):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -50150,6 +52542,8 @@ def uwritenam(key=''):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   try: dum = AppleII_Mode
@@ -50245,8 +52639,8 @@ def _cnWSetMap():
 #enddef _cnWSetMap()
 
 def _clWSetMap():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -50258,10 +52652,10 @@ def _clWSetMap():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -50282,6 +52676,8 @@ def _clWSetMap():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -50291,6 +52687,8 @@ def _clWSetMap():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -50320,6 +52718,8 @@ def _clWSetMap():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   NamelistVars[DictNamelistVars['XMAPMIN']][1] = float(S_xMapMin.get())
@@ -50352,8 +52752,8 @@ def _clWSetMap():
 #enddef _clWlistMap()
 
 def _clWSetSym():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -50365,10 +52765,10 @@ def _clWSetSym():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -50389,6 +52789,8 @@ def _clWSetSym():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -50398,6 +52800,8 @@ def _clWSetSym():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -50427,6 +52831,8 @@ def _clWSetSym():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
 
@@ -50455,8 +52861,8 @@ def _clWSetSym():
 #enddef _clWSetSym()
 
 def _SetCenter():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -50468,10 +52874,10 @@ def _SetCenter():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -50492,6 +52898,8 @@ def _SetCenter():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -50501,6 +52909,8 @@ def _SetCenter():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -50530,6 +52940,8 @@ def _SetCenter():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   S_KxCenter.set('yes')
@@ -50541,8 +52953,8 @@ def _SetCenter():
 #enddef _SetCenter()
 
 def _SetSym():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -50554,10 +52966,10 @@ def _SetSym():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -50578,6 +52990,8 @@ def _SetSym():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -50587,6 +53001,8 @@ def _SetSym():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -50616,6 +53032,8 @@ def _SetSym():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   S_IxSym.set('yes')
@@ -50638,8 +53056,8 @@ def _SetSym():
 #enddef _SetSym()
 
 def _ReSetSym():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -50651,10 +53069,10 @@ def _ReSetSym():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -50675,6 +53093,8 @@ def _ReSetSym():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -50684,6 +53104,8 @@ def _ReSetSym():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -50713,6 +53135,8 @@ def _ReSetSym():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   S_IxSym.set('no')
@@ -50735,8 +53159,8 @@ def _ReSetSym():
 #enddef _ReSetSym()
 
 def _Mcontrol_SetMap():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -50748,10 +53172,10 @@ def _Mcontrol_SetMap():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -50772,6 +53196,8 @@ def _Mcontrol_SetMap():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -50781,6 +53207,8 @@ def _Mcontrol_SetMap():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -50810,6 +53238,8 @@ def _Mcontrol_SetMap():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global WSetMap
 
@@ -50931,8 +53361,8 @@ def _Mcontrol_SetMap():
 #enddef _Mcontrol_SetMap)
 
 def _Mcontrol_SetSym():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -50944,10 +53374,10 @@ def _Mcontrol_SetSym():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -50968,6 +53398,8 @@ def _Mcontrol_SetSym():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -50977,6 +53409,8 @@ def _Mcontrol_SetSym():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -51006,6 +53440,8 @@ def _Mcontrol_SetSym():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   try: WSetSym.destroy()
@@ -51103,8 +53539,8 @@ S_Xcenter = StringVar()
 S_Xsym = StringVar()
 
 def ureadnam():
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -51116,10 +53552,10 @@ def ureadnam():
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -51140,6 +53576,8 @@ def ureadnam():
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -51149,6 +53587,8 @@ def ureadnam():
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -51178,6 +53618,8 @@ def ureadnam():
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   iUndu = 0
@@ -51319,8 +53761,8 @@ def _ccWfnam():
 #enddef _ccWfnam()
 
 def _clWfnam(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -51332,10 +53774,10 @@ def _clWfnam(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -51356,6 +53798,8 @@ def _clWfnam(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -51365,6 +53809,8 @@ def _clWfnam(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -51394,6 +53840,8 @@ def _clWfnam(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   global WfileNAM
@@ -51434,8 +53882,8 @@ def _clWfnam(key):
 #enddef _clWfnamII()
 
 def _unam(key):
-  global TransRotCop,EchoCLC
-
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -51447,10 +53895,10 @@ def _unam(key):
   MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
   S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
 
-  global Rmode, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
   MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
 
-  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo, MListVars
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
   global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
   WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
 
@@ -51471,6 +53919,8 @@ def _unam(key):
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
   global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
   V_nXdiv, V_nYdiv, V_nZdiv, \
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
@@ -51480,6 +53930,8 @@ def _unam(key):
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
 
   global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
   S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
@@ -51509,6 +53961,8 @@ def _unam(key):
   S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
   WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
   WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
   WFileNAM = Toplevel()
@@ -51595,7 +54049,7 @@ WaveFilePrefix = 'undugui_'
 if iLoad:
   ureadclc("Load")
   if iLoad > 1:
-    _showGeo("Load")
+    _showGeo("3d")
   #endif
 #endif
 #uwriteclc()
