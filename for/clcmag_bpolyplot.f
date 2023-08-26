@@ -1,3 +1,4 @@
+*CMZ :          25/08/2023  07.53.34  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  16.06.46  by  Michael Scheer
 *CMZ :  2.04/09 16/08/2023  09.50.47  by  Michael Scheer
 *CMZ :  2.04/07 07/08/2023  12.29.11  by  Michael Scheer
@@ -296,7 +297,7 @@
 
       write(luncnf,'(a)')"0 !idev, 0: viewer is not used"
       write(luncnf,'(a)')"-20. -20. !plot size in cm, negative values indicate HIGZ compatible mode"
-      write(luncnf,'(a)')"0.8 !rescaling factor; if not one, plot files are copied and rescaled"
+      write(luncnf,'(a)')"1.0 !rescaling factor; if not one, plot files are copied and rescaled"
       write(luncnf,'(a)')"0 0 800 800 !bounding box"
       if (kunduplot_mode.ne.0) then
         write(luncnf,'(a)')"undumag_3d.eps !base name of plotfiles"
@@ -534,35 +535,67 @@ c--- 3D, top and side views {
 
       if (jcomment.ne.0) call mtitle(trim(ctitle))
 
+      call mplzon(1,1,1,' ')
+      call mplfra(0.,10.,0.,10.,'AB')
+
       if (kunduplot_mode.eq.0) then
+
         call mplset('YMGL',0.5)
-        call mplzon(1,1,1,' ')
-        call mplfra(0.,10.,0.,10.,'AB')
 
-        call mgset('CHHE',0.4)
-        xpl(1)=0.2
-        ypl(1)=6.
+        if (theta.ne.0.0.or.phi.ne.0.0) then
 
-        xpl(2)=xpl(1)+cosd(phi)*cosd(theta)*0.8
-        ypl(2)=ypl(1)+sind(phi)*cosd(theta)*0.8
-        call mpl(2,xpl,ypl)
-        dx=xpl(2)-xpl(1)
-        dy=ypl(2)-ypl(1)
-        call mtx(xpl(1)+dx*1.2,ypl(1)+dy*1.2,'x')
+          call mgset('CHHE',0.2)
+          call mplzon(2,2,1,'S')
+          call mplfr3(0.,1.,0.,1.,0.,1.,theta,phi,'W')
 
-        xpl(2)=xpl(1)
-        ypl(2)=ypl(1)+cosd(theta)*0.8
-        call mpl(2,xpl,ypl)
-        dx=xpl(2)-xpl(1)
-        dy=ypl(2)-ypl(1)
-        call mtx(xpl(1)+dx*1.2,ypl(1)+dy*1.2,'y')
+          xpl(1)=-0.8
+          xpl(2)=-0.6
+          ypl(1)=-0.8
+          ypl(2)=-0.8
+          zpl(1)=0.0
+          zpl(2)=0.0
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'x')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
 
-        xpl(2)=xpl(1)+sind(phi)*cosd(theta)*0.8
-        ypl(2)=ypl(1)-cosd(phi)*cosd(theta)*0.8
-        call mpl(2,xpl,ypl)
-        dx=xpl(2)-xpl(1)
-        dy=ypl(2)-ypl(1)
-        call mtx(xpl(1)+dx*1.2,ypl(1)+dy*1.2,'z')
+          xpl(1)=-0.8
+          xpl(2)=-0.8
+          ypl(1)=-0.8
+          ypl(2)=-0.6
+          zpl(1)=0.0
+          zpl(2)=0.0
+
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'y')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+
+          xpl(1)=-0.8
+          xpl(2)=-0.8
+          ypl(1)=-0.8
+          ypl(2)=-0.8
+          zpl(1)=0.
+          zpl(2)=0.2
+
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'z')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+          call muwk(0,0)
+
+          call mplzon(1,1,1,'S')
+          call mplfra(0.,10.,0.,10.,'AB')
+        endif
 
         call mgset('CHHE',0.5)
         call mtx(4.1,4.7,'upper magnets')
