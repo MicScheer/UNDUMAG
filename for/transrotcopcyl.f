@@ -1,3 +1,4 @@
+*CMZ :          26/08/2023  09.55.25  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  08.07.21  by  Michael Scheer
 *CMZ :  2.04/08 11/08/2023  14.49.50  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  09.15.04  by  Michael Scheer
@@ -79,7 +80,7 @@ c                t_magnets(imag)%t_voxels(iv)%gcen=t_magnets(imag)%t_voxels(iv)%
               enddo
             else if (t8(8).eq.3.0d0) then
               if (tmag%IsPole.ne.0) then
-                write(lun6,*)"*** Warning in clctransrotcop: Setting remanence not allowed for iron ***"
+                write(lun6,*)"*** Warning in ransrotcopcyl: Setting remanence not allowed for iron ***"
                 write(lun6,*)"*** Pole:",tmag%cnam
                 cycle
               endif

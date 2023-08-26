@@ -1,3 +1,4 @@
+*CMZ :          26/08/2023  10.27.59  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  08.02.18  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  16.11.22  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
@@ -743,7 +744,9 @@ c-----------------------------------------------------------------------
         nydiv=t_magnets(nmag)%nydiv
         nzdiv=t_magnets(nmag)%nzdiv
 
-        t_magnets(nmag)%nvoxels=0
+        if (t_magnets(nmag)%ctype.ne.'Cylinder') then
+          t_magnets(nmag)%nvoxels=0
+        endif
 
         allocate(t_magnets(nmag)%kvoxels(nxdiv,nydiv,nzdiv))
         t_magnets(nmag)%kvoxels=0

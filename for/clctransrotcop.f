@@ -1,3 +1,4 @@
+*CMZ :          26/08/2023  09.53.27  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  08.05.44  by  Michael Scheer
 *CMZ :  2.04/08 11/08/2023  14.49.50  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  09.15.04  by  Michael Scheer
@@ -81,7 +82,10 @@ c-----------------------------------------------------------------------
         ifound=0
         do imag=1,nmagtot_t
           tmag=t_magnets(imag)
-          if (tmag%ctype.eq.'Cylinder') cycle
+          if (tmag%ctype.eq.'Cylinder') then
+            ifound=-1
+            cycle
+          endif
           t8=transrotcop(:,itr)
           if(
      &        tmag%cmoth.eq.ctransrotcop(itr).or.
