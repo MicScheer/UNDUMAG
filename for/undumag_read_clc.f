@@ -1,3 +1,4 @@
+*CMZ :  2.04/11 29/08/2023  14.43.10  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/01 22/01/2023  13.04.45  by  Michael Scheer
@@ -339,7 +340,7 @@
               enddo
               i=i-1
             else if (cline(ipos(1,1):ipos(2,1)).eq.'Cylinder') then
-              do l=1,4
+              do l=1,5
                 nclcspec=nclcspec+1
                 clcspec(nclcspec)=clcbuff(i)
                 if (kechocalc.ne.0) print*,trim(clcbuff(i))
