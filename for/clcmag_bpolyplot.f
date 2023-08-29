@@ -1,4 +1,4 @@
-*CMZ :          25/08/2023  07.53.34  by  Michael Scheer
+*CMZ :          28/08/2023  14.35.56  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  16.06.46  by  Michael Scheer
 *CMZ :  2.04/09 16/08/2023  09.50.47  by  Michael Scheer
 *CMZ :  2.04/07 07/08/2023  12.29.11  by  Michael Scheer
@@ -64,7 +64,7 @@
       subroutine clcmag_bpolyplot(iplot,xmin,xmax,ymin,ymax,zmin,zmax,
      &  theta,phi,nwitems,ncwires,wire)
 
-*KEEP,bpolyederf90u.
+*KEEP,BPOLYEDERF90U.
 
       use bpolyederf90m
 
@@ -75,7 +75,7 @@
 
       implicit none
 
-*KEEP,mshplt.
+*KEEP,MSHPLT.
       real
      &  pttomm_ps,pttocm_ps, !convert from pt to mm or cm respectively
      &  scale_ps, isscale_ps, !current scale to convert from pt
@@ -781,8 +781,8 @@ c y is vertical (WAVE-system)
 
       else !:if (theta.eq.0.0.and.phi.eq.0.0) then
 
-        xyzmin=min(xplmin,yplmin,zplmin)*0.8
-        xyzmax=max(xplmax,yplmax,zplmax)*0.8
+        xyzmin=min(xplmin,yplmin,zplmin)!*0.8
+        xyzmax=max(xplmax,yplmax,zplmax)!*0.8
 
         !dx=(xyzmax-xyzmin)*0.1*0.0
 c        call mplfr3(xyzmin,xyzmax,
