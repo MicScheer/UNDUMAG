@@ -37073,9 +37073,9 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
 
         for ic in range(len(mp[7])):
 
-          xx = xc + calc_var(mp[7][ic][0])
-          yy = yc + calc_var(mp[7][ic][1])
-          zz = zc + calc_var(mp[7][ic][2])
+          xx = calc_var(mp[7][ic][0])
+          yy = calc_var(mp[7][ic][1])
+          zz = calc_var(mp[7][ic][2])
 
           if callkey != 'plotMag':
             if cmoth in DictTransRotCop or cmag in DictTransRotCop:
@@ -37103,7 +37103,8 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
         Quit("_showGeoPython: " + mp[3] + " hier einfügen")
       #endif mp[3] == 'Block'
 
-      dtx = -tx; dty = -ty; dtz = -tz
+      #dtx = -tx; dty = -ty; dtz = -tz
+      dtx = 0.; dty = 0.; dtz = 0.
 
       mper = nper
 
