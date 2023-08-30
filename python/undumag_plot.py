@@ -1663,7 +1663,7 @@ if System != 'WINDOWS':
 #if System != 'WINDOWS':
 
 Gdebug = 0
-import m_hbook as m
+#import m_hbook as m
 
 global TransRotCop, EchoCLC,DictTransRotCop
 global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
@@ -27505,7 +27505,7 @@ def undu_overview():
 #enddef
 #import undumag_plot as upl
 #from undumag_plot import *
-import m_hbook as m
+#import m_hbook as m
 
 global TransRotCop, EchoCLC,DictTransRotCop
 global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
