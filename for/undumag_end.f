@@ -1,3 +1,4 @@
+*CMZ :          30/08/2023  11.37.07  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  16.57.37  by  Michael Scheer
 *CMZ :  2.04/01 20/01/2023  13.43.13  by  Michael Scheer
@@ -96,10 +97,10 @@
 
       implicit none
 
-*KEEP,seqdebug.
+*KEEP,SEQDEBUG.
       integer iseqdebug
       common/seqdebugc/iseqdebug
-*KEEP,random.
+*KEEP,RANDOM.
       integer*8 irancalls
       integer, parameter :: irnsize=64
       integer irnseed(irnsize),irnmode,irnseedi(irnsize)
@@ -176,7 +177,7 @@
       real hpaw(npawp)
       common/pawc/hpaw
 
-*KEEP,mshplt.
+*KEEP,MSHPLT.
       real
      &  pttomm_ps,pttocm_ps, !convert from pt to mm or cm respectively
      &  scale_ps, isscale_ps, !current scale to convert from pt
@@ -340,7 +341,7 @@
      &  ,yoffexp_ps !yoffset of power term
      &  ,xpcorn_ps,ypcorn_ps
      &  ,ifbox_ps,xfb_ps,yfb_ps
-*KEEP,PHYCONparam,T=F77.
+*KEEP,PHYCONPARAM.
 c-----------------------------------------------------------------------
 c     phyconparam.cmn
 c-----------------------------------------------------------------------
@@ -3439,7 +3440,7 @@ c{ Plot By, Bz
       do mat=1,nmatfiles
         n=matmaps(4,mat)
         mtyp=matmaps(2,mat)
-        if (mtyp.eq.1) then
+        if (mtyp.eq.1.and.nrec.gt.0) then
           if (n.eq.0) then
             if (newclc.ne.0) then
               br=0.0d0
