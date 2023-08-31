@@ -43104,8 +43104,14 @@ def _listCoils(modecoil='first'):
   bdel = Button(fbench,text='Delete',command=_delCoil)
   bdel.pack(side=LEFT,expand=TRUE,fill=X)
 
-  bplot = Button(fbench,text='Plot',command=_plotCoil)
-  bplot.pack(side=LEFT,expand=TRUE,fill=X)
+  bplot3d = Button(fbench,text='Plot 3d',command = lambda view = '3d': _plotCoil(view))
+  bplot3d.pack(side=LEFT,expand=TRUE,fill=X)
+  bplotxz = Button(fbench,text='Plot top view',command = lambda view = 'xz': _plotCoil(view))
+  bplotxz.pack(side=LEFT,expand=TRUE,fill=X)
+  bplotxy = Button(fbench,text='Plot side view',command = lambda view = 'xy': _plotCoil(view))
+  bplotxy.pack(side=LEFT,expand=TRUE,fill=X)
+  bplotzy = Button(fbench,text='Plot beam view',command = lambda view = 'zy': _plotCoil(view))
+  bplotzy.pack(side=LEFT,expand=TRUE,fill=X)
 
   bClose = Button(fbottom,text='Ok',command=_clWlistCoils)
   bClose.pack(expand=TRUE,fill=X)
@@ -43165,7 +43171,7 @@ def _delCoil():
 
 #enddef _delCoil()
 
-def _plotCoil():
+def _plotCoil(view='3d'):
   global Selected_Coil, NCoil
 
   if Selected_Coil == None or Selected_Coil < 0 or Selected_Coil >= NCoil:
@@ -43173,7 +43179,7 @@ def _plotCoil():
     return
   #endif not Seletec_Coil
 
-  xyzcoils = _ucoilplot(modus='notsame',item=Selected_Coil)
+  xyzcoils = _ucoilplot(view,modus='notsame',item=Selected_Coil)
 #enddef _plotCoil()
 
 def _SelCoil(k):
