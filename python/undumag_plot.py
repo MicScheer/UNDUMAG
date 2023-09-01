@@ -28214,8 +28214,8 @@ def undumag_wind_to_fila(coilin):
     return
   #if coil[0].upper() != 'RECTWINDINGS'
 
-  print("wind_to_fila:",NL,coilin)
-  debug("debug: Wind")
+  #print("wind_to_fila:",NL,coilin)
+  #debug("debug: Wind")
 
   coil = []
   for v in coilin[1]:
@@ -28704,10 +28704,10 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   Fclc = open("filaments.clc","w")
   Fclc.write("& User_Comment\nCoils to Filaments\n\n")
 
-  fil = []
-  if kcoil > -1:
-    filo = deepcopy(Filaments)
-  #endif
+#  fil = []
+#  if kcoil > -1:
+#    filo = deepcopy(Filaments)
+#  #endif
 
   write_variables(Fclc)
   write_coils(Coils,Fclc,kcoil)
@@ -29220,7 +29220,6 @@ def ureadclc(callkey=''):
         elif key == 'RectWindings' or key == 'Rectangular' or key == 'RectangCirc':
           wl = []
           for w in words: wl.append(w)
-          #debug("wl")
           coil.append(wl)
           Coils.append(coil)
         elif key == 'RectArc' or key == 'RectBar' \

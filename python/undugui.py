@@ -29169,8 +29169,8 @@ def undumag_wind_to_fila(coilin):
     return
   #if coil[0].upper() != 'RECTWINDINGS'
 
-  print("wind_to_fila:",NL,coilin)
-  debug("debug: Wind")
+  #print("wind_to_fila:",NL,coilin)
+  #debug("debug: Wind")
 
   coil = []
   for v in coilin[1]:
@@ -29659,10 +29659,10 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   Fclc = open("filaments.clc","w")
   Fclc.write("& User_Comment\nCoils to Filaments\n\n")
 
-  fil = []
-  if kcoil > -1:
-    filo = deepcopy(Filaments)
-  #endif
+#  fil = []
+#  if kcoil > -1:
+#    filo = deepcopy(Filaments)
+#  #endif
 
   write_variables(Fclc)
   write_coils(Coils,Fclc,kcoil)
@@ -30175,7 +30175,6 @@ def ureadclc(callkey=''):
         elif key == 'RectWindings' or key == 'Rectangular' or key == 'RectangCirc':
           wl = []
           for w in words: wl.append(w)
-          #debug("wl")
           coil.append(wl)
           Coils.append(coil)
         elif key == 'RectArc' or key == 'RectBar' \
@@ -31162,12 +31161,15 @@ def write_variables(Fclc):
 
 def write_coils(coils,Fclc,kcoil=-1):
 
+  #print("write_coils:",coils,kcoil)
   iexplain = 0
 
   Fclc.write(NL)
 
   icoil = -1
   for coil in coils:
+
+    #if calc_var(coil[1][0]) == 0.0: continue
 
     icoil += 1
     if kcoil > -1 and kcoil != icoil: continue
@@ -33208,9 +33210,18 @@ def ureadfil(callkey=''):
     #endif
   #endif NCoil
 
+  tclc = os.stat('undumag.clc').st_mtime_ns
+  tfil = os.stat('undumag.fil').st_mtime_ns
+
+  if tclc > tfil:
+    print(NL,"*** Warning: File undumag.fil older then undumag.clc, will ignore it.\nRerun UNDUMAG with appropriate number of coils or delete it.")
+    return
+  #endif
+
   Ffil = open("undumag.fil","r")
   fils = Ffil.readlines()
   Ffil.close()
+
   fs = fils[1].split()
   icoilo = fs[-1]
   icoil = icoilo
@@ -33331,7 +33342,12 @@ def _undumag(callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  print("_undumag:Rmodus",Rmodus)
+  print("Executing\nundumag.exe",Rmodus)
+  if Rmodus.split()[0] == 'FILAMENTS':
+    print('to update undumag.fil\n')
+  elif Rmodus.split()[0] == 'SEGMENTATION':
+    print('to perform segmentation, i.e. updating undumag.geo etc..\n')
+  #endif
 
   if IUNDUMAGisRunning:
     wError("UNDUNMAG IS RUNNING!")
@@ -33428,7 +33444,7 @@ def _undumag(callkey=''):
 
 #enddef _undumag()
 
-def _runundumag(callkey='',mode=''):
+def _runundumag(callkey='',modus=''):
 
   global TransRotCop,EchoCLC,DictTransRotCop
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
@@ -33514,7 +33530,7 @@ def _runundumag(callkey='',mode=''):
 
 
 
-  Rmodus = mode
+  Rmodus = modus
   _undumag('_rundunmag')
 
 #enddef
@@ -34165,8 +34181,8 @@ def undumag_wind_to_fila(coilin):
     return
   #if coil[0].upper() != 'RECTWINDINGS'
 
-  print("wind_to_fila:",NL,coilin)
-  debug("debug: Wind")
+  #print("wind_to_fila:",NL,coilin)
+  #debug("debug: Wind")
 
   coil = []
   for v in coilin[1]:
@@ -34655,10 +34671,10 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   Fclc = open("filaments.clc","w")
   Fclc.write("& User_Comment\nCoils to Filaments\n\n")
 
-  fil = []
-  if kcoil > -1:
-    filo = deepcopy(Filaments)
-  #endif
+#  fil = []
+#  if kcoil > -1:
+#    filo = deepcopy(Filaments)
+#  #endif
 
   write_variables(Fclc)
   write_coils(Coils,Fclc,kcoil)
@@ -35171,7 +35187,6 @@ def ureadclc(callkey=''):
         elif key == 'RectWindings' or key == 'Rectangular' or key == 'RectangCirc':
           wl = []
           for w in words: wl.append(w)
-          #debug("wl")
           coil.append(wl)
           Coils.append(coil)
         elif key == 'RectArc' or key == 'RectBar' \
@@ -36330,12 +36345,15 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
   icoil = -1
   ifound = 0
 
+  kallzero = 1
   for coil in Filaments:
-
     icoil += 1
     if item > -1 and icoil != item: continue
+    curr = calc_var(Coils[icoil][1][0])
     coiltit = Coils[icoil][0][1]
     ifound = 1
+    if curr == 0: continue
+    kallzero = 0
     for wire in coil:
       xmin = min(xmin,wire[2],wire[5])
       xmax = max(xmax,wire[2],wire[5])
@@ -36346,6 +36364,8 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
     #endfor wire in coil
 
   #endfor coil in Filaments
+
+  if kallzero : return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
 
   dx = (xmax-xmin)*0.1
   dy = (ymax-ymin)*0.1
@@ -36445,7 +36465,7 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
   #endif modus
 
 
-  return [xmin,xmax,ymin,ymax,zmin,zmax]
+  return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
 
 #enddef _ucoilplot(view='3d', modus='same')
 
@@ -37097,7 +37117,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
         cmag = MagPolsSel[imp]
         imag = DictMagPolsTot[cmag]
         mp = MagPolsTot[imag]
-        print(mp)
+        #print(mp)
       else:
         mp = MagPolsTot[imp]
       #endif
@@ -37132,7 +37152,6 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
       if mp[3].find('Block') > -1:
 
         corns = blockcorners(mp)
-
         for corn in corns:
 
           xx = corn[0]; yy = corn[1]; zz = corn[2]
@@ -37149,9 +37168,9 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
             y = yc + rot21*xx + rot22*yy + rot23*zz
             z = zc + rot31*xx + rot32*yy + rot33*zz
           else:
-            x = xc
-            y = yc
-            z = zc
+            x = xx + xc
+            y = yy + yc
+            z = zz + zc
           #endif
 
           points.append([x,y,z])
@@ -37177,9 +37196,9 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
             y = yc + rot21*xx + rot22*yy + rot23*zz
             z = zc + rot31*xx + rot32*yy + rot33*zz
           else:
-            x = xc
-            y = yc
-            z = zc
+            x = xx + xc
+            y = yy + yc
+            z = zz + zc
           #endif
 
           points.append([x,y,z])
@@ -37206,7 +37225,6 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
           for p in points:
             pp.append([p[0]+dtx,p[1]+dty,p[2]+dtz])
           #endfor p in points
-
           verts,ifaces,faces,bounds = hull3d(pp)
           plothull3dxzy(isame=1,edgecolor=col,ishow=0,modus='line')
 
@@ -37282,7 +37300,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
     if ispec != 0: break
   #endfor mm in range(Nmodul)
 
-  if len(xyzcoils) > 0:
+  if len(xyzcoils) and xyzcoils[6] == 0:
     xplmin = min(xplmin,xyzcoils[0])
     xplmax = max(xplmax,xyzcoils[1])
     yplmin = min(yplmin,xyzcoils[2])
@@ -37489,22 +37507,24 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
 
     if len(Filaments):
       xyzcoils = _ucoilplot(modus,callkey='ShowGeoPythonXYZ')
-      print(xyzcoils)
-      if modus == 'xy':
-        xplmin = min(xplmin,xyzcoils[0])
-        xplmax = max(xplmax,xyzcoils[1])
-        yplmin = min(yplmin,xyzcoils[2])
-        yplmax = max(yplmax,xyzcoils[3])
-      elif modus == 'xz':
-        xplmin = min(xplmin,xyzcoils[0])
-        xplmax = max(xplmax,xyzcoils[1])
-        yplmin = min(yplmin,xyzcoils[4])
-        yplmax = max(yplmax,xyzcoils[5])
-      elif modus == 'zy':
-        xplmin = min(xplmin,xyzcoils[4])
-        xplmax = max(xplmax,xyzcoils[5])
-        yplmin = min(yplmin,xyzcoils[2])
-        yplmax = max(yplmax,xyzcoils[3])
+      #print(xyzcoils)
+      if xyzcoils[6] == 0:
+        if modus == 'xy':
+          xplmin = min(xplmin,xyzcoils[0])
+          xplmax = max(xplmax,xyzcoils[1])
+          yplmin = min(yplmin,xyzcoils[2])
+          yplmax = max(yplmax,xyzcoils[3])
+        elif modus == 'xz':
+          xplmin = min(xplmin,xyzcoils[0])
+          xplmax = max(xplmax,xyzcoils[1])
+          yplmin = min(yplmin,xyzcoils[4])
+          yplmax = max(yplmax,xyzcoils[5])
+        elif modus == 'zy':
+          xplmin = min(xplmin,xyzcoils[4])
+          xplmax = max(xplmax,xyzcoils[5])
+          yplmin = min(yplmin,xyzcoils[2])
+          yplmax = max(yplmax,xyzcoils[3])
+        #endif
       #endif
 
   #endif item
@@ -41441,8 +41461,9 @@ def Set_Coil(k):
       return
   #endif
 
-  print(k,NL,Coils[k])
-  Quit("Ende in set_coil")
+  #print(k,NL,Coils[k])
+  print("Set_Coil is still under construction...")
+  return 1
 
   coil = [Coils[k][0],[S_Current_Coil.get(),S_Filling_Coil.get(),S_nWindings_Coil.get(), \
   S_Xcen_Coil.get(),S_Ycen_Coil.get(),S_Zcen_Coil.get(),S_VnX_Coil.get(), \
@@ -41549,7 +41570,8 @@ def Get_Coil(k):
   global Coils
 
   print(k,NL,Coils[k])
-  Quit("Ende in set_coil")
+  print("Get_Coil is still under construction...")
+  return
 
   if Coils[k][0][0] == 'RectWindings':
     par = Coils[k][1]
@@ -41584,7 +41606,7 @@ def Get_Coil(k):
 
 global WediCoil
 
-def update_coils():
+def update_coils(caller=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
@@ -41671,6 +41693,8 @@ def update_coils():
   NCoil = len(Coils)
   DictCoils = {}
   idxcoil = 0
+
+  print("update_coils::",caller)
 
   for coil in Coils:
     key = coil[0][0]
@@ -42901,8 +42925,9 @@ def _listCoils(modecoil='first'):
 
   global WlistCoils
 
-  update_coils()
-  #debug("debug: List coils 1")
+  update_coils("_listCoiles: " + modecoil)
+
+  if len(Coils) == 0: return
 
   try:
     sgeo = WlistCoils.destroy()
@@ -42919,8 +42944,6 @@ def _listCoils(modecoil='first'):
 
   for key in DictCoils:
 
-    #debug("debug: key")
-
     fkey = Frame(WlistCoils)
     fhead = Frame(fkey)
 
@@ -42934,6 +42957,7 @@ def _listCoils(modecoil='first'):
     header = DictCoilsHeader[key]
     nhead = len(header)
     lheader = []
+
     for t in header: lheader.append(len(t))
 
     ih = -1
@@ -42943,15 +42967,19 @@ def _listCoils(modecoil='first'):
       lab.pack(side=LEFT)
     #endfor
 
-    #debug("debug: lhead")
     fhead.pack(side=TOP,fill=X)
 
-    fc = Frame(fkey)
+    if len(Filaments) <= 0:
+      Rmodus = 'FILAMENTS STDOUT=undumag.lun6'
+      _undumag('listCoils')
+      ureadfil()
+    #endif
 
     for icoil in DictCoils[key]:
 
-      iVar = 0
+      fc = Frame(fkey)
 
+      iVar = 0
       cidx = str(icoil+1)
       coil = Coils[icoil]
       cnam = coil[0][1]
@@ -42971,8 +42999,6 @@ def _listCoils(modecoil='first'):
       lab.pack(side=LEFT)
       lab = Label(fc,text=cnam,font=MyFont,bg='white',width=15)
       lab.pack(side=LEFT)
-
-      #debug("debug:" + key)
 
       if key == 'Filaments':
 
@@ -43040,6 +43066,9 @@ def _listCoils(modecoil='first'):
 
       else: #key
 
+        print(icoil,cidx,key,cnam,coil[1])
+        #if icoil: continue
+
         #print("*** key:",key)
         iVar = 0
         for var in coil[1]:
@@ -43048,6 +43077,7 @@ def _listCoils(modecoil='first'):
             break
           #endif
         #endfor var
+
         ic = -1
         for var in coil[1]:
           ic += 1
@@ -47148,7 +47178,9 @@ def _selectMag(cmag):
     NMagPolSel += 1
 
   #endif not mag in DictMagsSel
+
   _configMagButts()
+
   WallListMags.update()
 
 #enddef _selectMag(mag)
