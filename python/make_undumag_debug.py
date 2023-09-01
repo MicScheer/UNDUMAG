@@ -168,6 +168,9 @@ def undu_update():
 
   get_undu_tree()
 
+  Tmain = os.stat(UI + '/main/undumag_main.f').st_mtime_ns
+  if Tmain > Texe: kmain = 1
+
   for td in Undu_tree:
 
     dd = td[0]
