@@ -1,3 +1,4 @@
+*CMZ :  2.04/13 31/08/2023  13.05.39  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/02 03/03/2022  12.09.38  by  Michael Scheer
 *CMZ :  2.02/01 19/10/2021  13.27.41  by  Michael Scheer
@@ -92,7 +93,7 @@
             call util_string_split(cline,1000,nwords,ipos,istat)
             cword=cline(ipos(1,1):ipos(2,1))
             read(cword,*)curr
-            if (curr.eq.0.0d0) cycle
+c            if (curr.eq.0.0d0) cycle
             cword=cline(ipos(1,2):ipos(2,2))
             read(cword,*)x1
             cword=cline(ipos(1,3):ipos(2,3))
@@ -131,7 +132,8 @@
             if (kechocalc.ne.0) print*,trim(cline)
             call clcstring_to_vars(cline)
             read(cline,*)curr,x1,y1,z1,x2,y2,z2,icolor
-            if (curr.eq.0.0d0.or.(x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+c            if (curr.eq.0.0d0.or.(x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+            if ((x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
             nfila=nfila+1
           enddo
           close(lunf)
@@ -145,24 +147,24 @@
 
         else if (ckey.eq.'RectWindings') then
           read(cline,*)t_coils(nc)%params(1:19)
-          if (t_coils(nc)%params(1).eq.0.0d0) then
-            nc=nc-1
-            cycle
-          endif
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
           nwind=nwind+1
         else if (ckey.eq.'Rectangular') then
           read(cline,*)t_coils(nc)%params(1:17)
-          if (t_coils(nc)%params(1).eq.0.0d0) then
-            nc=nc-1
-            cycle
-          endif
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
           nrace=nrace+1
         else if (ckey.eq.'RectangCirc') then
           read(cline,*)t_coils(nc)%params(1:17)
-          if (t_coils(nc)%params(1).eq.0.0d0) then
-            nc=nc-1
-            cycle
-          endif
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
           ncrace=ncrace+1
         else if (ckey.eq.'RectArc') then
           ib=ib+1
@@ -171,10 +173,10 @@
           call clcstring_to_vars(cline1)
           cline=trim(adjustl(cline)) // " " // trim(adjustl(cline1))
           read(cline,*)t_coils(nc)%params(1:21)
-          if (t_coils(nc)%params(1).eq.0.0d0) then
-            nc=nc-1
-            cycle
-          endif
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
           narc=narc+1
         else if (ckey.eq.'CircArc') then
           ib=ib+1
@@ -183,10 +185,10 @@
           call clcstring_to_vars(cline1)
           cline=trim(adjustl(cline)) // " " // trim(adjustl(cline1))
           read(cline,*)t_coils(nc)%params(1:20)
-          if (t_coils(nc)%params(1).eq.0.0d0) then
-            nc=nc-1
-            cycle
-          endif
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
           ncarc=ncarc+1
         else if (ckey.eq.'RectBar') then
           ib=ib+1
@@ -196,10 +198,10 @@
           call clcstring_to_vars(cline1)
           cline=trim(adjustl(cline)) // " " // trim(adjustl(cline1))
           read(cline,*)t_coils(nc)%params(1:19)
-          if (t_coils(nc)%params(1).eq.0.0d0) then
-            nc=nc-1
-            cycle
-          endif
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
           nrbar=nrbar+1
         else if (ckey.eq.'ThickWire') then
           ib=ib+1
@@ -208,10 +210,10 @@
           call clcstring_to_vars(cline1)
           cline=trim(adjustl(cline)) // " " // trim(adjustl(cline1))
           read(cline,*)t_coils(nc)%params(1:18)
-          if (t_coils(nc)%params(1).eq.0.0d0) then
-            nc=nc-1
-            cycle
-          endif
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
           nthwir=nthwir+1
         endif !ckey
 
@@ -287,7 +289,7 @@
             call util_string_split(cline,1000,nwords,ipos,istat)
             cword=cline(ipos(1,1):ipos(2,1))
             read(cword,*)curr
-            if (curr.eq.0.0d0) cycle
+c            if (curr.eq.0.0d0) cycle
             cword=cline(ipos(1,2):ipos(2,2))
             read(cword,*)x1
             cword=cline(ipos(1,3):ipos(2,3))
@@ -326,7 +328,8 @@
             read(lunf,'(a)') cline
             call clcstring_to_vars(cline)
             read(cline,*)curr,x1,y1,z1,x2,y2,z2,icolor
-            if (curr.eq.0.0d0.or.(x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+            if ((x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+c            if (curr.eq.0.0d0.or.(x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
             ncwires=ncwires+1
             wire(1,ncwires)=1 !type
             wire(2,ncwires)=curr

@@ -1,3 +1,4 @@
+*CMZ :  2.04/13 04/09/2023  08.27.06  by  Michael Scheer
 *CMZ :  2.04/08 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/06 04/08/2023  11.24.35  by  Michael Scheer
 *CMZ :  2.03/00 31/07/2022  18.33.07  by  Michael Scheer
@@ -22,6 +23,8 @@
       ! for the voxels xyz = gcen!
       ! xhull,yhull,zhull refer to gcen for voxels
 
+      call util_zeit_kommentar(lun6,"Cutting magnets")
+
       allocate(corn1(3,2*ncornmax,2*nplanmax),corn2(3,2*ncornmax,2*nplanmax))
       allocate(ncorn1(2*nplanmax),ncorn2(2*nplanmax))
 
@@ -40,7 +43,10 @@
 
       call clcmag_voxels
       call clcmag_copy_voxels
+c      call clcmag_facets
 
+
+      call util_zeit_kommentar(lun6,"Done")
 
       return
       end

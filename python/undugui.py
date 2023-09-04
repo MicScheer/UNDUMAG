@@ -36352,7 +36352,7 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
     curr = calc_var(Coils[icoil][1][0])
     coiltit = Coils[icoil][0][1]
     ifound = 1
-    if curr == 0: continue
+    if curr == 0 and modus != 'notsame': continue
     kallzero = 0
     for wire in coil:
       xmin = min(xmin,wire[2],wire[5])
@@ -36365,7 +36365,7 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   #endfor coil in Filaments
 
-  if kallzero : return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
+  if kallzero: return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
 
   dx = (xmax-xmin)*0.1
   dy = (ymax-ymin)*0.1
@@ -41694,7 +41694,7 @@ def update_coils(caller=''):
   DictCoils = {}
   idxcoil = 0
 
-  print("update_coils::",caller)
+  #print("update_coils::",caller)
 
   for coil in Coils:
     key = coil[0][0]
@@ -42470,7 +42470,7 @@ def _clWaddCoils(key):
   NCoil = len(Coils)
 
   undu_coils_to_filaments(NCoil-1)
-  xyzcoils = _ucoilplot(modus='notsame',item=NCoil-1)
+  xyzcoils = _ucoilplot('3d','notsame',NCoil-1,'_clWaddCoils')
 
   if key == 'RectWindings': WaddCoilRace.destroy()
 #enddef _clWaddCoils()
@@ -43066,7 +43066,7 @@ def _listCoils(modecoil='first'):
 
       else: #key
 
-        print(icoil,cidx,key,cnam,coil[1])
+        #print(icoil,cidx,key,cnam,coil[1])
         #if icoil: continue
 
         #print("*** key:",key)
@@ -43209,7 +43209,7 @@ def _plotCoil(view='3d'):
     return
   #endif not Seletec_Coil
 
-  xyzcoils = _ucoilplot(view,modus='notsame',item=Selected_Coil)
+  xyzcoils = _ucoilplot(view,'notsame',Selected_Coil,'_plotCoil')
 #enddef _plotCoil()
 
 def _SelCoil(k):

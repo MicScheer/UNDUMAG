@@ -1,4 +1,5 @@
-*CMZ :          23/08/2023  08.17.05  by  Michael Scheer
+*CMZ :  2.04/13 03/09/2023  09.50.42  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  08.17.05  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  19.31.25  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  16.41.34  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  16.37.47  by  Michael Scheer
@@ -26,6 +27,8 @@
      &  ncornmax_t=8,nplanmax_t=16, nmodule_t=0, nmagcopy_t=0,nvoxcopy_t=0,
      &  nclccop_t=0,nmoth_t=0,nmothtot_t=0,nmagsym_t=0,ninhom_t=0,nmaginhom_t=0
 
+      integer, dimension (:,:), allocatable :: ifacets
+      integer :: nfacets=0
       integer, dimension (:), allocatable :: ksort_t,kmaglist_t,maginhom_t
 
       character(512), dimension (:), allocatable :: clcbuff,clcmag,clccoil,
@@ -41,7 +44,7 @@
       type T_Voxel
 
       double precision, dimension (:), allocatable :: xhull,yhull,zhull
-      double precision, dimension (:,:), allocatable :: plan, vnorm
+      double precision, dimension (:,:), allocatable :: plan, vcen,vnorm
 
       integer, dimension (:,:), allocatable :: kedge
       integer, dimension (:), allocatable :: kface,khull
@@ -74,7 +77,7 @@
 
       type T_Magnet
 
-        double precision, dimension (:,:), allocatable :: plan
+        double precision, dimension (:,:), allocatable :: fcen,fnorm
         double precision, dimension (:), allocatable :: xhull0,yhull0,zhull0,
      &    xhull,yhull,zhull,ydivs,zdivs
 

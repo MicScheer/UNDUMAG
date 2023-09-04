@@ -1,3 +1,4 @@
+*CMZ :  2.04/13 04/09/2023  10.53.07  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
 *CMZ :  2.04/03 28/02/2023  12.18.17  by  Michael Scheer
@@ -26,8 +27,8 @@
 
       character(2048) cline
 
-      type (T_Magnet) tmag
-      type (T_Magnet_Copy) tmagc
+c      type (T_Magnet) tmag
+c      type (T_Magnet_Copy) tmagc
 
       write(lun6,*)
       write(lun6,*)'Writing geometry to undumag.geo'
@@ -49,15 +50,15 @@
         kvox=t_voxcopy(imag)%kvoxel
         kcopy=t_voxcopy(imag)%kcopy
 
-        tmag=t_magnets(kmag)
-        tmagc=t_magcopy(im)
+c        tmag=t_magnets(kmag)
+c        tmagc=t_magcopy(im)
 
         gcen=bpebc(1:3,imag)
         nplan=ibpeplan(imag)
         moth=nint(bpebc(15,imag))
 
         if(moth.ne.motho) then
-          chmag=tmagc%cnam
+          chmag=t_magcopy(im)%cnam
           write(cline,*)"* ",trim(chmag),moth
           write(lunvox,'(a)')cline(2:len_trim(cline))
           motho=moth
@@ -91,7 +92,7 @@
      &        ,sngl(bx),sngl(by),sngl(bz),sngl(bc)
      &        ,iplan,icorn
      &        ,sngl(x),sngl(y),sngl(z)
-     &        ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &        ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
             if (kplsym.ne.0) then
               if (ixsym.ne.0.and.iysym.ne.0.and.izsym.ne.0) then
                 write(lunvox,*)nmag+imag,itype,
@@ -100,49 +101,49 @@
      &            ,sngl(-bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(-x),sngl(y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)2*nmag+imag,itype,
      &            sngl(gcen(1)),sngl(-gcen(2)),sngl(gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(-bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(-y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)3*nmag+imag,itype,
      &            sngl(gcen(1)),sngl(gcen(2)),sngl(-gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(bx),sngl(by),sngl(-bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(y),sngl(-z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)4*nmag+imag,itype,
      &            sngl(-gcen(1)),sngl(-gcen(2)),sngl(gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(-x),sngl(-y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)5*nmag+imag,itype,
      &            sngl(-gcen(1)),sngl(gcen(2)),sngl(-gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(-bx),sngl(by),sngl(-bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(-x),sngl(y),sngl(-z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)6*nmag+imag,itype,
      &            sngl(gcen(1)),sngl(-gcen(2)),sngl(-gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(-bx),sngl(by),sngl(-bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(-y),sngl(-z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)7*nmag+imag,itype,
      &            sngl(-gcen(1)),sngl(-gcen(2)),sngl(-gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(bx),sngl(by),sngl(-bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(-x),sngl(-y),sngl(-z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
               else if (ixsym.ne.0.and.iysym.ne.0) then
                 write(lunvox,*)nmag+imag,itype,
      &            sngl(-gcen(1)),sngl(gcen(2)),sngl(gcen(3))
@@ -150,21 +151,21 @@
      &            ,sngl(-bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(-x),sngl(y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)2*nmag+imag,itype,
      &            sngl(gcen(1)),sngl(-gcen(2)),sngl(gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(-bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(-y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)3*nmag+imag,itype,
      &            sngl(-gcen(1)),sngl(-gcen(2)),sngl(gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(-x),sngl(-y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
               else if (ixsym.ne.0.and.izsym.ne.0) then
                 write(lunvox,*)nmag+imag,itype,
      &            sngl(-gcen(1)),sngl(gcen(2)),sngl(gcen(3))
@@ -172,21 +173,21 @@
      &            ,sngl(-bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(-x),sngl(y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)2*nmag+imag,itype,
      &            sngl(gcen(1)),sngl(gcen(2)),sngl(-gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(bx),sngl(by),sngl(bz),sngl(-bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(y),sngl(-z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)3*nmag+imag,itype,
      &            sngl(-gcen(1)),sngl(gcen(2)),sngl(-gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(-bx),sngl(by),sngl(-bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(-x),sngl(y),sngl(-z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
               else if (iysym.ne.0.and.izsym.ne.0) then
                 write(lunvox,*)nmag+imag,itype,
      &            sngl(gcen(1)),sngl(-gcen(2)),sngl(gcen(3))
@@ -194,21 +195,21 @@
      &            ,sngl(-bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(-y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)2*nmag+imag,itype,
      &            sngl(gcen(1)),sngl(gcen(2)),sngl(-gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(bx),sngl(by),sngl(bz),sngl(-bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(y),sngl(-z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
                 write(lunvox,*)3*nmag+imag,itype,
      &            sngl(gcen(1)),sngl(-gcen(2)),sngl(-gcen(3))
      &            ,mothdiv(1:4),imat,ncol
      &            ,sngl(-bx),sngl(by),sngl(-bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(-y),sngl(-z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
               else if (ixsym.ne.0) then
                 write(lunvox,*)nmag+imag,itype,
      &            sngl(-gcen(1)),sngl(gcen(2)),sngl(gcen(3))
@@ -216,7 +217,7 @@
      &            ,sngl(-bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(-x),sngl(y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
               else if (iysym.ne.0.) then
                 write(lunvox,*)nmag+imag,itype,
      &            sngl(gcen(1)),sngl(-gcen(2)),sngl(gcen(3))
@@ -224,7 +225,7 @@
      &            ,sngl(-bx),sngl(by),sngl(bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(-y),sngl(z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
               else if (izsym.ne.0.) then
                 write(lunvox,*)nmag+imag,itype,
      &            sngl(gcen(1)),sngl(gcen(2)),sngl(-gcen(3))
@@ -232,7 +233,7 @@
      &            ,sngl(bx),sngl(by),sngl(-bz),sngl(bc)
      &            ,iplan,icorn
      &            ,sngl(x),sngl(y),sngl(-z)
-     &            ,trim(tmagc%cnam)," ",trim(tmagc%cmoth)
+     &            ,trim(t_magcopy(im)%cnam)," ",trim(t_magcopy(im)%cmoth)
               endif !syms
             endif !(kplsym.ne.0) then
           enddo
