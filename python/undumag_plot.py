@@ -24456,6 +24456,7 @@ getystat = get_y_stat
 nhull3d = nqhull3d
 hull3d = qhull3d
 plotncyl = plotncylinder
+read_facets = read_faces
 #end of aliases in m_hbook
 
 #end of m_hbook

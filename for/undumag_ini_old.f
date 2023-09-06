@@ -134,7 +134,7 @@
 ! bpebc(17,imag) select flag
 ! bpebc(18:20,imag) external field and field of coils
 
-*KEEP,PHYCONparam,T=F77.
+*KEEP,PHYCONPARAM.
 c-----------------------------------------------------------------------
 c     phyconparam.cmn
 c-----------------------------------------------------------------------
@@ -216,10 +216,10 @@ c      vstokes(4,3)=(-sqrt(1./2.),        0.0d0)
 c-----------------------------------------------------------------------
 c     end of phyconparam.cmn
 c-----------------------------------------------------------------------
-*KEEP,seqdebug.
+*KEEP,SEQDEBUG.
       integer iseqdebug
       common/seqdebugc/iseqdebug
-*KEEP,random.
+*KEEP,RANDOM.
       integer*8 irancalls
       integer, parameter :: irnsize=64
       integer irnseed(irnsize),irnmode,irnseedi(irnsize)
@@ -356,7 +356,7 @@ c-----------------------------------------------------------------------
       flush(lun)
       close(lun)
 
-*KEEP,unduver.
+*KEEP,UNDUVER.
       print *
       print *
       print *

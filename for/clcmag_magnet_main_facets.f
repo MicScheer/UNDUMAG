@@ -1,3 +1,4 @@
+*CMZ :          06/09/2023  08.36.30  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  10.58.39  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  20.28.53  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
@@ -31,7 +32,8 @@
      &  cbuff(8*mmag*nplanmax))
 
       write(lun6,*)
-      write(lun6,*)'Writing faces to undumag_main_facets.fct'
+      write(lun6,*)'Writing faces to undumag_main_facets.fct and'
+      write(lun6,*)'Writing faces to undumag_bounding_box.fct'
 
       lin=0
       nface=0
@@ -65,6 +67,10 @@
           ibuff(k+j*nface)=ibuff(k)
         enddo
       enddo
+
+      open(newunit=luno,file='undumag_bounding_box.fct')
+      write(luno,*)xmin_t,xmax_t,ymin_t,ymax_t,zmin_t,zmax_t
+      close(luno)
 
       open(newunit=luno,file='undumag_main_facets.fct')
 

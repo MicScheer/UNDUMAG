@@ -24466,6 +24466,7 @@ getystat = get_y_stat
 nhull3d = nqhull3d
 hull3d = qhull3d
 plotncyl = plotncylinder
+read_facets = read_faces
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -36464,7 +36465,84 @@ def undu_mags(plopt='sameline'):
 
 #enddef undu_mags()
 
-def read_main_faces(fname,cs='xyz'):
+def read_facets_bounding_box(fb='undumag_bounding_box.fct'):
+  global MainFacets, FcBox,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
+  FcBox = []
+  if fexist('undumag_bounding_box.fct'):
+    tclc = os.stat('undumag.clc').st_mtime_ns
+    tbb = os.stat('undumag_bounding_box.fct').st_mtime_ns
+    if tclc > tbb:
+      wError("undumag_bounding_box.fct is older than undumag.clc!")
+      return
+    else:
+      print('\n--> Reading undumag_bounding_box.fct')
+      fbox = open('undumag_bounding_box.fct','r')
+      FcBox = np.fromstring(fbox.readline().strip(),dtype=np.float,sep=' ')
+      fbox.close()
+      Xmin = FcBox[0]
+      Xmax = FcBox[1]
+      Ymin = FcBox[2]
+      Ymax = FcBox[3]
+      Zmin = FcBox[4]
+      Zmax = FcBox[5]
+      print('\n--> Done')
+  else:
+    wError("File undumag_main_facets not found!")
+    return
+  #endif
+#enddef read_facets_bounding_box(fb='undumag_bounding_box.fct')
+
+def plot_main_faces():
+
+  global MainFacets,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
+  plopt = ''
+
+  Kpdf = False
+  Kdump = False
+  Kecho = False
+
+  dot()
+  getzone('3d')
+
+  facets = MainFacets[0]
+  voxels = MainFacets[1]
+
+  dx = (Xmax - Xmin) / 10.
+  dy = (Ymax - Ymin) / 10.
+  dz = (Zmax - Zmin) / 10.
+
+  null3d(Xmin-dx,Xmax+dx,Zmin-dz,Zmax+dz,Ymin-dy,Ymax+dy)
+  txyz(Ucomment,"x [mm]","z [mm]", "y [mm]")
+
+  ax = plt.gca()
+  iface = -1
+
+  nfacets = len(facets)
+
+  fcols = []
+  for v in voxels:
+    if not v[1] in fcols: fcols.append(v[1])
+  #endfor
+
+  for col in fcols:
+    fcolcol = []
+    for i in range(nfacets):
+      if voxels[i][1] == col: fcolcol.append(facets[i])
+    #endfor
+    fpl = mplot3d.art3d.Poly3DCollection(fcolcol)
+    fpl.set_color(UnduColors[int(col)])
+    fpl.set_edgecolor('black')
+    ax.add_collection3d(fpl)
+
+  #endfor
+
+#enddef plot_main_faces()
+
+plot_main_facets = plot_main_faces
+
+def read_main_faces(fname='undumag_main_facets.fct',cs='xyz'):
 
   F=open(fname,'r')
   fread = F.readlines()
@@ -37817,6 +37895,8 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
+  global MainFacets
+
   isameo = get_isame()
   print("_showGeoUndu:",modus,item,kseg,callkey)
   print("_showGeoUndu:MustUpdate:",MustUpdate)
@@ -37843,7 +37923,24 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
 
     if item < 0:
 
-      FcBox = []
+      read_facets_bounding_box()
+
+      if fexist('undumag_main_facets.fct'):
+        tclc = os.stat('undumag.clc').st_mtime_ns
+        tgeo = os.stat('undumag_main_facets.fct').st_mtime_ns
+        if tclc > tgeo:
+          wError("undumag_main_facets.fct is older than undumag.clc!")
+          return
+        else:
+          print('\n--> Reading undumag_main_facets.fct')
+          mfaces,mvoxels = read_main_faces('undumag_main_facets.fct','xzy')
+          MainFacets = [mfaces,mvoxels]
+          print('\n--> Done')
+      else:
+        wError("File undumag_main_facets not found!")
+        return
+      #endif
+
       if fexist('undumag_facets.fct'):
         tclc = os.stat('undumag.clc').st_mtime_ns
         tgeo = os.stat('undumag_facets.fct').st_mtime_ns
@@ -37852,12 +37949,8 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
           return
         else:
           print('\n--> Reading undumag_facets.fct')
-          faces,voxels = read_faces('undumag_facets.fct')
+          faces,voxels = read_faces('undumag_facets.fct','xzy')
           Facets = [faces,voxels]
-          if fexist('undumag_facets.box'):
-            fbox = open('undumag_facets.box','r')
-            FcBox = fbox.readline().split()
-            fbox.close()
           print('\n--> Done')
       else:
         wError("File undumag_facets.fct not found!")
@@ -37876,38 +37969,13 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
       facets = Facets[0]
       voxels = Facets[1]
 
-#     if not len(FcBox):
-#
-#        for f in faces:
-#          ft = f.T
-#          xmin = ft[0].min()
-#        #endfor
-
-#        xmin = Nvox.x.min()
-#        xmax = Nvox.x.max()
-#        ymin = Nvox.y.min()
-#        ymax = Nvox.y.max()
-#        zmin = Nvox.z.min()
-#        zmax = Nvox.z.max()
-#
-#      else:
-#
-#        xmin = float(FcBox[0])
-#        xmax = float(FcBox[1])
-#        ymin = float(FcBox[2])
-#        ymax = float(FcBox[3])
-#        zmin = float(FcBox[4])
-#        zmax = float(FcBox[5])
-#
-#      #endif
-
-#      dx = (xmax - xmin) / 10.
-#      dy = (ymax - ymin) / 10.
-#      dz = (zmax - zmin) / 10.
+      dx = (Xmax - Xmin) / 10.
+      dy = (Ymax - Ymin) / 10.
+      dz = (Zmax - Zmin) / 10.
 
       #null3d(xmin-dx,xmax+dx,zmin-dz,zmax+dz,ymin-dy,ymax+dy)
 
-      null3d(Xmin,Xmax,Zmin,Zmax,Ymin,Ymax)
+      null3d(Xmin-dx,Xmax+dx,Zmin-dz,Zmax+dz,Ymin-dy,Ymax+dy)
       txyz(Ucomment,"x [mm]","z [mm]", "y [mm]")
 
       ax = plt.gca()
