@@ -1,3 +1,4 @@
+*CMZ :  2.04/14 05/09/2023  13.59.00  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/03 05/03/2023  16.22.55  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  18.03.22  by  Michael Scheer
@@ -53,7 +54,6 @@
       nzdiv=t_magnets(imag)%nzdiv
 
       ctype=t_magnets(imag)%ctype
-
 
       if (nydiv.gt.1) then
 
@@ -123,6 +123,7 @@
           khull=tvox%khull
           kedge=tvox%kedge
           kface=tvox%kface
+          kfacelast=tvox%kfacelast
 
           allocate(t_magnets(imag)%t_xycuts(ix,1)%khull(nhull))
           allocate(t_magnets(imag)%t_xycuts(ix,1)%xhull(nhull))
@@ -137,6 +138,7 @@
           t_magnets(imag)%t_xycuts(ix,1)%kedge=kedge
           t_magnets(imag)%t_xycuts(ix,1)%nface=nface
           t_magnets(imag)%t_xycuts(ix,1)%kface=kface
+          t_magnets(imag)%t_xycuts(ix,1)%kfacelast=kfacelast
 
           t_magnets(imag)%t_xycuts(ix,1)%size=tvox%size
 
@@ -463,6 +465,13 @@ c              stop
         write(lun6,*)"*** Warning in clcmag_ycut: Sum of xy-cut volumes differs from magnet volume by (rel.): ",vol
         write(lun6,*)"*** magnet :",trim(tmag%cnam),imag
       endif
+
+c      if (imag.eq.2) then
+c        do ix=1,nxdiv
+c          print*,t_magnets(imag)%t_xycuts(ix,1)%kface(1:t_magnets(imag)%t_xycuts(ix,1)%kfacelast)
+c        enddo
+c        stop
+c      endif
 
       return
       end

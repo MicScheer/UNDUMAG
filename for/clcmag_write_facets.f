@@ -1,3 +1,4 @@
+*CMZ :  2.04/14 05/09/2023  09.52.46  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  20.28.53  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/08 11/08/2023  12.58.25  by  Michael Scheer
@@ -22,17 +23,19 @@
       Type(T_Magnet) tmag
       Type(T_Voxel) tv
 
-      integer imag,luno,npoi,iv,i,imago,ivo,iface,l,lpoi,j,ll
+      double precision, dimension(:,:), allocatable :: buff
+      integer, dimension(:), allocatable :: ibuff
+      character(128), dimension(:), allocatable :: cbuff
+      integer imag,luno,npoi,iv,i,imago,ivo,iface,l,lpoi,j,ll,nf,lin
+
+      allocate(ibuff(8*nfacets),buff(3,8*nfacets*ncornmax),cbuff(8*nfacets))
 
       write(lun6,*)
       write(lun6,*)'Writing faces to undumag_facets.fct'
 
-      open(newunit=luno,file='undumag_facets.fct')
-
-      write(luno,*)nfacets
-
       imago=0
       ivo=0
+      lin=0
 
       do i=1,nfacets
 
@@ -41,6 +44,11 @@
         iface=ifacets(3,i)
         lpoi=ifacets(4,i)
         npoi=ifacets(5,i)
+
+        ibuff(i)=npoi
+        do j=1,7
+          ibuff(i+j*nfacets)=npoi
+        enddo
 
         if (imag.ne.imago) then
           tmag=t_magnets(imag)
@@ -52,15 +60,21 @@
           ivo=0
         endif
 
-        write(luno,*)npoi
+c        write(luno,*)npoi,tmag%icol,tmag%icol,iv,imag,tmag%cnam,tmag%cmoth
+        write(cbuff(i),*)npoi,tmag%icol,tmag%icol,iv,imag,tmag%cnam,tmag%cmoth
 
         do j=1,npoi
           ll=lpoi+j
           l=tv%kface(ll)
-          write(luno,*)
-     &      tv%xhull(l)+tv%gcen(1),
+c          write(luno,*)
+c     &      tv%xhull(l)+tv%gcen(1),
+c     &      tv%yhull(l)+tv%gcen(2),
+c     &      tv%zhull(l)+tv%gcen(3)
+          lin=lin+1
+          buff(:,lin)=
+     &      [tv%xhull(l)+tv%gcen(1),
      &      tv%yhull(l)+tv%gcen(2),
-     &      tv%zhull(l)+tv%gcen(3)
+     &      tv%zhull(l)+tv%gcen(3)]
         enddo
 
         ivo=iv
@@ -68,9 +82,101 @@
 
       enddo
 
+      open(newunit=luno,file='undumag_facets.fct')
+
+      nf=nfacets
+      if(izsym.ne.0) nf=nf*2
+
+      write(luno,*) nf
+
+      lin=0
+      do i=1,nfacets
+        write(luno,*)trim(cbuff(i))
+        do l=1,ibuff(i)
+          lin=lin+1
+          write(luno,*)buff(:,lin)
+        enddo
+      enddo
+
+      if (izsym.ne.0)  then
+        lin=0
+        do i=1,nfacets
+          write(luno,*)trim(cbuff(i))
+          do l=1,ibuff(i)
+            lin=lin+1
+            write(luno,*)buff(1,lin),buff(2,lin),-buff(3,lin)
+          enddo
+        enddo
+      endif
+
+      if (iysym.ne.0) then
+        rewind(luno)
+        read(luno,*) nf
+        lin=0
+        do i=1,nf
+          read(luno,'(a)') cbuff(i)
+          do l=1,ibuff(i)
+            lin=lin+1
+            read(luno,*)buff(1,lin),buff(2,lin),buff(3,lin)
+          enddo
+        enddo
+        rewind(luno)
+        lin=0
+        write(luno,*) 2*nf
+        do i=1,nf
+          write(luno,*)trim(cbuff(i))
+          do l=1,ibuff(i)
+            lin=lin+1
+            write(luno,*)buff(1,lin),buff(2,lin),buff(3,lin)
+          enddo
+        enddo
+        lin=0
+        do i=1,nf
+          write(luno,*)trim(cbuff(i))
+          do l=1,ibuff(i)
+            lin=lin+1
+            write(luno,*)buff(1,lin),-buff(2,lin),buff(3,lin)
+          enddo
+        enddo
+      endif
+
+      if (ixsym.ne.0) then
+        rewind(luno)
+        lin=0
+        read(luno,*) nf
+        do i=1,nf
+          read(luno,'(a)') cbuff(i)
+          do l=1,ibuff(i)
+            lin=lin+1
+            read(luno,*)buff(1,lin),buff(2,lin),buff(3,lin)
+          enddo
+        enddo
+        rewind(luno)
+        write(luno,*) 2*nf
+        lin=0
+        do i=1,nf
+          write(luno,*)trim(cbuff(i))
+          do l=1,ibuff(i)
+            lin=lin+1
+            write(luno,*)buff(1,lin),buff(2,lin),buff(3,lin)
+          enddo
+        enddo
+        lin=0
+        do i=1,nf
+          write(luno,*)trim(cbuff(i))
+          do l=1,ibuff(i)
+            lin=lin+1
+            write(luno,*)-buff(1,lin),buff(2,lin),buff(3,lin)
+          enddo
+        enddo
+      endif
+
       flush(luno)
       close(luno)
       write(lun6,*)
       write(lun6,*)'Done'
+
+      deallocate(buff,cbuff,ibuff)
+
       return
       end

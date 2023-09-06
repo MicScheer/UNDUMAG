@@ -1,4 +1,4 @@
-*CMZ :  2.04/06 04/09/2023  12.06.53  by  Michael Scheer
+*CMZ :  2.04/06 06/09/2023  08.21.14  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  14.44.40  by  Michael Scheer
 *CMZ :  2.04/00 05/12/2022  15.18.35  by  Michael Scheer
 *CMZ :  2.03/00 31/08/2022  08.10.44  by  Michael Scheer
@@ -364,8 +364,8 @@ c-----------------------------------------------------------------------
       write(lun6,*)'     *                                                        *'
       write(lun6,*)'     *                       UNDUMAG                          *'
       write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     *                    Version 2.04/13                     *'
-      write(lun6,*)'     *                         4.9.2023                       *'
+      write(lun6,*)'     *                    Version 2.04/15                     *'
+      write(lun6,*)'     *                         6.9.2023                       *'
       write(lun6,*)'     *                                                        *'
       write(lun6,*)'     *                     Michael Scheer                     *'
       write(lun6,*)'     *                       HZB/BESSY                        *'
@@ -378,7 +378,7 @@ c-----------------------------------------------------------------------
       call util_zeit_kommentar(lun6,"")
 
       open(unit=999,file="undumag.ver")
-      chuvers="2.04/13"
+      chuvers="2.04/15"
       write(999,*)chuvers
       close(999)
 *KEND.

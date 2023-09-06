@@ -1,3 +1,4 @@
+*CMZ :  2.04/14 05/09/2023  14.01.56  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/03 05/03/2023  16.30.33  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.27.31  by  Michael Scheer
@@ -51,7 +52,6 @@
 
       if (idebug.eq.10) then
         do ix=1,nxdiv
-          print*,ix,t_magnets(imag)%t_xcuts(ix)%volume
           do iy=1,nydiv
             print*,ix,iy,t_magnets(imag)%t_xycuts(ix,iy)%volume
           enddo
@@ -190,6 +190,7 @@
             khull=tvox%khull
             kedge=tvox%kedge
             kface=tvox%kface
+            kfacelast=tvox%kfacelast
 
             allocate(t_magnets(imag)%t_xyzcuts(ix,iy,1)%xhull(nhull))
             allocate(t_magnets(imag)%t_xyzcuts(ix,iy,1)%yhull(nhull))
@@ -204,6 +205,7 @@
             t_magnets(imag)%t_xyzcuts(ix,iy,1)%kedge=kedge
             t_magnets(imag)%t_xyzcuts(ix,iy,1)%nface=nface
             t_magnets(imag)%t_xyzcuts(ix,iy,1)%kface=kface
+            t_magnets(imag)%t_xyzcuts(ix,iy,1)%kfacelast=kfacelast
 
             t_magnets(imag)%t_xyzcuts(ix,iy,1)%size=tvox%size
             t_magnets(imag)%t_xyzcuts(ix,iy,1)%volume=tvox%volume

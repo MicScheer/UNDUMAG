@@ -1,4 +1,5 @@
-*CMZ :          26/08/2023  10.27.59  by  Michael Scheer
+*CMZ :  2.04/14 06/09/2023  06.47.58  by  Michael Scheer
+*CMZ :  2.04/11 26/08/2023  10.27.59  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  08.02.18  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  16.11.22  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
@@ -99,6 +100,7 @@ c-----------------------------------------------------------------------
         if (cline(ipos(1,1):ipos(2,1)).eq.'Magnet'.or.
      &      cline(ipos(1,1):ipos(2,1)).eq.'Pole') then
           nmag=nmag+1
+          t_magnets(nmag)%kmag=nmag
           t_magnets(nmag)%kmodule=magmodule(nmag)
           t_magnets(nmag)%IsSpecial=0
           cycle
@@ -106,6 +108,7 @@ c-----------------------------------------------------------------------
      &      cline(ipos(1,1):ipos(2,1)).eq.'Special_Pole') then
           nspecmag=nspecmag+1
           nmag=nmag+1
+          t_magnets(nmag)%kmag=nmag
           t_magnets(nmag)%kmodule=0
           t_magnets(nmag)%IsSpecial=1
           cycle

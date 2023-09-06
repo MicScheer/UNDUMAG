@@ -1,3 +1,4 @@
+*CMZ :  2.04/14 06/09/2023  06.43.30  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  09.50.42  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  08.17.05  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  19.31.25  by  Michael Scheer
@@ -92,7 +93,7 @@
      &    zfracdiv,zfrac,uschamf,dschamf,cylphi,BrN,xyzinh(4),xvolume,yvolume,
      &    zvolume
 
-        integer :: nface,nhull,icol,imat,nxdiv,nydiv,nzdiv,matindex,mattype,
+        integer :: kmag,nface,nhull,icol,imat,nxdiv,nydiv,nzdiv,matindex,mattype,
      &    kfacelast,nedge,nvoxels,IsPole,IsSpecial,IsBlock,nhull0,IsPart,
      &    ncopy=0,kmodule=0,IsInhom=0,mxdiv,mydiv,mzdiv,IsRotated
 
