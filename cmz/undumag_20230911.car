@@ -15304,6 +15304,7 @@ c      i_debug=imag
       return
       end
 +DECK,util_convex_hull_3d_simplices,T=F77.
+*CMZ :          11/09/2023  14.37.58  by  Michael Scheer
 *CMZ :  2.04/16 10/09/2023  19.49.45  by  Michael Scheer
 *CMZ :  2.02/02 05/07/2022  11.16.26  by  Michael Scheer
 *CMZ :  2.02/01 03/11/2021  13.16.39  by  Michael Scheer
@@ -15346,6 +15347,7 @@ c      i_debug=imag
           p2=[xin(i2),yin(i2),zin(i2)]
           do i3=1,nin
             if (i3.eq.i1.or.i3.eq.i2) cycle
+c            if (i1.eq.29.and.i2.eq.37.and.i3.eq.41) call util_break
             p3=[xin(i3),yin(i3),zin(i3)]
             cen=(p1+p2+p3)/3.0d0
             p21=p2-p1
@@ -15360,7 +15362,11 @@ c            vnor(3)=p21(1)*p32(2)-p21(2)*p32(1)
             do i=1,nin
               if (i.eq.i1.or.i.eq.i2.or.i.eq.i3) cycle
               p=[xin(i),yin(i),zin(i)]
-              call util_plane(p1,p2,p3,p,vnor,dist,iover,istat)
+              call util_plane_tiny(p1,p2,p3,p,vnor,dist,tiny,iover,istat)
+              if (istat.ne.0) then
+                ifound=0
+                exit
+              endif
               if (dot_product(cen-gcen,vnor).lt.0.0d0) then
                 vnor=-vnor
               endif
@@ -15401,6 +15407,7 @@ c            vnor(3)=p21(1)*p32(2)-p21(2)*p32(1)
       return
       end
 +DECK,util_convex_hull_3d_simp,T=F77.
+*CMZ :          11/09/2023  15.31.12  by  Michael Scheer
 *CMZ :  2.04/16 10/09/2023  20.05.58  by  Michael Scheer
 *-- Author :    Michael Scheer   08/09/2023
       subroutine util_convex_hull_3d_simp(n,x,y,z,tiny,nhull,khull,nsimp,ksimp,
@@ -15458,7 +15465,6 @@ c            vnor(3)=p21(1)*p32(2)-p21(2)*p32(1)
       enddo
 
       kfacelast=0
-      nveto=0
 
       do isim=1,nface
         npoi=0
@@ -15512,22 +15518,24 @@ c            vnor(3)=p21(1)*p32(2)-p21(2)*p32(1)
           mpoi=ibuff(ihull(ipoi))
           kfacelast=kfacelast+1
           kface(kfacelast)=mpoi
-          if (nveto(mpoi).ne.0) cycle
-          nhull=nhull+1
-          khull(nhull)=mpoi
-          nveto(mpoi)=1
         enddo
+
         kface(kl)=nh
         lface(isim)=kl
+
       enddo
 
       nedge=0
       kedge(1:4,1:n)=0
+      nveto=0
 
       do iface=1,nface
+
         l=lface(iface)
         npoi=kface(l)
+
         do ipoi=1,npoi
+
           if (ipoi.lt.npoi) then
             i1=kface(l+ipoi)
             i2=kface(l+ipoi+1)
@@ -15535,6 +15543,13 @@ c            vnor(3)=p21(1)*p32(2)-p21(2)*p32(1)
             i1=kface(l+ipoi)
             i2=kface(l+1)
           endif
+
+          if (nveto(i1).eq.0) then
+            nhull=nhull+1
+            khull(nhull)=i1
+            nveto(i1)=1
+          endif
+
           ifound=0
           do ied=1,nedge
             j1=kedge(1,ied)
@@ -15582,6 +15597,85 @@ c            vnor(3)=p21(1)*p32(2)-p21(2)*p32(1)
       endif
 
       deallocate(nveto,kveto,ksim,xh,yh,zh,ihull,ibuff,fn,xb,yb,zb)
+
+      return
+      end
++DECK,util_plane_tiny.
+*CMZ :          11/09/2023  14.12.49  by  Michael Scheer
+*CMZ : 00.00/19 07/06/2016  12.17.28  by  Michael Scheer
+*-- Author :    Michael Scheer   07/06/2016
+      subroutine util_plane_tiny(p1,p2,p3,p,vnor,dist,tiny,iover,istat)
+
+      implicit none
+
+      double precision p1(3),p2(3),p3(3),p(3),vnor(3),dist,tiny,
+     &  v21(3),v31(3),vp1(3),vin(3),v32(3),vcross(3),vp2(3),vp3(3)
+      integer iover,istat
+
+c 5.6.2019: Now, iover=1 if point over bounderaries or inside
+
+      istat=0
+
+      v21=p2-p1
+      v31=p3-p1
+      v32=p3-p2
+
+      vnor(1)=v21(2)*v31(3)-v21(3)*v31(2)
+      vnor(2)=v21(3)*v31(1)-v21(1)*v31(3)
+      vnor(3)=v21(1)*v31(2)-v21(2)*v31(1)
+
+      dist=norm2(vnor)
+
+      if (dist.le.tiny) then
+        istat=-1
+        goto 9999
+      endif
+
+      vnor=vnor/dist
+      vp1=p-p1
+      vp2=p-p2
+      vp3=p-p3
+
+      dist=vp1(1)*vnor(1)+vp1(2)*vnor(2)+vp1(3)*vnor(3)
+      vin=vp1-dist*vnor
+
+      iover=1
+
+      vcross(1)=v21(2)*vin(3)-v21(3)*vin(2)
+      vcross(2)=v21(3)*vin(1)-v21(1)*vin(3)
+      vcross(3)=v21(1)*vin(2)-v21(2)*vin(1)
+
+c5.6.2019      if (vcross(1)*vnor(1)+vcross(2)*vnor(2)+vcross(3)*vnor(3).le.0.0d0) then
+      if (vcross(1)*vnor(1)+vcross(2)*vnor(2)+vcross(3)*vnor(3).lt.0.0d0) then
+        iover=0
+        goto 9999
+      endif
+
+      vin=vp2-dist*vnor
+
+      vcross(1)=v32(2)*vin(3)-v32(3)*vin(2)
+      vcross(2)=v32(3)*vin(1)-v32(1)*vin(3)
+      vcross(3)=v32(1)*vin(2)-v32(2)*vin(1)
+
+c5.6.2019      if (vcross(1)*vnor(1)+vcross(2)*vnor(2)+vcross(3)*vnor(3).le.0.0d0) then
+      if (vcross(1)*vnor(1)+vcross(2)*vnor(2)+vcross(3)*vnor(3).lt.0.0d0) then
+        iover=0
+        goto 9999
+      endif
+
+      vin=vp3-dist*vnor
+
+      vcross(1)=v31(2)*vin(3)-v31(3)*vin(2)
+      vcross(2)=v31(3)*vin(1)-v31(1)*vin(3)
+      vcross(3)=v31(1)*vin(2)-v31(2)*vin(1)
+
+c5.6.2019      if (vcross(1)*vnor(1)+vcross(2)*vnor(2)+vcross(3)*vnor(3).ge.0.0d0) then
+      if (vcross(1)*vnor(1)+vcross(2)*vnor(2)+vcross(3)*vnor(3).gt.0.0d0) then
+        iover=0
+        goto 9999
+      endif
+
+9999  continue
 
       return
       end
