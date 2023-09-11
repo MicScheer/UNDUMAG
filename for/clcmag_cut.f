@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 06/09/2023  14.45.03  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  08.27.06  by  Michael Scheer
 *CMZ :  2.04/08 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/06 04/08/2023  11.24.35  by  Michael Scheer
@@ -43,7 +44,6 @@
 
       call clcmag_voxels
       call clcmag_copy_voxels
-c      call clcmag_facets
 
 
       call util_zeit_kommentar(lun6,"Done")

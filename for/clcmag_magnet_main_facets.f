@@ -1,4 +1,4 @@
-*CMZ :          06/09/2023  08.36.30  by  Michael Scheer
+*CMZ :  2.04/16 06/09/2023  12.43.21  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  10.58.39  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  20.28.53  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
@@ -21,15 +21,16 @@
 
       implicit none
 
-      double precision, dimension(:,:), allocatable :: buff
-      integer, dimension(:), allocatable :: ibuff
+      double precision, dimension(:,:), allocatable :: buff,gcenbuff
+      integer, dimension(:), allocatable :: ibuff,icopybuff
       character(128), dimension(:), allocatable :: cbuff
-      integer imag,luno,npoi,iv,i,l,j,nf,lin,mmag,nface,k
+      integer imag,luno,npoi,iv,i,l,j,nf,lin,nface,k,mmag,kmag
 
+      nmagtot_t=nmagtot_t
       mmag=nmag_t+nspecmag_t
 
-      allocate(ibuff(8*mmag*nplanmax),buff(3,8*mmag*nplanmax*ncornmax),
-     &  cbuff(8*mmag*nplanmax))
+      allocate(ibuff(8*nmagtot_t*nplanmax),buff(3,8*mmag*nplanmax*ncornmax),
+     &  cbuff(8*mmag*nplanmax),gcenbuff(3,nmagtot_t),icopybuff(nmagtot_t))
 
       write(lun6,*)
       write(lun6,*)'Writing faces to undumag_main_facets.fct and'
@@ -37,8 +38,13 @@
 
       lin=0
       nface=0
+      do imag=1,nmagtot_t
+        icopybuff(imag)=t_magcopy(imag)%kproto
+        gcenbuff(:,imag)=t_magcopy(imag)%gcen
+      enddo
 
-      do imag=1,mmag
+      do kmag=1,nmagtot_t
+        imag=icopybuff(kmag)
         k=1
         do l=1,t_magnets(imag)%kfacelast
           npoi=t_magnets(imag)%kface(k)
@@ -53,9 +59,9 @@
             i=t_magnets(imag)%kface(k)
             lin=lin+1
             buff(:,lin)=
-     &        [t_magnets(imag)%xhull(i)+t_magnets(imag)%gcen(1),
-     &        t_magnets(imag)%yhull(i)+t_magnets(imag)%gcen(2),
-     &        t_magnets(imag)%zhull(i)+t_magnets(imag)%gcen(3)]
+     &        [t_magnets(imag)%xhull(i)+gcenbuff(1,kmag),
+     &        t_magnets(imag)%yhull(i)+gcenbuff(2,kmag),
+     &        t_magnets(imag)%zhull(i)+gcenbuff(3,kmag)]
           enddo
           k=k+1
           if (k.gt.t_magnets(imag)%kfacelast) exit
@@ -167,7 +173,7 @@
       write(lun6,*)
       write(lun6,*)'Done'
 
-      deallocate(buff,cbuff,ibuff)
+      deallocate(buff,cbuff,ibuff,gcenbuff,icopybuff)
 
       return
       end

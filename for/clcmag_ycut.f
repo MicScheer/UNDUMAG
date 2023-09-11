@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  13.59.00  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/03 05/03/2023  16.22.55  by  Michael Scheer
@@ -272,7 +273,7 @@ c              stop
                 enddo
               enddo
 
-              call util_convex_hull_3d_overwrite(npoi,
+              call util_convex_hull_3d_overwrite(imag,npoi,
      &          xh,yh,zh,khull,kedge,kface,nhull,nedge,nface,kfacelast,
      &          hulltiny,ifailhull)
 
@@ -351,7 +352,7 @@ c              stop
                 enddo
               enddo
 
-              call util_convex_hull_3d_overwrite(npoi,
+              call util_convex_hull_3d_overwrite(imag,npoi,
      &          xh,yh,zh,khull,kedge,kface,nhull,nedge,nface,kfacelast,
      &          hulltiny,ifailhull)
 

@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 11/09/2023  11.54.29  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  09.52.46  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  20.28.53  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
@@ -25,10 +26,13 @@
 
       double precision, dimension(:,:), allocatable :: buff
       integer, dimension(:), allocatable :: ibuff
-      character(128), dimension(:), allocatable :: cbuff
-      integer imag,luno,npoi,iv,i,imago,ivo,iface,l,lpoi,j,ll,nf,lin
+      character(2048), dimension(:), allocatable :: cbuff
 
-      allocate(ibuff(8*nfacets),buff(3,8*nfacets*ncornmax),cbuff(8*nfacets))
+      double precision gcen(3)
+      integer imag,luno,npoi,iv,i,imago,ivo,iface,l,lpoi,j,ll,nf,lin,ivc,kcopy
+
+      allocate(ibuff(8*nvoxcopy_t*ncornmax),buff(3,8*nvoxcopy_t*ncornmax),
+     &  cbuff(8*nvoxcopy_t*ncornmax))
 
       write(lun6,*)
       write(lun6,*)'Writing faces to undumag_facets.fct'
@@ -36,51 +40,55 @@
       imago=0
       ivo=0
       lin=0
+      nfacets=0
 
-      do i=1,nfacets
+      do ivc=1,nvoxcopy_t
 
-        imag=ifacets(1,i)
-        iv=ifacets(2,i)
-        iface=ifacets(3,i)
-        lpoi=ifacets(4,i)
-        npoi=ifacets(5,i)
+        gcen=t_voxcopy(ivc)%gcen
+        kcopy=t_voxcopy(ivc)%kcopy
 
-        ibuff(i)=npoi
-        do j=1,7
-          ibuff(i+j*nfacets)=npoi
-        enddo
+        do iface=1,t_voxcopy(ivc)%nface
 
-        if (imag.ne.imago) then
-          tmag=t_magnets(imag)
-          ivo=0
-        endif
+          npoi=t_voxcopy(ivc)%isfacet(iface)
+          if (npoi.eq.0) cycle
 
-        if (iv.ne.ivo) then
-          tv=tmag%t_voxels(iv)
-          ivo=0
-        endif
+          nfacets=nfacets+1
+          imag=t_voxcopy(ivc)%kproto
+          iv=t_voxcopy(ivc)%kvoxel
+          ibuff(nfacets)=npoi
 
-c        write(luno,*)npoi,tmag%icol,tmag%icol,iv,imag,tmag%cnam,tmag%cmoth
-        write(cbuff(i),*)npoi,tmag%icol,tmag%icol,iv,imag,tmag%cnam,tmag%cmoth
+c          do j=1,7
+c            ibuff(ivc+j*nvoxcopy_t)=npoi
+c          enddo
 
-        do j=1,npoi
-          ll=lpoi+j
-          l=tv%kface(ll)
-c          write(luno,*)
-c     &      tv%xhull(l)+tv%gcen(1),
-c     &      tv%yhull(l)+tv%gcen(2),
-c     &      tv%zhull(l)+tv%gcen(3)
-          lin=lin+1
-          buff(:,lin)=
-     &      [tv%xhull(l)+tv%gcen(1),
-     &      tv%yhull(l)+tv%gcen(2),
-     &      tv%zhull(l)+tv%gcen(3)]
-        enddo
+          if (imag.ne.imago) then
+            tmag=t_magnets(imag)
+            ivo=0
+          endif
+
+          if (iv.ne.ivo) then
+            tv=tmag%t_voxels(iv)
+            ivo=0
+          endif
+
+          write(cbuff(nfacets),*)npoi,tmag%icol,tmag%icol,iv,kcopy,imag,tmag%cnam,tmag%cmoth
+
+          do j=1,npoi
+            ll=lpoi+j
+            l=tv%kface(ll)
+            lin=lin+1
+            buff(:,lin)=
+     &        [tv%xhull(l)+gcen(1),
+     &        tv%yhull(l)+gcen(2),
+     &        tv%zhull(l)+gcen(3)]
+          enddo
+
+        enddo !ifac
 
         ivo=iv
         imago=imag
 
-      enddo
+      enddo !nvoxcopy_t
 
       open(newunit=luno,file='undumag_facets.fct')
 
@@ -173,6 +181,7 @@ c     &      tv%zhull(l)+tv%gcen(3)
 
       flush(luno)
       close(luno)
+
       write(lun6,*)
       write(lun6,*)'Done'
 

@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 06/09/2023  16.15.55  by  Michael Scheer
 *CMZ :  2.04/14 06/09/2023  06.43.30  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  09.50.42  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  08.17.05  by  Michael Scheer
@@ -22,6 +23,8 @@
 
       integer nclcbuff,nclcspec,nclcmag,nclccoil,nclcvar,nclcmod,nclcmat,
      &  kunduplot_mode
+
+      integer :: iwwork,iwfct=0,iwgeo=0,iwvgeo=0,iwmag=0
 
       integer :: nvar_t=0,nmag_t=0,nvox_t=0,niron_t=0,kvox=0,kfirstiron_t=0,
      &  nspecmag_t=0,kfirstiron_spec_t=0,ncoils_t=0,ncwires_t=0,nmagtot_t=0,
@@ -48,7 +51,7 @@
       double precision, dimension (:,:), allocatable :: plan, vcen,vnorm
 
       integer, dimension (:,:), allocatable :: kedge
-      integer, dimension (:), allocatable :: kface,khull
+      integer, dimension (:), allocatable :: kface,khull,isfacet
 
       double precision xyz(3),size(3),trans(3),rot(3,3),Br(3),
      &  gcen(3),volume,xmin,xmax,ymin,ymax,zmin,zmax
@@ -59,7 +62,8 @@
       end type T_Voxel
 
       type T_Voxel_Copy
-        integer kmagnet,kmodule,kcopy,kvoxel,kproto,ispole
+        integer, dimension (:), allocatable :: isfacet
+        integer kmagnet,kmodule,kcopy,kvoxel,kproto,ispole,nface
         double precision Br(3),gcen(3)
       end type T_Voxel_Copy
 

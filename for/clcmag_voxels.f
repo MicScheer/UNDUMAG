@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 06/09/2023  16.43.43  by  Michael Scheer
 *CMZ :  2.04/14 04/09/2023  16.36.15  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  11.19.16  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
@@ -26,7 +27,6 @@ c      Type(T_Magnet) tmag
       double precision br(3),volmag,gcen(3),p(3,3),wnorm(3),wcen(3)
       integer imag,ix,iy,iz,nx,ny,nz,nvox,k1,k,luno,npoi,l,ipoi,iface,nf,ison,icol
       integer :: idebug=0
-      integer :: iwwork,iwfct=0,iwgeo=0,iwvgeo=0,iwmag=0
 
 c+self,if=voxcyl.
       integer iv
@@ -34,30 +34,11 @@ c+self.
       character(32) ctype
 
 
-      iwwork=abs(iundugeo)
-      if(iwwork/1000.gt.0) then
-        iwfct=1
-        iwwork=iwwork-1000
-      endif
-      if(iwwork/100.gt.0) then
-        iwvgeo=1
-        iwwork=iwwork-100
-      endif
-      if(iwwork/10.gt.0) then
-        iwgeo=1
-        iwwork=iwwork-10
-      endif
-      if(iwwork.gt.0) then
-        iwmag=1
-      endif
-
       call util_zeit_kommentar(lun6,"Entered clcmag_voxels")
 
       if (iwvgeo.ne.0) then
         open(newunit=luno,file='undumag_voxels.geo')
       endif
-
-      nfacets=0
 
       do imag=1,nmag_t+nspecmag_t
 
@@ -115,9 +96,10 @@ c+self.
                 t_magnets(imag)%t_voxels(nvox)%izdiv=iz
                 t_magnets(imag)%t_voxels(nvox)%isBlock=
      &            t_magnets(imag)%isBlock
+                allocate(t_magnets(imag)%t_voxels(nvox)%isfacet(
+     &            t_magnets(imag)%t_voxels(nvox)%nface))
                 call clcmag_voxel_volume(imag,nvox)
                 l=0
-                nfacets=nfacets+t_magnets(imag)%t_voxels(nvox)%nface
                 if (iwvgeo.ne.0) then
                   do iface=1,t_magnets(imag)%t_voxels(nvox)%nface
                     l=l+1
@@ -174,8 +156,6 @@ c+self,if=voxcyl.
 
             l=0
 
-            nfacets=nfacets+t_magnets(imag)%t_voxels(iv)%nface
-
             if (iwvgeo.ne.0) then
               do iface=1,t_magnets(imag)%t_voxels(iv)%nface
                 l=l+1
@@ -218,8 +198,8 @@ c+self.
 
       call util_zeit_kommentar(lun6,"Calculating facets")
 
-      allocate(ifacets(5,nfacets))
-      ifacets=0
+c      allocate(ifacets(5,nfacets))
+c      ifacets=0
       nfacets=0
 
       do imag=1,nmag_t+nspecmag_t
@@ -262,6 +242,7 @@ c+self.
               t_magnets(imag)%t_voxels(iv)%vnorm(:,iface)=wnorm
               wcen=wcen/dble(npoi)
               t_magnets(imag)%t_voxels(iv)%vcen(:,iface)=wcen
+              t_magnets(imag)%t_voxels(iv)%isfacet(iface)=0
               if (
      &          ix.gt.1.and.ix.lt.nx.and.
      &          iy.gt.1.and.iy.lt.ny.and.
@@ -270,8 +251,9 @@ c+self.
               call clcmag_magnet_facet(t_magnets(imag),iv,iface,ison,
      &          hulltiny)
               if (ison.ne.1) cycle
-              nfacets=nfacets+1
-              ifacets(1:5,nfacets)=[imag,iv,iface,k1,npoi]
+              t_magnets(imag)%t_voxels(iv)%isfacet(iface)=npoi
+c              nfacets=nfacets+1
+c              ifacets(1:5,nfacets)=[imag,iv,iface,k1,npoi]
             enddo !face
           else
             print*,"*** CLCMAG_VOXELS: Cylinder not yet available for undumag.fct"
@@ -280,10 +262,6 @@ c+self.
       enddo !imag
 
       call util_zeit_kommentar(lun6,"Facets calculated")
-      if (iwfct.ne.0) then
-        call clcmag_write_facets
-        call clcmag_magnet_main_facets
-      endif
 
       return
       end

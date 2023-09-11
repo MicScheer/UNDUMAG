@@ -3827,6 +3827,8 @@ def bundu(gl,a=3.598,b=-3.840,c=0.631):
   return a*exp(b*gl+c*gl*gl)
 #enddef bundu()
 
+def mh(): setmarkersize(10.)
+def ml(): setmarkersize(8.)
 def mn(): setmarkersize(6.)
 def mm(): setmarkersize(4.)
 def ms(): setmarkersize(2.)

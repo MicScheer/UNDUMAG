@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 06/09/2023  16.17.42  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  10.41.24  by  Michael Scheer
 *CMZ :  2.04/07 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/06 04/08/2023  11.26.53  by  Michael Scheer
@@ -55,6 +56,10 @@
           else
             niron=niron+1
           endif
+          t_voxcopy(nvoxcopy_t)%nface=t_magnets(kmag)%t_voxels(ivox)%nface
+          allocate(
+     &    t_voxcopy(nvoxcopy_t)%isfacet(t_magnets(kmag)%t_voxels(ivox)%nface))
+          t_voxcopy(nvoxcopy_t)%isfacet=t_magnets(kmag)%t_voxels(ivox)%isfacet
         enddo !ivox
       enddo !imag
 
@@ -74,6 +79,11 @@ c        tmag=t_magnets(imag)
           endif
         endif
       enddo !ivox
+
+      if (iwfct.ne.0) then
+        call clcmag_write_facets
+        call clcmag_magnet_main_facets
+      endif
 
       call util_zeit_kommentar(lun6,"Leaving clcmag_copy_voxels")
       return

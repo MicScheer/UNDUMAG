@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/05 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.13.46  by  Michael Scheer
 *CMZ :  2.04/01 22/01/2023  13.04.45  by  Michael Scheer
@@ -53,7 +54,7 @@ c-----------------------------------------------------------------------
         zp(i)=t_magnets(imag)%zhull(i)
       enddo
 
-      call util_convex_hull_3d_overwrite(npoi,xp,yp,zp,khull,kedge,kface,
+      call util_convex_hull_3d_overwrite(imag,npoi,xp,yp,zp,khull,kedge,kface,
      &  nhull,nedge,nface,kfacelast,hulltiny,ifailhull)
 
       if (ifailhull.ne.0.or.nhull.lt.4) then

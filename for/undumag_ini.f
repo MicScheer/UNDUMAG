@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 06/09/2023  14.48.40  by  Michael Scheer
 *CMZ :  2.04/14 04/09/2023  13.53.15  by  Michael Scheer
 *CMZ :  2.04/10 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/05 15/03/2023  09.34.01  by  Michael Scheer
@@ -117,7 +118,7 @@
 
       double precision undumag_variable_getval
 
-*KEEP,PHYCONPARAM.
+*KEEP,PHYCONparam,T=F77.
 c-----------------------------------------------------------------------
 c     phyconparam.cmn
 c-----------------------------------------------------------------------
@@ -199,10 +200,10 @@ c      vstokes(4,3)=(-sqrt(1./2.),        0.0d0)
 c-----------------------------------------------------------------------
 c     end of phyconparam.cmn
 c-----------------------------------------------------------------------
-*KEEP,SEQDEBUG.
+*KEEP,seqdebug.
       integer iseqdebug
       common/seqdebugc/iseqdebug
-*KEEP,RANDOM.
+*KEEP,random.
       integer*8 irancalls
       integer, parameter :: irnsize=64
       integer irnseed(irnsize),irnmode,irnseedi(irnsize)
@@ -212,7 +213,6 @@ c-----------------------------------------------------------------------
 *KEND.
 
       integer lun,lunst,ivrmlo,lunrn,lundum,k,i,idatetime(8),kseg
-      integer :: iwwork,iwfct=0,iwgeo=0,iwvgeo=0,iwmag=0
       double precision retval
 
       character(10) dtday,dttime,dtzone

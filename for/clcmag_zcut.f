@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  14.01.56  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/03 05/03/2023  16.30.33  by  Michael Scheer
@@ -339,7 +340,7 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
                     enddo
                   enddo
 
-                  call util_convex_hull_3d_overwrite(npoi,
+                  call util_convex_hull_3d_overwrite(imag,npoi,
      &              xh,yh,zh,khull,kedge,kface,nhull,nedge,nface,kfacelast,
      &              hulltiny,ifailhull)
 
@@ -404,7 +405,9 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
               endif !(zmin.ge.zdiv.or.zmax.le.zdiv) then
 
 123           if (iz.eq.nzdiv-1.or.klast.ne.0) then
+
                 nvox=nvox+1
+
                 kz=iz+1
                 if (klast.ne.0) then
                   kz=klast+1
@@ -419,7 +422,7 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
                   enddo
                 enddo
 
-                call util_convex_hull_3d_overwrite(npoi,
+                call util_convex_hull_3d_overwrite(nvox,npoi,
      &            xh,yh,zh,khull,kedge,kface,nhull,nedge,nface,kfacelast,
      &            hulltiny,ifailhull)
 
