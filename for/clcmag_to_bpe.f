@@ -1,3 +1,4 @@
+*CMZ :  2.04/13 04/09/2023  10.46.42  by  Michael Scheer
 *CMZ :  2.04/07 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  20.55.09  by  Michael Scheer
 *CMZ :  2.02/01 11/02/2022  09.47.13  by  Michael Scheer
@@ -112,7 +113,7 @@ c     end of phyconparam.cmn
 c-----------------------------------------------------------------------
 *KEND.
 
-      type (T_Magnet) :: tmag
+c      type (T_Magnet) :: tmag
       type (T_Voxel) :: tv
 
       allocate(bpebc(20,nvoxcopy_t))
@@ -154,8 +155,8 @@ c-----------------------------------------------------------------------
         kmod=t_voxcopy(iv)%kmodule
         kmag=t_voxcopy(iv)%kproto
 
-        tmag=t_magnets(kmag)
-        if (tmag%IsPole.ne.0) cycle
+c        tmag=t_magnets(kmag)
+        if (t_magnets(kmag)%IsPole.ne.0) cycle
 
         kv=kv+1
 
@@ -163,7 +164,7 @@ c-----------------------------------------------------------------------
         kvox=t_voxcopy(iv)%kvoxel
         kcopy=t_voxcopy(iv)%kcopy
 
-        tv=tmag%t_voxels(kvox)
+        tv=t_magnets(kmag)%t_voxels(kvox)
 
         gcen=t_voxcopy(iv)%gcen
         br=t_voxcopy(iv)%br
@@ -174,7 +175,7 @@ c-----------------------------------------------------------------------
         bpebc(4:6,kv)=br
         bpebc(7,kv)=norm2(br)
 
-        if ((irecrepl.ne.0.and.tv%isblock.ne.0).or.tmag%isblock.gt.0) then
+        if ((irecrepl.ne.0.and.tv%isblock.ne.0).or.t_magnets(kmag)%isblock.gt.0) then
           bpebc(8,kv)=-6.0
           dx=tv%xmax-tv%xmin
           dy=tv%ymax-tv%ymin
@@ -185,8 +186,8 @@ c-----------------------------------------------------------------------
           bpebc(8,kv)=1.0
         endif
 
-        bpebc(9,kv)=tmag%imat
-        bpebc(10,kv)=tmag%isspecial
+        bpebc(9,kv)=t_magnets(kmag)%imat
+        bpebc(10,kv)=t_magnets(kmag)%isspecial
         bn=norm2(br)
 
         if (bn.ne.0.0d0) bpebc(11:13,kv)=br/bn
@@ -196,7 +197,7 @@ c-----------------------------------------------------------------------
         bpebc(16,kv)=0.0
         bpebc(17,kv)=0.0
 
-        ibpecol(kv)=tmag%icol
+        ibpecol(kv)=t_magnets(kmag)%icol
         ibpeplan(kv)=tv%nface
 
         if (tv%IsBlock.gt.0) cycle
@@ -222,8 +223,8 @@ c-----------------------------------------------------------------------
         kmod=t_voxcopy(iv)%kmodule
         kmag=t_voxcopy(iv)%kproto
 
-        tmag=t_magnets(kmag)
-        if (tmag%IsPole.eq.0) cycle
+c        tmag=t_magnets(kmag)
+        if (t_magnets(kmag)%IsPole.eq.0) cycle
 
         kv=kv+1
 
@@ -231,7 +232,7 @@ c-----------------------------------------------------------------------
         kvox=t_voxcopy(iv)%kvoxel
         kcopy=t_voxcopy(iv)%kcopy
 
-        tv=tmag%t_voxels(kvox)
+        tv=t_magnets(kmag)%t_voxels(kvox)
 
         gcen=t_voxcopy(iv)%gcen
         br=t_voxcopy(iv)%br
@@ -242,7 +243,7 @@ c-----------------------------------------------------------------------
         bpebc(4:6,kv)=br
         bpebc(7,kv)=norm2(br)
 
-        if ((irecrepl.ne.0.and.tv%isblock.ne.0).or.tmag%isblock.gt.0) then
+        if ((irecrepl.ne.0.and.tv%isblock.ne.0).or.t_magnets(kmag)%isblock.gt.0) then
           bpebc(8,kv)=-6.0
           dx=tv%xmax-tv%xmin
           dy=tv%ymax-tv%ymin
@@ -253,8 +254,8 @@ c-----------------------------------------------------------------------
           bpebc(8,kv)=1.0
         endif
 
-        bpebc(9,kv)=tmag%imat
-        bpebc(10,kv)=tmag%isspecial
+        bpebc(9,kv)=t_magnets(kmag)%imat
+        bpebc(10,kv)=t_magnets(kmag)%isspecial
         bn=norm2(br)
 
         if (bn.ne.0.0d0) bpebc(11:13,kv)=br/bn
@@ -264,7 +265,7 @@ c-----------------------------------------------------------------------
         bpebc(16,kv)=0.0
         bpebc(17,kv)=0.0
 
-        ibpecol(kv)=tmag%icol
+        ibpecol(kv)=t_magnets(kmag)%icol
         ibpeplan(kv)=tv%nface
 
         if (tv%IsBlock.gt.0) cycle

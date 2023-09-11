@@ -1,3 +1,4 @@
+*CMZ :  2.04/13 31/08/2023  13.34.35  by  Michael Scheer
 *CMZ :  2.02/02 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/00 26/02/2021  17.57.38  by  Michael Scheer
 *CMZ :  2.01/08 14/08/2020  11.48.46  by  Michael Scheer
@@ -59,7 +60,7 @@
           nwrbar=0
 
           do i=1,ncrace
-            if (crace(1,i).eq.0.0d0) cycle
+            !if (crace(1,i).eq.0.0d0) cycle
             if (nint(crace(14,i)).le.0) crace(14,i)=1.0d0
             if (nint(crace(15,i)).le.0) crace(15,i)=1.0d0
             if (nint(crace(16,i)).le.0) crace(16,i)=1.0d0
@@ -67,7 +68,7 @@
           enddo
 
           do i=1,nrace
-            if (race(1,i).eq.0.0d0) cycle
+            !if (race(1,i).eq.0.0d0) cycle
             if (nint(race(14,i)).le.0) race(14,i)=1.0d0
             if (nint(race(15,i)).le.0) race(15,i)=1.0d0
             if (nint(race(16,i)).le.0) race(16,i)=1.0d0
@@ -75,7 +76,7 @@
           enddo
 
           do i=1,nwind
-            if (wind(1,i).eq.0.0d0) cycle
+            !if (wind(1,i).eq.0.0d0) cycle
             if (nint(wind(14,i)).le.0) wind(14,i)=1.0d0
             if (nint(wind(15,i)).le.0) wind(15,i)=1.0d0
             if (nint(wind(16,i)).le.0) wind(16,i)=1.0d0
@@ -83,7 +84,7 @@
           enddo
 
           do i=1,narc
-            if (arc(1,i).eq.0.0d0) cycle
+            !if (arc(1,i).eq.0.0d0) cycle
             if (nint(arc(9,i)).le.0) arc(9,i)=1.0d0
             if (nint(arc(10,i)).le.0) arc(10,i)=1.0d0
             if (nint(arc(11,i)).le.0) arc(11,i)=1.0d0
@@ -91,21 +92,21 @@
           enddo
 
           do i=1,nthwir
-            if (thickwire(1,i).eq.0.0d0) cycle
+            !if (thickwire(1,i).eq.0.0d0) cycle
             if (nint(thickwire(8,i)).le.0) thickwire(8,i)=1.0d0
             if (nint(thickwire(7,i)).le.0) thickwire(7,i)=1.0d0
             nwthwir=nwthwir+nint(thickwire(8,i)*thickwire(7,i))
           enddo
 
           do i=1,nrbar
-            if (rectbar(1,i).eq.0.0d0) cycle
+            !if (rectbar(1,i).eq.0.0d0) cycle
             if (nint(rectbar(8,i)).le.0) rectbar(8,i)=1.0d0
             if (nint(rectbar(9,i)).le.0) rectbar(9,i)=1.0d0
             nwrbar=nwrbar+nint(rectbar(8,i)*rectbar(9,i))
           enddo
 
           do i=1,ncarc
-            if (carc(1,i).eq.0.0d0) cycle
+            !if (carc(1,i).eq.0.0d0) cycle
             if (nint(carc(8,i)).le.0) carc(8,i)=1.0d0
             if (nint(carc(9,i)).le.0) carc(9,i)=1.0d0
             if (nint(carc(10,i)).le.0) carc(10,i)=1.0d0
@@ -126,43 +127,43 @@
           endif
 
           do i=1,nwind
-            if (wind(1,i).eq.0.0d0) cycle
+            !if (wind(1,i).eq.0.0d0) cycle
             icoil=icoil+1
             call undumag_wind_to_fila(i,icoil)
           enddo
 
           do i=1,nrace
-            if (race(1,i).eq.0.0d0) cycle
+            !if (race(1,i).eq.0.0d0) cycle
             icoil=icoil+1
             call undumag_race_to_fila(i,icoil)
           enddo
 
           do i=1,ncrace
-            if (crace(1,i).eq.0.0d0) cycle
+            !if (crace(1,i).eq.0.0d0) cycle
             icoil=icoil+1
             call undumag_crace_to_fila(i,icoil)
           enddo
 
           do i=1,narc
-            if (arc(1,i).eq.0.0d0) cycle
+            !if (arc(1,i).eq.0.0d0) cycle
             icoil=icoil+1
             call undumag_arc_to_fila(i,icoil)
           enddo
 
           do i=1,nrbar
-            if (rectbar(1,i).eq.0.0d0) cycle
+            !if (rectbar(1,i).eq.0.0d0) cycle
             icoil=icoil+1
             call undumag_bar_to_fila(i,icoil)
           enddo
 
           do i=1,ncarc
-            if (carc(1,i).eq.0.0d0) cycle
+            !if (carc(1,i).eq.0.0d0) cycle
             icoil=icoil+1
             call undumag_circ_arc_to_fila(i,icoil)
           enddo
 
           do i=1,nthwir
-            if (thickwire(1,i).eq.0.0d0) cycle
+            !if (thickwire(1,i).eq.0.0d0) cycle
             icoil=icoil+1
             call undumag_thwire_to_fila(i,icoil)
           enddo
@@ -177,24 +178,24 @@
           enddo
         enddo
 
-        nallo=0
-        do i=1,ncwires
-          if (wire(2,i).ne.0.0d0) nallo=nallo+1
-        enddo
-
-        allocate(wold(nwitems,ncwires))
-        wold=wire
-        deallocate(wire)
-        allocate(wire(nwitems,nallo))
-
-        nallo=0
-        do i=1,ncwires
-          if (wold(2,i).eq.0.0d0) cycle
-          nallo=nallo+1
-          wire(:,nallo)=wold(:,i)
-        enddo
-        ncwires=nallo
-        deallocate(wold)
+c        nallo=0
+c        do i=1,ncwires
+c          if (wire(2,i).ne.0.0d0) nallo=nallo+1
+c        enddo
+c
+c        allocate(wold(nwitems,ncwires))
+c        wold=wire
+c        deallocate(wire)
+c        allocate(wire(nwitems,nallo))
+c
+c        nallo=0
+c        do i=1,ncwires
+c          if (wold(2,i).eq.0.0d0) cycle
+cc          nallo=nallo+1
+c          wire(:,nallo)=wold(:,i)
+c        enddo
+c        ncwires=nallo
+c        deallocate(wold)
 
 c concept of wires:
         ! 1: type of coil

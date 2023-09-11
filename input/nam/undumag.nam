@@ -1,4 +1,4 @@
-* Version 2.04/09
+* Version 2.04/16
  ! Name list file, to control UNDUMAG
 
  $undumagn
@@ -128,7 +128,13 @@
  iunduplot=1 ! Write Encapsulated PostScript files to show geometry
 	     ! iunduplot<0: stop UNDUMAG after writing undumag.eps
 
- iundugeo=1  ! Write geometry file
+ iundugeo=1111 ! Write geometry files
+             ! Three bits for
+	     ! undumag_facets.fct
+	     ! undumag_voxels.geo
+	     ! undumag.geo
+	     ! undumag.mag
+             ! ,i.e. iundugeo=1111 means to write all of them
 	     ! iundugeo<0: stop UNDUMAG after writing undumag.geo
 
  ivrml=1     ! Write CAD file of setup

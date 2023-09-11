@@ -1,3 +1,5 @@
+*CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
+*CMZ :  2.04/14 05/09/2023  13.54.14  by  Michael Scheer
 *CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  12.14.18  by  Michael Scheer
 *CMZ :  2.04/01 13/02/2023  13.19.45  by  Michael Scheer
@@ -125,6 +127,7 @@ c        t_magnets(imag)%dxdiv=t_magnets(imag)%size(1)/t_magnets(imag)%nxdiv
         nface=tmag%nface
         kedge=tmag%kedge
         kface=tmag%kface
+        kfacelast=tmag%kfacelast
 
         allocate(t_magnets(imag)%t_xcuts(1)%xhull(nhull))
         allocate(t_magnets(imag)%t_xcuts(1)%yhull(nhull))
@@ -139,6 +142,7 @@ c        t_magnets(imag)%dxdiv=t_magnets(imag)%size(1)/t_magnets(imag)%nxdiv
         t_magnets(imag)%t_xcuts(1)%kedge=kedge
         t_magnets(imag)%t_xcuts(1)%nface=nface
         t_magnets(imag)%t_xcuts(1)%kface=kface
+        t_magnets(imag)%t_xcuts(1)%kfacelast=kfacelast
 
         t_magnets(imag)%t_xcuts(1)%size=tmag%size
         t_magnets(imag)%t_xcuts(1)%xmin=tmag%xmin
@@ -242,7 +246,7 @@ c        t_magnets(imag)%dxdiv=t_magnets(imag)%size(1)/t_magnets(imag)%nxdiv
             !print*,x02
             !stop
 
-            call util_convex_hull_3d_overwrite(npoi,
+            call util_convex_hull_3d_overwrite(imag,npoi,
      &        xh,yh,zh,khull,kedge,kface,nhull,nedge,nface,kfacelast,
      &        hulltiny,ifailhull)
 
@@ -309,7 +313,7 @@ c        t_magnets(imag)%dxdiv=t_magnets(imag)%size(1)/t_magnets(imag)%nxdiv
                 enddo
               enddo
 
-              call util_convex_hull_3d_overwrite(npoi,
+              call util_convex_hull_3d_overwrite(imag,npoi,
      &          xh,yh,zh,khull,kedge,kface,nhull,nedge,nface,kfacelast,
      &          hulltiny,ifailhull)
 
@@ -399,6 +403,13 @@ c        t_magnets(imag)%dxdiv=t_magnets(imag)%size(1)/t_magnets(imag)%nxdiv
 
 
       !call util_break
+
+c      if (imag.eq.2) then
+c        do ix=1,nxdiv
+c          print*,t_magnets(imag)%t_xcuts(ix)%kface(1:t_magnets(imag)%t_xcuts(ix)%kfacelast)
+c        enddo
+c        stop
+c      endif
 
       return
       end

@@ -1,4 +1,6 @@
-*CMZ :          22/08/2023  09.03.52  by  Michael Scheer
+*CMZ :  2.04/16 06/09/2023  14.48.40  by  Michael Scheer
+*CMZ :  2.04/14 04/09/2023  13.53.15  by  Michael Scheer
+*CMZ :  2.04/10 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/05 15/03/2023  09.34.01  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  17.02.39  by  Michael Scheer
 *CMZ :  2.03/00 23/07/2022  09.18.29  by  Michael Scheer
@@ -227,6 +229,23 @@ c-----------------------------------------------------------------------
       ! read undumag.nam
       call undumag_ini_namelists
 
+      iwwork=abs(iundugeo)
+      if(iwwork/1000.gt.0) then
+        iwfct=1
+        iwwork=iwwork-1000
+      endif
+      if(iwwork/100.gt.0) then
+        iwvgeo=1
+        iwwork=iwwork-100
+      endif
+      if(iwwork/10.gt.0) then
+        iwgeo=1
+        iwwork=iwwork-10
+      endif
+      if(iwwork.gt.0) then
+        iwmag=1
+      endif
+
       if (kseg.ne.0) then
         kechocalc=0
       endif
@@ -337,12 +356,12 @@ c      call undumag_ini_displacement
 
       ! write buffer file undumag.mag
       kunduplot_mode=iunduplot_mode
-      if (iundugeo.ne.0.or.iunduplot.ne.0 ) then
+      if (iwmag.ne.0.or.iunduplot.ne.0) then
         call undumag_magfile
       endif
 
       ! write magnets, poles, and coils to undumag.geo
-      if (iundugeo.ne.0) call undumag_geo
+      if (iwgeo.ne.0) call undumag_geo
 
       if (iundugeo.lt.0) then
         open(newunit=lunst,file="undumag.stat")

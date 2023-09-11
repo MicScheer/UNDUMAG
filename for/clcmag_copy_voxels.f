@@ -1,3 +1,5 @@
+*CMZ :  2.04/16 06/09/2023  16.17.42  by  Michael Scheer
+*CMZ :  2.04/13 04/09/2023  10.41.24  by  Michael Scheer
 *CMZ :  2.04/07 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/06 04/08/2023  11.26.53  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
@@ -17,9 +19,11 @@
       integer i_tvoxel_is_block
       integer imag,ivox,icopy,imodul,kmag
 
-      type (T_Magnet) tmag
       type (T_Voxel) tv
       type (T_Voxel_Copy) tvc
+
+
+      call util_zeit_kommentar(lun6,"Entered clcmag_copy_voxels")
 
       nvoxcopy_t=0
       do imag=1,nmagtot_t
@@ -52,18 +56,22 @@
           else
             niron=niron+1
           endif
+          t_voxcopy(nvoxcopy_t)%nface=t_magnets(kmag)%t_voxels(ivox)%nface
+          allocate(
+     &    t_voxcopy(nvoxcopy_t)%isfacet(t_magnets(kmag)%t_voxels(ivox)%nface))
+          t_voxcopy(nvoxcopy_t)%isfacet=t_magnets(kmag)%t_voxels(ivox)%isfacet
         enddo !ivox
       enddo !imag
 
       do ivox=1,nvoxcopy_t
         tvc=t_voxcopy(ivox)
         imag=tvc%kproto
-        tmag=t_magnets(imag)
+c        tmag=t_magnets(imag)
         tv=t_magnets(imag)%t_voxels(tvc%kvoxel)
-        t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=tmag%IsBlock
-        if (tmag%ctype.ne.'Cylinder'
+        t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=t_magnets(imag)%IsBlock
+        if (t_magnets(imag)%ctype.ne.'Cylinder'
      &      .and.tv%nhull.eq.8.and.tv%nedge.eq.12.and.tv%nface.eq.6
-     &      .and.tmag%IsBlock.eq.0) then
+     &      .and.t_magnets(imag)%IsBlock.eq.0) then
           if (irecrepl.eq.0) then
             t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=-i_tvoxel_is_block(tv)
           else
@@ -72,5 +80,11 @@
         endif
       enddo !ivox
 
+      if (iwfct.ne.0) then
+        call clcmag_write_facets
+        call clcmag_magnet_main_facets
+      endif
+
+      call util_zeit_kommentar(lun6,"Leaving clcmag_copy_voxels")
       return
       end

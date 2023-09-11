@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/05 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.13.46  by  Michael Scheer
 *CMZ :  2.04/01 21/01/2023  11.47.09  by  Michael Scheer
@@ -49,7 +50,7 @@ c-----------------------------------------------------------------------
       y=tmag%yhull
       z=tmag%zhull
 
-      call util_convex_hull_3d_overwrite(npoi,x,y,z,khull,kedge,kface,
+      call util_convex_hull_3d_overwrite(tmag%kmag,npoi,x,y,z,khull,kedge,kface,
      &  nhull,nedge,nface,kfacelast,hulltiny,ifailhull)
 
       if (ifailhull.ne.0.or.nhull.lt.4) then
@@ -65,7 +66,7 @@ c-----------------------------------------------------------------------
         zc(i)=z(m)
       enddo
 
-      call util_convex_hull_3d_overwrite(nhull,xc,yc,zc,khull,kedge,kface,
+      call util_convex_hull_3d_overwrite(tmag%kmag,nhull,xc,yc,zc,khull,kedge,kface,
      &  nhull,nedge,nface,kfacelast,hulltiny,ifailhull)
 
       deallocate(tmag%xhull0,tmag%yhull0,tmag%zhull0,

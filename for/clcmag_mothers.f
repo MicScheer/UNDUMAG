@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.18.44  by  Michael Scheer
 *CMZ :  2.04/00 13/01/2023  11.54.35  by  Michael Scheer
@@ -20,7 +21,7 @@
       integer, dimension (:), allocatable :: kface,khull
 
       integer im,moth,imag,nm,nmag,nhull,npoi,nh,nedge,nface,ifail,
-     &  kfacelast,i,l,nhmag
+     &  kfacelast,i,l,nhmag,kmag
 
       character(32) cnam,cmoth
 
@@ -48,26 +49,23 @@
         endif
       enddo !nmag_t
 
-      do im=1,nmoth_t
-        nm=t_mothers(im)%nmagnets
-        allocate(t_mothers(im)%magnets(nm))
-        t_mothers(im)%nhull=0
-      enddo
-
-      do imag=1,nmag_t+nspecmag_t
-        cmoth=t_magnets(imag)%cmoth
+      nhull=0
+      do moth=1,nmoth_t
+        nm=t_mothers(moth)%nmagnets
+        allocate(t_mothers(moth)%magnets(nm))
+        t_mothers(moth)%nhull=0
         nmag=0
-        nhmag=t_magnets(imag)%nhull
-        do moth=1,nmoth_t
-          if (t_mothers(moth)%cmoth.eq.cmoth) then
+        do imag=1,nmag_t+nspecmag_t
+          cmoth=t_magnets(imag)%cmoth
+          if (cmoth.eq.t_mothers(moth)%cmoth) then
             nmag=nmag+1
+            nhmag=t_magnets(imag)%nhull
             t_mothers(moth)%magnets(nmag)=imag
             t_mothers(moth)%nhull=t_mothers(moth)%nhull+nhmag
             nhull=max(nhull,t_mothers(moth)%nhull)
-            exit
           endif
         enddo
-      enddo !nmag_t
+      enddo !moth
 
       allocate(hull(3,nhull))
       allocate(xh(nhull),yh(nhull),zh(nhull))
@@ -78,20 +76,22 @@
 
         npoi=0
         nmag=t_mothers(moth)%nmagnets
+        cmoth=t_mothers(moth)%cmoth
 
-        do imag=1,nmag
-          x=t_magnets(imag)%xyz(1)
-          y=t_magnets(imag)%xyz(2)
-          z=t_magnets(imag)%xyz(3)
-          do i=1,t_magnets(imag)%nhull
+        do imag=1,t_mothers(moth)%nmagnets
+          kmag=t_mothers(moth)%magnets(imag)
+          x=t_magnets(kmag)%xyz(1)
+          y=t_magnets(kmag)%xyz(2)
+          z=t_magnets(kmag)%xyz(3)
+          do i=1,t_magnets(kmag)%nhull
             npoi=npoi+1
-            xh(npoi)=t_magnets(imag)%xhull(i)+x
-            yh(npoi)=t_magnets(imag)%yhull(i)+y
-            zh(npoi)=t_magnets(imag)%zhull(i)+z
+            xh(npoi)=t_magnets(kmag)%xhull(i)+x
+            yh(npoi)=t_magnets(kmag)%yhull(i)+y
+            zh(npoi)=t_magnets(kmag)%zhull(i)+z
           enddo
         enddo
 
-        call util_convex_hull_3d_overwrite(npoi,xh,yh,zh,khull,kedge,kface,
+        call util_convex_hull_3d_overwrite(kmag,npoi,xh,yh,zh,khull,kedge,kface,
      &    nh,nedge,nface,kfacelast,tol,ifail)
 
         if (ifail.ne.0) then
@@ -107,7 +107,7 @@
      &    t_mothers(moth)%yhull(nh),
      &    t_mothers(moth)%zhull(nh),
      &    t_mothers(moth)%khull(nh),
-     &    t_mothers(moth)%kedge(4,2*nh-2),
+     &    t_mothers(moth)%kedge(4,nh+nface-2),
      &    t_mothers(moth)%kface(kfacelast)
      &    )
 
@@ -119,9 +119,9 @@
         l=0
         gcen=0.0d0
         do i=1,nh
-          t_mothers(moth)%xhull(i)=xh(i)
-          t_mothers(moth)%yhull(i)=yh(i)
-          t_mothers(moth)%zhull(i)=zh(i)
+          t_mothers(moth)%xhull(i)=xh(khull(i))
+          t_mothers(moth)%yhull(i)=yh(khull(i))
+          t_mothers(moth)%zhull(i)=zh(khull(i))
           gcen=gcen+[x,y,z]
         enddo
 

@@ -1729,7 +1729,7 @@ S_Iron_Bc, S_Iron_Bxn, S_Iron_Byn, S_Iron_Bzn, S_Iron_Ispec, S_Iron_Color
 global LastCLC, LastNAM
 global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
 NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-global Ngeo
+global Ngeo,Nvox,Facets,FcBox
 
 global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
 S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -1926,6 +1926,105 @@ VlocDist = 0
 
 global Aspect
 Aspect = "auto"
+
+def plotfaces(faces, isame=0,
+                facecolor='b',edgecolor='black',alpha=0.5,
+                linewidth=-1,markercolor='!',ishow=1):
+
+  global Isame,Iso,Ax
+
+  Iso = Isame
+
+  if not isame:
+
+    xmn = 1.e30
+    xmx = -1.e30
+    ymn = 1.e30
+    ymx = -1.e30
+    zmn = 1.e30
+    zmx = -1.e30
+
+    for f in faces:
+      xmn = min(f.T[0].min(),xmn)
+      xmx = max(f.T[0].max(),xmx)
+      ymn = min(f.T[1].min(),ymn)
+      ymx = max(f.T[1].max(),ymx)
+      zmn = min(f.T[2].min(),zmn)
+      zmx = max(f.T[2].max(),zmx)
+    #endfor
+
+    dx = (xmx-xmn)*0.1
+    dy = (ymx-ymn)*0.1
+    dz = (zmx-zmn)*0.1
+
+    xmin = xmn - dx
+    xmax = xmx + dx
+    ymin = ymn - dy
+    ymax = ymx + dy
+    zmin = zmn - dz
+    zmax = zmx + dz
+
+    null3d(xmin,xmax,ymin,ymax,zmin,zmax)
+    Isame = 1
+
+  #endif
+
+  getzone('3d')
+
+  ax = Ax
+
+  if edgecolor == '!': edgecolor = getlinecolor()
+  if linewidth < 0: linewidth = getlinewidth()
+
+  face = mplot3d.art3d.Poly3DCollection(faces)
+
+  face.set_color(facecolor)
+  face.set_linewidth(linewidth)
+  face.set_edgecolor(edgecolor)
+  face.set_alpha(alpha)
+
+  ax.add_collection3d(face)
+
+  if ishow: showplot()
+
+  Isame = Iso
+
+#enddef plotfaces
+
+def read_faces(fname,cs='xyz'):
+
+  F=open(fname,'r')
+  fread = F.readlines()
+  F.close()
+
+  faces = []
+  voxels = []
+
+  l=0
+  nface=-1
+  #breakpoint()
+  nmag = int(fread[l].strip())
+  l += 1
+  for imag in range(nmag):
+    npoi = int(fread[l].split()[0])
+    voxels.append(fread[l].split())
+    nface += 1
+    l += 1
+    fac = []
+    for ipoi in range(npoi):
+      p = np.fromstring(fread[l].strip(),dtype=np.float,sep=' ')
+      if cs.lower() == 'xzy':
+        fac.append([p[0],p[2],-p[1]])
+      else:
+        fac.append([p[0],p[1],p[2]])
+      #endif
+      l += 1
+    #endfor npoi
+    faces.append(np.array(fac))
+  #endfor nmag
+
+  return faces,voxels
+#enddef read_faces(fname)
 
 def plotqhull3d(vertices,ifaces,faces, isame=0,
                 facecolor='b',edgecolor='black',alpha=0.5,
@@ -3728,6 +3827,8 @@ def bundu(gl,a=3.598,b=-3.840,c=0.631):
   return a*exp(b*gl+c*gl*gl)
 #enddef bundu()
 
+def mh(): setmarkersize(10.)
+def ml(): setmarkersize(8.)
 def mn(): setmarkersize(6.)
 def mm(): setmarkersize(4.)
 def ms(): setmarkersize(2.)
@@ -6230,7 +6331,7 @@ def mhull3d(nt='?',varlis='',select='',isame=0,
   vx, vy, vz = ncopv(nt,varlis,select)
   points = np.array([vx,vy,vz]).T
 
-  vertices,ifaces,faces =  hull3d(points)
+  vertices,ifaces,faces,bounds =  hull3d(points)
 
   if iplot:
     plothull3d(isame,facecolor=facecolor,edgecolor=edgecolor,alpha=alpha)
@@ -24367,6 +24468,7 @@ getystat = get_y_stat
 nhull3d = nqhull3d
 hull3d = qhull3d
 plotncyl = plotncylinder
+read_facets = read_faces
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -27313,6 +27415,7 @@ def undu_b():
 
 def ndeleteupl(isilent=1):
   if Nntup > 0: print("\n --- Deleting old Ntuples\n")
+  ndelete("Nvox",isilent)
   ndelete("ngeo",isilent)
   ndelete("nmap",isilent)
   ndelete("nmapint",isilent)
@@ -27329,14 +27432,35 @@ def ndeleteupl(isilent=1):
 
 def nreloadupl():
 
-  global Nreload
+  global Nreload,Nvox
   global ntraj,nbprof,nmap,nmapint,nmapintf,nmh,nbr,nmat,nbyeff,nbzeff,ncoil,ngeo
 
   ndeleteupl()
 
   # Attention: There is also an Ngeo in undugui.py
-  if fexist('undumag.geo'):
-    ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+  if not nexist("ngeo"):
+    if fexist("undumag.geo"):
+      tclc = os.stat('undumag.clc').st_mtime_ns
+      tgeo = os.stat('undumag.geo').st_mtime_ns
+      if tclc > tgeo:
+        wError("undumag.geo is older than undumag.clc!")
+      else:
+        ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+      #endif
+    #endif
+  #endif
+
+  if fexist('undumag_voxels.geo'):
+    tclc = os.stat('undumag.clc').st_mtime_ns
+    tgeo = os.stat('undumag_voxels.geo').st_mtime_ns
+    if tclc > tgeo:
+      wError("undumag_voxels.geo is older than undumag.clc!")
+    else:
+      print('\n--> Reading undumag_voxels.geo')
+      Nvox = ncread("Nvox","mag:ivox:ix:iy:iz:iplan:icorn:x:y:z:xc:yc:zc:vol:icol","undumag_voxels.geo")
+      print('\n--> Done')
+    #endif
+  #endif
 
   if fexist('urad_traxyz.dat'):
     vlis = 'x:y:z:t:vx:vy:vz:Bx:By:Bz:gamma:Ex:Ey:Ez'
@@ -27646,7 +27770,7 @@ S_Iron_Bc, S_Iron_Bxn, S_Iron_Byn, S_Iron_Bzn, S_Iron_Ispec, S_Iron_Color
 global LastCLC, LastNAM
 global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
 NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-global Ngeo
+global Ngeo,Nvox,Facets,FcBox
 
 global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
 S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -27747,7 +27871,7 @@ def undugui_clean(key=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -27932,7 +28056,7 @@ def calc_var(svar):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -28045,7 +28169,7 @@ def ugui_get_clc_line(iline,nlines,icomm):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -28208,7 +28332,7 @@ def ugui_calc():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -28395,7 +28519,7 @@ def ugui_calc_line(cline):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -28516,7 +28640,7 @@ def ugui_ini():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -28703,7 +28827,7 @@ def utransrotcop():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -29055,7 +29179,7 @@ def checktransrotcop():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -29626,7 +29750,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -29821,7 +29945,7 @@ def ureadclc(callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -30750,7 +30874,7 @@ def _MbLeave(ev):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -30837,7 +30961,7 @@ def _MenuBar(ev):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -31097,7 +31221,7 @@ def write_variables(Fclc):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -31327,7 +31451,7 @@ def uwriteclc(callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -33159,7 +33283,7 @@ def ureadfil(callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -33318,7 +33442,7 @@ def _undumag(callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -33505,7 +33629,7 @@ def _runundumag(callkey='',modus=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -33715,7 +33839,7 @@ def utransrotcop():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -34067,7 +34191,7 @@ def checktransrotcop():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -34638,7 +34762,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -34833,7 +34957,7 @@ def ureadclc(callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -35912,7 +36036,16 @@ def undu_geo(plopt='sameline'):
   if plopt == '!': plopt = 'sameline'
 
   if not nexist("ngeo"):
-    ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+    if fexist("undumag.geo"):
+      tclc = os.stat('undumag.clc').st_mtime_ns
+      tgeo = os.stat('undumag.geo').st_mtime_ns
+      if tclc > tgeo:
+        wError("undumag.geo is older than undumag.clc!")
+        return
+      else:
+        ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+      #endif
+    #endif
   #endif
 
   if Nlines <= 0:
@@ -36098,9 +36231,18 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
   if plopt == '!': plopt = 'sameline'
 
   if not nexist("ngeo"):
-    print('\nReading undumag.geo...')
-    ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
-    print('done\n')
+    if fexist("undumag.geo"):
+      tclc = os.stat('undumag.clc').st_mtime_ns
+      tgeo = os.stat('undumag.geo').st_mtime_ns
+      if tclc > tgeo:
+        wError("undumag.geo is older than undumag.clc!")
+        return
+      else:
+        print('\nReading undumag.geo...')
+        ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+        print('done\n')
+      #endif
+    #endif
   #endif
 
   print('\nSelection for ',select)
@@ -36325,6 +36467,118 @@ def undu_mags(plopt='sameline'):
 
 #enddef undu_mags()
 
+def read_facets_bounding_box(fb='undumag_bounding_box.fct'):
+  global MainFacets, FcBox,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
+  FcBox = []
+  if fexist('undumag_bounding_box.fct'):
+    tclc = os.stat('undumag.clc').st_mtime_ns
+    tbb = os.stat('undumag_bounding_box.fct').st_mtime_ns
+    if tclc > tbb:
+      wError("undumag_bounding_box.fct is older than undumag.clc!")
+      return
+    else:
+      print('\n--> Reading undumag_bounding_box.fct')
+      fbox = open('undumag_bounding_box.fct','r')
+      FcBox = np.fromstring(fbox.readline().strip(),dtype=np.float,sep=' ')
+      fbox.close()
+      Xmin = FcBox[0]
+      Xmax = FcBox[1]
+      Ymin = FcBox[2]
+      Ymax = FcBox[3]
+      Zmin = FcBox[4]
+      Zmax = FcBox[5]
+      print('\n--> Done')
+  else:
+    wError("File undumag_main_facets not found!")
+    return
+  #endif
+#enddef read_facets_bounding_box(fb='undumag_bounding_box.fct')
+
+def plot_main_faces():
+
+  global MainFacets,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
+  plopt = ''
+
+  Kpdf = False
+  Kdump = False
+  Kecho = False
+
+  dot()
+  getzone('3d')
+
+  facets = MainFacets[0]
+  voxels = MainFacets[1]
+
+  dx = (Xmax - Xmin) / 10.
+  dy = (Ymax - Ymin) / 10.
+  dz = (Zmax - Zmin) / 10.
+
+  null3d(Xmin-dx,Xmax+dx,Zmin-dz,Zmax+dz,Ymin-dy,Ymax+dy)
+  txyz(Ucomment,"x [mm]","z [mm]", "y [mm]")
+
+  ax = plt.gca()
+  iface = -1
+
+  nfacets = len(facets)
+
+  fcols = []
+  for v in voxels:
+    if not v[1] in fcols: fcols.append(v[1])
+  #endfor
+
+  for col in fcols:
+    fcolcol = []
+    for i in range(nfacets):
+      if voxels[i][1] == col: fcolcol.append(facets[i])
+    #endfor
+    fpl = mplot3d.art3d.Poly3DCollection(fcolcol)
+    fpl.set_color(UnduColors[int(col)])
+    fpl.set_edgecolor('black')
+    ax.add_collection3d(fpl)
+
+  #endfor
+
+#enddef plot_main_faces()
+
+plot_main_facets = plot_main_faces
+
+def read_main_faces(fname='undumag_main_facets.fct',cs='xyz'):
+
+  F=open(fname,'r')
+  fread = F.readlines()
+  F.close()
+
+  faces = []
+  voxels = []
+
+  l=0
+  nface=-1
+  #breakpoint()
+  nmag = int(fread[l].strip())
+  l += 1
+  for imag in range(nmag):
+    npoi = int(fread[l].split()[0])
+    voxels.append(fread[l].split())
+    nface += 1
+    l += 1
+    fac = []
+    for ipoi in range(npoi):
+      p = np.fromstring(fread[l].strip(),dtype=np.float,sep=' ')
+      if cs.lower() == 'xzy':
+        fac.append([p[0],p[2],-p[1]])
+      else:
+        fac.append([p[0],p[1],p[2]])
+      #endif
+      l += 1
+    #endfor npoi
+    faces.append(np.array(fac))
+  #endfor nmag
+
+  return faces,voxels
+#enddef read_main_faces(fname)
+
 def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   global Coils, Filaments, UnduColors, CurrLoops, NMagPolTot
@@ -36352,7 +36606,7 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
     curr = calc_var(Coils[icoil][1][0])
     coiltit = Coils[icoil][0][1]
     ifound = 1
-    if curr == 0: continue
+    if curr == 0 and modus != 'notsame': continue
     kallzero = 0
     for wire in coil:
       xmin = min(xmin,wire[2],wire[5])
@@ -36365,7 +36619,7 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   #endfor coil in Filaments
 
-  if kallzero : return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
+  if kallzero: return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
 
   dx = (xmax-xmin)*0.1
   dy = (ymax-ymin)*0.1
@@ -36542,7 +36796,7 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -37016,7 +37270,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -37386,7 +37640,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -37616,7 +37870,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -37643,6 +37897,8 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
+  global MainFacets
+
   isameo = get_isame()
   print("_showGeoUndu:",modus,item,kseg,callkey)
   print("_showGeoUndu:MustUpdate:",MustUpdate)
@@ -37658,8 +37914,9 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
 
     _undumag("showGeoUndu")  #run undumag
 
-    if nexist("Ngeo"): Ngeo = ndelete("Ngeo")
-    Ngeo = ncread("Ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+#    if nexist("Ngeo"): Ngeo = ndelete("Ngeo")
+#    if fexist('undumag.geo'):
+#      Ngeo = ncread("Ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
     MustUpdate = 0
 
   #endif MustUpdate
@@ -37668,9 +37925,168 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
 
     if item < 0:
 
+      read_facets_bounding_box()
+
+      if fexist('undumag_main_facets.fct'):
+        tclc = os.stat('undumag.clc').st_mtime_ns
+        tgeo = os.stat('undumag_main_facets.fct').st_mtime_ns
+        if tclc > tgeo:
+          wError("undumag_main_facets.fct is older than undumag.clc!")
+          return
+        else:
+          print('\n--> Reading undumag_main_facets.fct')
+          mfaces,mvoxels = read_main_faces('undumag_main_facets.fct','xzy')
+          MainFacets = [mfaces,mvoxels]
+          print('\n--> Done')
+      else:
+        wError("File undumag_main_facets not found!")
+        return
+      #endif
+
+      if fexist('undumag_facets.fct'):
+        tclc = os.stat('undumag.clc').st_mtime_ns
+        tgeo = os.stat('undumag_facets.fct').st_mtime_ns
+        if tclc > tgeo:
+          wError("undumag_facets.fct is older than undumag.clc!")
+          return
+        else:
+          print('\n--> Reading undumag_facets.fct')
+          faces,voxels = read_faces('undumag_facets.fct','xzy')
+          Facets = [faces,voxels]
+          print('\n--> Done')
+      else:
+        wError("File undumag_facets.fct not found!")
+        return
+      #endif
+
+      plopt = ''
+
+      Kpdf = False
+      Kdump = False
+      Kecho = False
+
+      dot()
+      getzone('3d')
+
+      facets = Facets[0]
+      voxels = Facets[1]
+
+      dx = (Xmax - Xmin) / 10.
+      dy = (Ymax - Ymin) / 10.
+      dz = (Zmax - Zmin) / 10.
+
+      #null3d(xmin-dx,xmax+dx,zmin-dz,zmax+dz,ymin-dy,ymax+dy)
+
+      null3d(Xmin-dx,Xmax+dx,Zmin-dz,Zmax+dz,Ymin-dy,Ymax+dy)
+      txyz(Ucomment,"x [mm]","z [mm]", "y [mm]")
+
+      ax = plt.gca()
+      iface = -1
+#      for v in voxels:
+#        nfacets = int(v[0])
+#        fcol = int(v[1])
+#        edcol = int(v[2])
+#        fvox = []
+#        for i in range(nfacets):
+#          iface += 1
+#          fvox.append(faces[iface])
+#        #endfor
+#        fpl = mplot3d.art3d.Poly3DCollection(fvox)
+#        ax.add_collection3d(fpl)
+      #endfor
+
+      nfacets = len(facets)
+
+      fcols = []
+      for v in voxels:
+        if not v[1] in fcols: fcols.append(v[1])
+      #endfor
+
+      for col in fcols:
+        fcolcol = []
+        for i in range(nfacets):
+          if voxels[i][1] == col:
+            fcolcol.append(facets[i])
+          #endif
+        #endfor
+        fpl = mplot3d.art3d.Poly3DCollection(fcolcol)
+        fpl.set_color(UnduColors[int(col)])
+        fpl.set_edgecolor('black')
+        ax.add_collection3d(fpl)
+
+      #endfor
+
+    #endif item < 0
+
+  if modus == 'undu3dvgeo':
+
+    if item < 0:
+
+      if fexist('undumag_voxels.geo'):
+        tclc = os.stat('undumag.clc').st_mtime_ns
+        tgeo = os.stat('undumag_voxels.geo').st_mtime_ns
+        if tclc > tgeo:
+          wError("undumag_voxels.geo is older than undumag.clc!")
+          return
+        else:
+          print('\n--> Reading undumag_voxels.geo')
+          Nvox = ncread("Nvox","mag:ivox:ix:iy:iz:iplan:icorn:x:y:z:xc:yc:zc:vol:icol","undumag_voxels.geo")
+          print('\n--> Done')
+      else:
+        wError("File undumag_voxels.geo not found!")
+        return
+      #endif
+
+      plopt = ''
+
+      Kpdf = False
+      Kdump = False
+      Kecho = False
+
+      dot()
+      getzone('3d')
+      #nplot("Nvox","x:z:y","mag<10")
+      nmag = int(Nvox.mag.max())
+
+#      xmin = Nvox.x.min()
+#      xmax = Nvox.x.max()
+#      ymin = Nvox.y.min()
+#      ymax = Nvox.y.max()
+#      zmin = Nvox.z.min()
+#      zmax = Nvox.z.max()
+
+#      dx = (xmax - xmin) / 10.
+#      dy = (ymax - ymin) / 10.
+#      dz = (zmax - zmin) / 10.
+
+      #null3d(xmin-dx,xmax+dx,zmin-dz,zmax+dz,ymin-dy,ymax+dy)
+      null3d(Xmin,Xmax,Zmin,Zmax,Ymin,Ymax)
+      txyz(Ucomment,"x [mm]","z [mm]", "y [mm]")
+
+      for mag in range(nmag):
+        selmag = 'mag==' + str(mag+1)
+        kcol = Nvox.query(selmag + ' and iplan==1 and icorn==1').icol.max()
+        col = UnduColors[kcol]
+        mhull3d(Nvox,"x:z:y",selmag,edgecolor=col,isame=1)
+      #endfor mag in range(nmag)
+    #endif item < 0
+
+  elif modus == 'undu3dngeo':
+
+    if item < 0:
+
       if not nexist("Ngeo"):
-        Ngeo = ncread("Ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
-      #endif not nexist("Ngeo")
+        if fexist("undumag.geo"):
+          tclc = os.stat('undumag.clc').st_mtime_ns
+          tgeo = os.stat('undumag.geo').st_mtime_ns
+          if tclc > tgeo:
+            wError("undumag.geo is older than undumag.clc!")
+            return
+          else:
+            Ngeo = ncread("Ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+          #endif
+        #endif
+      #endif
 
       plopt = ''
 
@@ -37837,7 +38253,7 @@ def _GetMirror(key=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -38067,7 +38483,7 @@ def _GetHybrid():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -38321,7 +38737,7 @@ def GetHybridEnd():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -38549,7 +38965,7 @@ def _EndPoles_Whybrid():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -38732,7 +39148,7 @@ def _mirror():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -38937,7 +39353,7 @@ def _hybrid():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -39139,7 +39555,7 @@ def _updateMenu(menu):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -39225,7 +39641,7 @@ def _enterMenu(ev,menu):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -39313,7 +39729,7 @@ def _keypressMenu(ev,menu):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -39401,7 +39817,7 @@ def _leaveMenu(ev,menu):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -39494,7 +39910,7 @@ def _clWfclc(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -39684,7 +40100,7 @@ def _uclc(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -39818,7 +40234,7 @@ def ugui_ini_mirror(mode=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -40153,7 +40569,7 @@ def ugui_ini_hybrid(mode=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -40529,7 +40945,7 @@ def ugui_ini_appleII(mode=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -40843,7 +41259,7 @@ def _cnWappleII():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -40929,7 +41345,7 @@ def _clWappleII(callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -41044,7 +41460,7 @@ def _appleII(callkey=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -41428,7 +41844,7 @@ def Set_Coil(k):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -41544,7 +41960,7 @@ def Get_Coil(k):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -41666,7 +42082,7 @@ def update_coils(caller=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -41694,7 +42110,7 @@ def update_coils(caller=''):
   DictCoils = {}
   idxcoil = 0
 
-  print("update_coils::",caller)
+  #print("update_coils::",caller)
 
   for coil in Coils:
     key = coil[0][0]
@@ -41765,7 +42181,7 @@ def _WaddCoils(key=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -41873,7 +42289,7 @@ def _WaddCoilRace():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -42144,7 +42560,7 @@ def _WeditCoil():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -42421,7 +42837,7 @@ def _clWaddCoils(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -42470,7 +42886,7 @@ def _clWaddCoils(key):
   NCoil = len(Coils)
 
   undu_coils_to_filaments(NCoil-1)
-  xyzcoils = _ucoilplot(modus='notsame',item=NCoil-1)
+  xyzcoils = _ucoilplot('3d','notsame',NCoil-1,'_clWaddCoils')
 
   if key == 'RectWindings': WaddCoilRace.destroy()
 #enddef _clWaddCoils()
@@ -42545,7 +42961,7 @@ def _cnWaddCoilRace():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -42631,7 +43047,7 @@ def _cnWaddCoil():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -42717,7 +43133,7 @@ def _cnWaddCoils():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -42812,7 +43228,7 @@ def _clWlistCoils():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -42899,7 +43315,7 @@ def _listCoils(modecoil='first'):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -43066,7 +43482,7 @@ def _listCoils(modecoil='first'):
 
       else: #key
 
-        print(icoil,cidx,key,cnam,coil[1])
+        #print(icoil,cidx,key,cnam,coil[1])
         #if icoil: continue
 
         #print("*** key:",key)
@@ -43209,7 +43625,7 @@ def _plotCoil(view='3d'):
     return
   #endif not Seletec_Coil
 
-  xyzcoils = _ucoilplot(view,modus='notsame',item=Selected_Coil)
+  xyzcoils = _ucoilplot(view,'notsame',Selected_Coil,'_plotCoil')
 #enddef _plotCoil()
 
 def _SelCoil(k):
@@ -43723,7 +44139,7 @@ def update_magnets():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -44074,7 +44490,7 @@ def default_mag(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -44460,7 +44876,7 @@ def default_pol(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -44725,7 +45141,7 @@ def _WaddMag(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -45133,7 +45549,7 @@ def _WaddPol(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -45433,7 +45849,7 @@ def _clWaddPol(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -45655,7 +46071,7 @@ def _clWaddMag(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -45930,7 +46346,7 @@ def _EditMagGet(mag):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -46364,7 +46780,7 @@ def _clWEditMag(mag):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -46459,7 +46875,7 @@ def _focoEditMag(ev,imp,idx,kdx):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -46545,7 +46961,7 @@ def _editMag(imp):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -47346,7 +47762,7 @@ def _listMags(mode='all'):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -48249,7 +48665,7 @@ def _searchVariable(key='first'):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -48460,7 +48876,7 @@ def _EntryVarGet(stvar):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -48557,7 +48973,7 @@ def _listVarsGet():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -48768,7 +49184,7 @@ def _listVariables(mode='first'):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -49288,7 +49704,7 @@ def delParameter(vnam):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -49389,7 +49805,7 @@ def delVariable(vnam):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -49490,7 +49906,7 @@ def checkVariable(vnam,vdef):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -49594,7 +50010,7 @@ def addVariable(vnam,vdef,vcom):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -49713,7 +50129,7 @@ def _addVariables(mode='first'):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -50748,7 +51164,7 @@ def _MaddMatIron():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -50880,7 +51296,7 @@ def _MaddMatREClin():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -51029,7 +51445,7 @@ def _clWaddMatREClin():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -51123,7 +51539,7 @@ def addMatREClin(recfile='undugui_1.06_0.17.dat',rmu=1.06,rksi=0.17,iwdiget=0):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -51263,7 +51679,7 @@ def _MlistMat(sgeo=""):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -51565,7 +51981,7 @@ def uwritenam(key=''):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -51741,7 +52157,7 @@ def _clWSetMap():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -51854,7 +52270,7 @@ def _clWSetSym():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -51963,7 +52379,7 @@ def _SetCenter():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -52055,7 +52471,7 @@ def _SetSym():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -52158,7 +52574,7 @@ def _ReSetSym():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -52261,7 +52677,7 @@ def _Mcontrol_SetMap():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -52463,7 +52879,7 @@ def _Mcontrol_SetSym():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -52641,7 +53057,7 @@ def ureadnam():
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -52863,7 +53279,7 @@ def _clWfnam(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
@@ -52984,7 +53400,7 @@ def _unam(key):
   global LastCLC, LastNAM
   global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
   NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
-  global Ngeo
+  global Ngeo,Nvox,Facets,FcBox
 
   global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
   S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \

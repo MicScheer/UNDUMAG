@@ -1,3 +1,4 @@
+*CMZ :  2.04/16 11/09/2023  10.29.37  by  Michael Scheer
 *CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 24/02/2023  17.30.41  by  Michael Scheer
 *CMZ :  2.02/01 28/12/2021  11.43.51  by  Michael Scheer
@@ -10,6 +11,8 @@
       use magnets_structure
 
       implicit none
+
+c+seq,debugutil.
 
 *KEEP,random.
       integer*8 irancalls
