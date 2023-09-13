@@ -1,3 +1,4 @@
+*CMZ :  2.04/17 12/09/2023  14.03.08  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  11.20.18  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/08 11/08/2023  12.58.25  by  Michael Scheer
@@ -19,8 +20,6 @@
 
       implicit none
 
-      Type(T_Magnet) tmag
-
       double precision p(3,3),wnorm(3),wcen(3)
       integer imag,k,npoi,l,ipoi,iface,nf
       character(128) ctype
@@ -28,29 +27,29 @@
 
       do imag=1,nmag_t+nspecmag_t
 
-        tmag=t_magnets(imag)
-
-        ctype=tmag%ctype
+        ctype=t_magnets(imag)%ctype
         if (ctype.eq.'Cylinder') cycle
 
-        nf=tmag%nface
+        nf=t_magnets(imag)%nface
         allocate(
      &    t_magnets(imag)%fcen(3,nf),
-     &    t_magnets(imag)%fnorm(3,nf)
+     &    t_magnets(imag)%fnorm(3,nf),
+     &    t_magnets(imag)%lface(nf)
      &    )
 
         k=0
         do iface=1,nf
           k=k+1
-          npoi=tmag%kface(k)
+          t_magnets(imag)%lface(iface)=k
+          npoi=t_magnets(imag)%kface(k)
           wcen=0.0d0
           do l=1,npoi
             k=k+1
-            ipoi=tmag%kface(k)
+            ipoi=t_magnets(imag)%kface(k)
             if (l.le.3) then
-              p(1:3,l)=[tmag%xhull(ipoi),tmag%yhull(ipoi),tmag%zhull(ipoi)]
+              p(1:3,l)=[t_magnets(imag)%xhull(ipoi),t_magnets(imag)%yhull(ipoi),t_magnets(imag)%zhull(ipoi)]
             endif
-            wcen=wcen+[tmag%xhull(ipoi),tmag%yhull(ipoi),tmag%zhull(ipoi)]
+            wcen=wcen+[t_magnets(imag)%xhull(ipoi),t_magnets(imag)%yhull(ipoi),t_magnets(imag)%zhull(ipoi)]
           enddo
           call util_vcross(p(:,2)-p(:,1),p(:,3)-p(:,2),wnorm)
           wnorm=wnorm/norm2(wnorm)

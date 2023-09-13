@@ -1,3 +1,4 @@
+*CMZ :  2.04/17 12/09/2023  09.42.21  by  Michael Scheer
 *CMZ :  2.04/16 06/09/2023  16.15.55  by  Michael Scheer
 *CMZ :  2.04/14 06/09/2023  06.43.30  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  09.50.42  by  Michael Scheer
@@ -51,7 +52,7 @@
       double precision, dimension (:,:), allocatable :: plan, vcen,vnorm
 
       integer, dimension (:,:), allocatable :: kedge
-      integer, dimension (:), allocatable :: kface,khull,isfacet
+      integer, dimension (:), allocatable :: kface,khull,isfacet,lface
 
       double precision xyz(3),size(3),trans(3),rot(3,3),Br(3),
      &  gcen(3),volume,xmin,xmax,ymin,ymax,zmin,zmax
@@ -88,7 +89,7 @@
 
         integer, dimension (:,:,:), allocatable :: kvoxels
         integer, dimension (:,:), allocatable :: kedge
-        integer, dimension (:), allocatable :: kface,khull,kcopy
+        integer, dimension (:), allocatable :: kface,khull,kcopy,lface
 
         character(512), dimension (:), allocatable :: cinhom
 

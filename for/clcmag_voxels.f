@@ -1,3 +1,4 @@
+*CMZ :  2.04/17 12/09/2023  14.13.06  by  Michael Scheer
 *CMZ :  2.04/16 06/09/2023  16.43.43  by  Michael Scheer
 *CMZ :  2.04/14 04/09/2023  16.36.15  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  11.19.16  by  Michael Scheer
@@ -25,7 +26,9 @@ c      Type(T_Magnet) tmag
       Type(T_Voxel) tv
 
       double precision br(3),volmag,gcen(3),p(3,3),wnorm(3),wcen(3)
-      integer imag,ix,iy,iz,nx,ny,nz,nvox,k1,k,luno,npoi,l,ipoi,iface,nf,ison,icol
+      integer imag,ix,iy,iz,nx,ny,nz,nvox,k1,k,luno,npoi,l,ipoi,ivface,nf,
+     &  ison,icol,iface
+
       integer :: idebug=0
 
 c+self,if=voxcyl.
@@ -48,6 +51,7 @@ c+self.
 
         if (ctype.ne.'Cylinder') then
           allocate(t_magnets(imag)%t_voxels(t_magnets(imag)%nvoxels))
+
 c+self,if=-voxcyl.
 c        endif
 c+self.
@@ -58,9 +62,11 @@ c+self.
           else if (idebug.ge.2) then
             print*,"imag, nvoxels:",imag,t_magnets(imag)%nvoxels
           endif
+
           do iz=1,t_magnets(imag)%nzdiv
             do iy=1,t_magnets(imag)%nydiv
               do ix=1,t_magnets(imag)%nxdiv
+
                 if (idebug.eq.1) then
                   print*,imag,ix,iy,iz,
      &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%ixdiv,
@@ -70,6 +76,7 @@ c+self.
      &              t_magnets(imag)%kvoxels(ix,iy,iz),
      &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%volume
                 endif
+
                 if (t_magnets(imag)%t_xyzcuts(ix,iy,iz)%ixdiv.eq.0.or.
      &            t_magnets(imag)%t_xyzcuts(ix,iy,iz)%iydiv.eq.0.or.
      &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%izdiv.eq.0) then
@@ -79,7 +86,9 @@ c+self.
                   endif
                   cycle
                 endif
+
                 kvox=t_magnets(imag)%kvoxels(ix,iy,iz)
+
                 if (kvox.eq.0) then
                   if (t_magnets(imag)%t_xyzcuts(ix,iy,iz)%volume.ne.0d0) then
                     print*,imag,ix,iy,iz
@@ -87,15 +96,31 @@ c+self.
                   endif
                   cycle
                 endif
+
                 nvox=nvox+1
+
                 icol=t_magnets(imag)%icol
+
                 t_magnets(imag)%t_voxels(nvox)=
      &            t_magnets(imag)%t_xyzcuts(ix,iy,iz)
+
+                allocate(t_magnets(imag)%t_voxels(nvox)%lface(
+     &            t_magnets(imag)%t_voxels(nvox)%nface))
+
+                k=0
+                do iface=1,
+     &              t_magnets(imag)%t_voxels(nvox)%nface
+                  k=k+1
+                  t_magnets(imag)%t_voxels(nvox)%lface(iface)=k
+                  k=k+t_magnets(imag)%t_voxels(nvox)%kface(k)
+                enddo
+
                 t_magnets(imag)%t_voxels(nvox)%ixdiv=ix
                 t_magnets(imag)%t_voxels(nvox)%iydiv=iy
                 t_magnets(imag)%t_voxels(nvox)%izdiv=iz
                 t_magnets(imag)%t_voxels(nvox)%isBlock=
      &            t_magnets(imag)%isBlock
+
                 allocate(t_magnets(imag)%t_voxels(nvox)%isfacet(
      &            t_magnets(imag)%t_voxels(nvox)%nface))
                 call clcmag_voxel_volume(imag,nvox)
@@ -207,24 +232,31 @@ c      ifacets=0
 !        tmag=t_magnets(imag)
 
         ctype=t_magnets(imag)%ctype
+
         nx=t_magnets(imag)%nxdiv
         ny=t_magnets(imag)%nydiv
         nz=t_magnets(imag)%nzdiv
 
         do iv=1,t_magnets(imag)%nvoxels
+
           if (ctype.ne.'Cylinder') then
+
             tv=t_magnets(imag)%t_voxels(iv)
+
             gcen=tv%gcen
             ix=tv%ixdiv
             iy=tv%iydiv
             iz=tv%izdiv
             nf=tv%nface
+
             allocate(
      &        t_magnets(imag)%t_voxels(iv)%vcen(3,nf),
      &        t_magnets(imag)%t_voxels(iv)%vnorm(3,nf)
      &        )
+
             k=0
-            do iface=1,nf
+
+            do ivface=1,nf
               k=k+1
               npoi=tv%kface(k)
               wcen=0.0d0
@@ -239,22 +271,25 @@ c      ifacets=0
               enddo
               call util_vcross(p(:,2)-p(:,1),p(:,3)-p(:,2),wnorm)
               wnorm=wnorm/norm2(wnorm)
-              t_magnets(imag)%t_voxels(iv)%vnorm(:,iface)=wnorm
+              t_magnets(imag)%t_voxels(iv)%vnorm(:,ivface)=wnorm
               wcen=wcen/dble(npoi)
-              t_magnets(imag)%t_voxels(iv)%vcen(:,iface)=wcen
-              t_magnets(imag)%t_voxels(iv)%isfacet(iface)=0
+              t_magnets(imag)%t_voxels(iv)%vcen(:,ivface)=wcen
+              t_magnets(imag)%t_voxels(iv)%isfacet(ivface)=0
+
               if (
      &          ix.gt.1.and.ix.lt.nx.and.
      &          iy.gt.1.and.iy.lt.ny.and.
      &          iz.gt.1.and.iz.lt.nz
      &          ) cycle
-              call clcmag_magnet_facet(t_magnets(imag),iv,iface,ison,
+
+              call clcmag_magnet_facet(t_magnets(imag),iv,ivface,ison,
      &          hulltiny)
+
               if (ison.ne.1) cycle
-              t_magnets(imag)%t_voxels(iv)%isfacet(iface)=npoi
-c              nfacets=nfacets+1
-c              ifacets(1:5,nfacets)=[imag,iv,iface,k1,npoi]
-            enddo !face
+              t_magnets(imag)%t_voxels(iv)%isfacet(ivface)=npoi
+
+            enddo !ivface
+
           else
             print*,"*** CLCMAG_VOXELS: Cylinder not yet available for undumag.fct"
           endif !Cylinder

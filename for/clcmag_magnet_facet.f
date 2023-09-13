@@ -1,72 +1,90 @@
+*CMZ :  2.04/17 13/09/2023  16.13.11  by  Michael Scheer
 *CMZ :  2.04/14 06/09/2023  07.41.20  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  12.00.02  by  Michael Scheer
 *-- Author :    Michael Scheer   04/09/2023
-      subroutine clcmag_magnet_facet(tmag,iv,kface,ison,hulltiny)
+      subroutine clcmag_magnet_facet(tmag,iv,ivface,ison,hulltiny)
 
       use magnets_structure
 
       implicit none
 
       double precision hulltiny
-      integer :: iv,kface,ison,ipoi,npoi,ifac,k,l,iface
-c      integer :: ical=0,lund
+      integer :: iv,ivface,ison,l,iface
+
+      integer :: idebug=0,ipoi,k
 
       Type(T_Magnet) tmag
 
-      double precision p(3),v(3),dot,gcen(3),gvcen(3)
-
-c      if (tmag%kmag.gt.1) then
-c        stop "Ende in clcmag_magnet_facet"
-c      endif
+      double precision p(3),distpc,distpm1,gcen(3),gvcen(3),dp(3),dpn,pm1(3),
+     &  pc(3),vnor(3)
 
       gcen=tmag%gcen
       gvcen=tmag%t_voxels(iv)%gcen
-c      if(tmag%cnam.eq.'polLSF1'.and.tmag%nface.eq.5.and.iv.eq.2.and.kface.eq.3) then
-c        print*,tmag%cnam,tmag%nface,iv,kface
-c      endif
 
-c      if (ical.eq.0) then
-c        call clcmag_dump_hull_of_magnet(tmag%kmag,lund)
-c      endif
+      if (idebug.ne.0) then
+        do iface=1,tmag%nface
+          l=tmag%lface(iface)
+          do k=1,tmag%kface(l)
+            ipoi=tmag%kface(l+k)
+            write(44,*)
+     &        tmag%xhull(tmag%khull(ipoi)),
+     &        tmag%yhull(tmag%khull(ipoi)),
+     &        tmag%zhull(tmag%khull(ipoi)),
+     &        ipoi,iface
+          enddo
+        enddo
+      endif
 
       ison=0
 
-      do ifac=1,tmag%nface
-        if (tmag%kmag.eq.1) write(65,*)ifac,tmag%fcen(1:3,ifac)
-        l=1
-        iface=1
-        do k=1,tmag%t_voxels(iv)%kfacelast
-          if (iface.eq.kface) exit
-          iface=iface+1
-          l=l+tmag%t_voxels(iv)%kface(l)+1
-        enddo
-        ison=0
-        npoi=tmag%t_voxels(iv)%kface(l)
-        do ipoi=1,npoi
-          l=l+1
-c          p(1)=tmag%xhull(tmag%t_voxels(iv)%kface(l))
-c          p(2)=tmag%yhull(tmag%t_voxels(iv)%kface(l))
-c          p(3)=tmag%zhull(tmag%t_voxels(iv)%kface(l))
-          p(1)=tmag%t_voxels(iv)%xhull(tmag%t_voxels(iv)%kface(l))+gvcen(1)
-          p(2)=tmag%t_voxels(iv)%yhull(tmag%t_voxels(iv)%kface(l))+gvcen(2)
-          p(3)=tmag%t_voxels(iv)%zhull(tmag%t_voxels(iv)%kface(l))+gvcen(3)
-          if (tmag%kmag.eq.1) write(66,*)ifac,iv,ipoi,p
-          v=p-tmag%fcen(1:3,ifac)-gcen(:)
-          v=v/norm2(v)
-          dot=dot_product(v,tmag%fnorm(1:3,ifac))
-          if(abs(dot).le.hulltiny) then
-            ison=ison+1
-          endif
-c          print*,ifac,dot,ison
-        enddo
+      p=tmag%t_voxels(iv)%vcen(:,ivface)+gvcen
+      vnor=tmag%t_voxels(iv)%vnorm(:,ivface)
+      if (idebug.ne.0) then
+        write(33,*)iv,ivface,p,vnor
+      endif
 
-        if (ison.eq.npoi) then
-          ison=1
-          return
+      ison=0
+      do iface=1,tmag%nface
+
+        l=tmag%lface(iface)
+
+        pc=tmag%fcen(:,iface)+gcen
+
+        pm1=[
+     &    tmag%xhull(tmag%kface(l+1)),
+     &    tmag%yhull(tmag%kface(l+1)),
+     &    tmag%zhull(tmag%kface(l+1))
+     &    ]+gcen
+
+        dp=p-pc
+        dpn=norm2(dp)
+
+        if (dpn.le.hulltiny) then
+          distpc=0.0d0
+        else
+          distpc=abs(dot_product(tmag%fnorm(:,iface),dp/dpn))
         endif
-      enddo
 
-c      ical=ical+1
+        distpm1=abs(abs(dot_product(tmag%fnorm(:,iface),vnor))-1.0d0)
+
+        if (distpm1.le.hulltiny.and.distpc.le.hulltiny) then
+          ison=1
+        endif
+
+        if (idebug.ne.0) then
+          write(55,*)iface,iv,ivface,p,distpm1,
+     &      pm1,
+     &      tmag%fnorm(:,iface),
+     &      ison
+        endif
+
+        if (iv.eq.1.and.iface.eq.1) then
+          print*,iface,sngl(p),sngl(pc),sngl(vnor),sngl(tmag%fnorm(:,iface)),ison
+        endif
+
+        if (ison.eq.1) return
+
+      enddo !iface
 
       return
       end

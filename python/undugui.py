@@ -21817,16 +21817,15 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
 
   if Iclosed:
 
-    if type(x) == 'list':
-      x.append(x[0])
-      y.append(y[0])
-      z.append(z[0])
-    else:
-      l = len(x)
-      x = np.append(x,x[0])
-      y = np.append(y,y[0])
-      z = np.append(z,z[0])
+    if type(x) != 'list':
+      x = list(x)
+      y = list(y)
+      z = list(z)
     #endif
+
+    x.append(x[0])
+    y.append(y[0])
+    z.append(z[0])
 
     Iline = 1
   #endif
