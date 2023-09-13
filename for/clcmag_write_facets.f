@@ -1,3 +1,4 @@
+*CMZ :  2.04/17 13/09/2023  16.11.53  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  11.54.29  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  09.52.46  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  20.28.53  by  Michael Scheer
@@ -29,7 +30,8 @@
       character(2048), dimension(:), allocatable :: cbuff
 
       double precision gcen(3)
-      integer imag,luno,npoi,iv,i,imago,ivo,iface,l,lpoi,j,ll,nf,lin,ivc,kcopy
+      integer imag,luno,npoi,iv,i,imago,ivo,iface,l,j,nf,lin,ivc,kcopy,ib
+      integer :: idebug=0
 
       allocate(ibuff(8*nvoxcopy_t*ncornmax),buff(3,8*nvoxcopy_t*ncornmax),
      &  cbuff(8*nvoxcopy_t*ncornmax))
@@ -57,10 +59,6 @@
           iv=t_voxcopy(ivc)%kvoxel
           ibuff(nfacets)=npoi
 
-c          do j=1,7
-c            ibuff(ivc+j*nvoxcopy_t)=npoi
-c          enddo
-
           if (imag.ne.imago) then
             tmag=t_magnets(imag)
             ivo=0
@@ -74,14 +72,19 @@ c          enddo
           write(cbuff(nfacets),*)npoi,tmag%icol,tmag%icol,iv,kcopy,imag,tmag%cnam,tmag%cmoth
 
           do j=1,npoi
-            ll=lpoi+j
-            l=tv%kface(ll)
+            l=tv%kface(tv%lface(iface)+j)
             lin=lin+1
             buff(:,lin)=
      &        [tv%xhull(l)+gcen(1),
      &        tv%yhull(l)+gcen(2),
      &        tv%zhull(l)+gcen(3)]
+            if (idebug.ne.0) then
+              write(66,*)tmag%kmag,ivc,iface,nfacets,lin,buff(:,lin)
+            endif
           enddo
+
+          imago=imag
+          ivo=iv
 
         enddo !ifac
 
@@ -118,30 +121,57 @@ c          enddo
       endif
 
       if (iysym.ne.0) then
-        rewind(luno)
+
+        if (idebug.ne.0) then
+          flush(luno)
+          close(luno)
+          open(newunit=luno,file='undumag_facets.fct')
+        else
+          rewind(luno)
+        endif
+
         read(luno,*) nf
         lin=0
+        ib=0
         do i=1,nf
-          read(luno,'(a)') cbuff(i)
-          do l=1,ibuff(i)
+          read(luno,'(a)',end=91) cbuff(i)
+          ib=ib+1
+          if (ib.gt.nfacets) ib=1
+          do l=1,ibuff(ib)
             lin=lin+1
-            read(luno,*)buff(1,lin),buff(2,lin),buff(3,lin)
+            read(luno,*,end=91)buff(1,lin),buff(2,lin),buff(3,lin)
           enddo
         enddo
-        rewind(luno)
+
+91      if (idebug.ne.0) then
+          print*,i,lin
+          !stop "91"
+          flush(luno)
+          close(luno)
+          open(newunit=luno,file='undumag_facets.fct')
+        else
+          rewind(luno)
+        endif
+
         lin=0
         write(luno,*) 2*nf
+        ib=0
         do i=1,nf
           write(luno,*)trim(cbuff(i))
-          do l=1,ibuff(i)
+          ib=ib+1
+          if (ib.gt.nfacets) ib=1
+          do l=1,ibuff(ib)
             lin=lin+1
             write(luno,*)buff(1,lin),buff(2,lin),buff(3,lin)
           enddo
         enddo
         lin=0
+        ib=0
         do i=1,nf
           write(luno,*)trim(cbuff(i))
-          do l=1,ibuff(i)
+          ib=ib+1
+          if (ib.gt.nfacets) ib=1
+          do l=1,ibuff(ib)
             lin=lin+1
             write(luno,*)buff(1,lin),-buff(2,lin),buff(3,lin)
           enddo
@@ -149,30 +179,53 @@ c          enddo
       endif
 
       if (ixsym.ne.0) then
-        rewind(luno)
+        if (idebug.ne.0) then
+          flush(luno)
+          close(luno)
+          open(newunit=luno,file='undumag_facets.fct')
+        else
+          rewind(luno)
+        endif
         lin=0
         read(luno,*) nf
+        ib=0
         do i=1,nf
-          read(luno,'(a)') cbuff(i)
-          do l=1,ibuff(i)
+          read(luno,'(a)',end=92) cbuff(i)
+          ib=ib+1
+          if (ib.gt.nfacets) ib=1
+          do l=1,ibuff(ib)
             lin=lin+1
-            read(luno,*)buff(1,lin),buff(2,lin),buff(3,lin)
+            read(luno,*,end=92)buff(1,lin),buff(2,lin),buff(3,lin)
           enddo
         enddo
-        rewind(luno)
+92      if (idebug.ne.0) then
+          flush(luno)
+          close(luno)
+          print*,i,lin
+          !stop "92"
+          open(newunit=luno,file='undumag_facets.fct')
+        else
+          rewind(luno)
+        endif
         write(luno,*) 2*nf
         lin=0
+        ib=0
         do i=1,nf
           write(luno,*)trim(cbuff(i))
-          do l=1,ibuff(i)
+          ib=ib+1
+          if (ib.gt.nfacets) ib=1
+          do l=1,ibuff(ib)
             lin=lin+1
             write(luno,*)buff(1,lin),buff(2,lin),buff(3,lin)
           enddo
         enddo
         lin=0
+        ib=0
         do i=1,nf
           write(luno,*)trim(cbuff(i))
-          do l=1,ibuff(i)
+          ib=ib+1
+          if (ib.gt.nfacets) ib=1
+          do l=1,ibuff(ib)
             lin=lin+1
             write(luno,*)-buff(1,lin),buff(2,lin),buff(3,lin)
           enddo
