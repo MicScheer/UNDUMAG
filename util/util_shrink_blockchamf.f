@@ -1,8 +1,10 @@
+*CMZ :  2.04/18 14/09/2023  07.36.02  by  Michael Scheer
 *CMZ :  2.03/00 03/08/2022  14.56.09  by  Michael Scheer
 *CMZ :  2.02/01 01/11/2021  07.05.51  by  Michael Scheer
 *CMZ :  2.02/00 23/03/2021  20.11.13  by  Michael Scheer
 *-- Author :    Michael Scheer   10/09/2020
-      subroutine util_shrink_blockchamf(xlin,ylin,zlin,chamf,modech,coat,n,x,y,z)
+      subroutine util_shrink_blockchamf(xlin,ylin,zlin,chamf,modech,coat,
+     &  n,x,y,z)
 
 c +PATCH,//UNDUMAG/UTIL
 c +DECK,util_shrink_blockshamf.
@@ -18,19 +20,14 @@ c +DECK,util_shrink_blockshamf.
 
       implicit none
 
-      double precision xl,yl,zl,chamf,coat,x(12),y(12),z(12),cen(3),chus,chds,
-     &  sigchamf,xlin,ylin,zlin,s2c
+      double precision xl,yl,zl,chamf,coat,x(12),y(12),z(12),cen(3),
+     &  xlin,ylin,zlin,xus,xds,ybot,ytop,xusch,xdsch,ytopch,zz,chamfa
 
       integer modech,i,n,istat
 
-      if (chamf.ge.0.0d0) then
-        sigchamf=1.0d0
-      else
-        sigchamf=-1.0d0
-        chamf=-chamf
-      endif
+      chamfa=abs(chamf)
 
-      if (chamf.eq.0.0d0.or.coat.gt.chamf) then
+      if (chamfa.eq.0.0d0.or.coat.gt.chamfa) then
 
         xl=xlin-2.0d0*coat
         yl=ylin-2.0d0*coat
@@ -39,126 +36,135 @@ c +DECK,util_shrink_blockshamf.
         !bottom
 
         x(1)=-xl/2.0d0
-        y(1)=-yl*sigchamf/2.0d0
+        y(1)=-yl/2.0d0
         z(1)=-zl/2.0d0
 
         x(2)=xl/2.0d0
-        y(2)=-yl*sigchamf/2.0d0
+        y(2)=-yl/2.0d0
         z(2)=-zl/2.0d0
 
         x(3)=xl/2.0d0
-        y(3)=-yl*sigchamf/2.0d0
+        y(3)=-yl/2.0d0
         z(3)=zl/2.0d0
 
         x(4)=-xl/2.0d0
-        y(4)=-yl*sigchamf/2.0d0
+        y(4)=-yl/2.0d0
         z(4)=zl/2.0d0
 
         !top
+
         x(5)=-xl/2.0d0
-        y(5)=yl*sigchamf/2.0d0
+        y(5)=yl/2.0d0
         z(5)=-zl/2.0d0
 
         x(6)=xl/2.0d0
-        y(6)=yl*sigchamf/2.0d0
+        y(6)=yl/2.0d0
         z(6)=-zl/2.0d0
 
         x(7)=xl/2.0d0
-        y(7)=yl*sigchamf/2.0d0
+        y(7)=yl/2.0d0
         z(7)=zl/2.0d0
 
         x(8)=-xl/2.0d0
-        y(8)=yl*sigchamf/2.0d0
+        y(8)=yl/2.0d0
         z(8)=zl/2.0d0
 
         n=8
-        return
 
-      endif
-
-      if (modech.lt.0) then
-        chus=chamf
-        chds=0.0d0
-      else if (modech.gt.0) then
-        chus=0.0d0
-        chds=chamf
-      else
-        chus=chamf
-        chds=chamf
       endif
 
       xl=xlin
       yl=ylin
       zl=zlin
 
-      x(1)=-xl/2.0d0+coat
-      y(1)=-yl*sigchamf/2.0d0+coat
-      z(1)=-zl/2.0d0+coat
+      zz=zl/2.0d0-coat
 
-      x(2)=xl/2.0d0-coat
-      y(2)=-yl*sigchamf/2.0d0+coat
-      z(2)=z(1)
+      xus=-xl/2.0d0+coat
+      xusch=-xl/2.0d0+chamfa+coat*(sqrt(2.0d0)-1.0d0)
+      xds=-xus
+      xdsch=-xusch
 
-      x(6)=x(2)
-      y(6)=y(2)
-      z(6)=-z(2)
+      ybot=-yl/2.0d0+coat
+      ytop=-ybot
+      ytopch=yl/2.0d0-chamfa-coat*(sqrt(2.0d0)-1.0d0)
 
-      x(7)=x(1)
-      y(7)=y(1)
-      z(7)=-z(1)
+      if (modech.eq.0) then
 
-      if (chus.ne.0.0d0.or.chds.ne.0.0d0) then
+        n=12
 
-        x(3)=x(2)
-        y(3)=yl*sigchamf/2.-coat
-        z(3)=z(1)
+        ! top chamfaer
 
-        x(4)=-xl/2.0d0+chamf+coat*(sqrt(2.0d0)-1.0d0)
-        y(4)=y(3)
-        z(4)=z(1)
+        x(1)=xus
+        y(1)=ybot
+        z(1)=zz
 
-        x(5)=x(1)
-        y(5)=yl*sigchamf/2.0d0-chamf-coat*(sqrt(2.0d0)-1.0d0)
-        z(5)=z(1)
+        x(2)=xds
+        y(2)=ybot
+        z(2)=zz
 
-        x(8)=x(5)
-        y(8)=y(5)
-        z(8)=-z(5)
+        x(3)=xds
+        y(3)=ytopch
+        z(3)=zz
 
-        x(9)=x(4)
-        y(9)=y(4)
-        z(9)=-z(4)
+        x(4)=xdsch
+        y(4)=ytop
+        z(4)=zz
 
-        x(10)=x(3)
-        y(10)=y(3)
-        z(10)=-z(3)
+        x(5)=xusch
+        y(5)=ytop
+        z(5)=zz
+
+        x(6)=xus
+        y(6)=ytopch
+        z(6)=zz
+
+        x(7:12)=x(1:6)
+        y(7:12)=y(1:6)
+        z(7:12)=-z(1:6)
+
+        if (chamfa.lt.0.0d0) then
+          y=-y
+        endif
+
+      else
 
         n=10
 
-        if (chus.eq.0.0d0) x=-x
+        ! top chamfaer
 
-        if (chds.eq.0.0d0) then
+        x(1)=xus
+        y(1)=ybot
+        z(1)=zz
+
+        x(2)=xds
+        y(2)=ybot
+        z(2)=zz
+
+        x(3)=xds
+        y(3)=ytopch
+        z(3)=zz
+
+        x(4)=xdsch
+        y(4)=ytop
+        z(4)=zz
+
+        x(5)=xus
+        y(5)=ytop
+        z(5)=zz
+
+        x(6:10)=x(1:5)
+        y(6:10)=y(1:5)
+        z(6:10)=-z(1:5)
+
+        if (modech.lt.0) then
+          x=-x
         endif
 
-        return
+      endif !modech
 
+      if (chamf.lt.0.0d0) then
+        y=-y
       endif
 
-      n=12
-
-      x(3)=-x(4)
-      y(3)=y(4)
-
-      x(10)=x(3)
-      y(10)=y(3)
-      z(10)=-z(3)
-
-      x(11)=-x(5)
-      y(11)=y(5)
-      z(11)=z(5)
-
-      x(12)=x(11)
-      y(12)=y(11)
-      z(12)=-z(11)
       return
       end
