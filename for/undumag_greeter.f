@@ -1,4 +1,4 @@
-*CMZ :  2.02/01 13/09/2023  16.16.19  by  Michael Scheer
+*CMZ :  2.02/01 14/09/2023  07.39.43  by  Michael Scheer
 *-- Author :    Michael Scheer   19/10/2021
       subroutine undumag_greeter
       use undumagf90m
@@ -12,8 +12,8 @@
       write(lun6,*)'     *                                                        *'
       write(lun6,*)'     *                       UNDUMAG                          *'
       write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     *                    Version 2.04/17                     *'
-      write(lun6,*)'     *                        13.9.2023                       *'
+      write(lun6,*)'     *                    Version 2.04/18                     *'
+      write(lun6,*)'     *                        14.9.2023                       *'
       write(lun6,*)'     *                                                        *'
       write(lun6,*)'     *                     Michael Scheer                     *'
       write(lun6,*)'     *                       HZB/BESSY                        *'
@@ -26,7 +26,7 @@
       call util_zeit_kommentar(lun6,"")
 
       open(unit=999,file="undumag.ver")
-      chuvers="2.04/17"
+      chuvers="2.04/18"
       write(999,*)chuvers
       close(999)
 *KEND.
