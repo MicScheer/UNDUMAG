@@ -1,3 +1,4 @@
+*CMZ :          14/09/2023  10.42.13  by  Michael Scheer
 *CMZ :  2.04/17 13/09/2023  16.13.11  by  Michael Scheer
 *CMZ :  2.04/14 06/09/2023  07.41.20  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  12.00.02  by  Michael Scheer
@@ -76,10 +77,6 @@
      &      pm1,
      &      tmag%fnorm(:,iface),
      &      ison
-        endif
-
-        if (iv.eq.1.and.iface.eq.1) then
-          print*,iface,sngl(p),sngl(pc),sngl(vnor),sngl(tmag%fnorm(:,iface)),ison
         endif
 
         if (ison.eq.1) return
