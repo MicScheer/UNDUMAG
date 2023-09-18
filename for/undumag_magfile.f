@@ -1,3 +1,4 @@
+*CMZ :  2.04/19 18/09/2023  09.28.11  by  Michael Scheer
 *CMZ :  2.02/01 22/08/2023  09.03.52  by  Michael Scheer
 *-- Author :    Michael Scheer   20/10/2021
       subroutine undumag_magfile
@@ -55,7 +56,7 @@
             bpebc(7,ivox)=bc
 
             if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-              do i=5,10
+              do i=5,12
                 if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
               enddo
               write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -122,7 +123,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -171,7 +172,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -220,7 +221,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -267,7 +268,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -314,7 +315,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -367,7 +368,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -416,7 +417,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -463,7 +464,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -510,7 +511,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -560,7 +561,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -608,7 +609,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -656,7 +657,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -706,7 +707,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -754,7 +755,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -802,7 +803,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -850,7 +851,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -897,7 +898,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -944,7 +945,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
@@ -991,7 +992,7 @@
                 bpebc(7,ivox)=bc
 
                 if (bc.ne.0.0d0.or.t_magnets(kmag)%IsPole.ne.0) then
-                  do i=5,10
+                  do i=5,12
                     if (abs(htup(i)).lt.1.0d-15) htup(i)=1.0d-15
                   enddo
                   write(cline,'(5f9.0,6e15.5e3,f7.0)')htup
