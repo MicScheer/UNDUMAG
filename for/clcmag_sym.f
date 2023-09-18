@@ -1,3 +1,4 @@
+*CMZ :  2.04/19 17/09/2023  20.40.22  by  Michael Scheer
 *CMZ :  2.04/07 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/06 02/05/2023  10.37.14  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  16.27.00  by  Michael Scheer
@@ -296,7 +297,9 @@
         zmax=zmax_t
       endif
 
-      nxmap=nint((xmapmax-xmapmin)/dxmap)+1
+      if (dxmap.ne.0.0d0) then
+        nxmap=nint((xmapmax-xmapmin)/dxmap)+1
+      endif
 
       xmin_t=xmin
       ymin_t=ymin

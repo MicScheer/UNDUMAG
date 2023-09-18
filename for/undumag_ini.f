@@ -1,3 +1,4 @@
+*CMZ :  2.04/19 17/09/2023  15.21.47  by  Michael Scheer
 *CMZ :  2.04/16 06/09/2023  14.48.40  by  Michael Scheer
 *CMZ :  2.04/14 04/09/2023  13.53.15  by  Michael Scheer
 *CMZ :  2.04/10 22/08/2023  09.03.52  by  Michael Scheer
@@ -118,7 +119,7 @@
 
       double precision undumag_variable_getval
 
-*KEEP,PHYCONparam,T=F77.
+*KEEP,PHYCONPARAM.
 c-----------------------------------------------------------------------
 c     phyconparam.cmn
 c-----------------------------------------------------------------------
@@ -200,10 +201,10 @@ c      vstokes(4,3)=(-sqrt(1./2.),        0.0d0)
 c-----------------------------------------------------------------------
 c     end of phyconparam.cmn
 c-----------------------------------------------------------------------
-*KEEP,seqdebug.
+*KEEP,SEQDEBUG.
       integer iseqdebug
       common/seqdebugc/iseqdebug
-*KEEP,random.
+*KEEP,RANDOM.
       integer*8 irancalls
       integer, parameter :: irnsize=64
       integer irnseed(irnsize),irnmode,irnseedi(irnsize)
@@ -363,6 +364,20 @@ c      call undumag_ini_displacement
       ! write magnets, poles, and coils to undumag.geo
       if (iwgeo.ne.0) call undumag_geo
 
+      ! write interface to RADIA
+      open(unit=99,file='undumag_proc.nb',iostat=i)
+      if (i.eq.0) then
+        close(99)
+        call clcmag_to_radia
+      endif
+
+      ! write interface to RADIA for Python
+      open(unit=99,file='undumag_proc.py',iostat=i)
+      if (i.eq.0) then
+        close(99)
+        call clcmag_to_radia_python
+      endif
+
       if (iundugeo.lt.0) then
         open(newunit=lunst,file="undumag.stat")
         write(lunst,*)"0"
@@ -382,9 +397,6 @@ c      call undumag_ini_displacement
         stop "--- Programm UNDUMAG terminated due to iunduplot < 0 ---"
       endif
 
-      ! write interface to RADIA
-      call clcmag_to_radia
-      !call undumag_to_radia
 
       ! write CAD file undumag.wrl of magnets and poles if ivrml.ne.0
 
