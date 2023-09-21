@@ -1,4 +1,4 @@
-* Version 2.04/16
+* Version 2.04/19
  ! Name list file, to control UNDUMAG
 
  $undumagn
@@ -129,7 +129,7 @@
 	     ! iunduplot<0: stop UNDUMAG after writing undumag.eps
 
  iundugeo=1111 ! Write geometry files
-             ! Three bits for
+             ! Four bits for
 	     ! undumag_facets.fct
 	     ! undumag_voxels.geo
 	     ! undumag.geo
