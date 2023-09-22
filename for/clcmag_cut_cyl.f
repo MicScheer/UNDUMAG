@@ -1,3 +1,4 @@
+*CMZ :  2.04/20 20/09/2023  15.59.49  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/08 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
@@ -18,9 +19,12 @@
       character(2048) cline
 
       double precision
-     &  xp(8),yp(8),zp(8),phi,sp,cp,
+     &  xp(8),yp(8),zp(8),phi,sp,cp,gcentot(3),
      &  z1,z2,z3,z4,y1,y2,x1,x2,x3,x4,x0,y0,z0,ro,ri,r,h,
-     &  radin,radout,height,angle,xyz(3),dphi,dr,dh
+     &  radin,radout,height,angle,xyz(3),dphi,dr,dh,gcen(3),
+     &  xmint,xmaxt,ymint,ymaxt,zmint,zmaxt,
+     &  xmn,xmx,ymn,ymx,zmn,zmx,
+     &  xmin,xmax,ymin,ymax,zmin,zmax
 
       integer khull(8),kedge(4,2*8-2),kface(5*8),ir,iphi,ih,npoi,i,ivox,
      &  nhull,nedge,nface,kfacelast,ifailhull,imag,nr,nang,nh
@@ -116,6 +120,11 @@ c-----------------------------------------------------------------------
       height=t_magnets(imag)%size(3)
       angle=t_magnets(imag)%cylphi
 
+      t_magnets(imag)%yfracdiv=1.0d0
+      t_magnets(imag)%zfracdiv=1.0d0
+
+      gcentot=0.0d0
+
       if (coating.ne.0.0d0) then
         radin=radin+coating
         radout=radout-coating
@@ -145,11 +154,26 @@ c-----------------------------------------------------------------------
 
       ivox=0
       r=radin+dr/2.0d0
+
+      xmint=1.0e30
+      xmaxt=-1.0e30
+      ymint=1.0e30
+      ymaxt=-1.0e30
+      zmint=1.0e30
+      zmaxt=-1.0e30
+
       do ir=1,nr
         h=-height/2.0d0+dh/2.0d0
         do ih=1,nh
           phi=-angle/2.0d0*grarad1+dphi/2.0d0
           do iphi=1,nang
+
+            xmin=1.0e30
+            xmax=-1.0e30
+            ymin=1.0e30
+            ymax=-1.0e30
+            zmin=1.0e30
+            zmax=-1.0e30
 
             ivox=ivox+1
 
@@ -208,6 +232,30 @@ c-----------------------------------------------------------------------
             yp(8)=y2
             zp(8)=z4
 
+            gcen=[sum(xp),sum(yp),sum(zp)]/8.0d0
+            gcentot=gcentot+gcen
+
+            xmn=minval(xp)-gcen(1)
+            xmx=maxval(xp)-gcen(1)
+            ymn=minval(yp)-gcen(2)
+            ymx=maxval(yp)-gcen(2)
+            zmn=minval(zp)-gcen(3)
+            zmx=maxval(zp)-gcen(3)
+
+            xmin=min(xmn,xmin)
+            xmax=max(xmx,xmax)
+            ymin=min(ymn,ymin)
+            ymax=max(ymx,ymax)
+            zmin=min(zmn,zmin)
+            zmax=max(zmx,zmax)
+
+            xmint=min(xmint,xmin)
+            xmaxt=max(xmaxt,xmax)
+            ymint=min(ymint,ymin)
+            ymaxt=max(ymaxt,ymax)
+            zmint=min(zmint,zmin)
+            zmaxt=max(zmaxt,zmax)
+
             npoi=8
 
             call util_convex_hull_3d_overwrite(ivox,npoi,xp,yp,zp,
@@ -224,6 +272,7 @@ c-----------------------------------------------------------------------
             allocate(t_magnets(imag)%t_voxels(ivox)%yhull(nhull))
             allocate(t_magnets(imag)%t_voxels(ivox)%zhull(nhull))
             allocate(t_magnets(imag)%t_voxels(ivox)%khull(nhull))
+            allocate(t_magnets(imag)%t_voxels(ivox)%lface(nface))
             allocate(t_magnets(imag)%t_voxels(ivox)%kface(5*4))
             allocate(t_magnets(imag)%t_voxels(ivox)%kedge(4,2*8-2))
 
@@ -237,12 +286,29 @@ c-----------------------------------------------------------------------
             t_magnets(imag)%t_voxels(ivox)%IsBlock=t_magnets(imag)%IsBlock
 
             do i=1,nhull
-              t_magnets(imag)%t_voxels(ivox)%xhull(i)=xp(i)+xyz(1)
-              t_magnets(imag)%t_voxels(ivox)%yhull(i)=yp(i)+xyz(2)
-              t_magnets(imag)%t_voxels(ivox)%zhull(i)=zp(i)+xyz(3)
+              t_magnets(imag)%t_voxels(ivox)%xhull(i)=xp(i) - gcen(1) !+xyz(1)
+              t_magnets(imag)%t_voxels(ivox)%yhull(i)=yp(i) - gcen(2) !+xyz(2)
+              t_magnets(imag)%t_voxels(ivox)%zhull(i)=zp(i) - gcen(3) !+xyz(3)
             enddo
 
             phi=phi+dphi
+
+            t_magnets(imag)%t_voxels(ivox)%ixdiv=ir
+            t_magnets(imag)%t_voxels(ivox)%iydiv=iphi
+            t_magnets(imag)%t_voxels(ivox)%izdiv=ih
+
+            t_magnets(imag)%t_voxels(ivox)%gcen=gcen+xyz
+
+            t_magnets(imag)%t_voxels(ivox)%xmin=xmin
+            t_magnets(imag)%t_voxels(ivox)%xmax=xmax
+            t_magnets(imag)%t_voxels(ivox)%ymin=ymin
+            t_magnets(imag)%t_voxels(ivox)%ymax=ymax
+            t_magnets(imag)%t_voxels(ivox)%zmin=zmin
+            t_magnets(imag)%t_voxels(ivox)%zmax=zmax
+
+            do i=1,nface
+              t_magnets(imag)%t_voxels(ivox)%lface(i)=1+(i-1)*5
+            enddo
 
           enddo !iphi
 
@@ -253,6 +319,11 @@ c-----------------------------------------------------------------------
         r=r+dr
 
       enddo !ir
+
+      gcentot=gcentot/dble(nr*nang*nh)
+      t_magnets(imag)%gcen=gcentot+xyz
+
+      !call util_break
 
       return
       end

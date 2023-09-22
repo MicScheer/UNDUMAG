@@ -1,3 +1,4 @@
+*CMZ :  2.04/20 19/09/2023  15.56.38  by  Michael Scheer
 *CMZ :  2.04/08 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  15.35.36  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
@@ -95,15 +96,12 @@ c-----------------------------------------------------------------------
             t_magnets(imag)%xhull(i)=xyz(1)
             t_magnets(imag)%yhull(i)=xyz(2)
             t_magnets(imag)%zhull(i)=xyz(3)
-            !if (t_magnets(imag)%ctype.ne.'Cylinder') then
-               if (t_magnets(imag)%xhull(i).lt.xmin) xmin=t_magnets(imag)%xhull(i)
-              if (t_magnets(imag)%xhull(i).gt.xmax) xmax=t_magnets(imag)%xhull(i)
-              if (t_magnets(imag)%yhull(i).lt.ymin) ymin=t_magnets(imag)%yhull(i)
-              if (t_magnets(imag)%yhull(i).gt.ymax) ymax=t_magnets(imag)%yhull(i)
-              if (t_magnets(imag)%zhull(i).lt.zmin) zmin=t_magnets(imag)%zhull(i)
-              if (t_magnets(imag)%zhull(i).gt.zmax) zmax=t_magnets(imag)%zhull(i)
-            !else
-            !  size=t_magnets(imag)%size
+            if (t_magnets(imag)%xhull(i).lt.xmin) xmin=t_magnets(imag)%xhull(i)
+            if (t_magnets(imag)%xhull(i).gt.xmax) xmax=t_magnets(imag)%xhull(i)
+            if (t_magnets(imag)%yhull(i).lt.ymin) ymin=t_magnets(imag)%yhull(i)
+            if (t_magnets(imag)%yhull(i).gt.ymax) ymax=t_magnets(imag)%yhull(i)
+            if (t_magnets(imag)%zhull(i).lt.zmin) zmin=t_magnets(imag)%zhull(i)
+            if (t_magnets(imag)%zhull(i).gt.zmax) zmax=t_magnets(imag)%zhull(i)
             !endif
           enddo
 

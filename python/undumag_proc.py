@@ -24,6 +24,19 @@ if iUnduZsym>0: ixsym = iUnduZsym
 
 UnduSetUp = rad.ObjCnt([])
 
+# concept of wires of UNDUMAG:
+# 1: type of coil
+# 2: curr
+# 3: x1
+# 4: y1
+# 5: z1
+# 6: x2
+# 7: y2
+# 8: z2
+# 9: color
+# 10: number coil in group
+# 11: absolute coil number
+
 for imagpol in range(nMagPolTot):
   if imagpol==kForceMagPol:
      rad.ObjDrwAtr(AllMagPols[imagpol],ForceColor,0.0001)
@@ -45,6 +58,36 @@ if izsym!=0:
 #endif
 
 #print(rad.ObjGeoLim(AllMagPols[0]))
+
+if nUnduFilaments > 0:
+  wires = []
+  Coils = rad.ObjCnt([])
+  FWIRE = open("undumag.fil",'r')
+  fwires = FWIRE.readlines()
+  FWIRE.close()
+  for wlin in fwires:
+    if wlin[0] == '*': continue
+    swlin = wlin.split()
+    ctype = int(swlin[0])
+    curr = float(swlin[1])
+    x1 = float(swlin[2])
+    y1 = float(swlin[3])
+    z1 = float(swlin[4])
+    x2 = float(swlin[5])
+    y2 = float(swlin[6])
+    z2 = float(swlin[7])
+    icolor = int(swlin[8])
+    igroup = int(swlin[9])
+    icoil = int(swlin[10])
+    wires.append([ctype,curr,[x1,y1,z1],[x2,y2,z2],icolor,igroup,icoil])
+    w = rad.ObjFlmCur([[x1,y1,z1],[x2,y2,z2]],curr)
+    rad.ObjAddToCnt(Coils,w)
+  #endfor
+
+  rad.ObjAddToCnt(UnduSetUp,Coils)
+#endif
+
+#endif
 
 if kDraw !=0:
 

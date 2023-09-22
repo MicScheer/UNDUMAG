@@ -1,3 +1,4 @@
+*CMZ :          21/09/2023  16.12.51  by  Michael Scheer
 *CMZ :  2.04/11 29/08/2023  14.43.10  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
@@ -22,6 +23,9 @@
 
       character(512) cline,cword
       cundutit='* No User Comment'
+      unducomment=''
+      usercom=''
+      cundutit='* ' // adjustl(trim(unducomment))
 
       nclcbuff=0
       ncwires=0

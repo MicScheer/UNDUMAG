@@ -1,3 +1,4 @@
+*CMZ :  2.04/20 19/09/2023  14.42.36  by  Michael Scheer
 *CMZ :  2.04/17 13/09/2023  16.11.53  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  11.54.29  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  09.52.46  by  Michael Scheer
@@ -69,7 +70,8 @@
             ivo=0
           endif
 
-          write(cbuff(nfacets),*)npoi,tmag%icol,tmag%icol,iv,kcopy,imag,tmag%cnam,tmag%cmoth
+          write(cbuff(nfacets),*)npoi,tmag%icol,tmag%icol,iv,kcopy,imag,
+     &      tmag%cnam,tmag%cmoth
 
           do j=1,npoi
             l=tv%kface(tv%lface(iface)+j)
