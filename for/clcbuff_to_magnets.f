@@ -1,3 +1,4 @@
+*CMZ :  2.04/20 20/09/2023  10.48.38  by  Michael Scheer
 *CMZ :  2.04/16 12/09/2023  13.51.34  by  Michael Scheer
 *CMZ :  2.04/14 06/09/2023  06.47.58  by  Michael Scheer
 *CMZ :  2.04/11 26/08/2023  10.27.59  by  Michael Scheer
@@ -445,7 +446,8 @@ c-----------------------------------------------------------------------
           else
             read(cword,*)nydiv
             phi=t_magnets(nmag)%cylphi
-            nydiv=max(nydiv,int(phi/45.0))+2
+            nydiv=max(nydiv,int(phi/30.0))
+            if (nydiv.lt.3) nydiv=3
             t_magnets(nmag)%nydiv=nydiv
           endif
 

@@ -1,3 +1,5 @@
+*CMZ :          21/09/2023  16.03.24  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.10.06  by  Michael Scheer
 *CMZ :  2.04/19 18/09/2023  10.41.10  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/01 09/02/2022  19.36.16  by  Michael Scheer
@@ -131,10 +133,10 @@ c-----------------------------------------------------------------------
      &  nsymx,nsymy,nsymz,npoi,nmatfe,nlast,nfirst,nface,ncyl,ncolor,mater
      &  ,lunrad,lunfe,lmat,kproto,kpoi,k,ironmode,iron,imp,ipoi,imag,imat
      &  ,ifound,i,iface,ieof,nbr,nUnduMag,nUnduPol,nMagPolTot,lenout,lunproc,
-     &  istat=0
+     &  istat=0,ivox,kmagnet,kvoxel,ixdiv,iydiv,izdiv
 
       character(2048) cline,cbuff(10),cout,clunrad
-      character(64) chmat
+      character(64) chmat,cnam
       character(32) c32,c32x,c32y,c32z
       character(17) chtime
 
@@ -375,113 +377,240 @@ c-----------------------------------------------------------------------
         ! ],
         ! [mx,my,mz]:[0,0,0]]
 
-        nface=t_magnets(kproto)%nface
-        ncolor=t_magnets(kproto)%icol
+        if(t_magnets(kproto)%ctype.ne.'Cylinder') then
 
-        write(lunrad,'(a)')trim(t_magcopy(imp)%cnam)//" = rad.ObjPolyhdr([ \"
+          nface=t_magnets(kproto)%nface
+          ncolor=t_magnets(kproto)%icol
 
-        gcen=t_magcopy(imp)%gcen
+          write(lunrad,'(a)')trim(t_magcopy(imp)%cnam)//" = rad.ObjPolyhdr([ \"
 
-        do kpoi=1,t_magnets(kproto)%nhull
+          gcen=t_magcopy(imp)%gcen
 
-          write(c32x,*)sngl(t_magnets(kproto)%xhull(kpoi)+gcen(1))
-          write(c32y,*)sngl(t_magnets(kproto)%yhull(kpoi)+gcen(2))
-          write(c32z,*)sngl(t_magnets(kproto)%zhull(kpoi)+gcen(3))
+          do kpoi=1,t_magnets(kproto)%nhull
 
-          if (kpoi.lt.t_magnets(kproto)%nhull) then
-            write(clunrad,*)
-     &        "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"],"
-            write(lunrad,'(a)') trim(clunrad)
-          else
-            write(clunrad,*)
-     &        "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"]],[ \"
-            write(lunrad,'(a)') trim(clunrad)
-          endif
-        enddo !kpoi
+            write(c32x,*)sngl(t_magnets(kproto)%xhull(kpoi)+gcen(1))
+            write(c32y,*)sngl(t_magnets(kproto)%yhull(kpoi)+gcen(2))
+            write(c32z,*)sngl(t_magnets(kproto)%zhull(kpoi)+gcen(3))
 
-        kpoi=1
-
-        do iface=1,nface
-
-          npoi=t_magnets(kproto)%kface(kpoi)
-          cline="         ["
-
-          do ipoi=kpoi+1,kpoi+npoi
-            call util_string_append_num(cline,t_magnets(kproto)%kface(ipoi),
-     &        nfirst,nlast)
-            if (ipoi.lt.kpoi+npoi) then
-              call util_string_append(cline,',',nfirst,nlast)
+            if (kpoi.lt.t_magnets(kproto)%nhull) then
+              write(clunrad,*)
+     &          "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"],"
+              write(lunrad,'(a)') trim(clunrad)
             else
-              call util_string_append(cline,'],',nfirst,nlast)
+              write(clunrad,*)
+     &          "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"]],[ \"
+              write(lunrad,'(a)') trim(clunrad)
             endif
-          enddo !ipoi
+          enddo !kpoi
 
-          if (iface.lt.nface) then
-            write(lunrad,'(a)')cline(1:nlast)
-            call util_string_append(cline,'],',nfirst,nlast)
+          kpoi=1
+
+          do iface=1,nface
+
+            npoi=t_magnets(kproto)%kface(kpoi)
+            cline="         ["
+
+            do ipoi=kpoi+1,kpoi+npoi
+              call util_string_append_num(cline,t_magnets(kproto)%kface(ipoi),
+     &          nfirst,nlast)
+              if (ipoi.lt.kpoi+npoi) then
+                call util_string_append(cline,',',nfirst,nlast)
+              else
+                call util_string_append(cline,'],',nfirst,nlast)
+              endif
+            enddo !ipoi
+
+            if (iface.lt.nface) then
+              write(lunrad,'(a)')cline(1:nlast)
+              call util_string_append(cline,'],',nfirst,nlast)
+            else
+              write(lunrad,'(a)')cline(1:nlast-1) // '], \'
+            endif
+            kpoi=kpoi+npoi+1
+          enddo !nface
+
+          if (t_magnets(kproto)%IsPole.eq.0) then
+            write(c32x,*)t_magcopy(imp)%br(1)
+            write(c32y,*)t_magcopy(imp)%br(2)
+            write(c32z,*)t_magcopy(imp)%br(3)
+            write(clunrad,*)"         [",trim(c32z),",",trim(c32x),",",trim(c32y),"])"
+            write(lunrad,'(a)') trim(clunrad)
+            mater = imatmagpol(imp)
+            write(chmat,*)mater-1
+            call util_string_trim(chmat,nfirst,nlast)
+            chmat="UmatREC["//chmat(nfirst:nlast)//"]"
           else
-            write(lunrad,'(a)')cline(1:nlast-1) // '], \'
+            write(lunrad,'(a)')"[0,0,0])"
+            mater = imatmagpol(imp)
+            write(chmat,*)mater-1
+            call util_string_trim(chmat,nfirst,nlast)
+            chmat="UmatIron["//chmat(nfirst:nlast)//"]"
+          endif !Pole/Mag
+
+          if (t_magnets(kproto)%nzdiv*t_magnets(kproto)%nydiv*t_magnets(kproto)%nxdiv.gt.1) then
+            write(lunrad,'(a)')
+            write(cline,*)
+     &        "rad.ObjDivMag("//trim(adjustl(t_magcopy(imp)%cnam))//", [[",
+     &        t_magnets(kproto)%nzdiv,",",
+     &        sngl(t_magnets(kproto)%zfracdiv),"],",t_magnets(kproto)%nxdiv,
+     &        ",[",t_magnets(kproto)%nydiv,",",
+     &        sngl(t_magnets(kproto)%yfracdiv),"]],'kxkykz->Numb')"
+            call util_remove_double_blanks(cline,cout,lenout)
+            write(lunrad,'(a)') cout(2:lenout)
+            write(lunrad,'(a)')
           endif
-          kpoi=kpoi+npoi+1
-        enddo !nface
 
-        if (t_magnets(kproto)%IsPole.eq.0) then
-          write(c32x,*)t_magnets(kproto)%br(1)
-          write(c32y,*)t_magnets(kproto)%br(2)
-          write(c32z,*)t_magnets(kproto)%br(3)
-          write(clunrad,*)"         [",trim(c32z),",",trim(c32x),",",trim(c32y),"])"
-          write(lunrad,'(a)') trim(clunrad)
-          mater = imatmagpol(imp)
-          write(chmat,*)mater-1
-          call util_string_trim(chmat,nfirst,nlast)
-          chmat="UmatREC["//chmat(nfirst:nlast)//"]"
-        else
-          write(lunrad,'(a)')"[0,0,0])"
-          mater = imatmagpol(imp)
-          write(chmat,*)mater-1
-          call util_string_trim(chmat,nfirst,nlast)
-          chmat="UmatIron["//chmat(nfirst:nlast)//"]"
-        endif !Pole/Mag
-
-        if (t_magnets(kproto)%nzdiv*t_magnets(kproto)%nydiv*t_magnets(kproto)%nxdiv.gt.1) then
           write(lunrad,'(a)')
-          write(cline,*)
-     &      "rad.ObjDivMag("//trim(adjustl(t_magcopy(imp)%cnam))//", [[",
-     &      t_magnets(kproto)%nzdiv,",",
-     &      sngl(t_magnets(kproto)%zfracdiv),"],",t_magnets(kproto)%nxdiv,
-     &      ",[",t_magnets(kproto)%nydiv,",",
-     &      sngl(t_magnets(kproto)%yfracdiv),"]],'kxkykz->Numb')"
-          call util_remove_double_blanks(cline,cout,lenout)
-          write(lunrad,'(a)') cout(2:lenout)
+          write(lunrad,'(a)')"rad.MatApl("//trim(adjustl(t_magcopy(imp)%cnam))//","//
+     &      trim(chmat)//")"
+
+          if (ncolor.eq.2) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[1,0,0],0.0001)"
+          else if (ncolor.eq.3) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[0,1,0],0.0001)"
+          else if (ncolor.eq.4) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[0,0,1],0.0001)"
+            write(lunrad,'(a)') trim(clunrad)
+          else if (ncolor.eq.5) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[1,1,],0.0001)"
+          else if (ncolor.eq.6) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[1,0,1],0.0001)"
+          else if (ncolor.eq.7) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[0,1,1],0.0001)"
+          endif
+
           write(lunrad,'(a)')
-        endif
 
-        write(lunrad,'(a)')
-        write(lunrad,'(a)')"rad.MatApl("//trim(adjustl(t_magcopy(imp)%cnam))//","//
-     &    trim(chmat)//")"
+        else !cylinder:
 
-        if (ncolor.eq.2) then
-          write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
-     &      ",[1,0,0],0.0001)"
-        else if (ncolor.eq.3) then
-          write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
-     &      ",[0,1,0],0.0001)"
-        else if (ncolor.eq.4) then
-          write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
-     &      ",[0,0,1],0.0001)"
-          write(lunrad,'(a)') trim(clunrad)
-        else if (ncolor.eq.5) then
-          write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
-     &      ",[1,1,],0.0001)"
-        else if (ncolor.eq.6) then
-          write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
-     &      ",[1,0,1],0.0001)"
-        else if (ncolor.eq.7) then
-          write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
-     &      ",[0,1,1],0.0001)"
-        endif
+          do ivox=1,nvoxcopy_t
 
-        write(lunrad,'(a)')
+            kproto=t_voxcopy(ivox)%kproto
+            if (t_magnets(kproto)%ctype.ne.'Cylinder') cycle
+
+            kmagnet=t_voxcopy(ivox)%kmagnet
+            kvoxel=t_voxcopy(ivox)%kvoxel
+
+            cline=adjustl(t_magcopy(imp)%cnam)
+            call util_string_append(cline,'_',nfirst,nlast)
+            ixdiv=t_magnets(kproto)%t_voxels(kvoxel)%ixdiv
+            call util_string_append_num(cline,ixdiv,nfirst,nlast)
+            call util_string_append(cline,'_',nfirst,nlast)
+            iydiv=t_magnets(kproto)%t_voxels(kvoxel)%iydiv
+            call util_string_append_num(cline,iydiv,nfirst,nlast)
+            call util_string_append(cline,'_',nfirst,nlast)
+            izdiv=t_magnets(kproto)%t_voxels(kvoxel)%izdiv
+            call util_string_append_num(cline,izdiv,nfirst,nlast)
+            cnam=trim(cline)
+            call util_string_append(cline," = rad.ObjPolyhdr([ \",nfirst,nlast)
+
+            write(lunrad,'(a)') trim(cline)
+
+            gcen=t_voxcopy(ivox)%gcen
+
+            npoi=t_magnets(kproto)%t_voxels(kvoxel)%nhull
+            do ipoi=1,npoi
+
+              write(c32x,*)sngl(t_magnets(kproto)%t_voxels(kvoxel)%xhull(ipoi)+
+     &          gcen(1))
+              write(c32y,*)sngl(t_magnets(kproto)%t_voxels(kvoxel)%yhull(ipoi)+
+     &          gcen(2))
+              write(c32z,*)sngl(t_magnets(kproto)%t_voxels(kvoxel)%zhull(ipoi)+
+     &          gcen(3))
+
+              if (ipoi.lt.npoi) then
+                write(clunrad,*)
+     &            "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"],"
+                write(lunrad,'(a)') trim(clunrad)
+              else
+                write(clunrad,*)
+     &            "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"]],[ \"
+                write(lunrad,'(a)') trim(clunrad)
+              endif
+
+            enddo !ipoi
+
+            nface=t_magnets(kproto)%t_voxels(kvoxel)%nface
+            do iface=1,t_magnets(kproto)%t_voxels(kvoxel)%nface
+
+              k=t_magnets(kproto)%t_voxels(kvoxel)%lface(iface)
+              npoi=t_magnets(kproto)%t_voxels(kvoxel)%kface(k)
+
+              cline="         ["
+
+              do ipoi=1,npoi
+                call util_string_append_num(cline,
+     &            t_magnets(kproto)%t_voxels(kvoxel)%kface(k+ipoi),nfirst,nlast)
+                if (ipoi.lt.npoi) then
+                  call util_string_append(cline,',',nfirst,nlast)
+                else
+                  call util_string_append(cline,'],',nfirst,nlast)
+                endif
+              enddo !ipoi
+
+              if (iface.lt.nface) then
+                write(lunrad,'(a)')cline(1:nlast)
+c                call util_string_append(cline,'],',nfirst,nlast)
+              else
+                write(lunrad,'(a)')cline(1:nlast-1) // '], \'
+              endif
+
+            enddo !nface
+
+            if (t_magnets(kproto)%IsPole.eq.0) then
+              write(c32x,*)t_voxcopy(kvoxel)%br(1)
+              write(c32y,*)t_voxcopy(kvoxel)%br(2)
+              write(c32z,*)t_voxcopy(kvoxel)%br(3)
+              write(clunrad,*)"         [",trim(c32z),",",trim(c32x),",",trim(c32y),"])"
+              write(lunrad,'(a)') trim(clunrad)
+              mater = imatmagpol(imp)
+              write(chmat,*)mater-1
+              call util_string_trim(chmat,nfirst,nlast)
+              chmat="UmatREC["//chmat(nfirst:nlast)//"]"
+            else
+              write(lunrad,'(a)')"[0,0,0])"
+              mater = imatmagpol(imp)
+              write(chmat,*)mater-1
+              call util_string_trim(chmat,nfirst,nlast)
+              chmat="UmatIron["//chmat(nfirst:nlast)//"]"
+            endif !Pole/Mag
+
+            write(lunrad,'(a)')
+            write(lunrad,'(a)')"rad.MatApl("//trim(cnam)//","//
+     &        trim(chmat)//")"
+
+            if (ncolor.eq.2) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[1,0,0],0.0001)"
+            else if (ncolor.eq.3) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[0,1,0],0.0001)"
+            else if (ncolor.eq.4) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[0,0,1],0.0001)"
+              write(lunrad,'(a)') trim(clunrad)
+            else if (ncolor.eq.5) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[1,1,],0.0001)"
+            else if (ncolor.eq.6) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[1,0,1],0.0001)"
+            else if (ncolor.eq.7) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[0,1,1],0.0001)"
+            endif
+
+            write(lunrad,'(a)')
+
+          enddo !nvoxcopy_t
+
+        endif !(t_magnets(kproto)%ctype.ne.'Cylinder') then
 
       enddo !imp=1,nmagtot_t
 
@@ -489,64 +618,108 @@ c-----------------------------------------------------------------------
       write(lunrad,'(a)')"AllMagPols = []"
       write(lunrad,'(a)')"UnduPol = []"
 
+      nUnduMag = 0
+      nUnduPol = 0
+      nMagPolTot = 0
+
+      write(lunrad,'(a)')"nUnduMag = 0"
+      write(lunrad,'(a)')"nUnduPol = 0"
+      write(lunrad,'(a)')"nMagPolTot = 0"
+
       do imp=1,nmagtot_t
 
-        kproto=t_magcopy(imp)%kproto
+        if(t_magnets(kproto)%ctype.ne.'Cylinder') then
 
-        if (t_magnets(kproto)%IsPole.eq.0) then
+          kproto=t_magcopy(imp)%kproto
 
-          nUnduMag=nUnduMag+1
+          if (t_magnets(kproto)%IsPole.eq.0) then
 
-          write(c32,*)nUnduMag
-          write(lunrad,'(a)')"nUnduMag = " // trim(adjustl(c32))
-          write(lunrad,'(a)')"UnduMag.append(" //
-     &      trim(adjustl(t_magcopy(imp)%cnam)) // ")"
+            nUnduMag=nUnduMag+1
 
-          nMagPolTot=nMagPolTot+1
-
-          write(c32,*)nMagPolTot
-          write(lunrad,'(a)')"nMagPolTot = " // trim(adjustl(c32))
-          write(lunrad,'(a)')"AllMagPols.append(" //
-     &      trim(adjustl(t_magcopy(imp)%cnam)) // ')'
-          write(lunrad,'(a)')
-
-          if (t_magcopy(imp)%cnam.eq.chforcemag) then
-            write(lunrad,'(a)')
-            write(lunrad,'(a)')"iForceTyp = 1"
-            write(lunrad,'(a)') trim(clunrad)
             write(c32,*)nUnduMag
-            write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
+            write(lunrad,'(a)')"nUnduMag = " // trim(adjustl(c32))
+            write(lunrad,'(a)')"UnduMag.append(" //
+     &        trim(adjustl(t_magcopy(imp)%cnam)) // ")"
+
+            nMagPolTot=nMagPolTot+1
+
+            write(c32,*)nMagPolTot
+            write(lunrad,'(a)')"nMagPolTot = " // trim(adjustl(c32))
+            write(lunrad,'(a)')"AllMagPols.append(" //
+     &        trim(adjustl(t_magcopy(imp)%cnam)) // ')'
             write(lunrad,'(a)')
-          endif
 
-        else
+            if (t_magcopy(imp)%cnam.eq.chforcemag) then
+              write(lunrad,'(a)')
+              write(lunrad,'(a)')"iForceTyp = 1"
+              write(lunrad,'(a)') trim(clunrad)
+              write(c32,*)nUnduMag
+              write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
+              write(lunrad,'(a)')
+            endif
 
-          nUnduPol=nUnduPol+1
-          write(c32,*)nUnduPol
-          write(lunrad,'(a)')"nUnduPol = " // trim(adjustl(c32))
-          write(lunrad,'(a)')"UnduPol.append(" //
-     &      trim(adjustl(t_magcopy(imp)%cnam)) // ')'
+          else !Cylinder
 
-          nMagPolTot=nMagPolTot+1
-          write(c32,*)nMagPolTot
-          write(lunrad,'(a)')"nMagPolTot = " // trim(adjustl(c32))
-          write(lunrad,'(a)')"AllMagPols.append(" //
-     &      trim(adjustl(t_magcopy(imp)%cnam)) // ')'
-          write(lunrad,'(a)')
+            do ivox=1,nvoxcopy_t
 
-          if (t_magcopy(imp)%cnam.eq.chforcemag) then
-            write(lunrad,'(a)')' '
-            write(lunrad,'(a)')"iForceTyp = 1"
-            write(c32,*)nUnduPol
-            write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
-            write(lunrad,'(a)')
-          endif
+              kproto=t_voxcopy(ivox)%kproto
+              if (t_magnets(kproto)%ctype.ne.'Cylinder') cycle
+
+              kmagnet=t_voxcopy(ivox)%kmagnet
+              kvoxel=t_voxcopy(ivox)%kvoxel
+
+              nUnduPol=nUnduPol+1
+
+              cline=adjustl(t_magcopy(imp)%cnam)
+              call util_string_append(cline,'_',nfirst,nlast)
+              ixdiv=t_magnets(kproto)%t_voxels(kvoxel)%ixdiv
+              call util_string_append_num(cline,ixdiv,nfirst,nlast)
+              call util_string_append(cline,'_',nfirst,nlast)
+              iydiv=t_magnets(kproto)%t_voxels(kvoxel)%iydiv
+              call util_string_append_num(cline,iydiv,nfirst,nlast)
+              call util_string_append(cline,'_',nfirst,nlast)
+              izdiv=t_magnets(kproto)%t_voxels(kvoxel)%izdiv
+              call util_string_append_num(cline,izdiv,nfirst,nlast)
+              cnam=trim(cline)
+
+              write(c32,*)nUnduPol
+              write(lunrad,'(a)')"nUnduPol = " // trim(adjustl(c32))
+              write(lunrad,'(a)')"UnduPol.append(" //trim(cnam)// ')'
+
+              nMagPolTot=nMagPolTot+1
+
+              write(c32,*)nMagPolTot
+              write(lunrad,'(a)')"nMagPolTot = " // trim(adjustl(c32))
+              write(lunrad,'(a)')"AllMagPols.append(" //trim(cnam)// ')'
+              write(lunrad,'(a)')
+
+              if (t_magcopy(imp)%cnam.eq.chforcemag) then
+                write(lunrad,'(a)')' '
+                write(lunrad,'(a)')"iForceTyp = 1"
+                write(c32,*)nUnduPol
+                write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
+                write(lunrad,'(a)')
+                print*,"*** Warning in clcmag_to_radia_python: Force calculations for cylinders not yet tested..."
+              endif
+
+            enddo !nvox
+
+          endif !(t_magnets(kproto)%ctype.ne.'Cylinder') then
 
         endif !Pole/Mag
 
       enddo !imp=1,nmagtot_t
 
       deallocate(brrec)
+
+      write(c32,*) ncwires
+      write(lunrad,'(a)')'nUnduFilaments = ' // trim(adjustl(c32))
+
+      if (iunduplot.lt.0.or.iundugeo.lt.0.or.ivrml.lt.0) then
+        write(lunrad,'(a)')'iSolve = 0'
+      else
+        write(lunrad,'(a)')'iSolve = 1'
+      endif
 
       write(lunrad,'(a)')
       write(lunrad,'(a)')'#-- End of lines generated by UNDUMAG --'

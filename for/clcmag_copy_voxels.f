@@ -1,3 +1,4 @@
+*CMZ :  2.04/20 20/09/2023  12.45.10  by  Michael Scheer
 *CMZ :  2.04/16 06/09/2023  16.17.42  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  10.41.24  by  Michael Scheer
 *CMZ :  2.04/07 22/08/2023  09.03.52  by  Michael Scheer
@@ -49,7 +50,7 @@
           t_voxcopy(nvoxcopy_t)%kcopy=icopy
           t_voxcopy(nvoxcopy_t)%gcen=t_magnets(kmag)%t_voxels(ivox)%gcen
      &      +t_magcopy(imag)%gcen-t_magnets(kmag)%gcen
-          t_voxcopy(nvoxcopy_t)%br=t_magnets(kmag)%t_voxels(ivox)%br
+          t_voxcopy(nvoxcopy_t)%br=t_magcopy(kmag)%br
           t_voxcopy(nvoxcopy_t)%Ispole=t_magnets(kmag)%Ispole
           if (t_magnets(kmag)%Ispole.eq.0) then
             nrec=nrec+1
