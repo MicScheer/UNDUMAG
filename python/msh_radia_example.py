@@ -27,7 +27,7 @@ mshTrfOrnt(Mag,trl)
 mshTrfOrnt(Mag,rot)
 
 C = mshObjCnt('C')
-C = rad.ObjAddToCnt(C,[Mag,MagCopy])
+C = rad.ObjAddToCnt(C,[Mag])
 C = rad.ObjAddToCnt(C,[MagCopy])
 
 mshObjDrw(C)
