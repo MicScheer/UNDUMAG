@@ -9,11 +9,15 @@ pi = np.pi
 
 Br = [0.,0.,1.]
 
+Chamf = 0.0
+
+ChUsBot = Chamf
+ChDsBot = ChUsBot
+ChUsLeft = ChUsBot
+
 vertices = mshrect(0.0,0.,0.0,10.,100.,10.)
 verts,ifaces,faces,bounds = mshhull3d(vertices)
 Mag = mshObjPolyhdr(verts, ifaces, faces, bounds, Br,"Mag","r")
-
-MagCopy = mshObjDpl(Mag,nam='MagCopy')
 
 dxyz = [100,0,0]
 trl = mshTrfTrsl(dxyz)
@@ -27,8 +31,7 @@ mshTrfOrnt(Mag,trl)
 mshTrfOrnt(Mag,rot)
 
 C = mshObjCnt('C')
-C = rad.ObjAddToCnt(C,[Mag])
-C = rad.ObjAddToCnt(C,[MagCopy])
+mshObjAddToCnt(C,Mag)
 
-mshObjDrw(C)
+mshObjDrw(mshCntMaster)
 
