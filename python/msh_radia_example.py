@@ -1,6 +1,6 @@
 
 # +PATCH,//RADIA/PYTHON
-# +DECK,msh_radia_example,T=PYTHON.
+# +DECK,mshrpl,T=PYTHON.
 
 from mshradia import *
 
@@ -33,5 +33,7 @@ mshTrfOrnt(Mag,rot)
 C = mshObjCnt('C')
 mshObjAddToCnt(C,Mag)
 
-mshObjDrw(mshCntMaster)
+Ccopy = mshObjDpl(C,nam='Ccopy')
+
+mshObjDrw(Ccopy)
 
