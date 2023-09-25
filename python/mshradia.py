@@ -28,22 +28,66 @@ mshTrf = {}
 mshNames = {}
 mshColors = {}
 mshCnt = {}
+mshCntMembers = {}
+mshCntMaster = []
+
+def mshObjAddToCnt(cnt,obj):
+  global mshCntMaster,mshCntMembers
+
+  if obj in mshCnt: obj = rad.ObjCntStuf(obj)
+
+  if type(obj) == list:
+    rad.ObjAddToCnt(cnt,obj)
+    for o in list:
+      mshCntMaster.append(o)
+    #endfor
+  else:
+    rad.ObjAddToCnt(cnt,[obj])
+    mshCntMembers[cnt].append(obj)
+    mshCntMaster.append(obj)
+  #endif
+#enddef
+
+def mshGetObjName(obj):
+  global mshObs,mshCnt
+  if obj in mshCnt: return mshCnt[obj]
+  else: return mshObs[obj][2]
+#enddef
 
 def mshObjDpl(obj, sopt='FreeSym->False',nam=''):
-  global  mshObs,mshTrf,mshNames,mshColors
+
+  global  mshObs,mshTrf,mshNames,mshColors,mshCntMembers
+
   dpl = rad.ObjDpl(obj,sopt)
-  mshObs[dpl] = deepcopy(mshObs[obj])
-  mshColors[dpl] = mshColors[obj]
-  if nam == '':
-    nam = mshNames[obj] + '_' + str(dpl)
+
+  if obj in mshCnt:
+    if nam == '': nam = mshCnt[obj] + '_Dpl'
+    mshCnt[dpl] = nam
+    mshCntMembers[dpl] = []
+    mshNames[dpl] = nam
+    for o in mshCntMembers[obj]:
+      d = mshObjDpl(o)
+      mshCntMembers[dpl].append(d)
+    #endfor
+  else:
+    mshObs[dpl] = deepcopy(mshObs[obj])
+    mshColors[dpl] = mshColors[obj]
+    if nam == '':
+      nam = mshNames[obj] + '_Dpl'
+    #endif
+    mshObs[dpl][2] = nam
+    mshNames[dpl] = nam
+    mshCntMaster.append(dpl)
   #endif
+
   return dpl
 #enddef
 
-def mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz'):
+def mshObjDrw(obj=0,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz'):
 
-  global  mshObs,mshTrf,mshNames,mshColors,mshCnt
+  global  mshObs,mshTrf,mshNames,mshColors,mshCnt,mshCntMembers
   global Fig,Ax,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
 
   Xmin = 1.e30
   Xmax = -1.e30
@@ -52,18 +96,36 @@ def mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz'):
   Zmin = 1.e30
   Zmax = -1.e30
 
-  if obj in mshCnt:
+  if obj == 0: obj = mshCntMaster
+
+  if type(obj) == list:
+    tit = ''
+    isame = 0
+    iob = 0
+    for ob in obj:
+      try:
+        tit += '_' + mshNames[ob]
+        if iob == 0:
+          tit = mshNames[ob]
+          iob +=1
+        #endif
+      except: pass
+      _mshObjDrw(ob,facecolor,edgecolor,alpha,scale,tit,isame)
+      isame = 1
+    #endfor
+  elif obj in mshCnt:
     try: tit = mshCnt[obj]
     except: tit = ''
     isame = 0
-    for ob in rad.ObjCntStuf(obj):
+    for ob in mshCntMembers[obj]:
       _mshObjDrw(ob,facecolor,edgecolor,alpha,scale,tit,isame)
       isame = 1
     #endfor
   else:
-    try: tit = mshName[obj]
+    try: tit = mshNames[obj]
     except: tit = ''
     isame = 0
+    bounds = mshObs[obj][0][3]
     Xmin = bounds[0]
     Xmax = bounds[1]
     Ymin = bounds[2]
@@ -90,10 +152,8 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz',tit='',
     Ax = Axes3D(Fig)
 
   faces = mshObs[obj][0][2]
-  bounds = mshObs[obj][0][3]
 
   fpl =faces
-  bpl = bounds
 
   #breakpoint()
 
@@ -187,18 +247,22 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz',tit='',
 
 #enddef mshObjDrw(obj)
 
-def mshObjCnt(nam='NoName'):
-  global mshCnt
+def mshObjCnt(nam=''):
+  global mshCnt,mshCntMembers,mshNames
+  if nam == '': nam = 'Cnt_' + str(len(mshCnt))
   cnt = rad.ObjCnt([])
   mshCnt[cnt] = nam
+  mshNames[cnt] = nam
+  mshCntMembers[cnt] = []
   return cnt
 #endif
 
-def mshObjPolyhdr(verts, ifaces, faces, bounds, Br, nam='NoName',color='b'):
+def mshObjPolyhdr(verts, ifaces, faces, bounds, Br, nam='',color='b'):
   global  mshObs,mshTrf,mshNames,mshColors
   poly = rad.ObjPolyhdr(verts, ifaces, Br)
-  mshObs[poly] = [[verts,ifaces,faces,bounds,Br],[]]
+  if nam == '': nam = 'obj_index_' + str(poly)
   mshNames[poly] = nam
+  mshObs[poly] = [[verts,ifaces,faces,bounds,Br],[],nam]
   mshColors[poly] = color
   return poly
 #enddef
