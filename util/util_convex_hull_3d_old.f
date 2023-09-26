@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 26/09/2023  12.20.19  by  Michael Scheer
 *CMZ :  2.02/01 03/11/2021  12.49.04  by  Michael Scheer
 *CMZ :  2.00/03 19/04/2018  15.03.14  by  Michael Scheer
 *CMZ :  1.23/04 01/10/2017  14.44.56  by  Michael Scheer
@@ -82,8 +83,8 @@ c      double precision pvv
       ical=ical+1
       tiny2=tiny**2
 
-      allocate(kfaceheap(2*npoi))
-      allocate(kedgeheap(2*npoi))
+      allocate(kfaceheap(npoi*npoi))
+      allocate(kedgeheap(npoi*npoi))
       allocate(ibuff(npoi))
       allocate(ibuffp(npoi))
       allocate(ibuffm(npoi))

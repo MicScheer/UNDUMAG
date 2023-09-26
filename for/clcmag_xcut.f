@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  13.54.14  by  Michael Scheer
 *CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
@@ -399,6 +400,7 @@ c        t_magnets(imag)%dxdiv=t_magnets(imag)%size(1)/t_magnets(imag)%nxdiv
       if (abs(vol).gt.1.0d-9) then
         write(lun6,*)"*** Warning in clcmag_xcut: Sum of x-cut volumes differs from magnet volume by (rel.):",vol
         write(lun6,*)"Magnet: ",t_magnets(imag)%cnam
+        write(lun6,*)"Maybe you should try MODSIMPHULL=1 in undumag.nam"
       endif
 
 

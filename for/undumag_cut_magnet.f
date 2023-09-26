@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  14.42.15  by  Michael Scheer
 *CMZ :  2.04/01 22/01/2023  18.48.18  by  Michael Scheer
 *CMZ :  2.03/00 31/07/2022  18.19.49  by  Michael Scheer
@@ -93,11 +94,11 @@ c        ifail=-1234
         goto 9999
       endif
 
-      call util_convex_hull_3d(npoi,xh,yh,zh,khull,kedge,kface,
+      call util_convex_hull_3d_overwrite(kmag,npoi,xh,yh,zh,khull,kedge,kface,
      &  nh,nedge,nface,kfacelast,tol,ifail)
 
       if (ifail.ne.0) then
-        write(lun6,*)"Error in undumag_cut_magnet: Bad return from util_convex_hull_3d ***"
+        write(lun6,*)"Error in undumag_cut_magnet: Bad return from util_convex_hull_3d_overwrite ***"
         write(lun6,*)"ifail, ical: ",ifail, ical
         write(lun6,*)"*** Date written to util_convex_hull_3d.dat ***"
         open(newunit=lunf,file='util_convex_hull_3d.dat')
@@ -194,12 +195,12 @@ c        ifail=-1234
       if (n1.gt.3) then
 
 
-        call util_convex_hull_3d(n1,xh1,yh1,zh1,khull,kedge,kface,
+        call util_convex_hull_3d_overwrite(kmag,n1,xh1,yh1,zh1,khull,kedge,kface,
      &    nh1,nedge,nface,kfacelast,tol,ifail)
       endif
 
       if (ifail.ne.0) then
-        write(lun6,*)"Error in undumag_cut_magnet: Bad return from util_convex_hull_3d ***"
+        write(lun6,*)"Error in undumag_cut_magnet: Bad return from util_convex_hull_3d_overwrite ***"
         write(lun6,*)"ifail, ical: ",ifail, ical
         open(newunit=lunf,file='util_convex_hull_3d.dat')
         do i=1,n1
@@ -249,11 +250,11 @@ c          z0(1)=z0(1)+zh1(khull(k))
 
       if (nh2.gt.3) then
 
-        call util_convex_hull_3d(n2,xh2,yh2,zh2,khull,kedge,kface,
+        call util_convex_hull_3d_overwrite(kmag,n2,xh2,yh2,zh2,khull,kedge,kface,
      &    nh2,nedge,nface,kfacelast,tol,ifail)
 
         if (ifail.ne.0) then
-          write(lun6,*)"Error in undumag_cut_magnet: Bad return from util_convex_hull_3d ***"
+          write(lun6,*)"Error in undumag_cut_magnet: Bad return from util_convex_hull_3d_overwrite ***"
           write(lun6,*)"ifail, ical: ",ifail, ical
           open(newunit=lunf,file='util_convex_hull_3d.dat')
           do i=1,n2

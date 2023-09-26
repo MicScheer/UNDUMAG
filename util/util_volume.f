@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 26/09/2023  12.20.19  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  15.00.22  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  18.38.39  by  Michael Scheer
 *-- Author :    Michael Scheer   26/02/2023
@@ -20,7 +21,7 @@
       ! kface((n+1)*n)
 
       allocate(x(n),y(n),z(n),hull(n),khull(n),xr(n),yr(n),zr(n),
-     &  kedge(4,2*n-2),
+     &  kedge(4,n*n-2),
      &  kface((n+1)*n)
      &  )
 
@@ -28,7 +29,7 @@
       y(1:n)=yin(1:n)
       z(1:n)=zin(1:n)
 
-      call util_convex_hull_3d(
+      call util_convex_hull_3d_overwrite(-9,
      &  n,x,y,z,khull,kedge,kface,nhull,nedge,nface,kfacelast,tiny,kfail)
 
       gc=0.0d0
@@ -80,7 +81,6 @@
         l=l+npoi+1
       enddo
 
-c      allocate(x(n),y(n),z(n),hull(n),kedge(4,2*n),kface(5*n),khull(n))
 9999  continue
 
       deallocate(x,y,z,xr,yr,zr,hull,kedge,kface,khull)
