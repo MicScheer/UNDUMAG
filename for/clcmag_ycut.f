@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  13.59.00  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
@@ -443,6 +444,7 @@ c              stop
         if (abs(vol).gt.1.0d-9) then
           write(lun6,*)"*** Warning in clcmag_ycut: Sum of xy-cut volumes differs from magnet volume by (rel.):",vol
           write(lun6,*)"*** magnet, ixdiv:",trim(tmag%cnam),ix
+          write(lun6,*)"Maybe you should try MODSIMPHULL=1 in undumag.nam"
         endif
 
       enddo !nxdiv
@@ -465,6 +467,7 @@ c              stop
       if (abs(vol).gt.1.0d-9) then
         write(lun6,*)"*** Warning in clcmag_ycut: Sum of xy-cut volumes differs from magnet volume by (rel.): ",vol
         write(lun6,*)"*** magnet :",trim(tmag%cnam),imag
+        write(lun6,*)"Maybe you should try MODSIMPHULL=1 in undumag.nam"
       endif
 
 c      if (imag.eq.2) then

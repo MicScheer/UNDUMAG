@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  15.51.02  by  Michael Scheer
 *CMZ :  2.03/00 31/07/2022  18.33.07  by  Michael Scheer
 *CMZ :  2.02/01 27/10/2021  12.44.25  by  Michael Scheer
@@ -17,7 +18,7 @@
       iundumag_is_block=0
 
       npoi=npoip
-      call util_convex_hull_3d(npoi,x,y,z,khull,kedge,kface,nhull,nedge,nface,
+      call util_convex_hull_3d_overwrite(-9,npoi,x,y,z,khull,kedge,kface,nhull,nedge,nface,
      &  kfacelast,tiny,ifail)
 
       k=0

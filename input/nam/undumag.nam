@@ -1,4 +1,4 @@
-* Version 2.04/19
+* Version 2.04/21
  ! Name list file, to control UNDUMAG
 
  $undumagn
@@ -124,6 +124,8 @@
  hulltiny=1.e-6 ! precision parameter for routine util_convex_hull_3d
                 ! change may help in case of trouble
 		! 0: will be set to 1.e-6
+		
+ modsimphull=1  ! use simple convex-hull algorithm, slow but robuste
 
  iunduplot=1 ! Write Encapsulated PostScript files to show geometry
 	     ! iunduplot<0: stop UNDUMAG after writing undumag.eps

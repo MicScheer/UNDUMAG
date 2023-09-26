@@ -1,4 +1,5 @@
-*CMZ :          11/09/2023  15.31.12  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.24.47  by  Michael Scheer
+*CMZ :  2.04/17 11/09/2023  15.31.12  by  Michael Scheer
 *CMZ :  2.04/16 10/09/2023  20.05.58  by  Michael Scheer
 *-- Author :    Michael Scheer   08/09/2023
       subroutine util_convex_hull_3d_simp(n,x,y,z,tiny,nhull,khull,nsimp,ksimp,
@@ -8,15 +9,24 @@
 
       double precision, dimension(:), allocatable :: xh,yh,zh,xb,yb,zb
       double precision, dimension(:,:), allocatable :: fn
-      integer, dimension(:), allocatable :: nveto,kveto,ihull,ibuff
+      integer, dimension(:), allocatable :: nveto,kveto,ihull,ibuff,jbuff
       integer, dimension(:,:), allocatable :: ksim
 
       double precision  x(*),y(*),z(*),vn(3,*),tiny,vnor(3),gcen(3),dist,p(3)
 
       integer n,ksimp(*),kface(*),lface(*),kedge(4,*),khull(*),
      &  nface,kfail,nn,kfacelast,nsim,nedge,nh,nhull,
-     &  mpoi,npoi,lpoi,l,kl,k,ipoi,isim,i,nsimp,n3,
+     &  mpoi,npoi,lpoi,l,kl,k,ipoi,isim,i,nsimp,n3,ierr,
      &  iface,mnpoi,jface,iover,ll,i1,i2,j1,j2,ied,ked,ifound
+
+      integer :: ical=0,idebug=0
+
+      ical=ical+1
+c      print*,"Simp call:",ical
+c      if (ical.eq.7) then
+c        idebug=1
+cc        call util_break
+c      endif
 
       n3=n*(n+1)**2
       nsimp=0
@@ -25,12 +35,20 @@
       gcen=[sum(x(1:n)),sum(y(1:n)),sum(z(1:n))]/dble(n)
       nhull=0
 
+c      if (idebug.ne.0) then
+c        do i=1,n
+c          write(75,*)ical,i,x(i),y(i),z(i)
+c        enddo
+c        flush(75)
+c      endif
+
       call util_convex_hull_3d_simplices(n,x,y,z,tiny,nsimp,ksimp,vn,kfail)
       if (kfail.ne.0) return
 
+
       allocate(nveto(n),kveto(4*n3),ksim(nsimp,nsimp),xh(n),yh(n),zh(n),
      &  ihull(n),fn(3,nsimp),xb(n),yb(n),zb(n))
-      allocate(ibuff(n))
+      allocate(ibuff(n),jbuff(n))
 
       ksim=0
 
@@ -63,6 +81,7 @@
         kl=kfacelast
         nn=ksim(1,isim)
         kveto(1:3*n)=0
+
         do i=1,nn
           l=ksim(i+1,isim)
           do ipoi=1,3
@@ -73,9 +92,14 @@
             xh(npoi)=x(lpoi)
             yh(npoi)=y(lpoi)
             zh(npoi)=z(lpoi)
+c            if (idebug.ne.0.and.isim.eq.3) then
+c              write(88,*)i,npoi,lpoi,x(lpoi),y(lpoi),z(lpoi)
+c            endif
             kveto(lpoi)=1
           enddo
         enddo
+c        if (idebug.ne.0.and.isim.eq.3) flush(88)
+
         if (abs(fn(1,isim)).gt.0.5d0) then
           call util_convex_hull_2d(npoi,yh,zh,nh,ihull,tiny,kfail)
         else if (abs(fn(2,isim)).gt.0.5d0) then
@@ -90,26 +114,44 @@
 
         nh=nh-1
 
+        do i=1,nh
+          jbuff(i)=ibuff(ihull(i))
+        enddo
+
+        ihull=jbuff
+
+        do i=1,3
+          xh(i)=x(ihull(i))
+          yh(i)=y(ihull(i))
+          zh(i)=z(ihull(i))
+        enddo
+
         p=[xh(1),yh(1),zh(1)]
         call util_plane(p,[xh(2),yh(2),zh(2)],[xh(3),yh(3),zh(3)],p,
      &    vnor,dist,iover,kfail)
 
         if (dot_product(p-gcen,vnor).lt.0.0d0) then
-          xb(1:nh)=xh(1:nh)
-          yb(1:nh)=yh(1:nh)
-          zb(1:nh)=zh(1:nh)
+          jbuff=ihull
+c          xb(1:nh)=xh(1:nh)
+c          yb(1:nh)=yh(1:nh)
+c          zb(1:nh)=zh(1:nh)
           do i=1,nh
-            xh(i)=xb(nh-i+1)
-            yh(i)=yb(nh-i+1)
-            zh(i)=zb(nh-i+1)
+            ihull(i)=jbuff(nh-i+1)
+c            xh(i)=xb(nh-i+1)
+c            yh(i)=yb(nh-i+1)
+c            zh(i)=zb(nh-i+1)
           enddo
         endif
 
         do ipoi=1,nh
-          mpoi=ibuff(ihull(ipoi))
+          mpoi=ihull(ipoi)
           kfacelast=kfacelast+1
           kface(kfacelast)=mpoi
+c          if (idebug.ne.0.and.isim.eq.3) then
+c            write(88,*)'0',ipoi,mpoi,x(mpoi),y(mpoi),z(mpoi)
+c          endif
         enddo
+c        if (idebug.ne.0.and.isim.eq.3) flush(88)
 
         kface(kl)=nh
         lface(isim)=kl
@@ -120,11 +162,13 @@
       kedge(1:4,1:n)=0
       nveto=0
 
+      !if (ical.eq.7) call util_break
+
       do iface=1,nface
 
         l=lface(iface)
         npoi=kface(l)
-
+        !if (ical.eq.7.and.iface.gt.9) call util_break
         do ipoi=1,npoi
 
           if (ipoi.lt.npoi) then
@@ -135,6 +179,10 @@
             i2=kface(l+1)
           endif
 
+          if (i1.le.0.or.i1.gt.n) then
+            print*,"*** Fetter Fehler***"
+            stop
+          endif
           if (nveto(i1).eq.0) then
             nhull=nhull+1
             khull(nhull)=i1
@@ -182,12 +230,23 @@
         enddo !iedg
       enddo !iface
 
+
       if (nhull+nface-nedge.ne.2) then
         print*,"*** Error in util_convex_hull_3d_simp: Euler's rule not fullfilled ***"
         kfail=-1
       endif
 
-      deallocate(nveto,kveto,ksim,xh,yh,zh,ihull,ibuff,fn,xb,yb,zb)
+c      if (idebug.ne.0) then
+c        do i=1,nhull
+c          k=khull(i)
+c          write(75,*)-ical,i,x(i),y(i),z(i)
+c        enddo
+c        print*,"fort.75!"
+c      endif
+
+      deallocate(kveto,ksim,xh,yh,zh,ihull,ibuff,jbuff,fn,xb,yb,zb,nveto)
+
+c      idebug=0
 
       return
       end

@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/02 25/02/2022  09.54.41  by  Michael Scheer
 *CMZ :  2.02/01 09/02/2022  18.49.27  by  Michael Scheer
@@ -8,6 +9,7 @@
       use undumagf90m
       use bpolyederf90m
       use magnets_structure
+      use utilmod
 
       implicit none
 
@@ -126,6 +128,8 @@
       if (dedgefb.eq.0.0d0) dedgefb=0.02d0
 
       if (iforcedip.ne.0) idipoles=1
+
+      modsimp=modsimphull
 
       return
       end

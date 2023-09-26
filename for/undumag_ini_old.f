@@ -1,4 +1,4 @@
-*CMZ :  2.04/06 22/09/2023  09.06.50  by  Michael Scheer
+*CMZ :  2.04/06 26/09/2023  21.35.41  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  14.44.40  by  Michael Scheer
 *CMZ :  2.04/00 05/12/2022  15.18.35  by  Michael Scheer
 *CMZ :  2.03/00 31/08/2022  08.10.44  by  Michael Scheer
@@ -134,7 +134,7 @@
 ! bpebc(17,imag) select flag
 ! bpebc(18:20,imag) external field and field of coils
 
-*KEEP,PHYCONparam,T=F77.
+*KEEP,PHYCONPARAM.
 c-----------------------------------------------------------------------
 c     phyconparam.cmn
 c-----------------------------------------------------------------------
@@ -216,7 +216,7 @@ c      vstokes(4,3)=(-sqrt(1./2.),        0.0d0)
 c-----------------------------------------------------------------------
 c     end of phyconparam.cmn
 c-----------------------------------------------------------------------
-*KEEP,seqdebug.
+*KEEP,SEQDEBUG.
       integer iseqdebug
       common/seqdebugc/iseqdebug
 *KEEP,random.
@@ -356,7 +356,7 @@ c-----------------------------------------------------------------------
       flush(lun)
       close(lun)
 
-*KEEP,unduver.
+*KEEP,UNDUVER.
       print *
       print *
       print *
@@ -364,8 +364,8 @@ c-----------------------------------------------------------------------
       write(lun6,*)'     *                                                        *'
       write(lun6,*)'     *                       UNDUMAG                          *'
       write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     *                    Version 2.04/21                     *'
-      write(lun6,*)'     *                        22.9.2023                       *'
+      write(lun6,*)'     *                    Version 2.04/22                     *'
+      write(lun6,*)'     *                        26.9.2023                       *'
       write(lun6,*)'     *                                                        *'
       write(lun6,*)'     *                     Michael Scheer                     *'
       write(lun6,*)'     *                       HZB/BESSY                        *'
@@ -378,7 +378,7 @@ c-----------------------------------------------------------------------
       call util_zeit_kommentar(lun6,"")
 
       open(unit=999,file="undumag.ver")
-      chuvers="2.04/21"
+      chuvers="2.04/22"
       write(999,*)chuvers
       close(999)
 *KEND.

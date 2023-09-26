@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 26/09/2023  21.29.40  by  Michael Scheer
 *CMZ :  2.04/09 16/08/2023  07.59.23  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  09.45.40  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  11.50.12  by  Michael Scheer
@@ -29,7 +30,7 @@
 
 
       ! khull(nin)
-      ! kedge(4,2*nin-2)
+      ! kedge(4,nin*nin-2)
 
       ! kface((nin+1)*nin)
 
@@ -64,7 +65,8 @@
      &  cosphi,sinphi,qn,cosmax,cosqpv,ex(3),ey(3),ez(3),q(3),
      &  p1(3),p2(3),p3(3),pt1(3),pt2(3),pt3(3),
      &  p21(3),vnor(3),dist,pt1r(3),pn,
-     &  gcen(3),gceno(3),tinyin,tiny,tiny2,rotmat(3,3),rotg(3,3),rotm(3,3),rotws(3,3)
+     &  gcen(3),gceno(3),tinyin,tiny,tiny2,rotmat(3,3),rotg(3,3),rotm(3,3),
+     &  rotws(3,3),gcenin(3),pcen(3)
 
       double precision, dimension (:), allocatable ::  x2,y2,z2,x,y,z
 
@@ -87,6 +89,12 @@
       data ez/0.0d0,0.0d0,1.0d0/
 
       ical=ical+1
+c+self,if=debug3d.
+c      print*,"hull_3d, ical:",ical
+c      if (ical.eq.195) then
+c        !call util_break
+c      endif
+c+self.
       idimfail=0
       ifirst=0
       isecond=0
@@ -99,8 +107,8 @@ c 1.3.2023      tiny2=tiny**2
 
       npoi=nin
 
-      allocate(kfaceheap(2*npoi))
-      allocate(kedgeheap(2*npoi-2))
+      allocate(kfaceheap(npoi*npoi))
+      allocate(kedgeheap(npoi*npoi-2))
       allocate(ibuff(npoi),ibuffp(npoi),ibuffm(npoi),kbuff((npoi+1)*npoi))
       allocate(iplans(npoi,npoi),istore(npoi),iveto(npoi),kveto(npoi))
       allocate(x(npoi),y(npoi),z(npoi),x2(npoi),y2(npoi),z2(npoi))
@@ -187,6 +195,7 @@ c 1.3.2023      tiny2=tiny**2
       enddo
 
       gcen=gcen/npoi
+      gcenin=gcen
 
       ! All points in a plane?{
 
@@ -558,7 +567,6 @@ c15Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
 
       ! get normal vector vnor
       call util_plane(p1,p2,p3,p3,vnor,dist,iover,istat)
-
       if (istat.ne.0) then
         kfail=-8
         cerror="*** Error in util_convex_hull_3d: Bad return from util_plane ***"
@@ -628,6 +636,7 @@ c15Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
         if (mface.le.0.or.kedge(4,medge).ne.0) then
           cerror="*** Bad pointer of face or bad edge in util_convex_hull_3d ***"
           kfail=20
+          !!call util_break
           goto 9999
         endif
 
@@ -906,6 +915,7 @@ c        print*,q
               ifound=1
               if (kedge(3,ledge).eq.0) then
                 cerror="*** Error in util_convex_hull_3d: Bad edge ***"
+                !!call util_break
                 kfail=kfail+1
               endif
               if (kedge(4,ledge).eq.0) then
@@ -918,8 +928,8 @@ c        print*,q
           if (ifound.eq.0) then
             nedge=nedge+1
             if (nedge.gt.2*npoi-2) then
-              idimfail=81
-              goto 89
+              kfail=81
+              goto 9999
             endif
             kedge(1,nedge)=ib1
             kedge(2,nedge)=ib2
@@ -932,8 +942,8 @@ c        print*,q
           if (kedge(4,iedge).eq.0) then
             nedgeheap=nedgeheap+1
             if (nedgeheap.gt.2*npoi-2) then
-              idimfail=82
-              goto 89
+              kfail=82
+              goto 9999
             endif
             kedgeheap(nedgeheap)=iedge
           endif
@@ -951,7 +961,8 @@ c        print*,q
           write(6,*)
           write(6,*)"*** Error in util_convex_hull_3d: Bad edges ***"
           write(6,*)
-          idimfail=86
+          !!call util_break
+          kfail=86
         endif
         ifound=0
         do ipoi=1,nhull
@@ -963,7 +974,7 @@ c        print*,q
         if (ifound.eq.0) then
           nhull=nhull+1
           if (nhull.gt.npoi) then
-            idimfail=83
+            kfail=83
             goto 91
           endif
           khull(nhull)=kpoi
@@ -979,8 +990,8 @@ c        print*,q
         if (ifound.eq.0) then
           nhull=nhull+1
           if (nhull.gt.npoi) then
-            idimfail=84
-            goto 89
+            kfail=84
+            goto 9999
           endif
           khull(nhull)=kpoi
         endif
@@ -1042,10 +1053,16 @@ c        print*,q
 
 9999  continue
 
-      deallocate(kedgeheap,ibuff,ibuffp,ibuffm,kbuff,iplans,istore,
+c      if (ical.eq.195) then
+c        !call util_break
+c      endif
+
+      deallocate(kfaceheap,kedgeheap,ibuff,ibuffp,ibuffm,kbuff,iplans,istore,
      &  iveto,kveto,x,y,z,x2,y2,z2)
 
-      deallocate(kfaceheap)
+c      if (ical.eq.195) then
+c        !call util_break
+c      endif
 
       if (idimfail.ne.0) then
         kfail=idimfail
@@ -1053,14 +1070,13 @@ c        print*,q
 
       if (kfail.ne.0.and.kfail.ne.100) then
         write(6,*)trim(cerror)
-        write(6,*)"*** ical:",ical
+        write(6,*)"*** Error in util_convex_hull3d: kfail.ne.0 .and. kfail.ne.100, ical:",ical
       endif
 
       if (kfail.eq.0.and.nface+nhull-nedge.ne.2) then
         write(6,*)"Error in util_convex_hull3d: Euler's formula not fullfilled"
         kfail=-99
       endif
-
 
       return
       end

@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 26/09/2023  12.20.19  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  11.14.37  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.33.21  by  Michael Scheer
 *CMZ :  2.02/01 03/11/2021  12.49.04  by  Michael Scheer
@@ -16,11 +17,8 @@ c +DECK,util_shrink_xyz.
 
       double precision x(m),y(m),z(m),cen(3),xs(m),ys(m),zs(m),coat,gcen(3),
      &  tiny,p1(3),p2(3),p3(3),vn(3),gcenr(3),
-     &  signum,xx,yy,zz,gcenp(3),
+     &  signum,xx,yy,zz,gcenp(3),xmin,xmax,ymin,ymax,zmin,zmax,
      &  q1(3),q2(3),q3(3),r1(3),r2(3),r3(3),pp1(3),pp2(3),pp3(3)
-
-      double precision :: xmin=1.0d30,xmax=-1.0d30,ymin=1.0d0,ymax=-1.0d30,
-     &  zmin=1.0d30,zmax=-1.0d30
 
       integer, dimension (:,:), allocatable :: kedge
       integer, dimension (:), allocatable :: khull, kface,ik
@@ -32,14 +30,12 @@ c +DECK,util_shrink_xyz.
       kfail=1
       n=m !might be overwritten in util_weed
 
-      do i=1,n
-        if (x(i).lt.xmin) xmin=x(i)
-        if (x(i).gt.xmax) xmax=x(i)
-        if (y(i).lt.ymin) ymin=y(i)
-        if (y(i).gt.ymax) ymax=y(i)
-        if (z(i).lt.zmin) zmin=z(i)
-        if (z(i).gt.zmax) zmax=z(i)
-      enddo
+      xmin=minval(x)
+      xmax=maxval(x)
+      ymin=minval(y)
+      ymax=maxval(y)
+      zmin=minval(z)
+      zmax=maxval(z)
 
       if (xmax.eq.xmin) then
         return
@@ -53,9 +49,9 @@ c +DECK,util_shrink_xyz.
         return
       endif
 
-      allocate(khull(n),kedge(4,2*n),kface((n+1)*n),xr(n),yr(n),zr(n),ik(n))
+      allocate(khull(n),kedge(4,n*n),kface((n+1)*n),xr(n),yr(n),zr(n),ik(n))
 
-      call util_convex_hull_3d_overwrite(n,x,y,z,khull,kedge,kface,
+      call util_convex_hull_3d_overwrite(-9,n,x,y,z,khull,kedge,kface,
      &  nhull,nedge,nface,kfacelast,tiny,
      &  kfail)
 

@@ -1,3 +1,4 @@
+*CMZ :  2.04/22 25/09/2023  14.23.52  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.29.37  by  Michael Scheer
 *CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 24/02/2023  17.30.41  by  Michael Scheer
@@ -14,7 +15,7 @@
 
 c+seq,debugutil.
 
-*KEEP,random.
+*KEEP,RANDOM.
       integer*8 irancalls
       integer, parameter :: irnsize=64
       integer irnseed(irnsize),irnmode,irnseedi(irnsize)
@@ -68,6 +69,12 @@ c three points defining plane (lab.-system)
           p3(3)=bpemag(3,3,iplan,im)
 
           call undumag_bpen(im,iplan,p1,p2,p3,vnormlab,ifail)
+
+          if (idebug.ne.0) then
+            write(66,*)im,iplan,'1',p1+rmag,vnormlab
+            write(66,*)im,iplan,'2',p2+rmag,vnormlab
+            write(66,*)im,iplan,'3',p3+rmag,vnormlab
+          endif
 
           if (ifail.ne.0) then
             write(lun6,*)"*** Error 13 in undumag_ini_bpetm: Failure in undumag_bpen, mag, plane:",

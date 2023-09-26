@@ -1,3 +1,5 @@
+*CMZ :  2.04/22 26/09/2023  21.22.26  by  Michael Scheer
+*CMZ :  2.04/17 11/09/2023  20.47.28  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.30.11  by  Michael Scheer
 *CMZ :  2.04/09 15/08/2023  12.14.13  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  09.47.47  by  Michael Scheer
@@ -11,6 +13,8 @@
 
       ! like  util_convex_hull_3d, but overwrites xin,yin,zin
 
+      use utilmod
+
       implicit none
 
       double precision xin(*),yin(*),zin(*),tinyin,tiny
@@ -18,119 +22,136 @@
       double precision, dimension (:), allocatable ::  xh,yh,zh
       double precision, dimension (:,:), allocatable ::  vn
 
-      integer, dimension (:), allocatable ::  ksimp,lface,mface,mhull,mbuff
-      integer, dimension (:,:), allocatable ::  medge
+      integer, dimension (:), allocatable ::  ksimp,lface
 
       integer khull(*),kedge(4,*),kface(*)
       integer :: nin,n,k,kfail,i,nhull,nedge,nface,kfacelast,lunbad,
-     &  nsimp,n3,modsimp=0,ipoi,j,i1,i2,npoi,ical=0,iface,imag
+     &  nsimp,n3,ipoi,j,i1,i2,npoi,ical=0,iface,imag,icycle,idebug=0,ifail
 
 c+seq,debugutil.
       save ical
 
       ical=ical+1
-
-      modsimp=0
+      npoi=nin
 
       tiny=tinyin
       if (tiny.le.0.0d0) tiny=1.0d-12
 
-      allocate(xh(nin),yh(nin),zh(nin),
-     &  mbuff(nin),mhull(nin),mface((nin+1)*nin),medge(4,2*nin))
+      allocate(xh(npoi),yh(npoi),zh(npoi))
 
-      xh(1:nin)=xin(1:nin)
-      yh(1:nin)=yin(1:nin)
-      zh(1:nin)=zin(1:nin)
+      xh(1:npoi)=xin(1:npoi)
+      yh(1:npoi)=yin(1:npoi)
+      zh(1:npoi)=zin(1:npoi)
 
-      if (modsimp.eq.0) then
+      do icycle=1,2
 
-        call util_convex_hull_3d(
-     &    nin,xh,yh,zh,khull,kedge,kface,
-     &    nhull,nedge,nface,kfacelast,tiny,
-     &    kfail)
+        if (modsimp.eq.0) then
 
-        if (kfail.ne.0) then
+          call util_convex_hull_3d(
+     &      npoi,xh,yh,zh,khull,kedge,kface,
+     &      nhull,nedge,nface,kfacelast,tiny,
+     &      kfail)
 
-          print*,""
-          print*,"*** Warning in util_convex_hull_3d_overwrite:"
-          print*,"*** Bad return from util_convex_hull_3d.f"
-          print*,"*** Dumping points to hull.bad"
-          print*,""
-          open(newunit=lunbad,file='hull.bad')
-          do i=1,nin
-            write(lunbad,*) xin(i),yin(i),zin(i),i
-          enddo
-          flush(lunbad)
-          close(lunbad)
-          print*,"*** Trying util_convex_hull_3d_simp.f"
-          print*,""
+          if (kfail.ne.0) then
 
-          modsimp=2
+            print*,""
+            print*,"*** Warning in util_convex_hull_3d_overwrite:"
+            print*,"*** Bad return from util_convex_hull_3d.f"
+            print*,"*** Dumping points to hull.bad"
+            print*,""
+            open(newunit=lunbad,file='hull.bad')
+            do i=1,npoi
+              write(lunbad,*) xin(i),yin(i),zin(i),i
+            enddo
+            flush(lunbad)
+            close(lunbad)
+            print*,"*** Trying util_convex_hull_3d_simp.f"
+            print*,""
+
+            modsimp=2
+
+          endif
 
         endif
 
-      endif
+        if (modsimp.ne.0) then
 
-      if (modsimp.ne.0) then
+          n=npoi
+          n3=n*(n+1)**2
 
-        n=nin
-        n3=n*(n+1)**2
+          allocate(ksimp(4*n3),lface(n3),vn(3,4*n3))
 
-        allocate(ksimp(4*n3),lface(n3),vn(3,4*n3))
+          call util_weed_points(n,xh,yh,zh,tiny)
 
-        call util_weed_points(n,xh,yh,zh,tiny)
+          call util_convex_hull_3d_simp(n,xh,yh,zh,tiny,nhull,khull,
+     &      nsimp,ksimp,nface,kface,lface,kfacelast,nedge,kedge,vn,kfail)
 
-        call util_convex_hull_3d_simp(n,xh,yh,zh,tiny,nhull,khull,
-     &    nsimp,ksimp,nface,kface,lface,kfacelast,nedge,kedge,vn,kfail)
+          if (kfail.ne.0) then
+            print*,""
+            print*,"*** Error in util_convex_hull_3d_overwrite:"
+            print*,"*** Bad return from util_convex_hull_3d_simp.f"
+            return
+          else if (modsimp.eq.2) then
+            print*,"--> Success"
+          endif
 
-        if (kfail.ne.0) then
-          print*,""
-          print*,"*** Error in util_convex_hull_3d_overwrite:"
-          print*,"*** Bad return from util_convex_hull_3d_simp.f"
-          return
-        endif
+          deallocate(ksimp,lface,vn)
 
-        deallocate(ksimp,lface,vn)
+        endif !modsimp
 
-      endif !modsimp
-
-      mhull(1:nhull)=khull(1:nhull)
-      mface(1:kfacelast)=kface(1:kfacelast)
-      medge(1:4,1:nedge)=kedge(1:4,1:nedge)
-
-      n=nhull
-      do i=1,n
-        khull(i)=i
-        mbuff(mhull(i))=i
-        xin(i)=xh(mhull(i))
-        yin(i)=yh(mhull(i))
-        zin(i)=zh(mhull(i))
-      enddo
-
-      k=0
-      iface=0
-      do while (k.lt.kfacelast)
-        k=k+1
-        iface=iface+1
-        npoi=mface(k)
-        kface(k)=npoi
-        do ipoi=1,npoi
-          k=k+1
-c          print*,ical,iface,k,mface(i)
-          kface(k)=mbuff(mface(k))
+        do i=1,nhull
+          xin(i)=xh(khull(i))
+          yin(i)=yh(khull(i))
+          zin(i)=zh(khull(i))
         enddo
-C        if (k.ge.kfacelast) exit
+
+        npoi=nhull
+        xh(1:npoi)=xin(1:npoi)
+        yh(1:npoi)=yin(1:npoi)
+        zh(1:npoi)=zin(1:npoi)
+
+        if (idebug.ne.0) then
+
+          call util_check_hull_3d(
+     &      npoi,xin,yin,zin,khull,kedge,kface,
+     &      nhull,nedge,nface,kfacelast,tinyin,
+     &      ifail)
+
+          if (ifail.ne.0) then
+            if (icycle.eq.1) then
+              do i=1,nin
+                write(45,*)xin(i),yin(i),zin(i),i,ical
+              enddo
+              do i=1,nhull
+                write(46,*)xh(khull(i)),yh(khull(i)),zh(khull(i)),i,ical
+              enddo
+            else
+              do i=1,nin
+                write(45,*)xin(i),yin(i),zin(i),i,-ical
+              enddo
+              do i=1,nhull
+                write(46,*)xh(khull(i)),yh(khull(i)),zh(khull(i)),i,-ical
+              enddo
+            endif
+          endif
+        endif
+
       enddo
 
-      do i=1,nedge
-        kedge(1:2,i)=medge(1,mbuff(medge(1:2,i)))
-      enddo
-
-      deallocate(xh,yh,zh,mbuff,mhull,mface,medge)
+      deallocate(xh,yh,zh)
 
 c      call util_break
 
 c      i_debug=imag
+
+      if (idebug.ne.0) then
+        call util_check_hull_3d(
+     &    npoi,xin,yin,zin,khull,kedge,kface,
+     &    nhull,nedge,nface,kfacelast,tinyin,
+     &    ifail)
+      endif
+
+      if (modsimp.eq.2) modsimp=0
 
       return
       end
