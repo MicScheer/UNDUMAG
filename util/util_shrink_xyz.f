@@ -1,3 +1,4 @@
+*CMZ :  2.04/24 27/09/2023  16.34.37  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  12.20.19  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  11.14.37  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.33.21  by  Michael Scheer
@@ -26,6 +27,11 @@ c +DECK,util_shrink_xyz.
       integer i,n,kfail,nhull,nedge,nface,kfacelast,m,ns,ipoi,iplan,
      &  kplan(3),ifound,npoi,k,kpoi,l
 
+*KEEP,hulldim.
+      integer lenhull,lenedge,lenface
+      common/uhullc/lenhull,lenedge,lenface
+*KEND.
+
 
       kfail=1
       n=m !might be overwritten in util_weed
@@ -49,11 +55,15 @@ c +DECK,util_shrink_xyz.
         return
       endif
 
-      allocate(khull(n),kedge(4,n*n),kface((n+1)*n),xr(n),yr(n),zr(n),ik(n))
+c      lenface=2*(n+1)*n
+c      lenedge=3*n
+c      lenhull=n
+
+      allocate(khull(lenhull),kedge(4,lenedge),kface(lenface),
+     &  xr(n),yr(n),zr(n),ik(n))
 
       call util_convex_hull_3d_overwrite(-9,n,x,y,z,khull,kedge,kface,
-     &  nhull,nedge,nface,kfacelast,tiny,
-     &  kfail)
+     &  nhull,nedge,nface,kfacelast,tiny,kfail)
 
 
       if (kfail.ne.0) goto 9999

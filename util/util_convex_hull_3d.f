@@ -1,3 +1,4 @@
+*CMZ :  2.04/24 27/09/2023  16.44.14  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  21.29.40  by  Michael Scheer
 *CMZ :  2.04/09 16/08/2023  07.59.23  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  09.45.40  by  Michael Scheer
@@ -32,7 +33,7 @@
       ! khull(nin)
       ! kedge(4,nin*nin-2)
 
-      ! kface((nin+1)*nin)
+      ! kface(2*(nin+1)*nin)
 
       ! Output:
 
@@ -60,6 +61,11 @@
 
       implicit none
 
+*KEEP,hulldim.
+      integer lenhull,lenedge,lenface
+      common/uhullc/lenhull,lenedge,lenface
+*KEND.
+
       double precision xin(*),yin(*),zin(*),
      &  zmin,zmax,ymin,ymax,xmin,xmax,xsc,ysc,zsc,zmin1,zmin2,
      &  cosphi,sinphi,qn,cosmax,cosqpv,ex(3),ey(3),ez(3),q(3),
@@ -75,7 +81,8 @@
       integer, dimension (:), allocatable ::  ibuff,ibuffp,ibuffm,kbuff,
      &  kedgeheap,kfaceheap,istore,iveto,kveto
 
-      integer khull(*),kedge(4,*),kface(*),ifail,i,kzmin,nhull,nedge,nface,
+      integer khull(lenhull),kedge(4,lenedge),kface(lenface),
+     &  ifail,i,kzmin,nhull,nedge,nface,
      &  mface,lface,nin,npoi,ifound,iedge,ifirst,isecond,ithird,ipoi,kpoi,
      &  ledge,medge,jpoi,iover,istat,nh2d,nedgeheap,nbuff,iface,nfpoi,kfail,
      &  kfacelast,k,ib1,ib2
@@ -107,10 +114,10 @@ c 1.3.2023      tiny2=tiny**2
 
       npoi=nin
 
-      allocate(kfaceheap(npoi*npoi))
-      allocate(kedgeheap(npoi*npoi-2))
-      allocate(ibuff(npoi),ibuffp(npoi),ibuffm(npoi),kbuff((npoi+1)*npoi))
-      allocate(iplans(npoi,npoi),istore(npoi),iveto(npoi),kveto(npoi))
+      allocate(kfaceheap(lenface))
+      allocate(kedgeheap(lenedge))
+      allocate(ibuff(npoi),ibuffp(npoi),ibuffm(npoi),kbuff(lenface))
+      allocate(iplans(2*npoi,2*npoi),istore(npoi),iveto(npoi),kveto(npoi))
       allocate(x(npoi),y(npoi),z(npoi),x2(npoi),y2(npoi),z2(npoi))
 
       ibuff=0
@@ -120,6 +127,11 @@ c 1.3.2023      tiny2=tiny**2
       iplans=0
       iveto=0
       kveto=0
+
+      kface(1:lenface)=0
+      kedgeheap(1:lenedge)=0
+      kedge(1:4,1:lenedge)=0
+      kfaceheap(1:lenface)=0
 
       x(1:npoi)=xin(1:npoi)
       y(1:npoi)=yin(1:npoi)
@@ -299,9 +311,9 @@ c 1.3.2023      tiny2=tiny**2
       nedge=0
       nface=0
       nhull=0
-      kedge(1:4,1:2*npoi-2)=0
-      khull(1:npoi)=0
-      kface(1:(npoi+1)*npoi)=0
+      kedge(1:4,lenedge)=0
+      khull(1:lenhull)=0
+      kface(1:lenface)=0
 
       xsc=1.0d0/(xmax-xmin)
       ysc=1.0d0/(ymax-ymin)
@@ -583,7 +595,7 @@ c15Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
 
         ibuffp(1:k)=ibuff(1:k)
 
-        if (nh2d.gt.(npoi+1)*npoi) then
+        if (nh2d.gt.lenface) then
           cerror="*** Error in util_convex_hull_3d: Boundary for kbuff exceeded ***"
           kfail=9
           goto 9999
@@ -793,7 +805,7 @@ c        print*,q
           call util_plane(p1,p2,p3,q,vnor,dist,iover,istat)
           if (istat.eq.0.and.abs(dist).lt.tiny) then
             nbuff=nbuff+1
-            if (nbuff.gt.npoi) then
+            if (nbuff.gt.lenface) then
               kfail=-4
               cerror="*** Error in util_convex_hull_3d: Buffer exceeded ***"
               goto 9999
@@ -864,7 +876,7 @@ c        print*,q
 
           ibuffp(1:nh2d)=kbuff(1:nh2d)
 
-          if (nh2d.gt.(npoi+1)*npoi) then
+          if (nh2d.gt.lenface) then
             cerror="*** Error in util_convex_hull_3d: Boundary for kbuff exceeded ***"
             kfail=9
             goto 9999
@@ -927,7 +939,8 @@ c        print*,q
 
           if (ifound.eq.0) then
             nedge=nedge+1
-            if (nedge.gt.2*npoi-2) then
+            if (nedge.gt.lenedge) then
+              cerror='*** util_convex_hull_3d: Dimension lenedge exceeded'
               kfail=81
               goto 9999
             endif
@@ -1012,12 +1025,12 @@ c        print*,q
           kedge(2,i)=istore(kedgebuff(2,i))
         enddo
 
-        do kfacelast=1,(npoi+1)*npoi
+        do kfacelast=1,lenface
           if (kface(kfacelast).eq.0) then
             exit
           endif
-          if (kfacelast.gt.(npoi+1)*npoi) then
-            cerror="*** Error in util_convex_hull_3d: Boundary for kbuff exceeded ***"
+          if (kfacelast.gt.lenface) then
+            cerror="*** Error in util_convex_hull_3d: Boundary lenface exceeded ***"
             kfail=9
             deallocate(kedgebuff)
             goto 9999
@@ -1030,7 +1043,7 @@ c        print*,q
         do iface=1,nface
           nfpoi=kbuff(lface)
           do i=1,nfpoi
-            if (lface+i.gt.(npoi+1)*npoi) then
+            if (lface+i.gt.lenface) then
               cerror="*** Error in util_convex_hull_3d: Boundary for kbuff exceeded ***"
               kfail=9
               deallocate(kedgebuff)

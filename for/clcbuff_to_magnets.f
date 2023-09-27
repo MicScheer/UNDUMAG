@@ -1,3 +1,4 @@
+*CMZ :  2.04/24 27/09/2023  16.03.22  by  Michael Scheer
 *CMZ :  2.04/20 20/09/2023  10.48.38  by  Michael Scheer
 *CMZ :  2.04/16 12/09/2023  13.51.34  by  Michael Scheer
 *CMZ :  2.04/14 06/09/2023  06.47.58  by  Michael Scheer
@@ -19,10 +20,11 @@
       use undumagf90m
       use magnets_structure
       use displacement
+      use utilmod
 
       implicit none
 
-*KEEP,grarad,T=F77.
+*KEEP,GRARAD.
 c-----------------------------------------------------------------------
 c     grarad.cmn
 c-----------------------------------------------------------------------
@@ -48,6 +50,11 @@ c-----------------------------------------------------------------------
       integer i,k,l,m,kb,ib,ip,npoi,ir,ih,iphi,limit,
      &  nxdiv,nydiv,nzdiv,nhull,nface,nedge,kfacelast,kblockch
 
+*KEEP,hulldim.
+      integer lenhull,lenedge,lenface
+      common/uhullc/lenhull,lenedge,lenface
+*KEND.
+
       integer ipos(2,1000),jpos(2,1000),nwords,istat,ibrn,ifound
 
       integer ifailhull,lun,ieof,kfail
@@ -66,7 +73,11 @@ c-----------------------------------------------------------------------
       nmag=0
       niron=0
       ncornmax=12
-      nplanmax=8
+      nplanmax=12
+
+      lenface=ncornmax*nplanmax*2
+      lenhull=lenface
+      lenedge=lenface*2
 
       allocate(
      &  xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
@@ -74,7 +85,7 @@ c-----------------------------------------------------------------------
      &  xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax),
      &  xp(ncornmax),yp(ncornmax),zp(ncornmax),
      &  xpc(ncornmax),ypc(ncornmax),zpc(ncornmax),
-     &  kface((ncornmax+1)*ncornmax),kedge(4,2*ncornmax-2),khull(ncornmax))
+     &  kface(lenface),kedge(4,lenedge),khull(lenhull))
 
       ib=0
       kb=0
@@ -470,8 +481,15 @@ c-----------------------------------------------------------------------
           npoi=4*(nydiv+1)
 
           if(npoi.gt.ncornmax) then
+
             ncornmax=npoi
-            deallocate(xp,yp,zp,xpc,ypc,zpc,kface,kedge,khull,
+            nplanmax=2*ncornmax
+            lenface=ncornmax*nplanmax*2
+            lenedge=lenface*2
+            lenhull=lenface
+
+            deallocate(xp,yp,zp,xpc,ypc,zpc,
+     &        kface,kedge,khull,
      &        xpuffer1,ypuffer1,zpuffer1,
      &        xpuffer2,ypuffer2,zpuffer2,
      &        xpuffer3,ypuffer3,zpuffer3
@@ -482,7 +500,7 @@ c-----------------------------------------------------------------------
      &        xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax),
      &        xp(ncornmax),yp(ncornmax),zp(ncornmax),
      &        xpc(ncornmax),ypc(ncornmax),zpc(ncornmax),
-     &        kface((npoi+1)*npoi),kedge(4,2*npoi-2),khull(ncornmax))
+     &        kface(lenface),kedge(4,lenedge),khull(lenhull))
           endif
 
           ip=0

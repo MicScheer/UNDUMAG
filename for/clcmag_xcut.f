@@ -1,3 +1,4 @@
+*CMZ :  2.04/24 27/09/2023  16.27.12  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/14 05/09/2023  13.54.14  by  Michael Scheer
@@ -38,7 +39,10 @@
 
       integer, dimension (:,:), allocatable :: kedge
       integer, dimension (:), allocatable :: khull,kface
-
+*KEEP,hulldim.
+      integer lenhull,lenedge,lenface
+      common/uhullc/lenhull,lenedge,lenface
+*KEND.
       type(T_Magnet) :: tmag
 
       if (idebug.gt.0) call util_break
@@ -78,8 +82,7 @@
      &  xh(2*ncornmax*nplanmax),yh(2*ncornmax*nplanmax),zh(2*ncornmax*nplanmax),
      &  xhc(2*ncornmax*nplanmax),yhc(2*ncornmax*nplanmax),zhc(2*ncornmax*nplanmax))
 
-      allocate(khull(2*ncornmax*nplanmax),kedge(4,2*ncornmax*nplanmax-2),
-     &  kface(5*ncornmax*nplanmax))
+      allocate(khull(lenhull),kedge(4,lenedge),kface(lenface))
 
       t_magnets(imag)%mxdiv=0
 

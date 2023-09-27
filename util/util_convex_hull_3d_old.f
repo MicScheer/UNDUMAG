@@ -1,3 +1,4 @@
+*CMZ :  2.04/24 27/09/2023  11.13.46  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  12.20.19  by  Michael Scheer
 *CMZ :  2.02/01 03/11/2021  12.49.04  by  Michael Scheer
 *CMZ :  2.00/03 19/04/2018  15.03.14  by  Michael Scheer
@@ -22,7 +23,7 @@
 
       ! khull(npoi)
       ! kedge(4,2*npoi)
-      ! kface((npoi+1)*npoi)
+      ! kface((2*npoi+1)*npoi)
 
       ! Output:
 
@@ -83,7 +84,7 @@ c      double precision pvv
       ical=ical+1
       tiny2=tiny**2
 
-      allocate(kfaceheap(npoi*npoi))
+      allocate(kfaceheap(2*npoi*npoi))
       allocate(kedgeheap(npoi*npoi))
       allocate(ibuff(npoi))
       allocate(ibuffp(npoi))
@@ -152,7 +153,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       nhull=0
       kedge(4,1:2*npoi)=0
       khull(1:npoi)=0
-      kface(1:(npoi+1)*npoi)=0
+      kface(1:2*(npoi+1)*npoi)=0
 
       xsc=1.0d0/(xmax-xmin)
       ysc=1.0d0/(ymax-ymin)
@@ -851,7 +852,7 @@ c        nedgeheap=nedgeheap-1
           kedge(2,i)=istore(kedgebuff(2,i))
         enddo
 
-        do kfacelast=1,(npoi+1)*npoi
+        do kfacelast=1,2*(npoi+1)*npoi
           if (kface(kfacelast).eq.0) then
             exit
           endif

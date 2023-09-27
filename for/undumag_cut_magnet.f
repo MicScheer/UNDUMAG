@@ -1,3 +1,4 @@
+*CMZ :  2.04/24 27/09/2023  15.47.49  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  14.42.15  by  Michael Scheer
 *CMZ :  2.04/01 22/01/2023  18.48.18  by  Michael Scheer
@@ -44,16 +45,21 @@
 
       integer :: ical=0
 
+*KEEP,HULLDIM.
+      integer lenhull,lenedge,lenface
+      common/uhullc/lenhull,lenedge,lenface
+*KEND.
+
       ical=ical+1
       ifail=0
 
-      nh=ncornmax*nplanmax
+c      nh=ncornmax*nplanmax
 
       allocate(
-     &  xh(nh),yh(nh),zh(nh),
-     &  xh1(nh),yh1(nh),zh1(nh),
-     &  xh2(nh),yh2(nh),zh2(nh),
-     &  khull(nh),kedge(4,2*nh-2),kface(nh*(nh+1)))
+     &  xh(lenhull),yh(lenhull),zh(lenhull),
+     &  xh1(lenhull),yh1(lenhull),zh1(lenhull),
+     &  xh2(lenhull),yh2(lenhull),zh2(lenhull),
+     &  khull(lenhull),kedge(4,lenedge),kface(lenface))
 
       xmin=1.0d30
       xmax=-1.0d30
