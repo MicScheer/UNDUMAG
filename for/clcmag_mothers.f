@@ -1,3 +1,4 @@
+*CMZ :  2.04/24 27/09/2023  15.58.37  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 25/02/2023  17.18.44  by  Michael Scheer
@@ -22,6 +23,11 @@
 
       integer im,moth,imag,nm,nmag,nhull,npoi,nh,nedge,nface,ifail,
      &  kfacelast,i,l,nhmag,kmag
+
+*KEEP,hulldim.
+      integer lenhull,lenedge,lenface
+      common/uhullc/lenhull,lenedge,lenface
+*KEND.
 
       character(32) cnam,cmoth
 
@@ -68,9 +74,9 @@
       enddo !moth
 
       allocate(hull(3,nhull))
-      allocate(xh(nhull),yh(nhull),zh(nhull))
-      allocate(khull(nhull))
-      allocate(kedge(4,2*nhull-2),kface((nhull+1)*nhull))
+      allocate(xh(lenhull),yh(lenhull),zh(lenhull))
+      allocate(khull(lenhull))
+      allocate(kedge(4,lenedge),kface(lenface))
 
       do moth=1,nmoth_t
 

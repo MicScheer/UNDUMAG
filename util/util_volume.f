@@ -1,3 +1,4 @@
+*CMZ :  2.04/24 27/09/2023  15.32.24  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  12.20.19  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  15.00.22  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  18.38.39  by  Michael Scheer
@@ -12,18 +13,18 @@
      &  p1(3),p2(3),p3(3),vnor(3),dist,a,rotmat(3,3),r(3),vrot(3)
 
       integer l,n,kfail,nhull,nedge,nface,iover,i,ipoi,iface,npoi,kfacelast,k
-      double precision, dimension(:), allocatable :: x,y,z,hull,xr,yr,zr
+      double precision, dimension(:), allocatable :: x,y,z,xr,yr,zr
       integer, dimension(:,:), allocatable :: kedge
       integer, dimension(:), allocatable :: kface,khull
 
-      ! khull(n)
-      ! kedge(4,2*n-2)
-      ! kface((n+1)*n)
+*KEEP,hulldim.
+      integer lenhull,lenedge,lenface
+      common/uhullc/lenhull,lenedge,lenface
+*KEND.
 
-      allocate(x(n),y(n),z(n),hull(n),khull(n),xr(n),yr(n),zr(n),
-     &  kedge(4,n*n-2),
-     &  kface((n+1)*n)
-     &  )
+
+      allocate(x(n),y(n),z(n),khull(lenhull),xr(n),yr(n),zr(n),
+     &  kedge(4,lenedge),kface(lenface))
 
       x(1:n)=xin(1:n)
       y(1:n)=yin(1:n)
@@ -83,7 +84,7 @@
 
 9999  continue
 
-      deallocate(x,y,z,xr,yr,zr,hull,kedge,kface,khull)
+      deallocate(x,y,z,xr,yr,zr,kedge,kface,khull)
 
       return
       end
