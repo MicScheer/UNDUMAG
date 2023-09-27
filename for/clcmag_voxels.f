@@ -1,3 +1,4 @@
+*CMZ :  2.04/23 27/09/2023  07.36.57  by  Michael Scheer
 *CMZ :  2.04/20 20/09/2023  15.31.58  by  Michael Scheer
 *CMZ :  2.04/17 12/09/2023  14.13.06  by  Michael Scheer
 *CMZ :  2.04/16 06/09/2023  16.43.43  by  Michael Scheer
@@ -218,6 +219,7 @@ c+self.
      &      t_magnets(imag)%ctype.ne.'Cylinder') then
           write(lun6,*)'*** Warning in clcmag_voxels: Sum of volumes of voxels does not match the one of the magnet ',t_magnets(imag)%cnam
           write(lun6,*)"Rel. error :",(volmag-t_magnets(imag)%volume)/volmag
+          write(lun6,*)'*** Consider to set MODSIMPHULL=1  in undumag.nam'
         endif
       enddo !imag
 

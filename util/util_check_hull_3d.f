@@ -1,3 +1,4 @@
+*CMZ :  2.04/23 27/09/2023  09.36.23  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  16.33.57  by  Michael Scheer
 *CMZ :  2.04/17 11/09/2023  20.47.28  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.30.11  by  Michael Scheer
@@ -24,7 +25,7 @@ c+seq,debugutil.
       save ical
 
       ical=ical+1
-      if (ical.eq.10) idebug=1
+c      if (ical.eq.10) idebug=1
 
       if (idebug.ne.0) then
         print*
@@ -99,6 +100,6 @@ c      return
       enddo
 
       if (idebug.ne.0) flush(77)
-      if (ical.eq.10) stop
+
       return
       end

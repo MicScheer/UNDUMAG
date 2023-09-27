@@ -1,3 +1,4 @@
+*CMZ :  2.04/23 27/09/2023  08.50.09  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  21.24.47  by  Michael Scheer
 *CMZ :  2.04/17 11/09/2023  15.31.12  by  Michael Scheer
 *CMZ :  2.04/16 10/09/2023  20.05.58  by  Michael Scheer
@@ -12,7 +13,8 @@
       integer, dimension(:), allocatable :: nveto,kveto,ihull,ibuff,jbuff
       integer, dimension(:,:), allocatable :: ksim
 
-      double precision  x(*),y(*),z(*),vn(3,*),tiny,vnor(3),gcen(3),dist,p(3)
+      double precision  x(*),y(*),z(*),vn(3,*),tiny,vnor(3),gcen(3),dist,p1(3),
+     &  p2(3),p3(3)
 
       integer n,ksimp(*),kface(*),lface(*),kedge(4,*),khull(*),
      &  nface,kfail,nn,kfacelast,nsim,nedge,nh,nhull,
@@ -114,23 +116,24 @@ c        if (idebug.ne.0.and.isim.eq.3) flush(88)
 
         nh=nh-1
 
-        do i=1,nh
-          jbuff(i)=ibuff(ihull(i))
-        enddo
+c        do i=1,nh
+        jbuff(1:nh)=ibuff(ihull(1:nh))
+c        enddo
 
         ihull=jbuff
 
-        do i=1,3
-          xh(i)=x(ihull(i))
-          yh(i)=y(ihull(i))
-          zh(i)=z(ihull(i))
-        enddo
+c        do i=1,3
+        xh(1:3)=x(ihull(1:3))
+        yh(1:3)=y(ihull(1:3))
+        zh(1:3)=z(ihull(1:3))
+c        enddo
 
-        p=[xh(1),yh(1),zh(1)]
-        call util_plane(p,[xh(2),yh(2),zh(2)],[xh(3),yh(3),zh(3)],p,
-     &    vnor,dist,iover,kfail)
+        p1=[xh(1),yh(1),zh(1)]
+        p2=[xh(2),yh(2),zh(2)]
+        p3=[xh(3),yh(3),zh(3)]
+        call util_plane(p1,p2,p3,p1,vnor,dist,iover,kfail)
 
-        if (dot_product(p-gcen,vnor).lt.0.0d0) then
+        if (dot_product(p1-gcen,vnor).lt.0.0d0) then
           jbuff=ihull
 c          xb(1:nh)=xh(1:nh)
 c          yb(1:nh)=yh(1:nh)
