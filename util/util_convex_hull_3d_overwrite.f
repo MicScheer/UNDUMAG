@@ -1,3 +1,4 @@
+*CMZ :  2.04/26 28/09/2023  12.41.02  by  Michael Scheer
 *CMZ :  2.04/25 28/09/2023  08.25.12  by  Michael Scheer
 *CMZ :  2.04/23 27/09/2023  09.35.27  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  21.22.26  by  Michael Scheer
@@ -31,7 +32,7 @@
      &  nsimp,n3,ipoi,j,i1,i2,npoi,ical=0,iface,imag,ifail,iswitch,
      &  idebug=0
 
-*KEEP,HULLDIM.
+*KEEP,hulldim.
       integer lenhull,lenedge,lenface,nverhullmax
       common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
@@ -138,10 +139,11 @@ c+seq,debugutil.
           k=k+1
           kface(k)=lhull(kface(k))
         enddo
+        if (k.ge.kfacelast) exit
       enddo
 
       do i=1,nedge
-        kedge(1:4,i)=lhull(kedge(1:4,i))
+        kedge(1:2,i)=lhull(kedge(1:2,i))
       enddo
 
       deallocate(xh,yh,zh,lhull)
@@ -154,7 +156,7 @@ c+seq,debugutil.
       if (ifail.ne.0) then
         if (iswitch.ne.0) then
           print*,"*** Failed!! Giving up ***"
-        else
+        else if (modsimp.eq.0) then
           print*,""
           print*,"*** Warning in util_convex_hull_3d_overwrite:"
           print*,"*** Bad return from util_check_hull_3d.f"
