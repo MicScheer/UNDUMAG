@@ -1,4 +1,4 @@
-* Version 2.04/21
+* Version 2.04/24
  ! Name list file, to control UNDUMAG
 
  $undumagn
@@ -125,7 +125,8 @@
                 ! change may help in case of trouble
 		! 0: will be set to 1.e-6
 		
- modsimphull=1  ! use simple convex-hull algorithm, slow but robuste
+ modsimphull=0  ! use simple convex-hull algorithm, slow but robuste
+ nvertmax=32    ! max. number of vertices of convex hulls
 
  iunduplot=1 ! Write Encapsulated PostScript files to show geometry
 	     ! iunduplot<0: stop UNDUMAG after writing undumag.eps

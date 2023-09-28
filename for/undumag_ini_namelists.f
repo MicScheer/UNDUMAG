@@ -1,3 +1,4 @@
+*CMZ :  2.04/25 28/09/2023  08.29.16  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/02 25/02/2022  09.54.41  by  Michael Scheer
@@ -20,6 +21,9 @@
       common /randomc/ irancalls,irnseed,irnmode,irnseedi
 
       namelist /randomn/ irnmode,irnseed
+*KEEP,hulldim.
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
 
       integer lunnam,istat
@@ -39,6 +43,16 @@
       read(lunnam,undumagn)
       read(lunnam,randomn)
       close(lunnam)
+
+      if(nvertmax.lt.8) then
+        write(lun6,*)
+        write(lun6,*)"--- Undumag_ini_namelists: Nvertmax lower than eight ***"
+        write(lun6,*)"--- Undumag_ini_namelists: Set to  32 ***"
+        write(lun6,*)
+        nvertmax=32
+      endif
+
+      nverhullmax=nvertmax
 
       kcalcvars=1 !to avoid problems with undumag.in if coating is used
 
