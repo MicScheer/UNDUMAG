@@ -1,3 +1,4 @@
+*CMZ :  2.04/25 28/09/2023  08.00.38  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.03.22  by  Michael Scheer
 *CMZ :  2.04/20 20/09/2023  10.48.38  by  Michael Scheer
 *CMZ :  2.04/16 12/09/2023  13.51.34  by  Michael Scheer
@@ -51,8 +52,8 @@ c-----------------------------------------------------------------------
      &  nxdiv,nydiv,nzdiv,nhull,nface,nedge,kfacelast,kblockch
 
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface
-      common/uhullc/lenhull,lenedge,lenface
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
 
       integer ipos(2,1000),jpos(2,1000),nwords,istat,ibrn,ifound
@@ -72,10 +73,10 @@ c-----------------------------------------------------------------------
 
       nmag=0
       niron=0
-      ncornmax=12
-      nplanmax=12
+      ncornmax=nvertmax
+      nplanmax=2*nvertmax
 
-      lenface=ncornmax*nplanmax*2
+      lenface=ncornmax*nplanmax+nplanmax
       lenhull=lenface
       lenedge=lenface*2
 

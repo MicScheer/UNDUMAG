@@ -1,4 +1,6 @@
-*CMZ :          22/08/2023  08.57.29  by  Michael Scheer
+*CMZ :          28/09/2023  07.45.29  by  Michael Scheer
+*CMZ :  2.04/22 25/09/2023  12.20.45  by  Michael Scheer
+*CMZ :  2.04/10 22/08/2023  08.57.29  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  19.31.25  by  Michael Scheer
 *CMZ :  2.04/03 05/03/2023  15.03.22  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2022  12.27.43  by  Michael Scheer
@@ -148,7 +150,7 @@ c      real*4, dimension (:,:,:), allocatable :: wwmatrix
      &  nwarnbound, iwarnin,iwarn2pi,iwarnbound,ndipoles,killbadmag,irecrepl,kwarncom,irandmag,kshuffle,
      &  kforcemag,kurad,kbextern,kresiron,kprint,ndivfboxy,
      &  ncwires,nrace,nwind,ncrace,ncfila,narc,ncarc,nwcarc,nwrace,nwwind,
-     &  nwcrace,nwarc,ncoil,newclc,iunduplot_mode,
+     &  nwcrace,nwarc,ncoil,newclc,iunduplot_mode,modsimphull,nvertmax,
      &  nrbar,nwrbar,nthwir,nwthwir,nmagcyl,kwave,iforcegrid,modegui,nbrnmat
 
       character(256) unducomment
@@ -175,7 +177,7 @@ c      real*4, dimension (:,:,:), allocatable :: wwmatrix
      &  ds,xf,yf,zf,efx,efy,efz,xobsv,yobsv,zobsv,phelow,phehig,
      &  ieneloss,ivelofield,nphener,nstep,kxcenter,kcalcvars,
      &  dampiron,isimpson,isplinefm,kdisplace,kechocalc,knomagmap,knopolmap,
-     &  kmapmode,kmapnohead,knointmap,
+     &  kmapmode,kmapnohead,knointmap,modsimphull,nvertmax,
      &  iforce,ivrml,iundugeo,idipoles,iforcedip,iplforce,itorque,mbforcex,mbforcey,mbforcez,mfcolor,
      &  ubfcenx,ubfceny,ubfcenz,ubflenx,ubfleny,ubflenz,
      &  utorqcenx,utorqceny,utorqcenz,chforcemag,nwarnbound, iwarnin,iwarn2pi,

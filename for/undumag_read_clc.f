@@ -1,4 +1,5 @@
-*CMZ :          21/09/2023  16.12.51  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  07.22.52  by  Michael Scheer
+*CMZ :  2.04/21 21/09/2023  16.12.51  by  Michael Scheer
 *CMZ :  2.04/11 29/08/2023  14.43.10  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
@@ -219,6 +220,7 @@
               i=i-1
             else if (cline(ipos(1,1):ipos(2,1)).eq.'Corners') then
               read(clcbuff(i+4),*) ncorn
+              if (ncorn.gt.ncornmax) ncornmax=ncorn
               do l=1,5+ncorn
                 nclcmag=nclcmag+1
                 clcmag(nclcmag)=clcbuff(i)
