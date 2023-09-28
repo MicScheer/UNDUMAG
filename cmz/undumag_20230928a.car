@@ -1,3 +1,496 @@
++TITLE.
+UNDUMAG  2.04/27  28/09/2023  14.24.47
++PATCH,FOR.
+*CMZ :  0.00/00 20/04/2016  13.00.13  by  Michael Scheer
++DECK,undumag_read_clc.
+*CMZ :  2.04/25 28/09/2023  07.22.52  by  Michael Scheer
+*CMZ :  2.04/21 21/09/2023  16.12.51  by  Michael Scheer
+*CMZ :  2.04/11 29/08/2023  14.43.10  by  Michael Scheer
+*CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
+*CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
+*CMZ :  2.04/01 22/01/2023  13.04.45  by  Michael Scheer
+*CMZ :  2.04/00 14/01/2023  14.39.42  by  Michael Scheer
+*CMZ :  2.03/00 15/08/2022  12.39.08  by  Michael Scheer
+*CMZ :  2.02/02 09/03/2022  09.42.30  by  Michael Scheer
+*CMZ :  2.02/01 11/02/2022  08.28.50  by  Michael Scheer
+*-- Author :    Michael Scheer   20/04/2021
+      subroutine undumag_read_clc
+
+      use commandlinef90m
+      use bpolyederf90m
+      use undumagf90m
+      use magnets_structure
+      use displacement
+
+      implicit none
+
+      integer i,j,ieof,lunclc,istat,ipos(2,1000),nwords,
+     &  lmat,nmat,l,ncorn,nfila,lunf
+
+      character(512) cline,cword
+      cundutit='* No User Comment'
+      unducomment=''
+      usercom=''
+      cundutit='* ' // adjustl(trim(unducomment))
+
+      nclcbuff=0
+      ncwires=0
+
+      nwind=0
+      nrace=0
+      ncrace=0
+      narc=0
+      ncarc=0
+      nrbar=0
+      nthwir=0
+      nmagcyl=0
+
+      ntransrotcop=0
+      transrotcop=0.0d0
+
+      nmodule_t=0
+      modegui=0
+
+      open(newunit=lunclc,file=Fclc)
+
+      do while (.true.)
+        call util_skip_comment_end(lunclc,ieof)
+        if (ieof.ne.0) exit
+        read(lunclc,'(a)') cline
+        !if (kechocalc.ne.0) print*,trim(cline)
+        cline=adjustl(cline)
+        if (cline(1:4).eq.'Mode') then
+          call util_string_split(cline,1000,nwords,ipos,istat)
+          if (nwords.gt.1) then
+            if (cline(ipos(1,2):ipos(2,2)).eq.'Mirror') then
+              modegui=3
+            else if (cline(ipos(1,2):ipos(2,2)).eq.'Hybrid') then
+              modegui=2
+            else if (cline(ipos(1,2):ipos(2,2)).eq.'AppleII') then
+              modegui=1
+            endif
+          endif
+        endif
+        if (cline(1:1).eq.'&') then
+          call util_string_split(cline,1000,nwords,ipos,istat)
+          if (cline(ipos(1,2):ipos(2,2)).eq.'User_Comment') then
+            nclcbuff=nclcbuff+1
+            !if (kechocalc.ne.0) print*,trim(cline)
+            call util_skip_comment_end(lunclc,ieof)
+            if (ieof.ne.0) exit
+            cline=''
+            unducomment=''
+            read(lunclc,'(a)') cline
+            nclcbuff=nclcbuff+1
+            unducomment=trim(cline(1:512))
+            usercom=adjustl(trim(unducomment))
+            cundutit='* ' // adjustl(trim(unducomment))
+            read(lunclc,'(a)') cline
+            cycle ! to avoid confusion, if key words appear in comment
+          endif
+        endif
+        if (len_trim(cline).eq.0) cycle
+        nclcbuff=nclcbuff+1
+      enddo
+
+      allocate(
+     &  magmodule(nclcbuff),
+     &  clcbuff(nclcbuff),
+     &  clcmag(nclcbuff),
+     &  clcspec(nclcbuff),
+     &  clcmat(nclcbuff),
+     &  clcmod(nclcbuff),
+     &  clccoil(nclcbuff),
+     &  clccop(nclcbuff),
+     &  clcvar(nclcbuff),
+     &  clcinhom(nclcbuff)
+     &  )
+
+      rewind(lunclc)
+
+      nclcbuff=0
+      do while (.true.)
+        ieof=0
+        call util_skip_comment_end(lunclc,ieof)
+        if (ieof.ne.0) exit
+        read(lunclc,'(a)') cline
+        cline=adjustl(cline)
+        !print*,trim(cline)
+        if (len_trim(cline).eq.0) cycle
+        if (nclcbuff.gt.0.and.cline(1:1).eq.'&') then
+          call util_string_split(cline,1000,nwords,ipos,istat)
+          if (cline(ipos(1,2):ipos(2,2)).eq.'End') then
+            nclcbuff=nclcbuff+1
+            cline(1:1)='!'
+            clcbuff(nclcbuff)=cline
+            cycle
+          endif
+          if (clcbuff(nclcbuff)(1:1).eq.'&') then
+            !print*,cline(ipos(1,2):ipos(2,2))
+            !call util_break
+            print*,"*** Error in undumag_read_clc: Missing data lines after"
+            print*,trim(clcbuff(nclcbuff))
+            stop
+          endif
+          if (cline(ipos(1,2):ipos(2,2)).eq.'User_Comment') then
+            ieof=0
+            call util_skip_comment_end(lunclc,ieof)
+            if (ieof.ne.0) exit
+            read(lunclc,'(a)') cline
+            cycle
+          endif
+        endif
+        nclcbuff=nclcbuff+1
+        clcbuff(nclcbuff)=cline
+      enddo
+
+      close(lunclc)
+
+      nclcmag=0
+      nclcspec=0
+      nclccoil=0
+      nclcvar=0
+      nclcmod=0
+      nclcmat=0
+
+      nmag_t=0
+      niron_t=0
+      ninhom_t=0
+
+      i=0
+      do while (i.lt.nclcbuff)
+
+        i=i+1
+        cline=clcbuff(i)
+        if (kechocalc.ne.0) print*,trim(cline)
+        call util_string_split(cline,1000,nwords,ipos,istat)
+
+        if (cline(ipos(1,1):ipos(2,1)).eq.'&') then
+          if (cline(ipos(1,2):ipos(2,2)).eq.'User_Comment') then
+            i=i+1
+          else if (cline(ipos(1,2):ipos(2,2)).eq.'Inhomogeneity') then
+            !call util_break
+            ninhom_t=ninhom_t+1
+            clcinhom(ninhom_t)=cline(ipos(1,2):ipos(2,2))
+            i=i+1
+            do while (.true.)
+              !print*,i,trim(clcbuff(i))
+              ninhom_t=ninhom_t+1
+              clcinhom(ninhom_t)=clcbuff(i)
+              if (kechocalc.ne.0) print*,trim(clcbuff(i))
+              call util_string_split(clcinhom(ninhom_t),1000,nwords,ipos,istat)
+              if (clcinhom(ninhom_t)(ipos(1,2):ipos(2,2)).eq.'End') exit
+              i=i+1
+            enddo
+            !call util_break
+          else if (cline(ipos(1,2):ipos(2,2)).eq.'Pole' .or.
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Magnet') then
+            nmag_t=nmag_t+1
+            magmodule(nmag_t)=nmodule_t+1
+            if (cline(ipos(1,2):ipos(2,2)).eq.'Pole') niron_t=niron_t+1
+            nclcmag=nclcmag+1
+            clcmag(nclcmag)=cline(ipos(1,2):ipos(2,2))
+            i=i+1
+            cline=clcbuff(i)
+            if (kechocalc.ne.0) print*,trim(cline)
+            call util_string_split(cline,1000,nwords,ipos,istat)
+            if (
+     &          cline(ipos(1,1):ipos(2,1)).eq.'BlockChamf'.or.
+     &          cline(ipos(1,1):ipos(2,1)).eq.'BlockUsChamf'.or.
+     &          cline(ipos(1,1):ipos(2,1)).eq.'BlockDsChamf'
+     &          ) then
+              do l=1,5
+                nclcmag=nclcmag+1
+                clcmag(nclcmag)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else if (cline(ipos(1,1):ipos(2,1)).eq.'Block') then
+              do l=1,5
+                nclcmag=nclcmag+1
+                clcmag(nclcmag)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else if (cline(ipos(1,1):ipos(2,1)).eq.'Cylinder') then
+              nmagcyl=nmagcyl+1
+              do l=1,5
+                nclcmag=nclcmag+1
+                clcmag(nclcmag)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else if (cline(ipos(1,1):ipos(2,1)).eq.'Corners') then
+              read(clcbuff(i+4),*) ncorn
+              if (ncorn.gt.ncornmax) ncornmax=ncorn
+              do l=1,5+ncorn
+                nclcmag=nclcmag+1
+                clcmag(nclcmag)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else if (cline(ipos(1,1):ipos(2,1)).eq.'File') then
+              do l=1,5
+                nclcmag=nclcmag+1
+                clcmag(nclcmag)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else
+              print*,"*** Error in undumag_read_clc: Unknown magnet type in line"
+              print*,trim(cline)
+              stop
+            endif
+          else if (cline(ipos(1,2):ipos(2,2)).eq.'Module') then
+            nmodule_t=nmodule_t+1
+            nclcmod=nclcmod+1
+            clcmod(nclcmod)=clcbuff(i)
+            do l=1,4
+              i=i+1
+              nclcmod=nclcmod+1
+              clcmod(nclcmod)=clcbuff(i)
+              if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            enddo
+          else if (cline(ipos(1,2):ipos(2,2)).eq.'Translate') then
+            ntransrotcop=ntransrotcop+1
+            if (ntransrotcop.gt.ntransrotcop_p) then
+              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations changes, check parameter ntransrotcop_p ***"
+            endif
+            i=i+1
+            if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            ctransrotcop(ntransrotcop)=trim(clcbuff(i))
+            i=i+1
+            if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            !read(clcbuff(i),*) transrotcop(1:3,ntransrotcop)
+            transrotcop(1,ntransrotcop)=dble(i)
+            transrotcop(8,ntransrotcop)=0.0d0
+          else if (cline(ipos(1,2):ipos(2,2)).eq.'Remanence') then
+            ntransrotcop=ntransrotcop+1
+            if (ntransrotcop.gt.ntransrotcop_p) then
+              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations changes, check parameter ntransrotcop_p ***"
+            endif
+            transrotcop(8,ntransrotcop)=3.0d0
+            i=i+1
+            if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            ctransrotcop(ntransrotcop)=trim(clcbuff(i))
+            i=i+1
+            if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            transrotcop(1,ntransrotcop)=dble(i)
+            !read(clcbuff(i),*) transrotcop(1:6,ntransrotcop)
+          else if (cline(ipos(1,2):ipos(2,2)).eq.'Copy') then
+            nclccop_t=nclccop_t+1
+            i=i+1
+            if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            clccop(nclccop_t)=trim(clcbuff(i))
+            ntransrotcop=ntransrotcop+1
+            if (ntransrotcop.gt.ntransrotcop_p) then
+              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations changes, check parameter ntransrotcop_p ***"
+            endif
+            transrotcop(8,ntransrotcop)=-dble(nclccop_t)
+            if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            cline=clcbuff(i)
+            call util_string_split(cline,1000,nwords,ipos,istat)
+            cword=cline(ipos(1,1):ipos(2,1))
+            ctransrotcop(ntransrotcop)=trim(cword)
+          else if (
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Rotate'.or.
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Rotate_Shape') then
+            ntransrotcop=ntransrotcop+1
+            if (cline(ipos(1,2):ipos(2,2)).eq.'Rotate_Shape') then
+              transrotcop(8,ntransrotcop)=1.0d0
+            else
+              transrotcop(8,ntransrotcop)=2.0d0
+            endif
+            if (ntransrotcop.gt.ntransrotcop_p) then
+              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations changes, check parameter ntransrotcop_p ***"
+            endif
+            i=i+1
+            if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            ctransrotcop(ntransrotcop)=trim(clcbuff(i))
+            i=i+1
+            if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            transrotcop(1,ntransrotcop)=dble(i)
+            !read(clcbuff(i),*) transrotcop(1:3,ntransrotcop)
+            i=i+1
+            if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            !read(clcbuff(i),*) transrotcop(4:7,ntransrotcop)
+          else if (
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Magnet'.or.
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Pole'
+     &        ) then
+            nclcspec=nclcspec+1
+            clcspec(nclcspec)=cline(ipos(1,2):ipos(2,2))
+            nspecmag_t=nspecmag_t+1
+            if (cline(ipos(1,2):ipos(2,2)).eq.'Special_Pole') niron_t=niron_t+1
+            i=i+1
+            cline=clcbuff(i)
+            call util_string_split(cline,1000,nwords,ipos,istat)
+            if (
+     &          cline(ipos(1,1):ipos(2,1)).eq.'BlockChamf'.or.
+     &          cline(ipos(1,1):ipos(2,1)).eq.'BlockUsChamf'.or.
+     &          cline(ipos(1,1):ipos(2,1)).eq.'BlockDsChamf'
+     &          ) then
+              do l=1,5
+                nclcspec=nclcspec+1
+                clcspec(nclcspec)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else if (cline(ipos(1,1):ipos(2,1)).eq.'Block') then
+              do l=1,5
+                nclcspec=nclcspec+1
+                clcspec(nclcspec)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else if (cline(ipos(1,1):ipos(2,1)).eq.'Cylinder') then
+              do l=1,5
+                nclcspec=nclcspec+1
+                clcspec(nclcspec)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else if (cline(ipos(1,1):ipos(2,1)).eq.'Corners') then
+              read(clcbuff(i+4),*) ncorn
+              do l=1,5+ncorn
+                nclcspec=nclcspec+1
+                clcspec(nclcspec)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else if (cline(ipos(1,1):ipos(2,1)).eq.'File') then
+              do l=1,5
+                nclcspec=nclcspec+1
+                clcspec(nclcspec)=clcbuff(i)
+                if (kechocalc.ne.0) print*,trim(clcbuff(i))
+                i=i+1
+              enddo
+              i=i-1
+            else
+              print*,"*** Error in undumag_read_clc: Unknown magnet type in line"
+              print*,trim(cline)
+              stop
+            endif !shape
+
+          else if (cline(ipos(1,2):ipos(2,2)).eq.'Materials') then
+            i=i+1
+            cline=clcbuff(i)
+            nclcmat=nclcmat+1
+            clcmat(nclcmat)=clcbuff(i)
+            if (kechocalc.ne.0) print*,trim(cline)
+            read(cline,*) nmat
+            do lmat=1,nmat
+              nclcmat=nclcmat+1
+              i=i+1
+              clcmat(nclcmat)=clcbuff(i)
+              if (kechocalc.ne.0) print*,trim(clcbuff(i))
+            enddo !nmat
+
+          else if (cline(ipos(1,2):ipos(2,2)).eq.'Coil') then
+
+            ncoils_t=ncoils_t+1
+            nclccoil=nclccoil+1
+            clccoil(nclccoil)='Coil'
+            i=i+1
+            cline=clcbuff(i)
+            if (kechocalc.ne.0) print*,trim(cline)
+
+            call util_string_split(cline,1000,nwords,ipos,istat)
+            nclccoil=nclccoil+1
+
+            if (nwords.gt.1) then
+              clccoil(nclccoil)=adjustl(trim(cline(ipos(1,1):ipos(2,2))))
+            else
+              clccoil(nclccoil)=adjustl(trim(cline(ipos(1,1):ipos(2,1))))
+            endif
+
+            cword=adjustl(trim(cline(ipos(1,1):ipos(2,1))))
+
+            i=i+1
+            nclccoil=nclccoil+1
+            clccoil(nclccoil)=clcbuff(i)
+            cline=clcbuff(i)
+            if (kechocalc.ne.0) print*,trim(cline)
+
+            if (cword.eq.'Filaments') then
+              read(cline,*)nfila
+              do l=1,nfila
+                nclccoil=nclccoil+1
+                i=i+1
+                clccoil(nclccoil)=clcbuff(i)
+              enddo
+              ncwires=ncwires+nfila
+
+            else if (cword.eq.'File') then
+
+              call util_string_split(cline,1000,nwords,ipos,istat)
+              cword=adjustl(trim(cline(ipos(1,1):ipos(2,1))))
+              call util_unquote(cword)
+              clccoil(nclccoil)=adjustl(trim(cword))
+              open(newunit=lunf,file=trim(cword),status='old')
+              nfila=0
+              do while (.true.)
+                call util_skip_comment_empty_end(lunf,ieof)
+                if (ieof.ne.0) exit
+                read(lunf,'(a)')cline
+                nfila=nfila+1
+              enddo
+              close(lunf)
+              ncwires=ncwires+nfila
+
+            else if (
+     &          cword.eq.'RectArc'.or.
+     &          cword.eq.'CircArc'.or.
+     &          cword.eq.'RectBar'.or.
+     &          cword.eq.'ThickWire'
+     &          ) then
+              i=i+1
+              nclccoil=nclccoil+1
+              clccoil(nclccoil)=clcbuff(i)
+
+            else if (
+     &          cword.ne.'Rectangular'.and.
+     &          cword.ne.'RectangCirc'.and.
+     &          cword.ne.'RectWindings'
+     &          ) then
+              print*,""
+              print*,"*** Error in undumag_read_clc: Unknown coil type in line"
+              print*,trim(cline)
+              stop
+            endif
+
+          else
+            print*,""
+            print*,"*** Error in undumag_read_clc: Unknown key-word in line"
+            print*,trim(cline)
+            stop
+         endif ! &
+
+        else if (cline(1:1).eq.'$') then
+
+          !if (kechocalc.ne.0) print*,trim(cline)
+          do j=2,len_trim(cline)-1
+            if (cline(j:j).eq.'=') then
+              nclcvar=nclcvar+1
+              clcvar(nclcvar)=trim(cline(2:))
+              exit
+            endif
+          enddo
+        endif !c1
+      enddo
+
+      return
+      end
++DECK,undumag_ini_old.
 *CMZ :  2.04/06 28/09/2023  14.25.29  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  14.44.40  by  Michael Scheer
 *CMZ :  2.04/00 05/12/2022  15.18.35  by  Michael Scheer
@@ -134,99 +627,9 @@
 ! bpebc(17,imag) select flag
 ! bpebc(18:20,imag) external field and field of coils
 
-*KEEP,PHYCONparam,T=F77.
-c-----------------------------------------------------------------------
-c     phyconparam.cmn
-c-----------------------------------------------------------------------
-
-      complex*16, parameter :: zone1=(1.0d0,0.0d0), zi1=(0.0d0,1.0d0)
-
-      complex*16, dimension(4,3), parameter ::
-     &  vstokes=reshape([
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0, -0.70710678118654746d0),
-     &  ( 0.0000000000000000d0, -0.70710678118654746d0),
-     &  ( 0.70710678118654746d0, 0.0000000000000000d0),
-     &  (-0.70710678118654746d0,-0.70710678118654746d0),
-     &  ( 0.70710678118654746d0, 0.0000000000000000d0),
-     &  (-0.70710678118654746d0, 0.0000000000000000d0),
-     &  (-0.70710678118654746d0, 0.0000000000000000d0)
-     &  ],[4,3])
-
-c      vstokes(1,1)=( 0.0d0,        0.0d0)      !horizontal polarization
-c      vstokes(1,2)=( 0.0d0,        0.0d0)
-c      vstokes(1,3)=(-sqrt(1./2.),       -sqrt(1./2.))
-c
-c      vstokes(2,1)=( 0.0d0,        0.0d0)      !right handed polarization
-c      vstokes(2,2)=( 0.0d0,       -sqrt(1./2.))
-c      vstokes(2,3)=(+sqrt(1./2.),        0.0d0)
-c
-c      vstokes(3,1)=( 0.0d0,        0.0d0)      !left handed polarization
-c      vstokes(3,2)=( 0.0d0,       -sqrt(1./2.))
-c      vstokes(3,3)=(-sqrt(1./2.),        0.0d0)
-c
-c      vstokes(4,1)=( 0.0d0,        0.0d0)      !45 degree linear polarization
-c      vstokes(4,2)=( sqrt(1./2.),        0.0d0)
-c      vstokes(4,3)=(-sqrt(1./2.),        0.0d0)
-
-      double precision, parameter ::
-     &  HBAREV1=6.58211889D-16
-     &  ,CLIGHT1=2.99792458D8
-     &  ,EMASSKG1=9.10938188D-31
-     &  ,EMASSE1=0.510998902D6
-     &  ,EMASSG1=0.510998902D-3
-     &  ,ECHARGE1=1.602176462D-19
-     &  ,ERAD1=2.8179380D-15
-     &  ,EPS01=8.854187817D-12
-     &  ,PI1=3.141592653589793D0
-     &  ,rmu04pi1=1.0D-7
-     &  ,dnull1=0.0d0
-     &  ,done1=1.0d0
-     & ,HPLANCK1=6.626176D-34
-
-      double precision, parameter ::
-     & GRARAD1=PI1/180.0d0
-     & ,RADGRA1=180.0d0/PI1
-     & ,HBAR1=HBAREV1*ECHARGE1
-     & ,WTOE1=CLIGHT1*HPLANCK1/ECHARGE1*1.0d9
-     & ,CQ1=55.0d0/32.0d0/DSQRT(3.0D0)*HBAR1/EMASSKG1/CLIGHT1
-     & ,CGAM1=4.0d0/3.0d0*PI1*ERAD1/EMASSG1**3
-     & ,POL1CON1=8.0d0/5.0d0/DSQRT(3.0D0)
-     & ,POL2CON1=8.0d0/5.0d0/DSQRT(3.0D0)/2.0d0/PI1/3600.0d0
-     &  *EMASSKG1/HBAR1/ERAD1*EMASSG1**5
-     & ,TWOPI1=2.0D0*PI1
-     & ,HALFPI1=PI1/2.0D0
-     & ,sqrttwopi1=sqrt(twopi1)
-     & ,rmu01=4.0D0*PI1/1.0D7
-     & ,alpha1=echarge1**2/(4.0d0*pi1*eps01*hbar1*clight1)
-     & ,gaussn1=1.0d0/sqrt(twopi1)
-     & ,cK934=ECHARGE1/(2.0d0*PI1*EMASSKG1*CLIGHT1)/100.0d0
-     & ,powcon1=cgam1/2.0d0/pi1*clight1*(clight1/1.0d9)**2*emassg1
-     &  ,gamma1=1.0d0/emassg1
-     &  ,emom1=emasse1*dsqrt((gamma1-1.0d0)*(gamma1+1.0d0))
-     &  ,rho1=emom1/clight1
-     &  ,omegac1=1.5d0*gamma1**3*clight1/rho1
-     &  ,ecdipev1=omegac1*hbar1/echarge1
-     &  ,ecdipkev1=ecdipev1/1000.0d0
-
-c-----------------------------------------------------------------------
-c     end of phyconparam.cmn
-c-----------------------------------------------------------------------
-*KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
-*KEEP,random.
-      integer*8 irancalls
-      integer, parameter :: irnsize=64
-      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
-      common /randomc/ irancalls,irnseed,irnmode,irnseedi
-
-      namelist /randomn/ irnmode,irnseed
-*KEND.
++seq,phyconparam.
++seq,seqdebug.
++seq,random.
 
       double precision, dimension (:,:), allocatable :: bciron,bcrec,
      &  bpre16,bc0rec,bc0iron,displace
@@ -350,38 +753,16 @@ c-----------------------------------------------------------------------
 
       modegui=0
 
++self,if=trace.
+      print*,"-trace-: undumag_ini_old entered"
++self.
 
       open(newunit=lun,file="undumag.stat")
       write(lun,*)"1"
       flush(lun)
       close(lun)
 
-*KEEP,unduver.
-      print *
-      print *
-      print *
-      write(lun6,*)'     **********************************************************'
-      write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     *                       UNDUMAG                          *'
-      write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     *                    Version 2.04/27                     *'
-      write(lun6,*)'     *                        28.9.2023                       *'
-      write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     *                     Michael Scheer                     *'
-      write(lun6,*)'     *                       HZB/BESSY                        *'
-      write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     **********************************************************'
-      print *
-      print *
-      print *
-
-      call util_zeit_kommentar(lun6,"")
-
-      open(unit=999,file="undumag.ver")
-      chuvers="2.04/27"
-      write(999,*)chuvers
-      close(999)
-*KEND.
++seq,unduver.
 
 c+seq,phycon1.
 
@@ -408,6 +789,9 @@ c      iwarnbound=0
         deallocate(xmothi,ymothi,zmothi,npmothi,matmothi,ncolmothi)
         deallocate(chmoths,chmothso,chmags,chmagsm,chmothsm,chmagsi,chmothsi)
         deallocate(magcyl)
++self,if=chmagpols.
+        deallocate(chmagpols)
++self.,if=chmagpols.
         deallocate(idamp8)
       endif
 
@@ -425,6 +809,9 @@ c      iwarnbound=0
       maxpoints=0
       kallodip=0
 
++self,if=-nowarnings.
+      if (ireallo.eq.0) open(newunit=lunwarn,file="undumag.war")
++self.,if=-nowarnings.
 
       nmatpoimax=0
 
@@ -483,6 +870,9 @@ cdebug
       iysymo=iysym
       izsymo=izsym
 
++self,if=trace.
+      print*,"-trace-: Mark 1"
++self.
       if (irnmode.eq.1.or.irnmode.eq.2) then
         kundurun=0
         open(newunit=lundum,file="undumag.run",form='formatted',recl=512)
@@ -503,6 +893,9 @@ cdebug
         call util_random_init(irnsize,irnseed)
       endif
 
++self,if=trace.
+      print*,"-trace-: Mark 2"
++self.
       ndisp=0
       if (kdisplace.ne.0) then
         if (ixsym.gt.0.or.iysym.gt.0.or.izsym.gt.0) then
@@ -535,6 +928,9 @@ cdebug
         enddo
         close(lun)
       endif
++self,if=trace.
+      print*,"-trace-: Mark 3"
++self.
 
       if (nchiiron.le.0) nchiiron=1
       nchimax=0
@@ -575,10 +971,16 @@ cdebug
 
       if (ireallo.ne.0) close(lunconv)
       if(kdumpconv.ne.0) open(newunit=lunconv,file="undumag.cnv")
++self,if=trace.
+      print*,"-trace-: Mark 4"
++self.
 
       if (ireallo.eq.0.and.kcalcvars.ne.0) then
         call undumag_calc(kechocalc,kcalcvars)
       endif
++self,if=trace.
+      print*,"-trace-: Mark 5"
++self.
 
       if (ireallo.eq.0) then
         c128="izsym"
@@ -639,6 +1041,9 @@ cdebug
           endif
         endif
       endif
++self,if=trace.
+      print*,"-trace-: Mark 6"
++self.
 
       if (dedgefb.eq.0.0d0) dedgefb=0.02d0
 
@@ -653,7 +1058,13 @@ cdebug
       ubflenz=ubflenz+2.0d0*dedgefb
 
       if (iforce.lt.0) then
++self,if=trace.
+        print*,"-trace-: Calling undumag_force_parameters"
++self.
         call undumag_force_parameters
++self,if=trace.
+        print*,"-trace-: Passed undumag_force_parameters"
++self.
       endif
 
       if (iforce.ne.9999) then
@@ -713,6 +1124,9 @@ cdebug
       tiny=corrtiny
       tiny2=tiny*tiny
 
++self,if=trace.
+      print*,"-trace-: Mark 6"
++self.
       scalcur=1.0d0
 
       TWOPI=2.0D0*PI1
@@ -726,9 +1140,18 @@ cdebug
       pphi=unduplot_phi   !plotting angle
 
       lunbpe=98
++self,if=trace.
+      print*,"-trace-: Mark 7"
++self.
       close(lunbpe)
 
++self,if=trace.
+      print*,"-trace-: Calling undumag_drop_zero_magnets"
++self.
       call undumag_drop_zero_magnets(kfoundplanes,kechocalc,hulltiny)
++self,if=trace.
+      print*,"-trace-: Passed undumag_drop_zero_magnets"
++self.
 
       open(unit=lunbpe,file=filebpe,form='formatted',status='old')
 
@@ -1005,6 +1428,9 @@ cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
         call util_convex_hull_3d(npoi,xhull,yhull,zhull,khull,kedge,kface,
      &    nhull,nedge,nface,kfacelast,hulltiny,ifailhull)
++self,if=trace.
+        print*,"-trace-: Passed util_convex_hull_3d"
++self.
 
         if (ifailhull.ne.0.or.nhull.lt.4) then
           write(lun6,*)"*** Error in undumag_ini_old: Subroutine util_convex_hull_3d failed for ",
@@ -1631,6 +2057,9 @@ c        khull(1:kfacelast)=kface(1:kfacelast)
         backspace(lunbpe)
       endif
 
++self,if=trace.
+      print*,"-trace-: Going to material files"
++self.
 
       read(lunbpe,*)nmatfiles
 
@@ -1684,6 +2113,9 @@ c loop over magnets, modules, and arrays }
      &  chmags(32,nsmag),
      &  chmagsm(32,nsmag),chmothsm(32,nsmag),
      &  chmagsi(32,nsmag),chmothsi(32,nsmag)
++self,if=chmagpols.
+     &  ,chmagpols(32,nsmag)
++self.,if=chmagpols.
      &  )
 
       allocate(bpebc0(7,nsmag))
@@ -2113,6 +2545,9 @@ c            khull(1:kfacelast)=kface(1:kfacelast)
             z00=bpebc0(3,nmagmax)
 
             next=1
++self,if=debug.
+            open(unit=97)
++self.,if=debug.
             do iplan=1,nface
 
               ncorn=kface(next)
@@ -2146,6 +2581,11 @@ c            khull(1:kfacelast)=kface(1:kfacelast)
                   corn1(1,icorn,iplan)=x0
                   corn1(2,icorn,iplan)=y0
                   corn1(3,icorn,iplan)=z0
++self,if=debug.
+                  !w97
+                  write(97,*)"-99999. ",ireallo," -99999. ",nmagmax,iplan,icorn,
+     &              sngl(corn1(1:3,icorn,iplan)+bpebc0(1:3,nmagmax))
++self.
 
                 else ! icorn.lt.ncorn
 
@@ -2162,6 +2602,9 @@ c            khull(1:kfacelast)=kface(1:kfacelast)
               next=next+ncorn ! here, ncorn is already increamented by 1
 
             enddo !nface
++self,if=debug.
+            close(97)
++self.,if=debug.
 
             nplan=nface
 
@@ -2366,6 +2809,10 @@ c?            nmagmax=nmagmax-1
 
             if (ncorn2(1).gt.0) then
 
++self,if=debug.
+              write(lun6,*)
+              write(lun6,*)"ireallo, x-cut for magnet:",ireallo,nmagmax
++self.
               ! Magnet has been cut
 
               ! First piece
@@ -2409,6 +2856,9 @@ c?              nmagmax=nmagmax+1
               ibpeplan(nmagmax)=nplan
               ibpeplano(nmagmax)=nplan
 
++self,if=debug.
+              open(unit=97,access='append')
++self.,if=debug.
               do iplan=1,nplan
                 ncorn=ncorn1(iplan)
                 ibpecorn(iplan,nmagmax)=ncorn+1
@@ -2419,11 +2869,19 @@ c?              nmagmax=nmagmax+1
                 do icorn=1,ncorn
                   bpemag0(1:3,icorn,iplan,nmagmax)=
      &              corn1(1:3,icorn,iplan)
++self,if=debug.
+                  !w97
+                  write(97,*)"11 ",ireallo,xdiv,nmagmax,iplan,icorn,
+     &              sngl(corn1(1:3,icorn,iplan)+bpebc0(1:3,nmagmax))
++self.
                 enddo
                 ncorn=ncorn+1
                 bpemag0(1:3,ncorn,iplan,nmagmax)=
      &            corn1(1:3,1,iplan) !debug 1
               enddo
++self,if=debug.
+              close(97)
++self.,if=debug.
 
               !{ check orientation of planes
 
@@ -2448,6 +2906,9 @@ c?              nmagmax=nmagmax+1
               x0=x0/i
               y0=y0/i
               z0=z0/i
++self,if=debug.
+              write(lun6,*)"First piece:",kdmag
++self.
               do iplan=1,nplan
 
                 p1(1)=bpemag0(1,1,iplan,kdmag)
@@ -2499,6 +2960,9 @@ c?              nmagmax=nmagmax+1
               ! Second piece
 
               nmagmax=nmagmax+1
++self,if=debug.
+              write(lun6,*)"Second piece:",nmagmax
++self.
 
               bpebc(15,nmagmax)=bpebc15
               mothdiv(1,nmagmax)=bpebc15
@@ -2535,6 +2999,9 @@ c?              nmagmax=nmagmax+1
               ibpeplano(nmagmax)=nplan
               ibpecol(nmagmax)=ncol
 
++self,if=debug.
+              open(unit=97,access='append')
++self.,if=debug.
               do iplan=1,nplan
                 ncorn=ncorn2(iplan)
                 if (ncorn+1.gt.ncornmax) then
@@ -2545,11 +3012,19 @@ c?              nmagmax=nmagmax+1
                 do icorn=1,ncorn
                   bpemag0(1:3,icorn,iplan,nmagmax)=
      &              corn2(1:3,icorn,iplan)
++self,if=debug.
+                  !w97
+                  write(97,*)"22 ",ireallo,xdiv,nmagmax,iplan,icorn,
+     &              sngl(corn2(1:3,icorn,iplan)+bpebc0(1:3,nmagmax))
++self.
                 enddo
                 ncorn=ncorn+1
                 bpemag0(1:3,ncorn,iplan,nmagmax)=
      &            corn2(1:3,1,iplan) !debug 1
               enddo
++self,if=debug.
+              close(97)
++self.,if=debug.
 
               ncorn1=0
               corn1=0.0d0
@@ -2643,17 +3118,28 @@ c          dydiv=(ydivmax-ydivmin)/nydiv
 
             ydivmin=1.0d30
             ydivmax=-1.0d30
++self,if=debug.
+            open(unit=97,access='append')
++self.,if=debug.
             do iplan=1,nplan
               ncorn=ibpecorn(iplan,kdmag1)
               ncorn1(iplan)=ncorn
               do icorn=1,ncorn
                 corn1(1:3,icorn,iplan)=bpemag0(1:3,icorn,iplan,kdmag1)
++self,if=debug.
+                  !w97
+                write(97,*)"-9999. ",ireallo," -9999. ",kdmag1,iplan,icorn,
+     &            sngl(corn1(1:3,icorn,iplan)+bpebc0(1:3,kdmag1))
++self.
                 if (corn1(2,icorn,iplan).lt.ydivmin)
      &            ydivmin=corn1(2,icorn,iplan)
                 if (corn1(2,icorn,iplan).gt.ydivmax)
      &            ydivmax=corn1(2,icorn,iplan)
               enddo
             enddo
++self,if=debug.
+            close(97)
++self.,if=debug.
 
             dydiv=(ydivmax-ydivmin)/fracsum*yfacdiv
             ydiv=bpebc0(2,kdmag1)+ydivmin
@@ -2680,6 +3166,20 @@ c              ydiv=ydiv-dydiv
               z02(1)=z02(2)
 
 c              if (ireallo.eq.4.and.kdmag.eq.4) then
++self,if=debug.
+              write(lun6,*)"ireallo, iydiv, ydiv:",ireallo,iydiv,ydiv
+              open(unit=97,access='append')
+              do iplan=1,nplan
+                ncorn=ibpecorn(iplan,kdmag)
+                do icorn=1,ncorn
+                  !w97
+                  write(97,*)"0 ",ireallo,ydiv,kdmag,iplan,icorn,
+     &              sngl(corn1(1:3,icorn,iplan)+bpebc0(1:3,kdmag))
+                enddo
+              enddo
+c              endif
+              close(97)
++self.
 
               call undumag_cut_magnet(kdmag,x02,y02,z02, !debug 2
      &          2*nplanmax,2*ncornmax,
@@ -2698,6 +3198,9 @@ c              ncutpiece=ncutpiece+1
               if (ncorn2(1).gt.0) then
                 ! Magnet has been cut
 
++self,if=debug.
+                write(lun6,*)"y-cut for magnet:",kdmag
++self.
                 ncutpiece=ncutpiece+1
 
                 ! First piece, replaces mother
@@ -2736,6 +3239,9 @@ c              ncutpiece=ncutpiece+1
                 ibpeplan(kdmag)=nplan
                 ibpeplano(kdmag)=nplan
 
++self,if=debug.
+                open(unit=97,access='append')
++self.,if=debug.
                 do iplan=1,nplan
                   ncorn=ncorn1(iplan)
                   if (ncorn+1.gt.ncornmax) then
@@ -2746,11 +3252,19 @@ c              ncutpiece=ncutpiece+1
                   do icorn=1,ncorn
                     bpemag0(1:3,icorn,iplan,kdmag)=
      &                corn1(1:3,icorn,iplan)
++self,if=debug.
+                  !w97
+                    write(97,*)"1 ",ireallo,ydiv,kdmag,iplan,icorn,
+     &                sngl(corn1(1:3,icorn,iplan)+bpebc0(1:3,kdmag))
++self.
                   enddo
                   ncorn=ncorn+1
                   bpemag0(1:3,ncorn,iplan,kdmag)=
      &              corn1(1:3,1,iplan) !debug 2
                 enddo
++self,if=debug.
+                close(97)
++self.,if=debug.
 
                 !{ check orientation of planes
 
@@ -2828,6 +3342,9 @@ c              ncutpiece=ncutpiece+1
                 ! Second piece
 
                 nmagmax=nmagmax+1
++self,if=debug.
+                write(lun6,*)"Second piece:",nmagmax
++self.
 
                 bpebc(15,nmagmax)=bpebc15
                 mothdiv(1,nmagmax)=bpebc15
@@ -2863,6 +3380,9 @@ c              ncutpiece=ncutpiece+1
                 ibpeplano(nmagmax)=nplan
                 ibpecol(nmagmax)=ncol
 
++self,if=debug.
+                open(unit=97,access='append')
++self.,if=debug.
                 do iplan=1,nplan
                   ncorn=ncorn2(iplan)
                   if (ncorn+1.gt.ncornmax) then
@@ -2873,11 +3393,19 @@ c              ncutpiece=ncutpiece+1
                   do icorn=1,ncorn
                     bpemag0(1:3,icorn,iplan,nmagmax)=
      &                corn2(1:3,icorn,iplan)
++self,if=debug.
+                  !w97
+                    write(97,*)"2 ",ireallo,ydiv,kdmag,iplan,icorn,
+     &                sngl(corn2(1:3,icorn,iplan)+bpebc0(1:3,nmagmax))
++self.
                   enddo
                   ncorn=ncorn+1
                   bpemag0(1:3,ncorn,iplan,nmagmax)=
      &              corn2(1:3,1,iplan) !debug 2
                 enddo
++self,if=debug.
+                close(97)
++self.,if=debug.
 
                 !{ check orientation of planes
 
@@ -3043,6 +3571,9 @@ c              ncutpiece=ncutpiece+1
                 ! Magnet has been cut
 
                 ncutpiece=ncutpiece+1
++self,if=debug.
+                write(lun6,*)"z-cut for magnet:",kdmag
++self.
 
                 ! First piece, replaces mother
 
@@ -3172,6 +3703,9 @@ c              ncutpiece=ncutpiece+1
                 ! Second piece
 
                 nmagmax=nmagmax+1
++self,if=debug.
+                write(lun6,*)"Second piece:",nmagmax
++self.
 
                 bpebc(15,nmagmax)=bpebc15
                 mothdiv(1,nmagmax)=bpebc15
@@ -4793,6 +5327,9 @@ c?              nmagmax=nmagmax+1
               ! Second piece
 
               nmagmax=nmagmax+1
++self,if=debug.
+              write(lun6,*)"Second piece:",nmagmax
++self.
 
               bpebc(8,nmagmax)=bc8
               bpebc(9,nmagmax)=bc9
@@ -5026,6 +5563,20 @@ c              ncutpiece=ncutpiece+1
      &              corn1(1:3,1,iplan) !debug 5
                 enddo
 
++self,if=debug.
+              write(lun6,*)"ireallo, iydiv, ydiv:",ireallo,iydiv,ydiv
+              open(unit=97,access='append')
+              do iplan=1,nplan
+                ncorn=ibpecorn(iplan,kdmag)
+                do icorn=1,ncorn
+                  !w97
+                  write(97,*)" 222 ",ireallo,ydiv,kdmag,iplan,icorn,
+     &              sngl(corn1(1:3,icorn,iplan)+bpebc0(1:3,kdmag))
+                enddo
+              enddo
+c              endif
+              close(97)
++self.
                 !{ check orientation of planes
 
                 x0=0.0d0
@@ -5098,6 +5649,9 @@ c              ncutpiece=ncutpiece+1
                 ! Second piece
 
                 nmagmax=nmagmax+1
++self,if=debug.
+              write(lun6,*)"Second piece:",nmagmax
++self.
 
                 bpebc(8,nmagmax)=bc8
                 bpebc(15,nmagmax)=bpebc15
@@ -5425,6 +5979,9 @@ c              ncutpiece=ncutpiece+1
                 ! Second piece
 
                 nmagmax=nmagmax+1
++self,if=debug.
+                write(lun6,*)"Second piece:",nmagmax
++self.
 
                 bpebc(8,nmagmax)=bc8
                 bpebc(15,nmagmax)=bpebc15
@@ -6739,6 +7296,17 @@ c            write(lun6,*)imag,iplan,bpetm(1:3,8,iplan,imag)
 c      write(lun6,*)"Ende"
 c      stop
 !debug
++self,if=debug.
+      do imag=1,nmag
+        do iplan=1,ibpeplan(imag)
+          do icorn=1,ibpecorn(iplan,imag)
+            write(99,*)imag,iplan,icorn,
+     &        bpemag(1:3,icorn,iplan,imag)
+          enddo
+        enddo
+      enddo
+      write(lun6,*) "fort.99!"
++self.,if=debug.
       do imag=1,nmag
 
 c check, if all flanges appear twice, i.e. volume is closed
@@ -8734,6 +9302,45 @@ c        write(lun6,*)imag,moth,chmoth,chmoths(1:32,imag)
 
       deallocate(corn1,corn2,ncorn1,ncorn2)
 
++self,if=chmagpols.
+      if (nmag.gt.0) then
+        nmagpols=1
+        chmagpols(1:32,nmagpols)=chmoths(1:32,1)
+      endif
+
+      do imag=2,nmag
+        do imp=1,nmagpols
+          ifound=1
+          do ic=1,32
+            if (chmoths(ic,imag).ne.chmagpols(ic,imp)) then
+              ifound=0
+              exit
+            endif
+          enddo
+          if (ifound.eq.0) then
+            nmagpols=nmagpols+1
+            chmagpols(1:32,nmagpols)=chmoths(1:32,imag)
+            exit
+          endif
+        enddo
+      enddo
+
+      do imag=1,nmag
+        do imp=1,nmagpols
+          ifound=1
+          do ic=1,32
+            if (chmoths(ic,imag).ne.chmagpols(ic,imp)) then
+              ifound=0
+              exit
+            endif
+          enddo
+          if (ifound.eq.1) then
+            bpebc(15,imag)=imp
+            exit
+          endif
+        enddo
+      enddo
++self.,if=chmagpols.
 
       kforcemag=0
 
@@ -9320,6 +9927,9 @@ c            write(33,*),ipre,iplan,bcpre(1:6,iplan,ipre)
       endif !(iundugeo.ne.0) then
 
       if (kseg.eq.1) then
++self,if=trace.
+      print*,"-trace-: Leaving undumag_ini_old "
++self.
         return
       endif
 
@@ -10021,6 +10631,16 @@ c          write(lun6,*)"4 Info:",ncount,chmoth1,gcen
         stop
       endif
 
++self,if=randos.
+      allocate(xyzsmear(3,nmag))
+      do i=1,nmag
+        call util_random(3,g)
+        xyzsmear(1,i)=randos*g(1)
+        xyzsmear(2,i)=randos*g(2)
+        xyzsmear(3,i)=randos*g(3)
+        bpebc(1:3,i)=bpebc(1:3,i)+xyzsmear(1:3,i)
+      enddo
++self.
 
       zminprof=zplmin
       zmaxprof=zplmax
@@ -10033,4 +10653,2605 @@ c          write(lun6,*)"4 Info:",ncount,chmoth1,gcen
         stop "--- Programm UNDUMAG terminated due to iunduplot < 0 ---"
       endif
 
++self,if=trace.
+      print*,"-trace-: Leaving undumag_ini_old "
++self.
       end
++DECK,clcmag_copy_voxels.
+*CMZ :  2.04/27 28/09/2023  14.13.32  by  Michael Scheer
+*CMZ :  2.04/20 20/09/2023  12.45.10  by  Michael Scheer
+*CMZ :  2.04/16 06/09/2023  16.17.42  by  Michael Scheer
+*CMZ :  2.04/13 04/09/2023  10.41.24  by  Michael Scheer
+*CMZ :  2.04/07 22/08/2023  09.03.52  by  Michael Scheer
+*CMZ :  2.04/06 04/08/2023  11.26.53  by  Michael Scheer
+*CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
+*CMZ :  2.04/00 24/12/2022  13.07.12  by  Michael Scheer
+*CMZ :  2.02/01 19/01/2022  10.54.41  by  Michael Scheer
+*-- Author :    Michael Scheer   01/10/2021
+      subroutine clcmag_copy_voxels
+
+      use commandlinef90m
+      use bpolyederf90m
+      use undumagf90m
+      use magnets_structure
+      use displacement
+
+      implicit none
+
+      integer i_tvoxel_is_block
+      integer imag,ivox,icopy,imodul,kmag
+
+      type (T_Voxel) tv
+      type (T_Voxel_Copy) tvc
+
++self,if=trace.
+      print*,"-trace-: Entered clcmag_copy_voxels"
++self.
+
+      call util_zeit_kommentar(lun6,"Entered clcmag_copy_voxels")
+
+      nvoxcopy_t=0
+      do imag=1,nmagtot_t
+        nvoxcopy_t=nvoxcopy_t+t_magnets(t_magcopy(imag)%kproto)%nvoxels
+      enddo !imag
+
+      allocate(t_voxcopy(nvoxcopy_t))
+
+      nrec=0
+      niron=0
+      nvoxcopy_t=0
+
+      do imag=1,nmagtot_t
+        kmag=t_magcopy(imag)%kproto
+        imodul=t_magcopy(imag)%kmodule
+        icopy=t_magcopy(imag)%kcopy
+        do ivox=1,t_magnets(kmag)%nvoxels
+          nvoxcopy_t=nvoxcopy_t+1
+          t_voxcopy(nvoxcopy_t)%kmodule=imodul
+          t_voxcopy(nvoxcopy_t)%kmagnet=imag
+          t_voxcopy(nvoxcopy_t)%kproto=kmag
+          t_voxcopy(nvoxcopy_t)%kvoxel=ivox
+          t_voxcopy(nvoxcopy_t)%kcopy=icopy
+          t_voxcopy(nvoxcopy_t)%gcen=t_magnets(kmag)%t_voxels(ivox)%gcen
+     &      +t_magcopy(imag)%gcen-t_magnets(kmag)%gcen
+          t_voxcopy(nvoxcopy_t)%br=t_magnets(kmag)%t_voxels(ivox)%br
+          t_voxcopy(nvoxcopy_t)%Ispole=t_magnets(kmag)%Ispole
+          if (t_magnets(kmag)%Ispole.eq.0) then
+            nrec=nrec+1
+          else
+            niron=niron+1
+          endif
+          t_voxcopy(nvoxcopy_t)%nface=t_magnets(kmag)%t_voxels(ivox)%nface
+          allocate(
+     &    t_voxcopy(nvoxcopy_t)%isfacet(t_magnets(kmag)%t_voxels(ivox)%nface))
+          t_voxcopy(nvoxcopy_t)%isfacet=t_magnets(kmag)%t_voxels(ivox)%isfacet
+        enddo !ivox
+      enddo !imag
+
+      do ivox=1,nvoxcopy_t
+        tvc=t_voxcopy(ivox)
+        imag=tvc%kproto
+c        tmag=t_magnets(imag)
+        tv=t_magnets(imag)%t_voxels(tvc%kvoxel)
+        t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=t_magnets(imag)%IsBlock
+        if (t_magnets(imag)%ctype.ne.'Cylinder'
+     &      .and.tv%nhull.eq.8.and.tv%nedge.eq.12.and.tv%nface.eq.6
+     &      .and.t_magnets(imag)%IsBlock.eq.0) then
+          if (irecrepl.eq.0) then
+            t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=-i_tvoxel_is_block(tv)
+          else
+            t_magnets(imag)%t_voxels(tvc%kvoxel)%IsBlock=i_tvoxel_is_block(tv)
+          endif
+        endif
+      enddo !ivox
+
+      if (iwfct.ne.0) then
+        call clcmag_write_facets
+        call clcmag_magnet_main_facets
+      endif
+
+      call util_zeit_kommentar(lun6,"Leaving clcmag_copy_voxels")
++self,if=trace.
+      print*,"-trace-: Leaving clcmag_copy_voxels"
++self.
+      return
+      end
++DECK,undumag_ini_namelists.
+*CMZ :  2.04/25 28/09/2023  08.29.16  by  Michael Scheer
+*CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
+*CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
+*CMZ :  2.02/02 25/02/2022  09.54.41  by  Michael Scheer
+*CMZ :  2.02/01 09/02/2022  18.49.27  by  Michael Scheer
+*-- Author :    Michael Scheer   19/10/2021
+      subroutine undumag_ini_namelists
+
+      use commandlinef90m
+      use undumagf90m
+      use bpolyederf90m
+      use magnets_structure
+      use utilmod
+
+      implicit none
+
++seq,random.
++seq,hulldim.
+
+      integer lunnam,istat
+      logical lexist
+
+      character(128) c128
+
+      inquire(file=trim(Fnam),exist=lexist)
+      if (lexist.eqv..false.) then
+        write(lun6,*)""
+        write(lun6,*)"*** Error in undumag_ini_namelists: File " // trim(Fnam) // " not found ***"
+        write(lun6,*)"*** Program UNDUMAG aborted ***"
+        stop
+      endif
+
+      open(newunit=lunnam,file=trim(Fnam),form='formatted',status='old')
+      read(lunnam,undumagn)
+      read(lunnam,randomn)
+      close(lunnam)
+
+      if(nvertmax.lt.8) then
+        write(lun6,*)
+        write(lun6,*)"--- Undumag_ini_namelists: Nvertmax lower than eight ***"
+        write(lun6,*)"--- Undumag_ini_namelists: Set to  32 ***"
+        write(lun6,*)
+        nvertmax=32
+      endif
+
+      nverhullmax=nvertmax
+
+      kcalcvars=1 !to avoid problems with undumag.in if coating is used
+
+      if (kbextern.eq.0) then
+        bxex=0.0d0
+        byex=0.0d0
+        bzex=0.0d0
+      endif
+
+      rcvthron=abs(rcvthron)
+      if (rcvthron.eq.0.0d0) rcvthron=1.0d30
+
+      if (cuttiny.eq.0.0d0) cuttiny=0.1
+      if (hulltiny.eq.0.0d0) hulltiny=1.0d-6
+
+      if (nchiiron.le.0) nchiiron=1
+
+      nchimax=0
+
+      if (chicut.eq.-9999.0d0) chicut=max(abs(hconv),1.0d-10)
+      corrtiny=corrtiny/1000.0d0 ! mm->meter
+
+      open(unit=99,file='.util_spline_or_simpson_integral.dat')
+      write(99,*)isimpson
+      if (isimpson.gt.0) then
+        write(lun6,*)
+        write(lun6,*)"*** Simpson integrations applied ***"
+        write(lun6,*)
+      endif
+      flush(99)
+      close(99)
+
+      hconva=abs(hconv)
+      if (hconv.le.-1000.0d0) hconva=0.0d0
+
+      if (dampiron.eq.0.0d0.or.dampiron.gt.1.0d0) then
+        dampiron=1.0d0
+      endif
+
+      if (maxiteriron.eq.-9999.and.dampiron.lt.1.0d0) then
+        maxiteriron=nint(log(0.001)/log(1.0d0-dampiron)+1)
+      endif
+
+      dampi=dampiron
+
+      if (maxiteriron.eq.-9999) maxiteriron=1
+
+      if(kdumpconv.ne.0) open(newunit=lunconv,file="undumag.cnv")
+
+      if (perlen.eq.9999.0d0.and.newclc.eq.0) then
+        c128="perlen"
+        call undumag_parameter(c128,perlen,istat)
+        if (istat.ne.0) then
+          c128="Perlen"
+          call undumag_parameter(c128,perlen,istat)
+          if (istat.ne.0) then
+            c128="PerLen"
+            call undumag_parameter(c128,perlen,istat)
+          endif
+        endif
+        if (istat.ne.0) then
+          write(lun6,*)
+          write(lun6,*)"*** Error in undumag_ini_namelists: Bad return from undumag_parameter for PerLen ***"
+          write(lun6,*)"Make sure, that " // trim(Fclc) // " contains parameter or variable PerLen!"
+          write(lun6,*)
+          stop
+        else
+          write(lun6,*)
+          write(lun6,*)"Period length read from " // trim(Fclc) // ":",sngl(perlen)
+          write(lun6,*)
+          if (perlen.le.0.0d0) then
+            perlen=100.0d0
+            write(lun6,*)
+            write(lun6,*)"*** Warning in undumag_ini_namelists:Zero or negative period-length found ***"
+            write(lun6,*)"*** Set to 100 ***"
+            write(lun6,*)
+          endif
+        endif
+      endif
+
+      jrunnum=krunnum
+      jcomment=kcomment
+      jrunnum=krunnum
+      jdate=kdate
+      nthreads=nuthreads
+
+      if (dedgefb.eq.0.0d0) dedgefb=0.02d0
+
+      if (iforcedip.ne.0) idipoles=1
+
+      modsimp=modsimphull
+
+      return
+      end
++DECK,undumag_greeter.
+*CMZ :  2.02/01 28/09/2023  14.25.29  by  Michael Scheer
+*-- Author :    Michael Scheer   19/10/2021
+      subroutine undumag_greeter
+      use undumagf90m
+      use commandlinef90m
+      implicit none
++seq,unduver.
+      return
+      end
++DECK,clcbuff_to_magnets.
+*CMZ :  2.04/25 28/09/2023  08.00.38  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.03.22  by  Michael Scheer
+*CMZ :  2.04/20 20/09/2023  10.48.38  by  Michael Scheer
+*CMZ :  2.04/16 12/09/2023  13.51.34  by  Michael Scheer
+*CMZ :  2.04/14 06/09/2023  06.47.58  by  Michael Scheer
+*CMZ :  2.04/11 26/08/2023  10.27.59  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  08.02.18  by  Michael Scheer
+*CMZ :  2.04/07 09/08/2023  16.11.22  by  Michael Scheer
+*CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
+*CMZ :  2.04/03 04/03/2023  12.23.20  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  16.43.57  by  Michael Scheer
+*CMZ :  2.04/01 22/01/2023  13.04.45  by  Michael Scheer
+*CMZ :  2.04/00 17/01/2023  09.24.20  by  Michael Scheer
+*CMZ :  2.03/00 22/08/2022  12.31.51  by  Michael Scheer
+*CMZ :  2.02/01 29/01/2022  15.17.16  by  Michael Scheer
+*-- Author :    Michael Scheer   20/04/2021
+      subroutine clcbuff_to_magnets
+
+      use commandlinef90m
+      use bpolyederf90m
+      use undumagf90m
+      use magnets_structure
+      use displacement
+      use utilmod
+
+      implicit none
+
++seq,grarad.
+
+      character(2048) cline,cbuff(5),cfile,cline1
+      character(128) cword,ckey
+
+      double precision, dimension (:), allocatable :: xp,yp,zp,xpc,ypc,zpc
+
+      double precision undumag_variable_getval,size(3),dphi
+
+      double precision x,dx,dy,dz,Br(5),xc,yc,zc,gcen(3),chamf,
+     &  r,h,phi,radin,radout,height,angle,xyz(3),vol
+
+      integer, dimension (:,:), allocatable :: kedge
+      integer, dimension (:), allocatable :: khull,kface
+
+      integer i,k,l,m,kb,ib,ip,npoi,ir,ih,iphi,limit,
+     &  nxdiv,nydiv,nzdiv,nhull,nface,nedge,kfacelast,kblockch
+
++seq,hulldim.
+
++self,if=debcm.
+      integer n,ipoi,iplan
++self.
+      integer ipos(2,1000),jpos(2,1000),nwords,istat,ibrn,ifound
+
+      integer ifailhull,lun,ieof,kfail
+      logical lexist
+
+      !xhull,yhull,zhull are absolute at the end of this routine
+
+      !call util_break
+      nmag=nmag_t+nspecmag_t+nclccop_t
+
+      allocate(t_magnets(nmag),t_magnets_copy(nmag))
+      allocate(brnmat(2,nmag_t+nspecmag_t))
+
+      nbrnmat=0
+
+      nmag=0
+      niron=0
+      ncornmax=nvertmax
+      nplanmax=2*nvertmax
+
+      lenface=ncornmax*nplanmax+nplanmax
+      lenhull=lenface
+      lenedge=lenface*2
+
+      allocate(
+     &  xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
+     &  xpuffer2(ncornmax),ypuffer2(ncornmax),zpuffer2(ncornmax),
+     &  xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax),
+     &  xp(ncornmax),yp(ncornmax),zp(ncornmax),
+     &  xpc(ncornmax),ypc(ncornmax),zpc(ncornmax),
+     &  kface(lenface),kedge(4,lenedge),khull(lenhull))
+
+      ib=0
+      kb=0
+
+      limit=nclcmag+nclcspec
+
+      do while (ib.lt.limit)
+
+        if (kb.eq.0.and.ib.ge.nclcmag) then
+          ib=0
+          kb=1
+          limit=nclcspec
+        endif
+
+        ib=ib+1
+
+        if (kb.eq.0) then
+          cline = clcmag(ib)
+        else
+          cline = clcspec(ib)
+        endif
+
+        call util_string_split(cline,1000,nwords,ipos,istat)
+
+        if (cline(ipos(1,1):ipos(2,1)).eq.'Magnet'.or.
+     &      cline(ipos(1,1):ipos(2,1)).eq.'Pole') then
+          nmag=nmag+1
+          t_magnets(nmag)%kmag=nmag
+          t_magnets(nmag)%kmodule=magmodule(nmag)
+          t_magnets(nmag)%IsSpecial=0
+          cycle
+        else if (cline(ipos(1,1):ipos(2,1)).eq.'Special_Magnet'.or.
+     &      cline(ipos(1,1):ipos(2,1)).eq.'Special_Pole') then
+          nspecmag=nspecmag+1
+          nmag=nmag+1
+          t_magnets(nmag)%kmag=nmag
+          t_magnets(nmag)%kmodule=0
+          t_magnets(nmag)%IsSpecial=1
+          cycle
+        endif
+
+        ckey=cline(ipos(1,1):ipos(2,1))
+
+        if (kb.eq.0) then
+          cbuff=clcmag(ib:ib+4)
+        else
+          cbuff=clcspec(ib:ib+4)
+        endif
+
+        ib=ib+4
+
+        t_magnets(nmag)%cnam=cline(ipos(1,2):ipos(2,2))
+        t_magnets(nmag)%cmoth=cline(ipos(1,3):ipos(2,3))
+
+        do m=1,nmag-1
+          if (t_magnets(m)%cnam.eq.t_magnets(nmag)%cnam) then
+            print*,""
+            print*,"*** Error in clcbuff_to_magnets: Duplicate magnet ",
+     &        t_magnets(m)%cnam
+            print*,""
+            stop "*** Program UNDUMAG aborted ***"
+          endif
+        enddo
+
+        t_magnets(nmag)%cfile=''
+
+        cword=cline(ipos(1,4):ipos(2,4))
+
+        if (cword(1:1).eq.'$') then
+          t_magnets(nmag)%icol=nint(undumag_variable_getval(cword))
+        else
+          read(cword,*)t_magnets(nmag)%icol
+        endif
+
+        cline=cbuff(2)
+        call util_string_split(cline,1000,nwords,ipos,istat)
+
+        do i=1,3
+          cword=cline(ipos(1,i):ipos(2,i))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%xyz(i)=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%xyz(i)
+          endif
+        enddo
+
+        xc=t_magnets(nmag)%xyz(1)
+        yc=t_magnets(nmag)%xyz(2)
+        zc=t_magnets(nmag)%xyz(3)
+
+        cline=cbuff(3)
+        call util_string_split(cline,1000,nwords,ipos,istat)
+
+        if (kb.eq.0) then
+          cline1=clcmag(ib-5)
+        else
+          cline1=clcspec(ib-5)
+        endif
+
+        if (cline1.eq.'Pole'.or.cline1.eq. 'Special_Pole') then
+          niron=niron+1
+          cword = cline(ipos(1,1):ipos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%imat=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%imat
+          endif
+          t_magnets(nmag)%IsPole=1
+        else
+          do i=1,5
+            cword=cline(ipos(1,i):ipos(2,i))
+            if (cword(1:1).eq.'$') then
+              cword=cline(ipos(1,i):ipos(2,i))
+              Br(i)=undumag_variable_getval(cword)
+            else
+              read(cword,*)br(i)
+            endif
+          enddo
+          t_magnets(nmag)%IsPole=0
+          if (norm2(br(2:4)).ne.0.0d0) br(2:4)=br(2:4)/norm2(br(2:4))
+          if (br(5).eq.0.0d0) br=0.0d0
+
+          t_magnets(nmag)%brn=br(1)
++self,if=trace
+          print*,"--trace: CLCBUFF_TO_MAGNETS:",nmag,t_magnets(nmag)%brn
++self.
+          t_magnets(nmag)%br=br(2:4)*br(1)
+          t_magnets(nmag)%imat=nint(br(5))
+
+          ifound=0
+          do ibrn=1,nbrnmat
+            if (br(1).eq.brnmat(2,ibrn).and.br(5).eq.brnmat(1,ibrn)) then
+              ifound=1
+              exit
+            endif
+          enddo
+          if (ifound.eq.0) then
+            nbrnmat=nbrnmat+1
+            brnmat(1,nbrnmat)=br(5) !material index
+            brnmat(2,nbrnmat)=br(1) !Br
+          endif
+        endif  !Pole
+
+        t_magnets(nmag)%ctype=ckey(1:32)
+        t_magnets(nmag)%IsBlock=0
+        t_magnets(nmag)%IsRotated=0
+
+        if (ckey.eq.'Block') then
+
+          if (irecrepl.ne.0) then
+            t_magnets(nmag)%IsBlock=1
+          else
+            t_magnets(nmag)%IsBlock=-1
+          endif
+
+          cline=cbuff(4)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          do i=1,3
+            cword=cline(jpos(1,i):jpos(2,i))
+            if (cword(1:1).eq.'$') then
+              t_magnets(nmag)%size(i)=undumag_variable_getval(cword)
+            else
+              read(cword,*)t_magnets(nmag)%size(i)
+            endif
+            if (t_magnets(nmag)%IsPole.eq.0.and.coating.ne.0.0d0) then
+              t_magnets(nmag)%size(i)=t_magnets(nmag)%size(i)-2.0d0*coating
+            endif
+            if (t_magnets(nmag)%size(i).le.0.0d0) then
+              t_magnets(nmag)%brn=0.0d0
+              t_magnets(nmag)%br=0.0d0
+            endif
+          enddo
+
+          cline=cbuff(5)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          cword=cline(jpos(1,1):jpos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nxdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nxdiv
+          endif
+
+          cword=cline(jpos(1,2):jpos(2,2))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nydiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nydiv
+          endif
+
+          cword=cline(jpos(1,3):jpos(2,3))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nzdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nzdiv
+          endif
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%yfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%yfracdiv
+          endif
+
+          cword=cline(jpos(1,5):jpos(2,5))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%zfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%zfracdiv
+          endif
+
+          xc=t_magnets(nmag)%xyz(1)
+          yc=t_magnets(nmag)%xyz(2)
+          zc=t_magnets(nmag)%xyz(3)
+
+          npoi=8
+
+          xp(1)=xc-t_magnets(nmag)%size(1)/2.0d0
+          xp(2)=xc+t_magnets(nmag)%size(1)/2.0d0
+          xp(3)=xp(2)
+          xp(4)=xp(1)
+          xp(5:8)=xp(1:4)
+
+          yp(1:4)=yc-t_magnets(nmag)%size(2)/2.0d0
+          yp(5:8)=yc+t_magnets(nmag)%size(2)/2.0d0
+
+          zp(1:2)=zc-t_magnets(nmag)%size(3)/2.0d0
+          zp(3:4)=zc+t_magnets(nmag)%size(3)/2.0d0
+          zp(5:8)=zp(1:4)
+
+          else if (
+     &        ckey.eq.'BlockChamf'.or.
+     &        ckey.eq.'BlockUsChamf'.or.
+     &        ckey.eq.'BlockDsChamf'
+     &        ) then
+
+          cline=cbuff(4)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          do i=1,3
+            cword=cline(jpos(1,i):jpos(2,i))
+            if (cword(1:1).eq.'$') then
+              t_magnets(nmag)%size(i)=undumag_variable_getval(cword)
+            else
+              read(cword,*)t_magnets(nmag)%size(i)
+            endif
+            if (t_magnets(nmag)%size(i).le.0.0d0) then
+              t_magnets(nmag)%brn=0.0d0
+              t_magnets(nmag)%br=0.0d0
+            endif
+          enddo
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            chamf=undumag_variable_getval(cword)
+          else
+            read(cword,*) chamf
+          endif
+
+          kblockch=0
+          t_magnets(nmag)%UsChamf=chamf
+          t_magnets(nmag)%DsChamf=chamf
+
+          if (ckey.eq.'BlockUsChamf') then
+            kblockch=-1
+            t_magnets(nmag)%DsChamf=0.0d0
+          else if (ckey.eq.'BlockDsChamf') then
+            kblockch=1
+            t_magnets(nmag)%UsChamf=0.0d0
+          endif
+
+          npoi=12
+
+          dx=t_magnets(nmag)%size(1)
+          dy=t_magnets(nmag)%size(2)
+          dz=t_magnets(nmag)%size(3)
+
+          if (dx.le.0.0d0.or.dy.le.0.0d0.or.dz.le.0.0d0) then
+            t_magnets(nmag)%brn=0.0d0
+            t_magnets(nmag)%br=0.0d0
+          endif
+
+          if (t_magnets(nmag)%IsPole.ne.0.) then
+            call util_shrink_blockchamf(dx,dy,dz,chamf,kblockch,
+     &        coating*0.0d0,npoi,xp,yp,zp)
+          else
+            call util_shrink_blockchamf(dx,dy,dz,chamf,kblockch,
+     &        coating,npoi,xp,yp,zp)
+          endif
+
+          xp=xp+xc
+          yp=yp+yc
+          zp=zp+zc
+
+          cline=cbuff(5)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          cword=cline(jpos(1,1):jpos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nxdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nxdiv
+          endif
+
+          cword=cline(jpos(1,2):jpos(2,2))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nydiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nydiv
+          endif
+
+          cword=cline(jpos(1,3):jpos(2,3))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nzdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nzdiv
+          endif
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%yfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%yfracdiv
+          endif
+
+          cword=cline(jpos(1,5):jpos(2,5))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%zfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%zfracdiv
+          endif
+
+        else if (ckey.eq.'Cylinder') then
+
+          cline=cbuff(4)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          do i=1,3
+            cword=cline(jpos(1,i):jpos(2,i))
+            if (cword(1:1).eq.'$') then
+              t_magnets(nmag)%size(i)=undumag_variable_getval(cword)
+            else
+              read(cword,*)t_magnets(nmag)%size(i)
+            endif
+            if (t_magnets(nmag)%size(i).le.0.0d0) then
+              t_magnets(nmag)%brn=0.0d0
+              t_magnets(nmag)%br=0.0d0
+            endif
+          enddo
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%size(i)=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%cylphi
+          endif
+
+          cline=cbuff(5)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          cword=cline(jpos(1,1):jpos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nxdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nxdiv
+          endif
+
+          cword=cline(jpos(1,2):jpos(2,2))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nydiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)nydiv
+            phi=t_magnets(nmag)%cylphi
+            nydiv=max(nydiv,int(phi/30.0))
+            if (nydiv.lt.3) nydiv=3
+            t_magnets(nmag)%nydiv=nydiv
+          endif
+
+          cword=cline(jpos(1,3):jpos(2,3))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nzdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nzdiv
+          endif
+
+          radin=t_magnets(nmag)%size(1)
+          radout=t_magnets(nmag)%size(2)
+          height=t_magnets(nmag)%size(3)
+          angle=t_magnets(nmag)%cylphi
+
+          xyz=t_magnets(nmag)%xyz
+
+          if (radin.lt.tiny) radin=tiny
+
+          npoi=4*(nydiv+1)
+
+          if(npoi.gt.ncornmax) then
+
+            ncornmax=npoi
+            nplanmax=2*ncornmax
+            lenface=ncornmax*nplanmax*2
+            lenedge=lenface*2
+            lenhull=lenface
+
+            deallocate(xp,yp,zp,xpc,ypc,zpc,
+     &        kface,kedge,khull,
+     &        xpuffer1,ypuffer1,zpuffer1,
+     &        xpuffer2,ypuffer2,zpuffer2,
+     &        xpuffer3,ypuffer3,zpuffer3
+     &        )
+            allocate(
+     &        xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
+     &        xpuffer2(ncornmax),ypuffer2(ncornmax),zpuffer2(ncornmax),
+     &        xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax),
+     &        xp(ncornmax),yp(ncornmax),zp(ncornmax),
+     &        xpc(ncornmax),ypc(ncornmax),zpc(ncornmax),
+     &        kface(lenface),kedge(4,lenedge),khull(lenhull))
+          endif
+
+          ip=0
+          r=radin
+          npoi=0
+          dphi=angle/dble(nydiv)*grarad1
+          do ir=1,2
+            h=-height/2.0d0
+            do ih=1,2
+              phi=-angle/2.0d0*grarad1
+              do iphi=1,nydiv+1
+                ip=ip+1
+                xp(ip)=r*sin(phi)+xc
+                yp(ip)=h+yc
+                zp(ip)=r*cos(phi)+zc
+                phi=phi+dphi
+              enddo
+              h=height/2.0d0
+            enddo
+            r=radout
+          enddo
+
+          npoi=ip
+
+          call clcmag_cut_cyl(nmag)
+
+        else if (ckey.eq.'Corners'.or.ckey.eq.'File') then
+
+          cline=cbuff(4)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          cword=cline(jpos(1,1):jpos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nxdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nxdiv
+          endif
+
+          cword=cline(jpos(1,2):jpos(2,2))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nydiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nydiv
+          endif
+
+          cword=cline(jpos(1,3):jpos(2,3))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nzdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nzdiv
+          endif
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%yfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%yfracdiv
+          endif
+
+          cword=cline(jpos(1,5):jpos(2,5))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%zfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%zfracdiv
+          endif
+
+          if (ckey.eq.'Corners') then
+
+            read(cbuff(5),*) npoi
+
+            if(npoi.gt.ncornmax) then
+              ncornmax=npoi
+              deallocate(xp,yp,zp,xpc,ypc,zpc,kface,kedge,khull,
+     &          xpuffer1,ypuffer1,zpuffer1,
+     &          xpuffer2,ypuffer2,zpuffer2,
+     &          xpuffer3,ypuffer3,zpuffer3
+     &          )
+              allocate(
+     &          xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
+     &          xpuffer2(ncornmax),ypuffer2(ncornmax),zpuffer2(ncornmax),
+     &          xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax),
+     &          xp(ncornmax),yp(ncornmax),zp(ncornmax),
+     &          xpc(ncornmax),ypc(ncornmax),zpc(ncornmax),
+     &          kface((npoi+1)*npoi),kedge(4,2*npoi-2),khull(ncornmax))
+            endif
+
+            do i=1,npoi
+
+              ib=ib+1
+              if (kb.eq.0) then
+                cline=clcmag(ib)
+              else
+                cline=clcspec(ib)
+              endif
+
+              call util_string_split(cline,1000,nwords,ipos,istat)
+
+              do k=1,3
+                cword=cline(ipos(1,k):ipos(2,k))
+                if (cword(1:1).eq.'$') then
+                  x=undumag_variable_getval(cword)
+                else
+                  read(cword,*)x
+                endif
+                if (k.eq.1) then
+                  xp(i)=x+xc
+                else if (k.eq.2) then
+                  yp(i)=x+yc
+                else if (k.eq.3) then
+                  zp(i)=x+zc
+                endif
+              enddo !k
+
+            enddo !npoi
+
+          else !ckey
+
+            cfile=cbuff(5)
+            cline=trim(cfile)
+            l=len_trim(cfile)
+            if (cfile(1:1).eq."'") then
+              cline=cfile(2:l-1)
+            endif
+            cfile=cline
+            t_magnets(nmag)%cfile=trim(cfile)
+
+            inquire(file=trim(cfile),exist=lexist)
+            if (lexist.eqv..false.) then
+              write(lun6,*)"*** Error in clcbuff_to_magnets: File"
+              write(lun6,*)trim(cfile)
+              write(lun6,*)"not found ***"
+              stop
+            endif
+
+            open(newunit=lun,file=trim(cfile),status='old')
+            npoi=0
+            do while(.true.)
+              call util_skip_comment_empty_end(lun,ieof)
+              if (ieof.ne.0) exit
+              read(lun,'(a)')cline
+              npoi=npoi+1
+            enddo
+            rewind(lun)
+
+            if(npoi.gt.ncornmax) then
+              ncornmax=npoi
+              deallocate(xp,yp,zp,kface,kedge,khull,
+     &          xpuffer1,ypuffer1,zpuffer1,
+     &          xpuffer2,ypuffer2,zpuffer2,
+     &          xpuffer3,ypuffer3,zpuffer3)
+              allocate(xp(ncornmax),yp(ncornmax),zp(ncornmax),
+     &          kface((npoi+1)*npoi),kedge(4,2*npoi-2),khull(npoi),
+     &          xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
+     &          xpuffer2(ncornmax),ypuffer2(ncornmax),zpuffer2(ncornmax),
+     &          xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax)
+     &          )
+            endif
+
+            do i=1,npoi
+              call util_skip_comment_empty_end(lun,ieof)
+              read(lun,'(a)')cline
+              call util_string_split(cline,1000,nwords,ipos,istat)
+              do k=1,3
+                cword=cline(ipos(1,k):ipos(2,k))
+                if (cword(1:1).eq.'$') then
+                  x=undumag_variable_getval(cword)
+                else
+                  read(cword,*)x
+                endif
+                if (k.eq.1) then
+                  xp(i)=x+xc
+                else if (k.eq.2) then
+                  yp(i)=x+yc
+                else if (k.eq.3) then
+                  zp(i)=x+zc
+                endif
+              enddo !k
+            enddo !npoi
+
+          endif !Corners and File
+
+        else
+
+          write(lun6,*)"*** Error in clcbuff_to_magnets: Unknown magnet type:"
+          write(lun6,*)trim(ckey)
+          stop
+
+        endif
+
++self,if=debcm.
+        do i=1,npoi
+          write(887,*)xp(i),yp(i),zp(i),i
+        enddo
+        flush(887)
+        close(887)
++self.
+
+        if (t_magnets(nmag)%IsPole.eq.0.and.t_magnets(nmag)%brn.eq.0.0d0) then
+          !print*,"Test:",nmag,t_magnets(nmag)%brn
+          nmag=nmag-1
+          cycle
+        endif
+
+        call util_convex_hull_3d_overwrite(nmag,npoi,xp,yp,zp,khull,kedge,kface,
+     &    nhull,nedge,nface,kfacelast,hulltiny,ifailhull)
+
++self,if=debcm.
+        l=0
+        do iplan=1,nface
+          l=l+1
+          n=kface(l)
+          do i=1,n
+            l=l+1
+            ipoi=kface(l)
+            write(900,*)iplan,i,l,ipoi,xp(ipoi),yp(ipoi),zp(ipoi)
+          enddo
+        enddo
++self.
+        if (ifailhull.ne.0.or.nhull.lt.4) then
+          write(lun6,*)"*** Error in clcbuff_to_magnets: Subroutine util_convex_hull_3d failed for ",
+     &      trim(t_magnets(nmag)%cnam)
+          stop
+        endif
+
+        if (ifailhull.ne.0.or.nhull.lt.4) then
+          write(lun6,*)"*** Error in clcbuff_to_magnets: Subroutine util_convex_hull_3d failed for ",
+     &      trim(t_magnets(nmag)%cnam)
+          stop
+        endif
+
+        npoi=nhull
+
+        allocate(t_magnets(nmag)%xhull0(npoi))
+        allocate(t_magnets(nmag)%yhull0(npoi))
+        allocate(t_magnets(nmag)%zhull0(npoi))
+        allocate(t_magnets(nmag)%xhull(npoi))
+        allocate(t_magnets(nmag)%yhull(npoi))
+        allocate(t_magnets(nmag)%zhull(npoi))
+        allocate(t_magnets(nmag)%khull(npoi))
+        allocate(t_magnets(nmag)%kface(kfacelast))
+        allocate(t_magnets(nmag)%kedge(4,nedge))
+
+        t_magnets(nmag)%nhull=npoi
+        t_magnets(nmag)%khull(1:npoi)=khull(1:npoi)
+
+        gcen=0.0d0
+        do i=1,npoi
+          t_magnets(nmag)%xhull0(i)=xp(i)
+          t_magnets(nmag)%yhull0(i)=yp(i)
+          t_magnets(nmag)%zhull0(i)=zp(i)
+          t_magnets(nmag)%xhull(i)=xp(i)
+          t_magnets(nmag)%yhull(i)=yp(i)
+          t_magnets(nmag)%zhull(i)=zp(i)
+          gcen=gcen+[xp(i),yp(i),zp(i)]
+        enddo
+
+        if (t_magnets(nmag)%ctype.eq.'Cylinder') then
+          size=t_magnets(nmag)%size
+          vol=(size(2)**2-size(1)**2)*size(3)*t_magnets(nmag)%cylphi/360.0d0*pi1
+        else
+          call util_volume(npoi,xp,yp,zp,hulltiny,vol,kfail)
+          if (kfail.ne.0) then
+            write(lun6,*)"*** Error in clcbuff_to_magnets: Subroutine util_volume failed for ",
+     &        trim(t_magnets(nmag)%cnam)
+            stop
+          endif
+        endif
+
+        t_magnets(nmag)%volume=vol
+
+        gcen=gcen/npoi
+        t_magnets(nmag)%gcen=gcen
+
+        t_magnets(nmag)%kedge(:,1:nedge)=kedge(:,1:nedge)
+        t_magnets(nmag)%nedge=nedge
+        t_magnets(nmag)%kedge(:,1:nedge)=kedge(:,1:nedge)
+        t_magnets(nmag)%nface=nface
+        t_magnets(nmag)%kfacelast=kfacelast
+        t_magnets(nmag)%kface(1:kfacelast)=kface(1:kfacelast)
+
+        nplanmax=max(nplanmax,nface)
+
+        nxdiv=t_magnets(nmag)%nxdiv
+        nydiv=t_magnets(nmag)%nydiv
+        nzdiv=t_magnets(nmag)%nzdiv
+
+        if (t_magnets(nmag)%ctype.ne.'Cylinder') then
+          t_magnets(nmag)%nvoxels=0
+        endif
+
+        allocate(t_magnets(nmag)%kvoxels(nxdiv,nydiv,nzdiv))
+        t_magnets(nmag)%kvoxels=0
+        allocate(t_magnets(nmag)%t_xyzcuts(nxdiv,nydiv,nzdiv))
+        allocate(t_magnets(nmag)%t_xycuts(nxdiv,nydiv))
+        allocate(t_magnets(nmag)%t_xcuts(nxdiv))
+
+      enddo !nclcmag
+
+      deallocate(xp,yp,zp,xpc,ypc,zpc,kface,kedge,khull)
+
+      !call util_break
+
+
+      nmag_t=0
+      nspecmag_t=0
+      do i=1,nmag
+        if (t_magnets(i)%IsSpecial.eq.1) then
+          nspecmag_t=nspecmag_t+1
+        else
+          nmag_t=nmag_t+1
+        endif
+      enddo
+
+      nplanmax_t=nplanmax
+      ncornmax_t=ncornmax
+
+      nmagtot_t=nmag_t+nspecmag_t
+
+      deallocate(magmodule)
+
+      return
+      end
++PATCH,NAM,T=TEXT.
+*CMZ :  0.00/00 20/04/2016  13.01.58  by  Michael Scheer
++DECK,undumag,T=TEXT.
+*CMZ :  2.04/25 28/09/2023  07.38.54  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.33.16  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  09.12.17  by  Michael Scheer
+*CMZ :  2.04/14 04/09/2023  12.53.06  by  Michael Scheer
+*CMZ :  2.04/10 21/08/2023  16.26.25  by  Michael Scheer
+*CMZ :  2.04/09 16/08/2023  11.08.45  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  15.04.20  by  Michael Scheer
+*CMZ :  2.04/00 08/09/2022  16.06.28  by  Michael Scheer
+*CMZ :  2.03/00 14/08/2022  12.46.46  by  Michael Scheer
+*CMZ :  2.02/02 01/07/2022  18.04.41  by  Michael Scheer
+*CMZ :  2.02/01 10/02/2022  11.42.19  by  Michael Scheer
+*CMZ :  2.02/00 18/09/2020  17.00.52  by  Michael Scheer
+*CMZ :  2.01/08 14/08/2020  09.08.09  by  Michael Scheer
+*CMZ :  2.01/05 26/06/2020  15.56.43  by  Michael Scheer
+*CMZ :  2.01/04 18/07/2019  11.10.22  by  Michael Scheer
+*CMZ :  2.01/03 16/07/2019  09.27.19  by  Michael Scheer
+*CMZ :  2.00/01 12/04/2018  16.29.19  by  Michael Scheer
+*CMZ :  1.25/00 31/01/2018  17.15.36  by  Michael Scheer
+*CMZ :  1.24/01 16/10/2017  09.22.13  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  13.33.31  by  Michael Scheer
+*CMZ :  1.23/03 21/09/2017  14.53.30  by  Michael Scheer
+*CMZ :  1.23/02 18/09/2017  13.37.21  by  Michael Scheer
+*CMZ :  1.22/02 24/07/2017  15.38.16  by  Michael Scheer
+*CMZ :  1.22/01 20/07/2017  12.24.35  by  Michael Scheer
+*CMZ :  1.22/00 04/07/2017  09.44.57  by  Michael Scheer
+*CMZ :  1.20/03 29/06/2017  14.24.01  by  Michael Scheer
+*CMZ :  1.20/02 22/06/2017  15.58.32  by  Michael Scheer
+*CMZ :  1.18/03 14/06/2017  09.20.19  by  Michael Scheer
+*CMZ :  1.18/02 09/06/2017  13.19.02  by  Michael Scheer
+*CMZ :  1.17/07 22/05/2017  12.01.34  by  Michael Scheer
+*CMZ :  1.17/06 19/05/2017  20.24.02  by  Michael Scheer
+*CMZ :  1.17/05 18/05/2017  10.19.46  by  Michael Scheer
+*CMZ :  1.17/00 08/05/2017  13.27.26  by  Michael Scheer
+*CMZ :  1.15/11 23/04/2017  10.34.16  by  Michael Scheer
+*CMZ :  1.15/10 19/04/2017  12.21.42  by  Michael Scheer
+*CMZ :  1.15/07 05/04/2017  09.32.44  by  Michael Scheer
+*CMZ :  1.15/06 04/04/2017  13.30.52  by  Michael Scheer
+*CMZ :  1.15/04 03/04/2017  11.20.35  by  Michael Scheer
+*CMZ :  1.15/02 02/04/2017  09.32.08  by  Michael Scheer
+*CMZ :  1.15/00 24/03/2017  09.41.27  by  Michael Scheer
+*CMZ :  1.14/00 22/03/2017  12.53.22  by  Michael Scheer
+*CMZ :  1.13/03 10/03/2017  16.40.41  by  Michael Scheer
+*CMZ :  1.13/01 06/03/2017  10.12.59  by  Michael Scheer
+*CMZ :  1.13/00 02/03/2017  16.58.19  by  Michael Scheer
+*CMZ :  1.11/05 22/02/2017  16.06.24  by  Michael Scheer
+*CMZ :  1.11/04 25/01/2017  16.47.37  by  Michael Scheer
+*CMZ :  1.11/03 13/01/2017  12.25.40  by  Michael Scheer
+*CMZ :  1.11/01 09/01/2017  11.31.03  by  Michael Scheer
+*CMZ :  1.11/00 04/01/2017  15.47.32  by  Michael Scheer
+*CMZ :  1.10/00 01/11/2016  09.40.28  by  Michael Scheer
+*CMZ :  1.09/01 06/10/2016  13.35.33  by  Michael Scheer
+*CMZ :  1.08/00 27/09/2016  20.15.56  by  Michael Scheer
+*CMZ :  1.07/03 27/09/2016  13.48.49  by  Michael Scheer
+*CMZ :  1.07/01 25/09/2016  11.50.46  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  14.26.30  by  Michael Scheer
+*CMZ :  1.06/00 20/09/2016  14.08.40  by  Michael Scheer
+*CMZ :  1.04/01 14/09/2016  14.46.19  by  Michael Scheer
+*CMZ :  1.04/00 14/09/2016  10.45.13  by  Michael Scheer
+*CMZ :  1.03/00 13/09/2016  13.34.11  by  Michael Scheer
+*CMZ :  1.02/01 09/09/2016  15.28.35  by  Michael Scheer
+*CMZ :  1.02/00 22/08/2016  17.09.12  by  Michael Scheer
+*CMZ :  1.01/00 21/08/2016  11.39.57  by  Michael Scheer
+*CMZ :  1.00/00 19/08/2016  17.54.08  by  Michael Scheer
+*CMZ :  0.00/13 09/08/2016  17.01.43  by  Michael Scheer
+*CMZ :  0.00/12 21/07/2016  08.31.14  by  Michael Scheer
+*CMZ :  0.00/11 20/07/2016  15.12.04  by  Michael Scheer
+*CMZ :  0.00/10 13/07/2016  15.00.16  by  Michael Scheer
+*CMZ :  0.00/09 27/06/2016  10.04.07  by  Michael Scheer
+*CMZ :  0.00/04 10/05/2016  09.09.12  by  Michael Scheer
+*CMZ :  0.00/02 26/04/2016  16.10.51  by  Michael Scheer
+*CMZ :  0.00/01 26/04/2016  14.51.24  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  12.10.05  by  Michael Scheer
+*-- Author :    Michael Scheer   20/04/2016
++seq,inputver.
+ ! Name list file, to control UNDUMAG
+
+ $undumagn
+
+ nuthreads=-1 ! >0:   Number of CPU cores to be used
+              ! else: Use all cores
+
+ kechocalc=0 ! echo read lines of undumag.clc and undumag.in
+
+ kpreset=0 ! Initial magnetization is read from undumag.pre
+
+ matrix=1  ! Matrix mode: Fast, but can require much memory
+           ! >0: Matrix is calculated
+	   ! >1: Matrix is written to file undumag_matrix.pst	
+	   ! <0: Matrix is read from file undumag_matrix.pre
+	
+ ixsym=0 ! Mirror all magnets and poles in y-z plane at xsym
+ xsym=0. ! 9999: xsym is xcenter
+
+ iysym=0 ! Mirror all magnets and poles in x-z plane at origin
+ izsym=0 ! Mirror all magnets and poles in x-y plane at origin
+
+ kxcenter=1   ! Center magnetic structure
+ xcenter=0.   ! Magnetic structure is centered around xcenter
+
+ maxiter=1000 ! Maximum number of iterations of main loop
+ kprint=10    ! Test convergence and print progress every kprintth cycle
+              ! Must be > 0 for option kresiron
+
+ maxiterrec=5 ! Maximum number of iterations for magnets for each
+                ! cycle of the main loop
+ maxiteriron=100 ! Dito for iron poles
+                ! -9999: (1-dampiron)**(2*maxiteriron-1) = 0.001
+		
+ nchiiron=100   ! number of iterations on magnetization curve M(H) for iron
+ chicut=1.0e-8  ! Precision cut of Chi(H), -9999.: chicut = max(hconv,1.e-10)
+
+ dampiron=1.0   ! Damping factor for the relaxation of iron
+                ! 1: No damping
+	        ! >0: Damping
+	        ! 0 or missing: No damping
+
+ kbextern=0     ! superimpose external field (bxex,byex,bzex)
+ bxex=0.0       ! No symmetry operations are performed for this field
+ byex=0.0
+ bzex=0.0
+
+ isplinefm=0    ! spline M(H) table, linear interpolation otherwize
+
+ ibulk=0     ! bulk update of iron voxel
+
+ kdumpconv=0 ! dump progress of relaxation for iron
+
+ ! if dampfac.ne.0:
+ hconvbase=1.0d0 ! hconv -> hconvbase*dampiron**hconvexp
+                 ! and dampiron -> dampiron*dampfac
+ hconvexp=0.0d0  ! This is applied when the current hconv is reached
+ dampfac=0.0d0   !
+
+ kresiron=1   ! RMS of iron residuals used as convergence critirion
+              ! 1: UNDUMAG stops if resiron is reached
+              ! 2: UNDUMAG stops if resiron and hconv are reached
+	
+ resiron=3.0d-3 ! convergence critirion according to kresiron, CHECK kprint
+
+ hconv=1.0d-6 ! Convergence criterion,
+              ! i.e. the rel. change of B at the reference point
+	      ! hconv<0: Stop if deviation has reached a minimum
+	      ! hconv<-1000: Stop if deviation, when sign of deviation has
+	      ! changed (s.a. kresiron)
+
+ xconvmin=9999. ! reference points, where convergence is tested
+                ! is randomized according to randox
+		! 9999: automatic
+	
+ xconvmax=9999. ! reference points, where convergence is tested
+                ! is randomized according to randox
+	        ! 9999: automatic
+		
+ dxconv=-0.9  ! spacing of reference points
+              ! 9999: perlen/2.
+	      ! <0: abs(dxconv) is factor of intervall size, i.e.
+              ! exponential spacing between xconvmin and xconvmax,
+              ! nxconv must be greater 0
+	
+ nxconv=9999  ! number of reference points (must be < 100 ),
+              ! if dxconv is zero
+	      ! 9999: twice the number of periods between xconvmax and xconvmin
+
+ yconv=0.0
+ zconv=0.0    ! is randomized according to randoz if zero
+
+ killbadmag=0 ! To ignore problematic voxel listet in undumag.kll
+              ! undumag.bad is written for killbadmag<0 according to
+	      ! warnings of UNDUMAG
+	      ! killbadmag=-9999: Kill all but the bad voxel
+	
+ iwarn2pi=1   ! Warning and attempt to recover of 2 Pi jump in undumag_bpeq
+
+ rcvthron=0.1 ! allowed rel. deviation of the on-axis field from
+               ! neighbouring values before recovering starts
+
+ irecrepl=0   ! replace rectangular polyhedrons by blocks
+	
++self,if=randos.
+ randos=0.01  ! add noise to voxel positons to avoid boundary effects
++self.
+ randox=0.001   ! add noise to x for field calculations to avoid boundary effects
+              ! <0: means offset, no randomization
+ randoy=0.0   ! add noise to y for field calculations to avoid boundary effects
+              ! <0: means offset, no randomization
+ randoz=0.001  ! add noise to z for field calculations to avoid boundary effects
+              ! <0: means offset, no randomization
+
+ irandmag=0   ! randomize calculation point inside voxel as well
+              ! <0: Real deposition of the voxel center
+	
+ kshuffle=0   ! shuffle the iron voxel for each main iteration cycle
+
+ corrtiny=0.123e-3 ! x,y,z-shift for corrections of boundary errors [mm]
+
+ cuttiny=0.1   ! minimum size of cut volume relative to volume to be cut
+               ! 0: will be set to 0.1
+	       ! (only for new input format of undumag.clc)
+	
+ hulltiny=1.e-6 ! precision parameter for routine util_convex_hull_3d
+                ! change may help in case of trouble
+		! 0: will be set to 1.e-6
+		
+ modsimphull=0  ! use simple convex-hull algorithm, slow but robuste
+ nvertmax=32    ! max. number of vertices of convex hulls
+
+ iunduplot=1 ! Write Encapsulated PostScript files to show geometry
+	     ! iunduplot<0: stop UNDUMAG after writing undumag.eps
+
+ iundugeo=1111 ! Write geometry files
+             ! Four bits for
+	     ! undumag_facets.fct
+	     ! undumag_voxels.geo
+	     ! undumag.geo
+	     ! undumag.mag
+             ! ,i.e. iundugeo=1111 means to write all of them
+	     ! iundugeo<0: stop UNDUMAG after writing undumag.geo
+
+ ivrml=1     ! Write CAD file of setup
+             ! 1: Display items
+             ! 2: Display items with segmentation
+	     ! ivrml<0: stop UNDUMAG after writing undumag.wrl	
+	
+ kplsym=1    ! Plot symmetric items for ixsym, iysym, or izsym
+ kcomment=1  ! Print comment of input file undumag.clc to plots
+ krunnum=1  ! Print run number to plots
+ kdate=1  ! Print date to plots
+
+ unduplot_mode=0   ! Plotting mode
+                   !0: Overview
+		   !else: Only 3d view according to unduplot_theta/phi
+ unduplot_theta=0. ! Polar plotting angle
+ unduplot_phi=0.   ! Azimut plotting angle
+
+ ! Plotting window for set-up plots
+ xminpl=9999.      !9999.: Automatically
+ xmaxpl=9999.      !9999.: Automatically
+ yminpl=9999.      !9999.: Automatically
+ ymaxpl=9999.      !9999.: Automatically
+ zminpl=9999.      !9999.: Automatically
+ zmaxpl=9999.      !9999.: Automatically
+
+ uwindow=1000. ! Only items with x-uwindow <= x <= x-uwindow contribute
+               ! to field at x
+
+ kmapmode=0    ! Format of field map
+               ! 0: Field map includes material properties, magnetization etc.
+	       ! else: Only x y z Bx By Bz iFail are given
+
+ kmapnohead=0  ! No header line of map file
+
+ knointmap=1   ! no map of field integrals
+ 	
+ knomagmap=0   ! No field map inside magnets
+ knopolmap=0   ! No field map inside poles
+
+ intmaglis=0   ! Read magnets, that contribute to map from file undumag_magmap.lis
+               ! otherwize take all
+	
+ iforcegrid=1  ! write x,y,z of grid nodes to map, not the noisy
+               ! real position of calculation
+
+ xmapmin=9999. ! xmin for field map
+                ! 9999.: Auto scaling
+		! 9000.: -PerLen / 2
+		! -9000.: -PerLen / 4
+ xmapmax=9999. ! xmax for field map
+                ! 9999.: Auto scaling
+		! 9000.: PerLen / 2
+		! -9000.: +PerLen / 4
+	
+ dxmap=1.      ! Step size of field map in x
+               ! 9999.: Same as for Beff calculations, i.e. perlen/(nxbeff-1)
+	
+ nxmap=1       ! Number of steps in x, if dxmap is zero
+
+ ymapmin=-1.0  ! ymin for field map
+ ymapmax=1.0   ! ymax for field map
+ nymap=1       ! Number of steps for field map in y.
+               ! nymap=1 means y=(ymapmax+ymapmin)/2 is used
+
+ zmapmin=-20.0 ! zmin for field map
+ zmapmax=20.0  ! zmax for field map
+ nzmap=1       ! Number of steps for field map in z
+               ! nzmap=1 means z=(zmapmax+zmapmin)/2 is used
+
+ angmaprotx=0.0d0  ! rotation angle of map around x-axis
+ cenmaprotxy=0.0d0 ! y of center of rotation for angmaprotx
+ cenmaprotxz=0.0d0 ! z of center of rotation for angmaprotx
+
+ isimpson=0  ! Spline (0) or Simpson (1) integration for magnetic field
+             ! and force integrals
+	     ! See subroutine util_spline_or_simpson_integral
+
+ xbeff=-9999. ! Center for Beff calculations
+              ! 9999: xcenter
+              !-9999: (xmapmin+xmapmax)/2.
+	      ! This value is adjusted by UNDUMAG within half a period
+              ! around the original value
+	
+ xbeffy=-9999.0d0 ! if not -9999. xbeff for ByEff is forced to xbeffy
+ xbeffz=-9999.0d0 ! if not -9999. xbeff for BzEff is forced to xbeffz
+
+ perlen=9999.   ! Period-length for the calculation of the Beff
+              ! 9999: Read it from undumag.clc
+	
+ nxbeff=101   ! Number of points for the calculation of Beff
+
+ kbeffmode=9999  ! 0: Take full period for calculation
+                 ! else: Take half period,
+		 !       omit Abs(kbeffmode)*dx around Abs(perlen/4.),
+		 !       check undumag_beff.dat!
+		 !9999: automatic, i.e. if nperiods>0 is found in undumag.clc
+		 !      kbeffmode is set zero, else one.
+	
+ iforce=0     ! Calculation of forces and torques
+              ! iforce<0: Parameters for force calculations are taken
+	      ! from undumag.clc
+	      ! iforce=9999: The force box is calculated for chforcemag,
+	      ! used for iforcedip
+	
+ iplforce=0   ! Write fields of force box to file undumag_force.fbx
+
+ ubfcenx=0.0   ! center of box for forces and torques
+ ubfceny=0.0
+ ubfcenz=0.0
+
+ ubflenx=100.0   ! dimensions of box for forces and torques,
+                 ! dedgefb will be added
+ ubfleny=100.0
+ ubflenz=100.0
+
+ dedgefb=0.02 ! expansion of force box for numerical reasons,
+              ! is set to 0.02 if zero, should be greater than corrtiny,
+	      ! to avoid force calculations inside of the magnet
+
+ utorqcenx=9999.   ! reference point for torques, 9999.: box center
+ utorqceny=9999.
+ utorqcenz=9999.
+
+ mbforcex=10 ! number of integration points
+ mbforcey=10 ! number of integration points
+ mbforcez=10 ! number of integration points
+
+ ndivfboxy=1 ! Divide force box to calculate vertical force and torque
+             ! distribution. Ndivfboxy should be different from number of
+	     ! vertical division of the considered magnet or pole
+
+ mfcolor=1   ! color index of force box
+
+ idipoles=0      ! Calculate dipole representation of voxels
+
+ iforcedip=0     ! Calculation of forces using dipole approximation for magnets
+                 ! >0: Only the considered magnet or pole is approximated
+                 ! <0: All magnets and poles are approximated
+
+ chforcemag=''   ! Name of magnet for which forces are calculated
+                 ! If the magnet appears in different modules, check
+		 ! undumag_magnets.lis for the unique name (third column).
+
+ kurad=0     ! call urad to calculate trajectory and radiation
+ ebeam=1.722 ! Total beam energy in GeV
+
+ xelec=9999. !x at start (longitudinal coordinate)
+             !9999: xmapmin
+ yelec=0.0 !y at start (vertical coord.)
+ zelec=0.0 !z at start
+
+ !the velocity is internally normalized according to the beam energy
+ vxelec=1.0 !x comp. of velocity at start
+ vyelec=0.0 !y comp. of velocity at start
+ vzelec=0.0 !z comp. of velocity at start
+
+ ds=0.2  !step size
+ nstep=1 ! the trajectory is written for every nstepth tracking step
+         ! nstep.le.zero means no output
+
+ xf=9999. !x of end plane, where tracking stops
+         !9999: xmapmax
+ yf=0.0 !y of end plane, where tracking stops
+ zf=0.0 !z of end plane, where tracking stops
+
+ efx=1.0 !x of normal vector of end plane, where tracking stops
+ efy=0.0 !y of normal vector of end plane, where tracking stops
+ efz=0.0 !z of normal vector of end plane, where tracking stops
+
+ traxyz_theta=30. ! Polar plotting angle for 3D-trajectory
+ traxyz_phi=30.   ! Azimut plotting angle for 3D-trajectory
+
+ xobsv=10000. ! x of observation point in millimeter
+ yobsv=0.0    ! y of observation point in millimeter
+ zobsv=0.0    ! z of observation point in millimeter
+
+ phelow=1. ! lowest photon energy (eV)
+ phehig=1000. ! highest photon energy (eV)
+ nphener=1000 ! number of photon equidistant energies
+
+ ieneloss=-1 ! energy loss due to radiation
+            ! 0: no energy loss
+	    ! 1: continous energy loss
+	    !-1: discrete energy loss with quantum fluctuations
+	
+ ivelofield=0 ! to control the calculation of the velocity field
+              ! 0: velocity field is included
+              ! 1: velocity field is not included
+              !-1: velocity field is only
+
+ kudebug=0    ! debug flag
+
+ $end
+
+ $RANDOMN
+ ! Seeds to initialize the FORTRAN random generator.
+ ! Twelfe seed values are require; the first four seem to have no effect
+ ! under Linux and gfortran
+
+   irnmode=1 ! 1:  Seeds of this namelist are taken
+	     ! 2:  Seeds are taken from namelist, but runnumber is added to
+	     !     IRNSEED(12)
+	     ! <0: Seeds are read from file wave.seeds
+	     !
+	     ! else:
+	     !     Seed is initialize automatically, i.e. via
+	     !     call random_seed(isize) with isize=12
+	     !     giving reproducable seeds
+
+   IRNSEED(1)=287027030
+   IRNSEED(2)=-719361131
+   IRNSEED(3)=574274270
+   IRNSEED(4)=292048305
+   IRNSEED(5)=185733336
+   IRNSEED(6)=-1598963619
+   IRNSEED(7)=572469522
+   IRNSEED(8)=1446716853
+   IRNSEED(9)=437591706
+   IRNSEED(10)=1398099429
+   IRNSEED(11)=570932571
+   IRNSEED(12)=-1177695979
+
+ $END
++PATCH,SEQ.
+*CMZ :  0.00/00 20/04/2016  13.03.34  by  Michael Scheer
++KEEP,unduver.
+*CMZ :  2.04/27 28/09/2023  14.24.47  by  Michael Scheer
+*CMZ :  2.04/26 28/09/2023  13.25.52  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.31.19  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.46.53  by  Michael Scheer
+*CMZ :  2.04/23 27/09/2023  09.40.54  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.34.56  by  Michael Scheer
+*CMZ :  2.04/21 22/09/2023  09.06.23  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.28.15  by  Michael Scheer
+*CMZ :  2.04/19 18/09/2023  11.33.14  by  Michael Scheer
+*CMZ :  2.04/18 14/09/2023  07.39.08  by  Michael Scheer
+*CMZ :  2.04/17 13/09/2023  16.15.26  by  Michael Scheer
+*CMZ :  2.04/16 11/09/2023  11.57.47  by  Michael Scheer
+*CMZ :  2.04/15 06/09/2023  08.20.46  by  Michael Scheer
+*CMZ :  2.04/13 04/09/2023  12.06.16  by  Michael Scheer
+*CMZ :  2.04/12 31/08/2023  06.57.59  by  Michael Scheer
+*CMZ :  2.04/11 29/08/2023  15.03.24  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  16.14.31  by  Michael Scheer
+*CMZ :  2.04/09 18/08/2023  19.16.48  by  Michael Scheer
+*CMZ :  2.04/08 11/08/2023  14.57.08  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.14.02  by  Michael Scheer
+*CMZ :  2.04/06 07/08/2023  10.05.29  by  Michael Scheer
+*CMZ :  2.04/05 15/03/2023  13.22.48  by  Michael Scheer
+*CMZ :  2.04/04 14/03/2023  11.22.26  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  16.38.01  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  20.57.20  by  Michael Scheer
+*CMZ :  2.04/01 17/01/2023  13.16.06  by  Michael Scheer
+*CMZ :  2.04/00 02/09/2022  07.23.21  by  Michael Scheer
+*CMZ :  2.03/00 26/07/2022  07.27.06  by  Michael Scheer
+*CMZ :  2.02/02 11/02/2022  10.16.30  by  Michael Scheer
+*CMZ :  2.02/00 06/04/2021  15.55.28  by  Michael Scheer
+*CMZ :  2.01/08 15/08/2020  08.40.43  by  Michael Scheer
+*CMZ :  2.01/07 28/07/2020  10.27.15  by  Michael Scheer
+*CMZ :  2.01/06 27/07/2020  12.07.59  by  Michael Scheer
+*CMZ :  2.01/05 27/07/2020  10.28.00  by  Michael Scheer
+*CMZ :  2.01/03 16/07/2019  09.36.59  by  Michael Scheer
+*CMZ :  2.01/02 02/05/2018  14.22.15  by  Michael Scheer
+*CMZ :  2.01/01 24/04/2018  17.18.04  by  Michael Scheer
+*CMZ :  2.01/00 24/04/2018  15.17.18  by  Michael Scheer
+*CMZ :  2.00/03 24/04/2018  13.33.50  by  Michael Scheer
+*CMZ :  2.00/02 17/04/2018  13.44.53  by  Michael Scheer
+*CMZ :  2.00/01 16/04/2018  15.48.23  by  Michael Scheer
+*CMZ :  2.00/00 12/04/2018  08.51.26  by  Michael Scheer
+*CMZ :  1.25/05 05/04/2018  19.30.01  by  Michael Scheer
+*CMZ :  1.25/04 05/04/2018  16.14.01  by  Michael Scheer
+*CMZ :  1.25/03 03/04/2018  08.32.34  by  Michael Scheer
+*CMZ :  1.25/02 22/03/2018  15.10.45  by  Michael Scheer
+*CMZ :  1.25/01 20/03/2018  16.23.14  by  Michael Scheer
+*CMZ :  1.25/00 16/03/2018  15.06.30  by  Michael Scheer
+*CMZ :  1.24/01 17/10/2017  10.11.38  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  15.01.01  by  Michael Scheer
+*CMZ :  1.23/07 12/10/2017  08.31.17  by  Michael Scheer
+*CMZ :  1.23/06 06/10/2017  14.22.02  by  Michael Scheer
+*CMZ :  1.23/05 06/10/2017  12.51.05  by  Michael Scheer
+*CMZ :  1.23/04 05/10/2017  12.36.30  by  Michael Scheer
+*CMZ :  1.23/03 27/09/2017  09.39.17  by  Michael Scheer
+*CMZ :  1.23/02 18/09/2017  15.33.46  by  Michael Scheer
+*CMZ :  1.23/01 09/08/2017  08.38.14  by  Michael Scheer
+*CMZ :  1.23/00 04/08/2017  09.35.04  by  Michael Scheer
+*CMZ :  1.22/01 21/07/2017  15.02.00  by  Michael Scheer
+*CMZ :  1.22/00 05/07/2017  10.36.01  by  Michael Scheer
+*CMZ :  1.21/00 29/06/2017  16.12.16  by  Michael Scheer
+*CMZ :  1.20/03 29/06/2017  16.11.17  by  Michael Scheer
+*CMZ :  1.20/02 23/06/2017  14.23.56  by  Michael Scheer
+*CMZ :  1.20/01 22/06/2017  14.46.47  by  Michael Scheer
+*CMZ :  1.20/00 22/06/2017  11.27.31  by  Michael Scheer
+*CMZ :  1.19/00 20/06/2017  12.34.58  by  Michael Scheer
+*CMZ :  1.18/03 14/06/2017  11.29.53  by  Michael Scheer
+*CMZ :  1.18/02 13/06/2017  15.11.00  by  Michael Scheer
+*CMZ :  1.18/01 09/06/2017  08.54.59  by  Michael Scheer
+*CMZ :  1.18/00 06/06/2017  14.48.14  by  Michael Scheer
+*CMZ :  1.17/08 30/05/2017  16.29.12  by  Michael Scheer
+*CMZ :  1.17/07 24/05/2017  13.12.04  by  Michael Scheer
+*CMZ :  1.17/06 21/05/2017  14.25.54  by  Michael Scheer
+*CMZ :  1.17/05 18/05/2017  12.07.07  by  Michael Scheer
+*CMZ :  1.17/04 12/05/2017  13.52.43  by  Michael Scheer
+*CMZ :  1.17/03 09/05/2017  13.37.52  by  Michael Scheer
+*CMZ :  1.17/02 09/05/2017  13.11.36  by  Michael Scheer
+*CMZ :  1.17/01 08/05/2017  20.51.09  by  Michael Scheer
+*CMZ :  1.17/00 08/05/2017  16.57.03  by  Michael Scheer
+*CMZ :  1.16/00 07/05/2017  14.11.11  by  Michael Scheer
+*CMZ :  1.15/13 05/05/2017  10.21.44  by  Michael Scheer
+*CMZ :  1.15/11 03/05/2017  09.26.17  by  Michael Scheer
+*CMZ :  1.15/10 19/04/2017  12.48.35  by  Michael Scheer
+*CMZ :  1.15/09 07/04/2017  15.00.04  by  Michael Scheer
+*CMZ :  1.15/08 06/04/2017  15.01.20  by  Michael Scheer
+*CMZ :  1.15/07 05/04/2017  16.02.20  by  Michael Scheer
+*CMZ :  1.15/06 04/04/2017  13.33.09  by  Michael Scheer
+*CMZ :  1.15/05 04/04/2017  12.48.22  by  Michael Scheer
+*CMZ :  1.15/04 03/04/2017  13.12.53  by  Michael Scheer
+*CMZ :  1.15/03 03/04/2017  11.00.07  by  Michael Scheer
+*CMZ :  1.15/02 02/04/2017  09.46.32  by  Michael Scheer
+*CMZ :  1.15/01 30/03/2017  11.37.22  by  Michael Scheer
+*CMZ :  1.15/00 28/03/2017  12.03.00  by  Michael Scheer
+*CMZ :  1.14/00 22/03/2017  12.54.38  by  Michael Scheer
+*CMZ :  1.13/03 16/03/2017  17.18.19  by  Michael Scheer
+*CMZ :  1.13/02 09/03/2017  17.35.51  by  Michael Scheer
+*CMZ :  1.13/01 08/03/2017  17.07.42  by  Michael Scheer
+*CMZ :  1.13/00 02/03/2017  17.04.56  by  Michael Scheer
+*CMZ :  1.12/00 27/02/2017  15.49.37  by  Michael Scheer
+*CMZ :  1.11/07 23/02/2017  17.25.07  by  Michael Scheer
+*CMZ :  1.11/06 23/02/2017  13.48.56  by  Michael Scheer
+*CMZ :  1.11/05 22/02/2017  16.08.44  by  Michael Scheer
+*CMZ :  1.11/04 25/01/2017  16.58.21  by  Michael Scheer
+*CMZ :  1.11/03 18/01/2017  09.43.51  by  Michael Scheer
+*CMZ :  1.11/02 10/01/2017  10.20.14  by  Michael Scheer
+*CMZ :  1.11/01 09/01/2017  13.56.32  by  Michael Scheer
+*CMZ :  1.11/00 05/01/2017  09.37.44  by  Michael Scheer
+*CMZ :  1.10/03 05/12/2016  16.30.30  by  Michael Scheer
+*CMZ :  1.10/02 01/12/2016  13.35.11  by  Michael Scheer
+*CMZ :  1.10/01 21/11/2016  13.02.21  by  Michael Scheer
+*CMZ :  1.10/00 18/11/2016  09.20.28  by  Michael Scheer
+*CMZ :  1.09/01 10/10/2016  10.18.30  by  Michael Scheer
+*CMZ :  1.09/00 04/10/2016  12.55.22  by  Michael Scheer
+*CMZ :  1.08/00 30/09/2016  13.55.02  by  Michael Scheer
+*CMZ :  1.07/03 27/09/2016  19.17.35  by  Michael Scheer
+*CMZ :  1.07/02 25/09/2016  13.41.46  by  Michael Scheer
+*CMZ :  1.07/01 25/09/2016  11.51.16  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  15.02.55  by  Michael Scheer
+*CMZ :  1.06/01 21/09/2016  15.52.28  by  Michael Scheer
+*CMZ :  1.06/00 21/09/2016  13.02.46  by  Michael Scheer
+*CMZ :  1.04/03 15/09/2016  17.38.28  by  Michael Scheer
+*CMZ :  1.04/02 15/09/2016  16.33.46  by  Michael Scheer
+*CMZ :  1.04/01 14/09/2016  15.26.25  by  Michael Scheer
+*CMZ :  1.04/00 14/09/2016  13.37.05  by  Michael Scheer
+*CMZ :  1.03/00 13/09/2016  14.36.16  by  Michael Scheer
+*CMZ :  1.02/03 12/09/2016  11.55.27  by  Michael Scheer
+*CMZ :  1.02/01 11/09/2016  12.34.04  by  Michael Scheer
+*CMZ :  1.02/00 30/08/2016  13.27.12  by  Michael Scheer
+*CMZ :  1.01/00 21/08/2016  12.52.29  by  Michael Scheer
+*CMZ :  1.00/00 19/08/2016  18.47.41  by  Michael Scheer
+*CMZ :  0.00/14 19/08/2016  14.37.09  by  Michael Scheer
+*CMZ :  0.00/13 19/08/2016  14.12.39  by  Michael Scheer
+*CMZ :  0.00/12 21/07/2016  09.27.38  by  Michael Scheer
+*CMZ :  0.00/11 20/07/2016  16.30.10  by  Michael Scheer
+*CMZ :  0.00/10 14/07/2016  14.01.01  by  Michael Scheer
+*CMZ :  0.00/09 06/07/2016  08.51.18  by  Michael Scheer
+*CMZ :  0.00/08 23/06/2016  15.45.45  by  Michael Scheer
+*CMZ :  0.00/06 22/06/2016  14.00.43  by  Michael Scheer
+*CMZ :  0.00/05 14/06/2016  13.56.01  by  Michael Scheer
+*CMZ :  0.00/04 13/05/2016  14.51.39  by  Michael Scheer
+*CMZ :  0.00/03 04/05/2016  11.43.21  by  Michael Scheer
+*CMZ :  0.00/02 02/05/2016  10.24.12  by  Michael Scheer
+*CMZ :  0.00/01 26/04/2016  16.04.05  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  12.51.37  by  Michael Scheer
+*-- Author :    Michael Scheer   12/02/2004
+      print *
+      print *
+      print *
+      write(lun6,*)'     **********************************************************'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                       UNDUMAG                          *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                    Version 2.04/27                     *'
+      write(lun6,*)'     *                        28.9.2023                       *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                     Michael Scheer                     *'
+      write(lun6,*)'     *                       HZB/BESSY                        *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     **********************************************************'
+      print *
+      print *
+      print *
+
+      call util_zeit_kommentar(lun6,"")
+
+      open(unit=999,file="undumag.ver")
+      chuvers="2.04/27"
+      write(999,*)chuvers
+      close(999)
++KEEP,inputver.
+*CMZ :  2.04/27 28/09/2023  14.24.47  by  Michael Scheer
+*CMZ :  2.04/26 28/09/2023  13.25.52  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.31.19  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.46.53  by  Michael Scheer
+*CMZ :  2.04/23 27/09/2023  09.40.54  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.34.56  by  Michael Scheer
+*CMZ :  2.04/21 22/09/2023  09.06.23  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.28.15  by  Michael Scheer
+*CMZ :  2.04/19 18/09/2023  11.33.14  by  Michael Scheer
+*CMZ :  2.04/18 14/09/2023  07.39.08  by  Michael Scheer
+*CMZ :  2.04/17 13/09/2023  16.15.26  by  Michael Scheer
+*CMZ :  2.04/16 11/09/2023  11.57.47  by  Michael Scheer
+*CMZ :  2.04/15 06/09/2023  08.20.46  by  Michael Scheer
+*CMZ :  2.04/13 04/09/2023  12.06.16  by  Michael Scheer
+*CMZ :  2.04/12 31/08/2023  06.57.59  by  Michael Scheer
+*CMZ :  2.04/11 29/08/2023  15.03.24  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  16.14.31  by  Michael Scheer
+*CMZ :  2.04/09 18/08/2023  19.16.48  by  Michael Scheer
+*CMZ :  2.04/08 11/08/2023  14.57.08  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.14.02  by  Michael Scheer
+*CMZ :  2.04/06 07/08/2023  10.05.29  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  16.38.01  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  20.57.20  by  Michael Scheer
+*CMZ :  2.04/01 13/02/2023  14.22.34  by  Michael Scheer
+*CMZ :  2.04/00 02/09/2022  07.23.44  by  Michael Scheer
+*CMZ :  2.01/08 15/08/2020  08.40.43  by  Michael Scheer
+*CMZ :  2.01/07 28/07/2020  10.27.15  by  Michael Scheer
+*CMZ :  2.01/02 02/05/2018  14.22.15  by  Michael Scheer
+*CMZ :  2.01/01 24/04/2018  17.18.04  by  Michael Scheer
+*CMZ :  2.01/00 24/04/2018  15.17.18  by  Michael Scheer
+*CMZ :  2.00/03 24/04/2018  13.33.50  by  Michael Scheer
+*CMZ :  2.00/00 12/04/2018  08.51.26  by  Michael Scheer
+*CMZ :  1.25/05 05/04/2018  19.30.01  by  Michael Scheer
+*CMZ :  1.25/04 05/04/2018  16.14.01  by  Michael Scheer
+*CMZ :  1.25/02 22/03/2018  15.10.45  by  Michael Scheer
+*CMZ :  1.25/01 16/03/2018  15.07.26  by  Michael Scheer
+*CMZ :  1.24/01 17/10/2017  10.11.38  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  15.01.01  by  Michael Scheer
+*CMZ :  1.23/07 12/10/2017  08.31.17  by  Michael Scheer
+*CMZ :  1.23/06 06/10/2017  14.22.02  by  Michael Scheer
+*CMZ :  1.23/05 06/10/2017  12.51.05  by  Michael Scheer
+*CMZ :  1.23/04 05/10/2017  12.36.30  by  Michael Scheer
+*CMZ :  1.23/03 27/09/2017  09.39.17  by  Michael Scheer
+*CMZ :  1.23/02 18/09/2017  15.33.46  by  Michael Scheer
+*CMZ :  1.23/01 09/08/2017  08.38.14  by  Michael Scheer
+*CMZ :  1.23/00 04/08/2017  09.35.04  by  Michael Scheer
+*CMZ :  1.22/01 21/07/2017  15.02.00  by  Michael Scheer
+*CMZ :  1.22/00 05/07/2017  10.36.01  by  Michael Scheer
+*CMZ :  1.21/00 29/06/2017  16.12.16  by  Michael Scheer
+*CMZ :  1.20/03 29/06/2017  16.11.17  by  Michael Scheer
+*CMZ :  1.20/02 23/06/2017  14.23.56  by  Michael Scheer
+*CMZ :  1.20/01 22/06/2017  14.46.47  by  Michael Scheer
+*CMZ :  1.20/00 22/06/2017  11.27.31  by  Michael Scheer
+*CMZ :  1.19/00 20/06/2017  12.34.58  by  Michael Scheer
+*CMZ :  1.18/03 14/06/2017  11.29.53  by  Michael Scheer
+*CMZ :  1.18/02 13/06/2017  15.11.00  by  Michael Scheer
+*CMZ :  1.17/08 30/05/2017  16.29.12  by  Michael Scheer
+*CMZ :  1.17/07 24/05/2017  13.12.04  by  Michael Scheer
+*CMZ :  1.17/06 21/05/2017  14.25.54  by  Michael Scheer
+*CMZ :  1.17/05 18/05/2017  12.07.07  by  Michael Scheer
+*CMZ :  1.17/04 12/05/2017  13.52.43  by  Michael Scheer
+*CMZ :  1.17/03 09/05/2017  13.37.52  by  Michael Scheer
+*CMZ :  1.17/02 09/05/2017  13.11.36  by  Michael Scheer
+*CMZ :  1.17/01 08/05/2017  20.51.09  by  Michael Scheer
+*CMZ :  1.17/00 08/05/2017  16.57.03  by  Michael Scheer
+*CMZ :  1.16/00 07/05/2017  14.11.11  by  Michael Scheer
+*CMZ :  1.15/13 05/05/2017  10.21.44  by  Michael Scheer
+*CMZ :  1.15/11 03/05/2017  09.26.17  by  Michael Scheer
+*CMZ :  1.15/10 19/04/2017  12.48.35  by  Michael Scheer
+*CMZ :  1.15/09 07/04/2017  15.00.04  by  Michael Scheer
+*CMZ :  1.15/08 06/04/2017  15.01.20  by  Michael Scheer
+*CMZ :  1.15/07 05/04/2017  16.02.20  by  Michael Scheer
+*CMZ :  1.15/06 04/04/2017  13.33.09  by  Michael Scheer
+*CMZ :  1.15/05 04/04/2017  12.48.22  by  Michael Scheer
+*CMZ :  1.15/04 03/04/2017  13.12.53  by  Michael Scheer
+*CMZ :  1.15/03 03/04/2017  11.00.07  by  Michael Scheer
+*CMZ :  1.15/02 02/04/2017  09.46.32  by  Michael Scheer
+*CMZ :  1.15/01 30/03/2017  11.37.22  by  Michael Scheer
+*CMZ :  1.14/00 22/03/2017  12.54.38  by  Michael Scheer
+*CMZ :  1.13/03 16/03/2017  17.18.19  by  Michael Scheer
+*CMZ :  1.13/02 09/03/2017  17.35.51  by  Michael Scheer
+*CMZ :  1.13/01 08/03/2017  17.07.42  by  Michael Scheer
+*CMZ :  1.13/00 02/03/2017  17.04.56  by  Michael Scheer
+*CMZ :  1.12/00 27/02/2017  15.49.37  by  Michael Scheer
+*CMZ :  1.11/07 23/02/2017  17.25.07  by  Michael Scheer
+*CMZ :  1.11/06 23/02/2017  13.48.56  by  Michael Scheer
+*CMZ :  1.11/05 22/02/2017  16.08.44  by  Michael Scheer
+*CMZ :  1.10/01 21/11/2016  13.02.21  by  Michael Scheer
+*CMZ :  1.10/00 18/11/2016  09.20.28  by  Michael Scheer
+*CMZ :  1.09/01 10/10/2016  10.18.30  by  Michael Scheer
+*CMZ :  1.09/00 04/10/2016  12.55.22  by  Michael Scheer
+*CMZ :  1.08/00 30/09/2016  13.55.02  by  Michael Scheer
+*CMZ :  1.07/03 27/09/2016  19.17.35  by  Michael Scheer
+*CMZ :  1.07/02 25/09/2016  13.41.46  by  Michael Scheer
+*CMZ :  1.07/01 25/09/2016  11.51.16  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  15.02.55  by  Michael Scheer
+*CMZ :  1.06/01 21/09/2016  15.52.28  by  Michael Scheer
+*CMZ :  1.06/00 21/09/2016  13.02.46  by  Michael Scheer
+*CMZ :  1.05/00 17/09/2016  10.39.52  by  Michael Scheer
+*CMZ :  1.04/03 15/09/2016  17.38.28  by  Michael Scheer
+*CMZ :  1.04/02 15/09/2016  16.33.46  by  Michael Scheer
+*CMZ :  1.04/01 14/09/2016  15.26.25  by  Michael Scheer
+*CMZ :  1.04/00 14/09/2016  13.37.05  by  Michael Scheer
+*CMZ :  1.03/00 13/09/2016  14.36.16  by  Michael Scheer
+*CMZ :  1.02/03 12/09/2016  11.55.27  by  Michael Scheer
+*CMZ :  1.02/01 11/09/2016  12.34.04  by  Michael Scheer
+*CMZ :  1.02/00 30/08/2016  13.27.12  by  Michael Scheer
+*CMZ :  1.01/00 21/08/2016  12.52.29  by  Michael Scheer
+*CMZ :  1.00/00 19/08/2016  18.47.41  by  Michael Scheer
+*CMZ :  0.00/14 19/08/2016  14.37.09  by  Michael Scheer
+*CMZ :  0.00/13 19/08/2016  14.12.39  by  Michael Scheer
+*CMZ :  0.00/12 21/07/2016  09.27.38  by  Michael Scheer
+*CMZ :  0.00/11 20/07/2016  16.30.10  by  Michael Scheer
+*CMZ :  0.00/10 14/07/2016  14.01.01  by  Michael Scheer
+*CMZ :  0.00/09 06/07/2016  08.51.18  by  Michael Scheer
+*CMZ :  0.00/08 23/06/2016  15.45.45  by  Michael Scheer
+*CMZ :  0.00/07 23/06/2016  15.45.22  by  Michael Scheer
+*CMZ :  0.00/06 22/06/2016  14.00.43  by  Michael Scheer
+*CMZ :  0.00/05 14/06/2016  13.56.01  by  Michael Scheer
+*CMZ :  0.00/04 13/05/2016  14.51.39  by  Michael Scheer
+*CMZ :  0.00/03 04/05/2016  11.43.21  by  Michael Scheer
+*CMZ :  0.00/02 02/05/2016  10.24.12  by  Michael Scheer
+*CMZ :  0.00/01 26/04/2016  16.04.05  by  Michael Scheer
+*-- Author :    Michael Scheer   27/02/2004
+* Version 2.04/27
++PATCH,$VERSION.
+*CMZ :  0.00/00 20/04/2016  13.04.28  by  Michael Scheer
++DECK,V2_04.
+*CMZ :  2.04/27 28/09/2023  14.24.47  by  Michael Scheer
+*CMZ :  2.04/26 28/09/2023  13.25.52  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.31.19  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.46.53  by  Michael Scheer
+*CMZ :  2.04/23 27/09/2023  09.40.54  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.34.56  by  Michael Scheer
+*CMZ :  2.04/21 22/09/2023  09.06.23  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.28.15  by  Michael Scheer
+*CMZ :  2.04/19 18/09/2023  11.33.14  by  Michael Scheer
+*CMZ :  2.04/18 14/09/2023  07.39.08  by  Michael Scheer
+*CMZ :  2.04/17 13/09/2023  16.15.26  by  Michael Scheer
+*CMZ :  2.04/16 11/09/2023  11.57.47  by  Michael Scheer
+*CMZ :  2.04/15 06/09/2023  08.20.46  by  Michael Scheer
+*CMZ :  2.04/14 06/09/2023  07.42.07  by  Michael Scheer
+*CMZ :  2.04/13 04/09/2023  12.06.16  by  Michael Scheer
+*CMZ :  2.04/12 31/08/2023  06.57.59  by  Michael Scheer
+*CMZ :  2.04/11 29/08/2023  15.03.24  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  16.14.31  by  Michael Scheer
+*CMZ :  2.04/09 18/08/2023  19.16.48  by  Michael Scheer
+*CMZ :  2.04/08 11/08/2023  14.57.08  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.14.03  by  Michael Scheer
+*CMZ :  2.04/06 07/08/2023  10.05.29  by  Michael Scheer
+*CMZ :  2.04/05 15/03/2023  13.22.48  by  Michael Scheer
+*CMZ :  2.04/04 14/03/2023  11.22.26  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  16.38.01  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  20.57.20  by  Michael Scheer
+*CMZ :  2.04/01 13/02/2023  14.22.34  by  Michael Scheer
+*CMZ :  2.04/00 17/01/2023  13.14.13  by  Michael Scheer
+*-- Author :    Michael Scheer   17/01/2023
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/27   28/09/2023 14.24.47
+*
+* Bug removed from clcmag_copy_voxels
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/26   28/09/2023 13.25.52
+*
+* Bug removed from util_convex_hull_3d_overwrite
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/25   28/09/2023 08.31.19
+*
+* Allocation for util_convex_hull_3d improved, nvertmax in undumag.nam now
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/24   27/09/2023 16.46.53
+*
+* Allocation for util_convex_hull_3d improved
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/23   27/09/2023 09.40.54
+*
+* Bug removed from util_convex_hull_3d_overwrite
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/22   26/09/2023 21.34.56
+*
+* Bug removed from util_convex_hull_3d_simp
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/21   22/09/2023 09.06.23
+*
+* Interface for RADIA under Python now includes filaments
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/20   21/09/2023 10.28.15
+*
+* Interface for RADIA under Python now includes cylinders
+* Bugs in treatment of cylinders fixed
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/19   18/09/2023 11.33.14
+*
+* Interface for RADIA under Python
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/18   14/09/2023 07.39.08
+*
+* Bug removed from util_shrink_blockchamf
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/17   13/09/2023 16.15.26
+*
+* Bug removed from clcmag_magnet_facet
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/16   11/09/2023 11.57.47
+*
+* Calculation problems for convex hull solved
+* Bugs removed
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/15   06/09/2023 08.20.46
+*
+* Facets for undugui.py
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/14   06/09/2023 07.42.07
+*
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/13   04/09/2023 12.06.16
+*
+* Facets file implemented, segmentation speeded up
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/12   31/08/2023 06.57.59
+*
+* Bugs for plotting of coils removed from undugui.py
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/11   29/08/2023 15.03.24
+*
+* Bug from undumag_read_clc for cylinders removed
+* Graphics in undugui improved, bugs removed
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/10   23/08/2023 16.14.31
+*
+* Postscript 3d graphic improved, bug in undumag_drop_zero_magnets removed
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/09   18/08/2023 19.16.48
+*
+* Bugs in undugui.py
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/08   11/08/2023 14.57.08
+*
+* Treatment of cylinders implemented for new syntax
+*
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/07   10/08/2023 09.14.03
+*
+* Bug in CLCTRANSROTCOP removed. Check for rectangular block improved.
+* Check for size of interaction matrix implemented
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/06   07/08/2023 10.05.29
+*
+* Bugs... Variables for translations etc., translations etc. in GUI
+*
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/05   15/03/2023 13.22.48
+*
+* First GITLAB-Version
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/04   14/03/2023 11.22.26
+*
+* Before GITLAB-Version
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/03   05/03/2023 16.38.01
+*
+* Bugs of segmentation removed
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/02   27/02/2023 20.57.20
+*
+* Bugs of segmentation removed
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/01   13/02/2023 14.22.34
+*
+* Bugs of segmentation removed
+*________________________________________________________________________
+*
+*::>          VERSION  2.04/00   17/01/2023 13.14.13
+*
+* Inhomogenities, bugs removed
+*
++PATCH,UTIL,T=F77.
+*CMZ :  1.25/00 31/01/2018  16.03.22  by  Michael Scheer
++KEEP,hulldim.
+*CMZ :  2.04/25 28/09/2023  07.41.49  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  13.30.55  by  Michael Scheer
+*-- Author :    Michael Scheer   27/09/2023
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
++DECK,util_convex_hull_3d_overwrite.
+*CMZ :  2.04/26 28/09/2023  12.41.02  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.25.12  by  Michael Scheer
+*CMZ :  2.04/23 27/09/2023  09.35.27  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.22.26  by  Michael Scheer
+*CMZ :  2.04/17 11/09/2023  20.47.28  by  Michael Scheer
+*CMZ :  2.04/16 11/09/2023  10.30.11  by  Michael Scheer
+*CMZ :  2.04/09 15/08/2023  12.14.13  by  Michael Scheer
+*CMZ :  2.04/04 06/03/2023  09.47.47  by  Michael Scheer
+*CMZ :  2.04/03 02/03/2023  07.55.42  by  Michael Scheer
+*CMZ :  2.04/02 25/02/2023  16.23.46  by  Michael Scheer
+*-- Author :    Michael Scheer   25/02/2023
+      subroutine util_convex_hull_3d_overwrite(imag,
+     &  nin,xin,yin,zin,khull,kedge,kface,
+     &  nhull,nedge,nface,kfacelast,tinyin,
+     &  kfail)
+
+      ! like  util_convex_hull_3d, but overwrites xin,yin,zin
+
+      use utilmod
+
+      implicit none
+
+      double precision xin(*),yin(*),zin(*),tinyin,tiny
+
+      double precision, dimension (:), allocatable ::  xh,yh,zh
+      double precision, dimension (:,:), allocatable ::  vn
+
+      integer, dimension (:), allocatable ::  ksimp,lface,lhull
+
+      integer khull(*),kedge(4,*),kface(*)
+      integer :: nin,n,k,kfail,i,nhull,nedge,nface,kfacelast,lunbad,
+     &  nsimp,n3,ipoi,j,i1,i2,npoi,ical=0,iface,imag,ifail,iswitch,
+     &  idebug=0
+
++seq,hulldim.
+c+seq,debugutil.
+      save ical
+
+      ical=ical+1
+
+      if (idebug.gt.1) then
+        print*,"UTIL_CONVEX_HULL_3D_OVERWRITE, ical,modesimp:",ical,modsimp
+      endif
+
+      if (nin.gt.lenhull) then
+        print*,"*** Error in util_convex_hull_3d_overwrite: Nvertmax to small ***"
+        kfail=-1
+        return
+      endif
+
+      tiny=tinyin
+      if (tiny.le.0.0d0) tiny=1.0d-12
+
+      allocate(xh(nin),yh(nin),zh(nin))
+
+      iswitch=0
+
+1     npoi=nin
+
+      xh(1:npoi)=xin(1:npoi)
+      yh(1:npoi)=yin(1:npoi)
+      zh(1:npoi)=zin(1:npoi)
+
+      if (modsimp.eq.0) then
+
+        call util_convex_hull_3d(
+     &    npoi,xh,yh,zh,khull,kedge,kface,
+     &    nhull,nedge,nface,kfacelast,tiny,
+     &    kfail)
+
+        if (kfail.ne.0) then
+
+          print*,""
+          print*,"*** Warning in util_convex_hull_3d_overwrite:"
+          print*,"*** Bad return from util_convex_hull_3d.f"
+          print*,"*** Dumping points to hull.bad"
+          print*,""
+          open(newunit=lunbad,file='hull.bad')
+          do i=1,npoi
+            write(lunbad,*) xin(i),yin(i),zin(i),i
+          enddo
+          flush(lunbad)
+          close(lunbad)
+          print*,"*** Trying util_convex_hull_3d_simp.f"
+          print*,""
+
+          modsimp=2
+
+        endif
+
+      endif
+
+      if (modsimp.ne.0) then
+
+        n=npoi
+        n3=n*(n+1)**2
+
+        allocate(ksimp(4*n3),lface(n3),vn(3,4*n3))
+
+        call util_weed_points(n,xh,yh,zh,tiny)
+
+        call util_convex_hull_3d_simp(n,xh,yh,zh,tiny,nhull,khull,
+     &    nsimp,ksimp,nface,kface,lface,kfacelast,nedge,kedge,vn,kfail)
+
+        if (kfail.ne.0) then
+          print*,""
+          print*,"*** Error in util_convex_hull_3d_overwrite:"
+          print*,"*** Bad return from util_convex_hull_3d_simp.f"
+          return
+        else if (modsimp.eq.2) then
+          print*,"--> Success"
+        endif
+
+        deallocate(ksimp,lface,vn)
+
+      endif !modsimp
+
+      allocate(lhull(nin))
+
+      do i=1,nhull
+        lhull(khull(i))=i
+      enddo
+
+      xin(1:nhull)=xh(khull(1:nhull))
+      yin(1:nhull)=yh(khull(1:nhull))
+      zin(1:nhull)=zh(khull(1:nhull))
+
+      do i=1,nhull
+        khull(i)=i
+      enddo
+
+      k=0
+      do i=1,kfacelast
+        k=k+1
+        do ipoi=1,kface(k)
+          k=k+1
+          kface(k)=lhull(kface(k))
+        enddo
+        if (k.ge.kfacelast) exit
+      enddo
+
+      do i=1,nedge
+        kedge(1:2,i)=lhull(kedge(1:2,i))
+      enddo
+
+      deallocate(xh,yh,zh,lhull)
+
+      call util_check_hull_3d(
+     &  npoi,xin,yin,zin,khull,kedge,kface,
+     &  nhull,nedge,nface,kfacelast,tinyin,
+     &  ifail)
+
+      if (ifail.ne.0) then
+        if (iswitch.ne.0) then
+          print*,"*** Failed!! Giving up ***"
+        else if (modsimp.eq.0) then
+          print*,""
+          print*,"*** Warning in util_convex_hull_3d_overwrite:"
+          print*,"*** Bad return from util_check_hull_3d.f"
+          print*,"*** Trying util_convex_hull_3d_simp"
+          print*,""
+          modsimp=2
+          iswitch=iswitch+1
+          goto 1
+        endif
+      endif
+
+      if (iswitch.ne.0.and.ifail.eq.0) then
+        print*,'--> Success!'
+      endif
+
+      if (modsimp.eq.2) modsimp=0
+
+      return
+      end
++PATCH,TEX,T=LATEX.
+*CMZ :  1.02/01 05/09/2016  08.18.58  by  Michael Scheer
++KEEP,udocvers,T=LATEX.
+*CMZ :  2.04/27 28/09/2023  14.24.47  by  Michael Scheer
+*CMZ :  2.04/26 28/09/2023  13.25.52  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.31.19  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.46.53  by  Michael Scheer
+*CMZ :  2.04/23 27/09/2023  09.40.54  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.34.56  by  Michael Scheer
+*CMZ :  2.04/21 22/09/2023  09.06.23  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.28.15  by  Michael Scheer
+*CMZ :  2.04/19 18/09/2023  11.33.14  by  Michael Scheer
+*CMZ :  2.04/18 14/09/2023  07.39.08  by  Michael Scheer
+*CMZ :  2.04/17 13/09/2023  16.15.26  by  Michael Scheer
+*CMZ :  2.04/16 11/09/2023  11.57.47  by  Michael Scheer
+*CMZ :  2.04/15 06/09/2023  08.20.46  by  Michael Scheer
+*CMZ :  2.04/12 31/08/2023  06.57.59  by  Michael Scheer
+*CMZ :  2.04/11 29/08/2023  15.03.24  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  16.14.31  by  Michael Scheer
+*CMZ :  2.04/09 18/08/2023  19.16.48  by  Michael Scheer
+*CMZ :  2.04/08 11/08/2023  14.57.08  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.14.02  by  Michael Scheer
+*CMZ :  2.04/06 07/08/2023  10.05.29  by  Michael Scheer
+*CMZ :  2.04/04 14/03/2023  11.22.26  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  16.38.01  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  20.57.20  by  Michael Scheer
+*CMZ :  2.04/00 17/01/2023  13.14.13  by  Michael Scheer
+*CMZ :  2.03/00 02/09/2022  07.21.32  by  Michael Scheer
+*CMZ :  2.02/02 07/07/2022  18.13.06  by  Michael Scheer
+*CMZ :  2.01/08 15/08/2020  08.40.43  by  Michael Scheer
+*CMZ :  2.01/07 28/07/2020  10.27.15  by  Michael Scheer
+*CMZ :  2.01/06 27/07/2020  12.07.59  by  Michael Scheer
+*CMZ :  2.01/05 27/07/2020  10.28.00  by  Michael Scheer
+*CMZ :  2.01/04 29/07/2019  12.06.40  by  Michael Scheer
+*CMZ :  2.01/00 24/04/2018  15.17.18  by  Michael Scheer
+*CMZ :  2.00/00 12/04/2018  08.51.26  by  Michael Scheer
+*CMZ :  1.25/00 16/03/2018  15.06.30  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  15.01.01  by  Michael Scheer
+*CMZ :  1.23/00 04/08/2017  09.35.04  by  Michael Scheer
+*CMZ :  1.22/00 05/07/2017  10.36.01  by  Michael Scheer
+*CMZ :  1.21/00 29/06/2017  16.12.16  by  Michael Scheer
+*CMZ :  1.20/00 22/06/2017  11.27.31  by  Michael Scheer
+*CMZ :  1.19/00 20/06/2017  12.34.58  by  Michael Scheer
+*CMZ :  1.18/00 06/06/2017  14.48.14  by  Michael Scheer
+*CMZ :  1.17/00 08/05/2017  16.57.03  by  Michael Scheer
+*CMZ :  1.16/00 07/05/2017  14.11.11  by  Michael Scheer
+*CMZ :  1.15/00 28/03/2017  12.03.00  by  Michael Scheer
+*CMZ :  1.14/00 22/03/2017  12.54.38  by  Michael Scheer
+*CMZ :  1.13/00 02/03/2017  17.04.56  by  Michael Scheer
+*CMZ :  1.12/00 27/02/2017  15.49.37  by  Michael Scheer
+*CMZ :  1.11/00 05/01/2017  09.37.44  by  Michael Scheer
+*CMZ :  1.10/00 18/11/2016  09.20.28  by  Michael Scheer
+*CMZ :  1.09/00 04/10/2016  12.55.22  by  Michael Scheer
+*CMZ :  1.08/00 30/09/2016  13.55.02  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  15.02.55  by  Michael Scheer
+*CMZ :  1.06/00 20/09/2016  18.55.37  by  Michael Scheer
+*CMZ :  1.02/01 05/09/2016  08.41.09  by  Michael Scheer
+*-- Author :    Michael Scheer   05/09/2016
+Version 2.04/27
++PATCH,MODULES.
+*CMZ :  2.04/05 14/03/2023  12.19.23  by  Michael Scheer
++DECK,UNDUMAGf90m,T=F77.
+*CMZ :  2.04/25 28/09/2023  07.45.29  by  Michael Scheer
+*CMZ :  2.04/22 25/09/2023  12.20.45  by  Michael Scheer
+*CMZ :  2.04/10 22/08/2023  08.57.29  by  Michael Scheer
+*CMZ :  2.04/05 14/03/2023  19.31.25  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  15.03.22  by  Michael Scheer
+*CMZ :  2.03/00 22/08/2022  12.27.43  by  Michael Scheer
+*CMZ :  2.02/02 03/03/2022  11.56.47  by  Michael Scheer
+*CMZ :  2.02/01 26/04/2021  07.33.54  by  Michael Scheer
+*CMZ :  2.02/00 16/02/2021  14.20.30  by  Michael Scheer
+*CMZ :  2.01/08 13/08/2020  11.30.15  by  Michael Scheer
+*CMZ :  2.01/05 26/06/2020  14.58.35  by  Michael Scheer
+*CMZ :  2.01/04 16/07/2019  14.49.37  by  Michael Scheer
+*CMZ :  2.01/03 15/07/2019  15.06.29  by  Michael Scheer
+*CMZ :  2.01/02 26/04/2018  12.28.16  by  Michael Scheer
+*CMZ :  2.00/00 11/04/2018  13.52.25  by  Michael Scheer
+*CMZ :  1.25/03 23/03/2018  15.53.14  by  Michael Scheer
+*CMZ :  1.25/02 21/03/2018  10.11.25  by  Michael Scheer
+*CMZ :  1.25/01 20/03/2018  13.49.06  by  Michael Scheer
+*CMZ :  1.25/00 16/03/2018  13.28.25  by  Michael Scheer
+*CMZ :  1.24/01 16/10/2017  09.19.11  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  08.36.08  by  Michael Scheer
+*CMZ :  1.23/05 05/10/2017  16.45.51  by  Michael Scheer
+*CMZ :  1.23/04 28/09/2017  13.54.36  by  Michael Scheer
+*CMZ :  1.23/03 21/09/2017  14.46.49  by  Michael Scheer
+*CMZ :  1.23/02 18/09/2017  14.00.28  by  Michael Scheer
+*CMZ :  1.22/02 27/07/2017  09.16.11  by  Michael Scheer
+*CMZ :  1.22/01 20/07/2017  12.02.40  by  Michael Scheer
+*CMZ :  1.20/03 29/06/2017  10.53.36  by  Michael Scheer
+*CMZ :  1.20/00 20/06/2017  17.32.50  by  Michael Scheer
+*CMZ :  1.19/00 19/06/2017  18.04.00  by  Michael Scheer
+*CMZ :  1.18/03 14/06/2017  09.16.03  by  Michael Scheer
+*CMZ :  1.18/02 13/06/2017  12.18.33  by  Michael Scheer
+*CMZ :  1.17/07 21/05/2017  18.28.26  by  Michael Scheer
+*CMZ :  1.17/06 21/05/2017  12.01.23  by  Michael Scheer
+*CMZ :  1.17/05 18/05/2017  09.20.21  by  Michael Scheer
+*CMZ :  1.17/04 10/05/2017  11.17.06  by  Michael Scheer
+*CMZ :  1.17/00 08/05/2017  13.25.33  by  Michael Scheer
+*CMZ :  1.16/00 06/05/2017  12.55.04  by  Michael Scheer
+*CMZ :  1.15/12 04/05/2017  15.51.52  by  Michael Scheer
+*CMZ :  1.15/11 23/04/2017  10.38.05  by  Michael Scheer
+*CMZ :  1.15/10 19/04/2017  12.19.13  by  Michael Scheer
+*CMZ :  1.15/08 06/04/2017  09.03.14  by  Michael Scheer
+*CMZ :  1.15/06 04/04/2017  13.28.20  by  Michael Scheer
+*CMZ :  1.15/04 03/04/2017  11.21.37  by  Michael Scheer
+*CMZ :  1.15/02 02/04/2017  09.38.33  by  Michael Scheer
+*CMZ :  1.14/00 21/03/2017  16.23.04  by  Michael Scheer
+*CMZ :  1.13/03 16/03/2017  09.37.22  by  Michael Scheer
+*CMZ :  1.13/01 06/03/2017  10.14.22  by  Michael Scheer
+*CMZ :  1.13/00 01/03/2017  09.19.24  by  Michael Scheer
+*CMZ :  1.11/05 27/01/2017  09.42.57  by  Michael Scheer
+*CMZ :  1.11/04 25/01/2017  16.52.23  by  Michael Scheer
+*CMZ :  1.11/03 17/01/2017  14.50.07  by  Michael Scheer
+*CMZ :  1.11/01 05/01/2017  14.35.46  by  Michael Scheer
+*CMZ :  1.11/00 07/12/2016  12.38.34  by  Michael Scheer
+*CMZ :  1.10/03 01/12/2016  14.58.46  by  Michael Scheer
+*CMZ :  1.10/02 24/11/2016  10.20.40  by  Michael Scheer
+*CMZ :  1.09/01 06/10/2016  09.05.14  by  Michael Scheer
+*CMZ :  1.07/03 27/09/2016  13.44.47  by  Michael Scheer
+*CMZ :  1.07/01 25/09/2016  11.38.45  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  14.27.14  by  Michael Scheer
+*CMZ :  1.06/00 21/09/2016  11.55.19  by  Michael Scheer
+*CMZ :  1.04/00 14/09/2016  10.45.46  by  Michael Scheer
+*CMZ :  1.02/00 22/08/2016  17.13.11  by  Michael Scheer
+*CMZ :  0.00/13 28/07/2016  09.47.14  by  Michael Scheer
+*CMZ :  0.00/12 21/07/2016  09.03.35  by  Michael Scheer
+*CMZ :  0.00/11 20/07/2016  11.39.48  by  Michael Scheer
+*CMZ :  0.00/10 13/07/2016  14.56.05  by  Michael Scheer
+*CMZ :  0.00/09 05/07/2016  16.04.35  by  Michael Scheer
+*CMZ :  0.00/07 22/06/2016  14.09.40  by  Michael Scheer
+*CMZ :  0.00/04 10/05/2016  09.06.41  by  Michael Scheer
+*CMZ :  0.00/02 27/04/2016  09.26.25  by  Michael Scheer
+*CMZ :  0.00/01 26/04/2016  14.57.22  by  Michael Scheer
+*CMZ :  1.17/13 07/04/2016  14.37.11  by  Michael Scheer
+*CMZ :  1.17/12 06/04/2016  12.17.38  by  Michael Scheer
+*CMZ :  1.17/10 04/04/2016  13.37.17  by  Michael Scheer
+*CMZ :  1.17/09 04/04/2016  09.08.54  by  Michael Scheer
+*CMZ :  1.17/07 03/04/2016  13.18.15  by  Michael Scheer
+*CMZ :  1.17/06 31/03/2016  09.17.56  by  Michael Scheer
+*CMZ :  1.17/05 27/03/2016  09.00.04  by  Michael Scheer
+*CMZ :  1.17/04 24/03/2016  16.12.04  by  Michael Scheer
+*CMZ :  1.17/03 21/03/2016  09.38.56  by  Michael Scheer
+*CMZ :  1.17/02 11/03/2016  16.56.25  by  Michael Scheer
+*-- Author :    Michael Scheer   02/12/2003
+      module undumagf90m
+
+c +PATCH,//UNDUMAG/SEQ
+c +DECK,UNDUMAGf90m,T=F77.
+
+      implicit none
+
+      integer nthreadp,nwitems
+      parameter (nthreadp=1000,nwitems=11)
+
+!      double precision, dimension (:,:,:,:), allocatable :: wwmatrix
+
+      double precision, dimension (:,:,:), allocatable :: bcmat
+      double precision, dimension (:,:), allocatable :: bc0,bc00,bpm,
+     &  bpebc0,wire,race,wind,arc,carc,crace,rectbar,thickwire,brnmat
+
+      double precision, dimension (:), allocatable ::
+     &  feh1,feh2,feh3,fem1,fem2,fem3,ufespl1,
+     &  fespl1,fewspl1,fewspl2,fewspl3,fewspl4,
+     &  bxconvw,byconvw,bzconvw
+
+      double precision, dimension (:,:), allocatable :: dipoles
+      double precision, dimension (:,:,:), allocatable :: cornpoles
+
+      real*4, dimension (:,:,:,:), allocatable :: wwmatrix4,convmat
+c      real*4, dimension (:,:,:), allocatable :: wwmatrix
+
+      integer, dimension (:), allocatable :: kspecmag,idamp8,ncornpoles
+      integer, dimension(:,:), allocatable :: magcyl
+
+      double precision
+     &  unduplot_phi,unduplot_theta,traxyz_theta,traxyz_phi,permu,parmu,perksi,parksi,
+     &  xmapmin,xmapmax,ymapmin,ymapmax,zmapmin,zmapmax,dxmap,
+     &  xminpl,xmaxpl,yminpl,ymaxpl,zminpl,zmaxpl,
+     &  xconvmin,xconvmax,dxconv,xconv(100),yconv,zconv,hconv,hconva,uwindow,xsym,
+     &  xbeff,xbeffy,xbeffz,perlen,
+     &  ebeam,zslit,xcenter,xmaxinf,xcentershift,xelec,yelec,zelec,
+     &  vxelec,vyelec,vzelec,
+     &  ds,xf,yf,zf,efx,efy,efz,xobsv,yobsv,zobsv,phelow,phehig,dampiron,dampi,
+     &  ubfcenx,ubfceny,ubfcenz,ubflenx,ubfleny,ubflenz,
+     &  utorqcenx,utorqceny,utorqcenz,
+     &  fxdip,fydip,fzdip,
+     &  txdip,tydip,tzdip,
+     &  uservar(100),corrtiny,cuttiny,hulltiny,randos,randox,randoy,randoz
+     &  ,dampfac,hconvbase,hconvexp,chicut,damp8,rcvthron,angmaprotx,
+     &  cenmaprotxy,cenmaprotxz,zminprof,zmaxprof,
+     &  bxex,byex,bzex,hresidiron,resiron,halt,dedgefb,coating
+
+      real randoxa,randoya,randoza,randox10,randoy10,randoz10,
+     &  randomx,randomy,randomz
+
+      integer
+     &  maxiter,maxiterrec,maxiteriron,nchiiron,ibulk,nchimax,kesti,
+     &  ktetmesh,
+     &  kiter,iterrectot,iterirontot,
+     &  iunduplot,kcomment,krunnum,kdate,kplsym,nrec,niron,nxmap,intmaglis,noduplis,nymap,nzmap
+     &  ,mode,ncornmax,nplanmax,ncornadd,nplanadd,niterrec,niteriron,niter,
+     &  kconvrec,kconviron,kconv,lunconv,kdumpconv,nmatfiles,
+     &  matmaps(4,1000),kpreset,matrix,
+     &  magmatrix,nuthreads,
+     &  ixsym,iysym,izsym,nspecmag,nxbeff,kbeffmode,
+     &  ixsymo,iysymo,izsymo,
+     &  ieneloss,ivelofield,nphener,nstep,kxcenter,kudebug,kcalcvars,isimpson,
+     &  nxconv,kdisplace,kechocalc,knomagmap,knopolmap,isplinefm,
+     &  iforce,ivrml,iundugeo,idipoles,iforcedip,iplforce,itorque,mbforcex,mbforcey,mbforcez,mfcolor,
+     &  kmapmode,kmapnohead,knointmap,konv,iwarnsum,maxpoints,nmagpols,kallodip,
+     &  nwarnbound, iwarnin,iwarn2pi,iwarnbound,ndipoles,killbadmag,irecrepl,kwarncom,irandmag,kshuffle,
+     &  kforcemag,kurad,kbextern,kresiron,kprint,ndivfboxy,
+     &  ncwires,nrace,nwind,ncrace,ncfila,narc,ncarc,nwcarc,nwrace,nwwind,
+     &  nwcrace,nwarc,ncoil,newclc,iunduplot_mode,modsimphull,nvertmax,
+     &  nrbar,nwrbar,nthwir,nwthwir,nmagcyl,kwave,iforcegrid,modegui,nbrnmat
+
+      character(256) unducomment
+      character(512) cundutit
+      character(16) chuvers
+
+      character, dimension (:,:), allocatable :: chmags, chmoths,
+     &  chmagsm,chmothsm,chmagsi,chmothsi,chmagpols,chmothso
+
+      character(32) chmag,chmoth,chforcemag
+
+      namelist/undumagn/
+     &  maxiter,maxiterrec,maxiteriron,nchiiron,ibulk,iunduplot,kcomment,
+     &  krunnum,kdate,ktetmesh,kesti,
+     &  kplsym,nxmap,intmaglis,noduplis,nymap,nzmap
+     &  ,mode,kdumpconv,dxmap,iunduplot_mode,
+     &  unduplot_phi,unduplot_theta,traxyz_theta,traxyz_phi,
+     &  xmapmin,xmapmax,ymapmin,ymapmax,zmapmin,zmapmax,
+     &  xconvmin,xconvmax,dxconv,nxconv,yconv,zconv,hconv,kpreset,uwindow,matrix,nuthreads,
+     &  xminpl,xmaxpl,yminpl,ymaxpl,zminpl,zmaxpl,
+     &  ixsym,iysym,izsym,xsym,
+     &  xbeff,xbeffy,xbeffz,perlen,nxbeff,kbeffmode,kurad,ebeam,zslit,xcenter,
+     &  xelec,yelec,zelec,vxelec,vyelec,vzelec,
+     &  ds,xf,yf,zf,efx,efy,efz,xobsv,yobsv,zobsv,phelow,phehig,
+     &  ieneloss,ivelofield,nphener,nstep,kxcenter,kcalcvars,
+     &  dampiron,isimpson,isplinefm,kdisplace,kechocalc,knomagmap,knopolmap,
+     &  kmapmode,kmapnohead,knointmap,modsimphull,nvertmax,
+     &  iforce,ivrml,iundugeo,idipoles,iforcedip,iplforce,itorque,mbforcex,mbforcey,mbforcez,mfcolor,
+     &  ubfcenx,ubfceny,ubfcenz,ubflenx,ubfleny,ubflenz,
+     &  utorqcenx,utorqceny,utorqcenz,chforcemag,nwarnbound, iwarnin,iwarn2pi,
+     &  killbadmag,corrtiny,cuttiny,hulltiny,randos,randox,randoy,randoz,irecrepl
+     &  ,dampfac,hconvbase,hconvexp,chicut,irandmag,kshuffle,
+     &  randomx,randomy,randomz,rcvthron,angmaprotx,cenmaprotxy,cenmaprotxz,
+     &  bxex,byex,bzex,kbextern,kresiron,resiron,kprint,ndivfboxy,dedgefb,
+     &  iforcegrid,kudebug,newclc
+
+      end module undumagf90m
++DECK,magnet_struct,T=F77.
+*CMZ :  2.04/27 28/09/2023  14.01.15  by  Michael Scheer
+*CMZ :  2.04/17 12/09/2023  09.42.21  by  Michael Scheer
+*CMZ :  2.04/16 06/09/2023  16.15.55  by  Michael Scheer
+*CMZ :  2.04/14 06/09/2023  06.43.30  by  Michael Scheer
+*CMZ :  2.04/13 03/09/2023  09.50.42  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  08.17.05  by  Michael Scheer
+*CMZ :  2.04/05 14/03/2023  19.31.25  by  Michael Scheer
+*CMZ :  2.04/03 03/03/2023  16.41.34  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  16.37.47  by  Michael Scheer
+*CMZ :  2.04/01 23/01/2023  09.51.15  by  Michael Scheer
+*CMZ :  2.04/00 13/01/2023  10.56.20  by  Michael Scheer
+*CMZ :  2.02/02 16/02/2022  15.17.02  by  Michael Scheer
+*CMZ :  2.02/01 06/02/2022  11.20.01  by  Michael Scheer
+*-- Author :    Michael Scheer   25/04/2021
+      module magnets_structure
+
+      double precision ::
+     &  xcwmin=1.0d30,xcwmax=-1.0d30,
+     &  ycwmin=1.0d30,ycwmax=-1.0d30,
+     &  zcwmin=1.0d30,zcwmax=-1.0d30,
+     &  xmin_t=1.0d30,xmax_t=-1.0d30,
+     &  ymin_t=1.0d30,ymax_t=-1.0d30,
+     &  zmin_t=1.0d30,zmax_t=-1.0d30,
+     &  xsymmm_t
+
+      integer nclcbuff,nclcspec,nclcmag,nclccoil,nclcvar,nclcmod,nclcmat,
+     &  kunduplot_mode
+
+      integer :: iwwork,iwfct=0,iwgeo=0,iwvgeo=0,iwmag=0
+
+      integer :: nvar_t=0,nmag_t=0,nvox_t=0,niron_t=0,kvox=0,kfirstiron_t=0,
+     &  nspecmag_t=0,kfirstiron_spec_t=0,ncoils_t=0,ncwires_t=0,nmagtot_t=0,
+     &  ncornmax_t=8,nplanmax_t=16, nmodule_t=0, nmagcopy_t=0,nvoxcopy_t=0,
+     &  nclccop_t=0,nmoth_t=0,nmothtot_t=0,nmagsym_t=0,ninhom_t=0,nmaginhom_t=0
+
+      integer, dimension (:,:), allocatable :: ifacets
+      integer :: nfacets=0
+      integer, dimension (:), allocatable :: ksort_t,kmaglist_t,maginhom_t
+
+      character(512), dimension (:), allocatable :: clcbuff,clcmag,clccoil,
+     &  clcvar,clcmod,clcmat,clctrarot,clccop,clcspec,clcinhom
+
+      type T_variable
+        character(128) cname
+        double precision val
+      end type T_variable
+
+      type(T_variable), dimension(:), allocatable :: t_variables
+
+      type T_Voxel
+
+      double precision, dimension (:), allocatable :: xhull,yhull,zhull
+      double precision, dimension (:,:), allocatable :: plan, vcen,vnorm
+
+      integer, dimension (:,:), allocatable :: kedge
+      integer, dimension (:), allocatable :: kface,khull,isfacet,lface
+
+      double precision xyz(3),size(3),trans(3),rot(3,3),Br(3),
+     &  gcen(3),volume,xmin,xmax,ymin,ymax,zmin,zmax
+
+      integer nhull,ixdiv,iydiv,izdiv,nedge,nface,kfacelast,
+     &  IsPole,IsBlock,mxdiv,mydiv,mzdiv
+
+      end type T_Voxel
+
+      type T_Voxel_Copy
+        integer, dimension (:), allocatable :: isfacet
+        integer kmagnet,kmodule,kcopy,kvoxel,kproto,ispole,nface
+        double precision Br(3),Brn,gcen(3)
+      end type T_Voxel_Copy
+
+      type T_Magnet_Copy
+        integer kproto,kmodule,kcopy,IsPole,IsSpecial
+        double precision gcen(3),Br(3),BrN,xmin,xmax,ymin,ymax,zmin,zmax,
+     &    size(3),volume
+        character(32) ctype,cnam,cmoth
+      end type T_Magnet_Copy
+
+      type T_Magnet_Sym
+        integer kproto,kmodule,kcopy,IsPole,IsSpecial
+        double precision gcen(3),Br(3),BrN,xmin,xmax,ymin,ymax,zmin,zmax
+        character(32) ctype,cnam,cmoth
+      end type T_Magnet_Sym
+
+      type T_Magnet
+
+        double precision, dimension (:,:), allocatable :: fcen,fnorm
+        double precision, dimension (:), allocatable :: xhull0,yhull0,zhull0,
+     &    xhull,yhull,zhull,ydivs,zdivs
+
+        integer, dimension (:,:,:), allocatable :: kvoxels
+        integer, dimension (:,:), allocatable :: kedge
+        integer, dimension (:), allocatable :: kface,khull,kcopy,lface
+
+        character(512), dimension (:), allocatable :: cinhom
+
+        double precision xyz(3),size(3),trans(3),rot(3,3),Br(3),yfracdiv,
+     &    xmin,ymin,zmin,xmax,ymax,zmax,volume,gcen(3),dxdiv,dydiv,dzdiv,yfrac,
+     &    zfracdiv,zfrac,uschamf,dschamf,cylphi,BrN,xyzinh(4),xvolume,yvolume,
+     &    zvolume
+
+        integer :: kmag,nface,nhull,icol,imat,nxdiv,nydiv,nzdiv,matindex,mattype,
+     &    kfacelast,nedge,nvoxels,IsPole,IsSpecial,IsBlock,nhull0,IsPart,
+     &    ncopy=0,kmodule=0,IsInhom=0,mxdiv,mydiv,mzdiv,IsRotated
+
+        character(32) ctype,cnam,cmoth
+        character(1024) cfile
+
+        type(T_Voxel), dimension(:), allocatable ::  t_voxels, t_xcuts
+        type(T_Voxel), dimension(:,:), allocatable :: t_xycuts
+        type(T_Voxel), dimension(:,:,:), allocatable :: t_xyzcuts
+
+      end type T_Magnet
+
+      type T_Mother
+
+        double precision, dimension (:), allocatable :: xhull,yhull,zhull
+
+        integer, dimension (:,:), allocatable :: kedge
+        integer, dimension (:), allocatable :: kface,khull,magnets
+
+        double precision xyz(3),xmin,ymin,zmin,xmax,ymax,zmax,gcen(3)
+
+        integer :: nmagnets=0,nhull,kfacelast
+
+        character(32) :: cmoth=''
+
+      end type T_Mother
+
+      type T_Filament
+        double precision curr,x1,y1,z1,x2,y2,z2
+        integer icolor
+      end type T_Filament
+
+      type T_Coil
+        integer ncwireI,ncwireE,iibuff,iebuff
+        character(128) ctype,cnam
+        character(1024) cparams
+        double precision params(100)
+      endtype T_Coil
+
+      type(T_Magnet), dimension(:), allocatable ::  t_magnets, t_magnets_copy
+      type(T_Coil), dimension(:), allocatable ::  t_coils
+
+      type T_Module
+        integer ncopy
+        double precision offset(3),phi,vspace(3), scalmag(3),rotmat(3,3)
+      end type T_Module
+
+      character(32), dimension(:), allocatable :: chmutts
+
+      integer, dimension (:), allocatable :: magmodule
+      integer, parameter :: ntransrotcop_p=1000, nmat_p=1000
+
+      integer :: ntransrotcop=0, nmat_t=0, t_matrec(3,nmat_p), nowarnugv=0
+      double precision transrotcop(8,ntransrotcop_p)
+      character(128) ctransrotcop(ntransrotcop_p)
+
+      type(T_Mother), dimension(:), allocatable ::  t_mothers
+      type(T_Module), dimension(:), allocatable ::  t_modules
+      type(T_Magnet_Copy), dimension(:), allocatable ::  t_magcopy
+      type(T_Magnet_Sym), dimension(:), allocatable ::  t_magsym
+      type(T_Voxel_Copy), dimension(:), allocatable ::  t_voxcopy
+
+      double precision, dimension (:), allocatable ::
+     &  xpuffer1,ypuffer1,zpuffer1,
+     &  xpuffer2,ypuffer2,zpuffer2,
+     &  xpuffer3,ypuffer3,zpuffer3
+
+      end module magnets_structure
