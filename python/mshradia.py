@@ -22,6 +22,7 @@ from matplotlib import cm #color maps
 
 global  mshObs,mshTrf,mshNames,mshColors,mshCnt
 global Ax,Fig
+global MagVoxelField, PolVoxelField
 
 mshObs = {}
 mshTrf = {}
@@ -37,21 +38,30 @@ def mshObjAddToCnt(cnt,obj):
   if obj in mshCnt: obj = rad.ObjCntStuf(obj)
 
   if type(obj) == list:
-    rad.ObjAddToCnt(cnt,obj)
-    for o in list:
-      mshCntMaster.append(o)
-    #endfor
+      rad.ObjAddToCnt(cnt,obj)
+      for o in obj:
+        if not o in mshCntMaster: mshCntMaster.append(o)
+        if not o in mshCntMembers[cnt]: mshCntMembers[cnt].append(o)
+      #endfor
+    #endif
   else:
     rad.ObjAddToCnt(cnt,[obj])
-    mshCntMembers[cnt].append(obj)
-    mshCntMaster.append(obj)
+    if not obj in mshCntMembers[cnt]: mshCntMembers[cnt].append(obj)
+    if not obj in mshCntMaster: mshCntMaster.append(obj)
+    #endif
   #endif
+#enddef
+
+def mshIsPole(obj):
+  global mshObs,mshCnt
+  if obj in mshCnt: return -1
+  else: return mshObs[obj][-2]
 #enddef
 
 def mshGetObjName(obj):
   global mshObs,mshCnt
   if obj in mshCnt: return mshCnt[obj]
-  else: return mshObs[obj][2]
+  else: return mshObs[obj][-1]
 #enddef
 
 def mshObjDpl(obj, sopt='FreeSym->False',nam=''):
@@ -83,10 +93,11 @@ def mshObjDpl(obj, sopt='FreeSym->False',nam=''):
   return dpl
 #enddef
 
-def mshObjDrw(obj=0,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz'):
+def mshObjDrw(obj=0,facecolor='b',edgecolor='black',alpha=0.2,scale='xyz',
+              modus='cen',msize=4.):
 
   global  mshObs,mshTrf,mshNames,mshColors,mshCnt,mshCntMembers
-  global Fig,Ax,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Fig,Ax,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax,Xcen,Ycen,Zcen
 
 
   Xmin = 1.e30
@@ -110,7 +121,7 @@ def mshObjDrw(obj=0,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz'):
           iob +=1
         #endif
       except: pass
-      _mshObjDrw(ob,facecolor,edgecolor,alpha,scale,tit,isame)
+      _mshObjDrw(ob,facecolor,edgecolor,alpha,scale,tit,isame,modus,msize)
       isame = 1
     #endfor
   elif obj in mshCnt:
@@ -118,9 +129,26 @@ def mshObjDrw(obj=0,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz'):
     except: tit = ''
     isame = 0
     for ob in mshCntMembers[obj]:
-      _mshObjDrw(ob,facecolor,edgecolor,alpha,scale,tit,isame)
+      bounds = mshObs[ob][0][3]
+      xmin = bounds[0]
+      xmax = bounds[1]
+      ymin = bounds[2]
+      ymax = bounds[3]
+      zmin = bounds[4]
+      zmax = bounds[5]
+      Xmin = min(Xmin,xmin)
+      Xmax = max(Xmax,xmax)
+      Ymin = min(Ymin,ymin)
+      Ymax = max(Ymax,ymax)
+      Zmin = min(Zmin,zmin)
+      Zmax = max(Zmax,zmax)
+    #endfor
+
+    for ob in mshCntMembers[obj]:
+      _mshObjDrw(ob,facecolor,edgecolor,alpha,scale,tit,isame,modus,msize)
       isame = 1
     #endfor
+
   else:
     try: tit = mshNames[obj]
     except: tit = ''
@@ -132,15 +160,19 @@ def mshObjDrw(obj=0,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz'):
     Ymax = bounds[3]
     Zmin = bounds[4]
     Zmax = bounds[5]
-    _mshObjDrw(obj,facecolor,edgecolor,alpha,scale,tit,isame)
+    _mshObjDrw(obj,facecolor,edgecolor,alpha,scale,tit,isame,modus,msize)
   #endif
+
+  Fig.savefig("undumag_radia.pdf")
 
 #enddef _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz')
 
-def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz',tit='',isame=0):
+def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.1,scale='xyz',tit='',isame=0,
+               modus='cen',msize=4):
 
   global  mshObs,mshTrf,mshNames,mshColors,mshCnt
-  global Fig,Ax,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Fig,Ax,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax,Xcen,Ycen,Zcen
+  global MagVoxelField, PolVoxelField
 
   if obj in mshCnt:
     print(rad.ObjCntStuf(obj))
@@ -203,28 +235,32 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz',tit='',
   Zmin = zmin
   Zmax = zmax
 
-  dx = (xmax-xmin)*0.05
-  dy = (ymax-ymin)*0.05
-  dz = (zmax-zmin)*0.05
+  dx = (xmax-xmin)*0.55
+  dy = (ymax-ymin)*0.55
+  dz = (zmax-zmin)*0.55
+
+  Xcen = (xmax+xmin)/2.
+  Ycen = (ymax+ymin)/2.
+  Zcen = (zmax+zmin)/2.
 
   if scale == 'xz':
     xzmin = min(xmin,zmin)
     xzmax = max(xmax,zmax)
-    dxz = (xzmax-xzmin)*0.05
-    Ax.set_xlim3d(xzmin-dxz,xzmax+dxz)
-    Ax.set_ylim3d(ymin-dy,ymax+dy)
-    Ax.set_zlim3d(xzmin-dxz,xzmax+dxz)
+    dxz = (xzmax-xzmin)*0.55
+    Ax.set_xlim3d(Xcen-dxz,xcen+dxz)
+    Ax.set_xlim3d(Ycen-dy,ycen+dy)
+    Ax.set_zlim3d(Zcen-dxz,Zcen+dxz)
   elif scale == 'xyz':
     xyzmin = min(xmin,ymin,zmin)
     xyzmax = max(xmax,ymax,zmax)
-    dxyz = (xyzmax-xyzmin)*0.05
-    Ax.set_xlim3d(xyzmin-dxyz,xyzmax+dxyz)
-    Ax.set_ylim3d(xyzmin-dxyz,xyzmax+dxyz)
-    Ax.set_zlim3d(xyzmin-dxyz,xyzmax+dxyz)
+    dxyz = (xyzmax-xyzmin)*0.55
+    Ax.set_xlim3d(Xcen-dxyz,Xcen+dxyz)
+    Ax.set_ylim3d(Ycen-dxyz,Ycen+dxyz)
+    Ax.set_zlim3d(Zcen-dxyz,Zcen+dxyz)
   else:
-    Ax.set_xlim3d(xmin-dx,xmax+dx)
-    Ax.set_ylim3d(ymin-dy,ymax+dy)
-    Ax.set_zlim3d(zmin-dz,zmax+dz)
+    Ax.set_xlim3d(Xcen-dx,Xcen+dx)
+    Ax.set_xlim3d(Ycen-dy,Ycen+dy)
+    Ax.set_xlim3d(Zcen-dz,Zcen+dz)
   #endif
 
   pfaces = mplot3d.art3d.Poly3DCollection(fpl)
@@ -241,9 +277,33 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.5,scale='xyz',tit='',
 
   Ax.add_collection3d(pfaces)
 
-  txyz(tit,"x [mm]","y [mm]","z [mm]")
+  if modus == 'cen':
 
-  plt.show(block=False)
+    for vox in MagVoxelField:
+      col = mshColors[vox]
+      points = []
+      for ipoi in range(len(MagVoxelField[vox])):
+        points.append(MagVoxelField[vox][ipoi][0])
+      #endfor
+      points=np.array(points).T
+      plt.plot(points[0],points[1],points[2],marker='o',fillstyle='full',
+               ls='',mec='black',mfc=col,mew=1,c='black',markersize=msize)
+    #endfor
+
+    for vox in PolVoxelField:
+      points = []
+      col = mshColors[vox]
+      for ipoi in range(len(PolVoxelField[vox])):
+        points.append(PolVoxelField[vox][ipoi][0])
+      #endfor
+      points=np.array(points).T
+      plt.plot(points[0],points[1],points[2],marker='o',fillstyle='full',
+               ls='',mec='black',mfc=col,mew=1,c='black',markersize=msize)
+    #endfor
+
+  #endif
+
+  txyz(tit,"x [mm]","y [mm]","z [mm]")
 
 #enddef mshObjDrw(obj)
 
@@ -257,12 +317,16 @@ def mshObjCnt(nam=''):
   return cnt
 #endif
 
-def mshObjPolyhdr(verts, ifaces, faces, bounds, Br, nam='',color='b'):
+def mshObjPolyhdr(verts, ifaces, faces, bounds, Br, nam='',color='b',IsPole=-1):
   global  mshObs,mshTrf,mshNames,mshColors
+  if IsPole == -1:
+    if Br[0]*Br[0]+Br[1]*Br[1]+Br[2]*Br[2] == 0: IsPole = 1
+    else: IsPole = 0
+  #endif
   poly = rad.ObjPolyhdr(verts, ifaces, Br)
   if nam == '': nam = 'obj_index_' + str(poly)
   mshNames[poly] = nam
-  mshObs[poly] = [[verts,ifaces,faces,bounds,Br],[],nam]
+  mshObs[poly] = [[verts,ifaces,faces,bounds,Br],[],IsPole,nam]
   mshColors[poly] = color
   return poly
 #enddef
