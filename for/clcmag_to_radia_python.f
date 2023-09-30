@@ -1,3 +1,4 @@
+*CMZ :  2.04/28 29/09/2023  11.43.35  by  Michael Scheer
 *CMZ :  2.04/22 22/09/2023  12.32.06  by  Michael Scheer
 *CMZ :  2.04/21 21/09/2023  16.03.24  by  Michael Scheer
 *CMZ :  2.04/20 21/09/2023  10.10.06  by  Michael Scheer
@@ -295,6 +296,17 @@ c-----------------------------------------------------------------------
       write(lunrad,'(a)')"nUnduNoMagMap = " // c32x
       write(lunrad,'(a)')
 
+c+self,if=uvarrad.
+
+      write(lunrad,'(a)')
+      write(lunrad,'(a)')'# --- Variables of undumag.clc ---'
+      write(lunrad,'(a)')
+
+      do i=1,nvar_t
+        write(clunrad,*) trim(t_variables(i)%cname),' = ',t_variables(i)%val
+        write(lunrad,'(a)') trim(adjustl(clunrad))
+      enddo !nvar_t
+c+self.,if=uvarrad.
 
       write(lunrad,'(a)')
       write(lunrad,'(a)')'# --- Materials of undumag.clc ---'

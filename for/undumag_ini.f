@@ -1,3 +1,4 @@
+*CMZ :  2.04/28 29/09/2023  16.50.35  by  Michael Scheer
 *CMZ :  2.04/20 20/09/2023  15.47.37  by  Michael Scheer
 *CMZ :  2.04/19 17/09/2023  15.21.47  by  Michael Scheer
 *CMZ :  2.04/16 06/09/2023  14.48.40  by  Michael Scheer
@@ -366,17 +367,23 @@ c      call undumag_ini_displacement
       if (iwgeo.ne.0) call undumag_geo
 
       ! write interface to RADIA
-      open(unit=99,file='undumag_proc.nb',iostat=i)
+      open(unit=99,file='undumag_proc.nb',status='old',iostat=i)
       if (i.eq.0) then
         close(99)
         call clcmag_to_radia
       endif
 
       ! write interface to RADIA for Python
-      open(unit=99,file='undumag_proc.py',iostat=i)
+      open(unit=99,file='undumag_proc.py',status='old',iostat=i)
       if (i.eq.0) then
         close(99)
         call clcmag_to_radia_python
+      endif
+
+      open(unit=99,file='undumag_proc_msh_radia.py',status='old',iostat=i)
+      if (i.eq.0) then
+        close(99)
+        call clcmag_to_msh_radia
       endif
 
       if (iundugeo.lt.0) then
