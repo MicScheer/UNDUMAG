@@ -146,7 +146,7 @@ if iSolve !=0 :
 
     for po in mshCntMembers[UnduPol]:
 
-      Voxel = rad.ObjM(UnduPol[po])
+      Voxel = rad.ObjM(po)
       nVoxel = len(Voxel)
 
       msh.PolVoxelField[po] = []
@@ -202,14 +202,12 @@ if iSolve !=0 :
 
     FMAGMAP = open("unduradia_mag.map",'w')
 
-    msh.MagVoxelField[mg] = []
-
     for mg in mshCntMembers[UnduMag]:
 
-      Voxel = rad.ObjM(UnduMag[mgl])
+      Voxel = rad.ObjM(mg)
       nVoxel = len(Voxel)
 
-      msh.MagVoxelField[mg].append([[x,y,z],[Bx,By,Bz],[Hx,Hy,Hz,H],[Mx,My,Mz]])
+      msh.MagVoxelField[mg] = []
 
       for ivox in range(nVoxel):
 
