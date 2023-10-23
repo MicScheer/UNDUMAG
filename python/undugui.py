@@ -1070,7 +1070,6 @@ Wfd = []
 
 Vfd = None
 
-IsameCanvas = 0
 TextIn = ''
 LastPlot = []
 Lastwin = ''
@@ -1079,6 +1078,8 @@ Koverview = 0
 Icalloverview = 0
 
 WclipE = 1
+
+IsameCanvas = 0
 # Histograms and Ntuples
 global H1h, H1hh, H2h, H2hh, H1, H2, H1head, H2head, H1HLast, Nhead, Ntup, \
 Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
@@ -1821,7 +1822,7 @@ clight1,cgam1,cq1,alpha1,dnull1,done1,sqrttwopi1,\
 emassg1,emasse1,echarge1,emasskg1,eps01,erad1,\
 grarad1,hbar1,hbarev1,hplanck1,pol1con1,pol2con1,\
 radgra1,rmu01,rmu04pi1,twopi1,pi1,halfpi1,wtoe1,gaussn1,ck934,\
-ecdipev,ecdipkev,fwhmgauss1,fwhmsinxx21,rmssinxx21
+ecdipev,ecdipkev,fwhmgauss1,fwhmsinxx21,rmssinxx21,g1max,h2max
 
 hbarev1=6.58211889e-16
 clight1=2.99792458e8
@@ -1841,6 +1842,11 @@ cq1=55.e0/32.e0/(3.0e0)**0.5*hbar1/emasskg1/clight1
 cgam1=4.e0/3.e0*pi1*erad1/emassg1**3
 pol1con1=8.e0/5.e0/(3.0e0)**0.5
 pol2con1=8.e0/5.e0/(3.0e0)**0.5/2.e0/pi1/3600.e0*emasskg1/hbar1/erad1*emassg1**5
+
+h2const=1.327e13
+h2max=1.474
+g1const=2.457e13
+g1max=0.9212
 
 twopi1=2.0e0*pi1
 halfpi1=pi1/2.0e0
@@ -2014,7 +2020,7 @@ def read_faces(fname,cs='xyz'):
     for ipoi in range(npoi):
       p = np.fromstring(fread[l].strip(),dtype=np.float,sep=' ')
       if cs.lower() == 'xzy':
-        fac.append([p[0],p[2],-p[1]])
+        fac.append([p[0],p[2],p[1]])
       else:
         fac.append([p[0],p[1],p[2]])
       #endif
@@ -2274,7 +2280,7 @@ def nqhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,
                 modus='faces',ishow=ishow)
   #endif
 
-  if iretval: return vert,ifaces,faces
+  if iretval: return vert,ifaces,faces,bounds
 
 #enddef nqhull3d(nt='?')
 
@@ -2857,7 +2863,15 @@ def _delPlot():
 #enddef _delPlot()
 
 def _zones():
-    global Wmain, Wmaster, Winz, Erows, Ecols, Ekzon, Myfont,Nyzone,Nxzone
+    global Wmain, Wmaster, Winz, Erows, Ecols, Ekzon, Myfont,Nyzone,Nxzone, \
+    IsameCanvas
+
+#    print("entered _zones")
+
+    if type(IsameCanvas) == int:
+      IsameCanvas = StringVar()
+      IsameCanvas.set(IsameCanvas)
+    #endif
 
     Winz = Toplevel()
     Winz.attributes('-topmost', 1)
@@ -2900,6 +2914,7 @@ def _zones():
     Winz.geometry(sgeo)
 
     Wmaster.wait_window(Winz)
+#    print("Leaving _zones")
 #enddef _zones():
 
 def _lines():
@@ -6932,7 +6947,7 @@ def nfill(nt='?', data=''):
   #endfor
 
   nt = N
-  ndum = ncre("ndum","ndum",varlis,ioverwrite=1)
+  nfillwork = ncre("nfillwork","nfillwork",varlis,ioverwrite=1)
 
   if type(data) == list:
     try:
@@ -6951,10 +6966,10 @@ def nfill(nt='?', data=''):
   for k in range(nvar):
     l = 4 + k
     var = nhead[l][0]
-    ndum[var] = dat[k]
+    nfillwork[var] = dat[k]
   #endfor k in range(nvar):
 
-  nn = pd.concat([nt,ndum])
+  nn = pd.concat([nt,nfillwork])
 
   idn = GetIndexN(nt,1)
   Ntup[idn] = nn
@@ -9851,9 +9866,17 @@ def ninter(nt='?',varlis='',select='',xint='!'):
   Ninter.x = xint
   Ninter.y = yint
 
-  yp = deepcopy(xint)
-  ypp = deepcopy(xint)
-  yinteg = deepcopy(xint)
+  yp = np.zeros_like(xint)
+  ypp = np.zeros_like(xint)
+  yinteg = np.zeros_like(xint)
+
+  if xint.min() == xint.max():
+    Ninter.yp = yp
+    Ninter.ypp = ypp
+    Ninter.yint = yinteg
+    nupdate_header(Ninter)
+    return
+  #endif
 
   n = len(xint)-1
 
@@ -18150,10 +18173,10 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
     if cmap == '' or cmap == '!': cmap=Cmap
 
-    #s = np.ones_like(nparse(nt.varlis[3])) * Markersize**2
-    s = np.arange(1,len(nt)+1)
-    s = np.ones_like(s) * Markersize
-    sopt = ",s=s ,c=" + st + ",cmap='" + cmap + "',marker='" + Markertype + "'"
+    s = Markersize*Markersize
+
+    sopt = ",s=s" + ",c=" + st + ",cmap='" + cmap + "', linewidth=0.0, \
+    marker='" + Markertype + "'"
     scom = 'Ax.scatter(' + sx + ',' + sy + ',' + sz + sopt + ')'
     img = eval('Ax.scatter(' + sx + ',' + sy + ',' + sz + sopt + ')')
 
@@ -18584,7 +18607,6 @@ def vplxy(x='!',y='!',plopt='',label='',color='!',fillcolor='none'):
     tex = \
     "N, Sum: " + str(int(len(x))) + ", " + '{:.4g}'.format(y.sum()) + \
     "\nMean: " + '{:.4g}'.format(xmean) + \
-    "\nMean: " + '{:.4g}'.format(xmean) + \
     "\nRMS: " + '{:.4g}'.format(xrms)
 
     if xopt != None and yopt != None:
@@ -18612,6 +18634,15 @@ def vplls(x='!',y='!',plopt='sameline',label=''):
   vplxy(x,y,plopt,label,tit,xtit,ytit)
 def vplms(x='!',y='!',plopt='samemarker',label=''):
   vplxy(x,y,plopt,label,tit,xtit,ytit)
+
+def pmark(x,y,z='!',plopt='isame'):
+  if type(z) != str:
+    vplxyz(x,y,z,plopt)
+  else:
+    vplxy(x,y,plopt)
+  #endif
+  showplot()
+#enddef
 
 def vplxyey(x,y,ey='',plopt='o',label='',
             marker='o', mfc='', mec='', ms='', mew=0):
@@ -20596,6 +20627,10 @@ def vpeaks(x,y,pkmin=0.5,nsmooth=0,isilent=0):
 
   global Ical
 
+  x = np.array(x)
+  y = np.array(y)
+
+  #breakpoint()
   fmxtot=-1.0e30
   ndim = len(x)
 
@@ -20657,7 +20692,11 @@ def vpeaks(x,y,pkmin=0.5,nsmooth=0,isilent=0):
     sm=smooth[i-1]-s0
     sp=smooth[i+1]-s0
 
+    #print("tresh:",thresh)
+    #print(sm,s0,sp)
     if s0 >= thresh and sm < 0.0 and sp <= 0.0:
+
+      #breakpoint()
 
       npeaks=npeaks+1
 
@@ -20983,6 +21022,8 @@ def vfwhm(x='?',y='',nsmooth=0,isilent=0):
   fwhm = []
   npeaks = len(ixpeaks)
   npoi = len(x)
+
+  #breakpoint()
 
   for i in range(npeaks):
 
@@ -21798,6 +21839,12 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
 
   if not Isame: getzone(projection='3d')
 
+  if type(x) == float:
+    if color == 'default': color = Markercolor
+    Ax.scatter(x,y,z,marker=Markertype,c=color,label=label)
+    return
+  #endif
+
   iplot = 0
 
   if Iscatter:
@@ -21856,12 +21903,14 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
     iplot=1
 
   if Iscat3d:
-    Ax.scatter(x,y,z,marker=Markertype,c=Markercolor,label=label)
+    if color == 'default': color = Markercolor
+    Ax.scatter(x,y,z,marker=Markertype,c=color,label=label)
     iplot = 1
   #endif
 
   if not iplot:
-    Ax.scatter(x,y,z,marker=Markertype,c=Markercolor,label=label)
+    if color == 'default': color = Markercolor
+    Ax.scatter(x,y,z,marker=Markertype,c=color,label=label)
   #endif iplot == 0:
 
   txyz(tit,xtit,ytit,ztit)
@@ -21943,11 +21992,11 @@ def vplxyzt(x,y,z,t,plopt='',tit='',xtit='',ytit='',ztit='', label='',
 
   if Iscat3d:
 
-    Ax.scatter(x,y,z,cmap=cmap,c=t,marker=Markertype,fillstyle=Fillstyle,label=label)
+    Ax.scatter(x,y,z,cmap=cmap,c=t,marker=Markertype,linewidth=Linewidth,fillstyle=Fillstyle,label=label)
     iplot = 1
 
   if not iplot:
-    Ax.scatter(x,y,z,cmap=cmap,c=t,marker=Markertype,fillstyle=Fillstyle,label=label)
+    Ax.scatter(x,y,z,cmap=cmap,c=t,marker=Markertype,linewidth=Linewidth,fillstyle=Fillstyle,label=label)
   #endif iplot == 0:
 
   txyz(tit,xtit,ytit,ztit)
@@ -22206,7 +22255,8 @@ def b_to_K(bv='?',lam=None,bh=0.0):
   emassg1,emasse1,echarge1,emasskg1,eps01,erad1,\
   grarad1,hbar1,hbarev1,hplanck1,pol1con1,pol2con1,\
   radgra1,rmu01,rmu04pi1,twopi1,pi1,halfpi1,wtoe1,gaussn1,ck934,\
-  ecdipev,ecdipkev
+  ecdipev,ecdipkev,fwhmgauss1,fwhmsinxx21,rmssinxx21,g1max,h2max, \
+  g1const,h2const
 
   #Bh, Bv in Tesla, lam in mm
   if type(bv) == str:
@@ -22230,7 +22280,8 @@ def K_to_b(K='?',lam=None):
   emassg1,emasse1,echarge1,emasskg1,eps01,erad1,\
   grarad1,hbar1,hbarev1,hplanck1,pol1con1,pol2con1,\
   radgra1,rmu01,rmu04pi1,twopi1,pi1,halfpi1,wtoe1,gaussn1,ck934,\
-  ecdipev,ecdipkev
+  ecdipev,ecdipkev,fwhmgauss1,fwhmsinxx21,rmssinxx21,g1max,h2max, \
+  g1const,h2const
 
   #B in Tesla, lam in mm
   if type(K) == str:
@@ -22250,7 +22301,8 @@ def K_to_harm(K='?',lam=None,ebeam=None):
   emassg1,emasse1,echarge1,emasskg1,eps01,erad1,\
   grarad1,hbar1,hbarev1,hplanck1,pol1con1,pol2con1,\
   radgra1,rmu01,rmu04pi1,twopi1,pi1,halfpi1,wtoe1,gaussn1,ck934,\
-  ecdipev,ecdipkev
+  ecdipev,ecdipkev,fwhmgauss1,fwhmsinxx21,rmssinxx21,g1max,h2max, \
+  g1const,h2const
 
   if type(K) == str:
     print("\nUsage: K_to_harm(K, lamba/mm, Ebeam/GeV")
@@ -22272,7 +22324,8 @@ def b_to_harm(b='?',lam=None,ebeam=None):
   emassg1,emasse1,echarge1,emasskg1,eps01,erad1,\
   grarad1,hbar1,hbarev1,hplanck1,pol1con1,pol2con1,\
   radgra1,rmu01,rmu04pi1,twopi1,pi1,halfpi1,wtoe1,gaussn1,ck934,\
-  ecdipev,ecdipkev
+  ecdipev,ecdipkev,fwhmgauss1,fwhmsinxx21,rmssinxx21,g1max,h2max, \
+  g1const,h2const
 
   if type(b) == str:
     print("\nUsage: b_to_harm(B/T, lamba/mm, Ebeam/GeV")
@@ -22286,7 +22339,8 @@ def harm_to_K(ebeam='?',lam=None,nharm=None,harm=None):
   emassg1,emasse1,echarge1,emasskg1,eps01,erad1,\
   grarad1,hbar1,hbarev1,hplanck1,pol1con1,pol2con1,\
   radgra1,rmu01,rmu04pi1,twopi1,pi1,halfpi1,wtoe1,gaussn1,ck934,\
-  ecdipev,ecdipkev
+  ecdipev,ecdipkev,fwhmgauss1,fwhmsinxx21,rmssinxx21,g1max,h2max, \
+  g1const,h2const
 
 
   if type(ebeam) == str:
@@ -24445,7 +24499,6 @@ she = os.system
 
 setdump = optdump
 ndelet = ndelete
-pmark = vplm
 fexists = fexist
 
 vfitg = vfitgauss
@@ -24732,6 +24785,26 @@ def ivmin(v): return pd.Series(v).idxmin()
 def vmin(v): return v.min(v)
 def ivmax(v): return pd.Series(v).idxmax()
 def vmax(v): return v.max(v)
+
+def vsymxy(x,y):
+  x = list(x)
+  y = list(y)
+  n=len(x)
+  xs = []
+  ys = []
+  for i in range(n):
+    xs.append(-x[n-i-1])
+    ys.append(y[n-i-1])
+  #endfor
+  for i in range(n):
+    if x[i] == 0: continue
+    xs.append(x[i])
+    ys.append(y[i])
+  #endfor
+
+  return np.array(xs),np.array(ys)
+
+#endef
 
 def vminmax(x='?',y=''):
 
@@ -26932,7 +27005,7 @@ def undu_mat_mh(mat=12):
           m2 = nmat.query(sel).m.max()
           chi = (m2-m1) / (h2-h1)
           npllbs(nmat,"h:m",sel)
-          print(sel,h1,h2,m1,m2)
+#          print(sel,h1,h2,m1,m2)
           dm = bcmx - bcmn
           dh = (hmx-hmn)*0.8
           textWC(hmn+dh,bcmn+dh*chi-dm*0.2,"$\mu_0$ = " + str(g3(chi+1.0)),8)
@@ -26995,7 +27068,7 @@ def undu_read_map():
     #endwhile
     words = cline.split()
     if len(words) > 8:
-      vlis = 'kmoth:kmag:mat:ityp:matmod:x:y:z:Bx:By:Bz:B:Hx:Hy:Hz:H:Mx:My:Mz:M:BxD:ByD:BzD:ifail:kfail'
+      vlis = 'kmoth:kmag:mat:ityp:matmod:x:y:z:Bx:By:Bz:B:Hx:Hy:Hz:H:Mx:My:Mz:M:BxD:ByD:BzD:ifail:kfail:cmag:cmoth'
     else:
       vlis = 'x:y:z:Bx:By:Bz:ifail:kfail'
     #endif
@@ -27392,7 +27465,7 @@ def undu_b():
     #endwhile
     words = cline.split()
     if len(words) > 8:
-      vlis = 'kmoth:kmag:mat:ityp:matmod:x:y:z:Bx:By:Bz:B:Hx:Hy:Hz:H:Mx:My:Mz:M:BxD:ByD:BzD:ifail:kfail'
+      vlis = 'kmoth:kmag:mat:ityp:matmod:x:y:z:Bx:By:Bz:B:Hx:Hy:Hz:H:Mx:My:Mz:M:BxD:ByD:BzD:ifail:kfail:cmag:cmoth'
     else:
       vlis = 'x:y:z:Bx:By:Bz:ifail:kfail'
     #endif
@@ -27442,10 +27515,9 @@ def nreloadupl():
       tclc = os.stat('undumag.clc').st_mtime_ns
       tgeo = os.stat('undumag.geo').st_mtime_ns
       if tclc > tgeo:
-        wError("undumag.geo is older than undumag.clc!")
-      else:
-        ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+        print("undumag.geo is older than undumag.clc!")
       #endif
+      ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
     #endif
   #endif
 
@@ -27453,12 +27525,11 @@ def nreloadupl():
     tclc = os.stat('undumag.clc').st_mtime_ns
     tgeo = os.stat('undumag_voxels.geo').st_mtime_ns
     if tclc > tgeo:
-      wError("undumag_voxels.geo is older than undumag.clc!")
-    else:
-      print('\n--> Reading undumag_voxels.geo')
-      Nvox = ncread("Nvox","mag:ivox:ix:iy:iz:iplan:icorn:x:y:z:xc:yc:zc:vol:icol","undumag_voxels.geo")
-      print('\n--> Done')
+      print("undumag_voxels.geo is older than undumag.clc!")
     #endif
+    print('\n--> Reading undumag_voxels.geo')
+    Nvox = ncread("Nvox","mag:ivox:ix:iy:iz:iplan:icorn:x:y:z:xc:yc:zc:vol:icol","undumag_voxels.geo")
+    print('\n--> Done')
   #endif
 
   if fexist('urad_traxyz.dat'):
@@ -27529,7 +27600,7 @@ def nreloadupl():
     #endwhile
     words = cline.split()
     if len(words) > 8:
-      vlis = 'kmoth:kmag:mat:ityp:matmod:x:y:z:Bx:By:Bz:B:Hx:Hy:Hz:H:Mx:My:Mz:M:BxD:ByD:BzD:ifail:kfail'
+      vlis = 'kmoth:kmag:mat:ityp:matmod:x:y:z:Bx:By:Bz:B:Hx:Hy:Hz:H:Mx:My:Mz:M:BxD:ByD:BzD:ifail:kfail:cmag:cmoth'
     else:
       vlis = 'x:y:z:Bx:By:Bz:ifail:kfail'
     #endif
@@ -27713,6 +27784,354 @@ def undu_overview():
   optstat(ksta)
 
 #enddef
+
+def undu_plot_mag_magnetization(cnams='',msize=-9.):
+
+  global MainFacets,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
+  if msize < 0: msi = getmarkersize()
+  else: msi = msize
+
+  if nexist("nmap") == 0:
+    if fexist("undumag.map"):
+      undu_read_map()
+    else:
+      print("\n*** File undumag.map not found ***")
+      return
+    #endif
+  #endif
+
+  nmap = nget("nmap")
+  #reakpoint()
+
+  if len(MainFacets) == 0:
+    try:
+      faces,voxels = read_main_faces(fname='undumag_main_facets.fct',cs='xzy')
+      MainFacets = [faces,voxels]
+    except:
+      print('*** Error reading file undumag_main_facets.fct ***')
+      return
+    #endtry
+  #endif
+
+  if len(cnams) == 0: cnams = ''
+
+  if type(cnams) != list:
+    if cnams == '':
+      clist = []
+      for v in voxels:
+        cmag = v[5]
+        cmoth = v[6]
+        if not cmag in clist: clist.append(cmag)
+      #endfor
+    else:
+      clist = [cnams]
+    #endif
+  else:
+    clist = cnams
+  #endif
+
+  if len(clist) == 0:
+    print("\n*** Nothing to plot ***")
+    return
+  #endif
+
+  try:
+    c = nmap.cmag[0]
+  except:
+    print("\n*** No magnets found in undumag.map, check undumag.nam and rerun UNDUMAG ***")
+    return
+  #endtry
+
+  if len(FcBox) == 0:
+    read_facets_bounding_box(fb='undumag_bounding_box.fct')
+  #endif
+
+  null3d(Xmin,Xmax,Zmin,Zmax,Ymin,Ymax)
+
+  Xmin = 1.0e30
+  Xmax = -1.0e30
+  Ymin = 1.0e30
+  Ymax = -1.0e30
+  Zmin = 1.0e30
+  Zmax = -1.0e30
+
+  getzone('3d')
+  ax = plt.gca()
+
+  selli = []
+  cnamo = ''
+
+  for cnam in clist:
+
+    plf = []
+
+    if True:
+      #try:
+
+      facets = MainFacets[0]
+      voxels = MainFacets[1]
+
+      nfacets = len(facets)
+
+      ifound = -1
+      iv = -1
+      for v in voxels:
+        iv += 1
+        kcol = UnduColors[int(v[1])]
+        cmag = v[5]
+        cmoth = v[6]
+        if cmag == cnam or cmoth == cnam:
+          ifound = iv
+          break
+      #endfor
+
+      for i in range(nfacets):
+        if voxels[i][5] == cnam or voxels[i][6] == cnam:
+          ft = facets[i].T
+          Xmin = min(Xmin,ft[0].min())
+          Xmax = max(Xmax,ft[0].max())
+          Ymin = min(Ymin,ft[2].min())
+          Ymax = max(Ymax,ft[2].max())
+          Zmin = min(Zmin,ft[1].min())
+          Zmax = max(Zmax,ft[1].max())
+          plf.append(facets[i])
+        #endif
+      #endfor
+
+      #breakpoint()
+
+      fpl = mplot3d.art3d.Poly3DCollection(plf)
+
+      fpl.set_color(kcol)
+      fpl.set_edgecolor(kcol)
+      fpl.set_alpha(0.0)
+
+      ax.add_collection3d(fpl)
+
+      sel = "cmag == '" + cnam + "' or " + "cmoth == '" + cnam + "'"
+      if cnamo != cnam: selli.append(sel)
+      cnamo = cnam
+
+      #except:
+    else:
+      print("\n*** Failed. Check undumag.nam and rerun UNDUMAG ***")
+      return
+    #endtry
+
+  #endfor clist
+
+  sel = selli[0]
+  for i in range(1,len(selli)):
+    sel += ' or ' + selli[i]
+  #endfor
+
+  mso = getmarkersize()
+  setmarkersize(msi)
+  npl(nmap,"x:z:y:M",sel,plopt='same')
+  setmarkersize(mso)
+
+  if len(plf) == 0:
+    print("\n*** Nothing to plot, check item name or undumag.nam and rerun UNDUMAG ***")
+    print("\nItems found:\n")
+    return
+  #endif
+
+  dx = (Xmax - Xmin) / 10.
+  dy = (Ymax - Ymin) / 10.
+  dz = (Zmax - Zmin) / 10.
+
+  if dx == 0: dx = 1
+  if dy == 0: dy = 1
+  if dz == 0: dz = 1
+
+  ax.set_xlim(Xmin-dx,Xmax+dx)
+  ax.set_ylim(Zmin-dz,Zmax+dy)
+  ax.set_zlim(Ymin-dy,Ymax+dz)
+
+  if len(clist) == 1:
+    txyz(clist[0],"x [mm]","z [mm]", "y [mm]")
+  else:
+    txyz('',"x [mm]","z [mm]", "y [mm]")
+  #endif
+
+  showplot()
+
+#enddef undu_plot_mag_magnetization():
+
+def undu_plot_mag_3d(cnams='',alpha=1.0):
+
+  global MainFacets,Facets,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
+  if nexist("nmap") == 0:
+    if fexist("undumag.map"):
+      undu_read_map()
+    else:
+      print("\n*** File undumag.map not found ***")
+      return
+    #endif
+  #endif
+
+  nmap = nget("nmap")
+
+  if len(MainFacets) == 0:
+    try:
+      mfaces,mvoxels = read_main_faces(fname='undumag_main_facets.fct',cs='xzy')
+      MainFacets = [mfaces,mvoxels]
+    except:
+      print('*** Error reading file undumag_main_facets.fct ***')
+      return
+    #endtry
+  #endif
+
+  if len(Facets) == 0:
+    try:
+      faces,voxels = read_main_faces(fname='undumag_facets.fct',cs='xzy')
+      Facets = [faces,voxels]
+    except:
+      print('*** Error reading file undumag_facets.fct ***')
+      return
+    #endtry
+  #endif
+
+  #reakpoint()
+
+  if len(cnams) == 0: cnams = ''
+
+  if type(cnams) != list:
+    if cnams == '':
+      clist = []
+      for v in mvoxels:
+        cmag = v[5]
+        cmoth = v[6]
+        if not cmag in clist: clist.append(cmag)
+      #endfor
+    else:
+      clist = [cnams]
+    #endif
+  else:
+    clist = cnams
+  #endif
+
+  if len(clist) == 0:
+    print("\n*** Nothing to plot ***")
+    return
+  #endif
+
+  try:
+    c = nmap.cmag[0]
+  except:
+    print("\n*** No magnets found in undumag.map, check undumag.nam and rerun UNDUMAG ***")
+    return
+  #endtry
+
+  if len(FcBox) == 0:
+    read_facets_bounding_box(fb='undumag_bounding_box.fct')
+  #endif
+
+  null3d(Xmin,Xmax,Zmin,Zmax,Ymin,Ymax)
+
+  Xmin = 1.0e30
+  Xmax = -1.0e30
+  Ymin = 1.0e30
+  Ymax = -1.0e30
+  Zmin = 1.0e30
+  Zmax = -1.0e30
+
+  getzone('3d')
+  ax = plt.gca()
+
+  selli = []
+  cnamo = ''
+
+  #reakpoint()
+  for cnam in clist:
+
+    plf = []
+
+    if True:
+      #try:
+
+      facets = Facets[0]
+      voxels = Facets[1]
+
+      nfacets = len(facets)
+
+      ifound = -1
+      iv = -1
+      for v in voxels:
+        iv += 1
+        kcol = UnduColors[int(v[1])]
+        cmag = v[6]
+        cmoth = v[7]
+        if cmag == cnam or cmoth == cnam:
+          ifound = iv
+          break
+      #endfor
+
+      for i in range(nfacets):
+        if voxels[i][6] == cnam or voxels[i][7] == cnam:
+          ft = facets[i].T
+          Xmin = min(Xmin,ft[0].min())
+          Xmax = max(Xmax,ft[0].max())
+          Ymin = min(Ymin,ft[2].min())
+          Ymax = max(Ymax,ft[2].max())
+          Zmin = min(Zmin,ft[1].min())
+          Zmax = max(Zmax,ft[1].max())
+          plf.append(facets[i])
+        #endif
+      #endfor
+
+      #breakpoint()
+
+      fpl = mplot3d.art3d.Poly3DCollection(plf)
+
+      fpl.set_color(kcol)
+      fpl.set_edgecolor('black')
+      fpl.set_alpha(alpha)
+
+      ax.add_collection3d(fpl)
+
+      sel = "cmag == '" + cnam + "' or " + "cmoth == '" + cnam + "'"
+      if cnamo != cnam: selli.append(sel)
+      cnamo = cnam
+
+      #except:
+    else:
+      print("\n*** Failed. Check undumag.nam and rerun UNDUMAG ***")
+      return
+    #endtry
+
+  #endfor clist
+
+  if len(plf) == 0:
+    print("\n*** Nothing to plot, check item name or undumag.nam and rerun UNDUMAG ***")
+    print("\nItems found:\n")
+    return
+  #endif
+
+  dx = (Xmax - Xmin) / 10.
+  dy = (Ymax - Ymin) / 10.
+  dz = (Zmax - Zmin) / 10.
+
+  if dx == 0: dx = 1
+  if dy == 0: dy = 1
+  if dz == 0: dz = 1
+
+  ax.set_xlim(Xmin-dx,Xmax+dx)
+  ax.set_ylim(Zmin-dz,Zmax+dy)
+  ax.set_zlim(Ymin-dy,Ymax+dz)
+
+  if len(clist) == 1:
+    txyz(clist[0],"x [mm]","z [mm]", "y [mm]")
+  else:
+    txyz('',"x [mm]","z [mm]", "y [mm]")
+  #endif
+
+  showplot()
+
+#enddef undu_plot_mag3d():
+
 #import undumag_plot as upl
 #from undumag_plot import *
 #import m_hbook as m
@@ -33466,10 +33885,13 @@ def _undumag(callkey=''):
 
 
   print("Executing\nundumag.exe",Rmodus)
-  if Rmodus.split()[0] == 'FILAMENTS':
-    print('to update undumag.fil\n')
-  elif Rmodus.split()[0] == 'SEGMENTATION':
-    print('to perform segmentation, i.e. updating undumag.geo etc..\n')
+
+  if len(Rmodus):
+    if Rmodus.split()[0] == 'FILAMENTS':
+      print('to update undumag.fil\n')
+    elif Rmodus.split()[0] == 'SEGMENTATION':
+      print('to perform segmentation, i.e. updating undumag.geo etc..\n')
+    #endif
   #endif
 
   if IUNDUMAGisRunning:
@@ -36038,13 +36460,11 @@ def undu_geo(plopt='sameline'):
     if fexist("undumag.geo"):
       tclc = os.stat('undumag.clc').st_mtime_ns
       tgeo = os.stat('undumag.geo').st_mtime_ns
-      if tclc > tgeo:
-        wError("undumag.geo is older than undumag.clc!")
-        return
-      else:
-        ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
-      #endif
+      if tclc > tgeo: print("undumag.geo is older than undumag.clc!")
+      ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
     #endif
+  else:
+    ngeo = nget("ngeo")
   #endif
 
   if Nlines <= 0:
@@ -36132,10 +36552,10 @@ def undu_geo(plopt='sameline'):
         setmarkercolor(UnduColors[icmin])
         #setlinecolor(UnduColors[icmin])
 
-        nhull = nhull3d(ngeo,"x:z:y",ssel,'sameline')
-        nhull = nhull3d(ngeo,"x:z:y",ssel,'sameline',
-                        facecolor=UnduColors[icmin],edgecolor=UnduColors[icmin],
-                        alpha=0,ishow=0)
+        #nhull = nhull3d(ngeo,"x:z:y",ssel,'sameline')
+        nhull = nhull3d(ngeo,"x:z:y",ssel,'sameline', \
+        facecolor=UnduColors[icmin],edgecolor=UnduColors[icmin], \
+        alpha=0,ishow=0)
 
       #endfor mag in range(mmin,mmax)
 
@@ -36233,14 +36653,10 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
     if fexist("undumag.geo"):
       tclc = os.stat('undumag.clc').st_mtime_ns
       tgeo = os.stat('undumag.geo').st_mtime_ns
-      if tclc > tgeo:
-        wError("undumag.geo is older than undumag.clc!")
-        return
-      else:
-        print('\nReading undumag.geo...')
-        ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
-        print('done\n')
-      #endif
+      if tclc > tgeo: print("undumag.geo is older than undumag.clc!")
+      print('\nReading undumag.geo...')
+      ngeo = ncread("ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+      print('done\n')
     #endif
   #endif
 
@@ -36466,6 +36882,11 @@ def undu_mags(plopt='sameline'):
 
 #enddef undu_mags()
 
+global MainFacets,FcBox,Faces
+MainFacets = []
+Facets = []
+FcBox = []
+
 def read_facets_bounding_box(fb='undumag_bounding_box.fct'):
   global MainFacets, FcBox,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
 
@@ -36474,20 +36895,19 @@ def read_facets_bounding_box(fb='undumag_bounding_box.fct'):
     tclc = os.stat('undumag.clc').st_mtime_ns
     tbb = os.stat('undumag_bounding_box.fct').st_mtime_ns
     if tclc > tbb:
-      wError("undumag_bounding_box.fct is older than undumag.clc!")
-      return
-    else:
-      print('\n--> Reading undumag_bounding_box.fct')
-      fbox = open('undumag_bounding_box.fct','r')
-      FcBox = np.fromstring(fbox.readline().strip(),dtype=np.float,sep=' ')
-      fbox.close()
-      Xmin = FcBox[0]
-      Xmax = FcBox[1]
-      Ymin = FcBox[2]
-      Ymax = FcBox[3]
-      Zmin = FcBox[4]
-      Zmax = FcBox[5]
-      print('\n--> Done')
+      print("undumag_bounding_box.fct is older than undumag.clc!")
+    #endif
+    print('\n--> Reading undumag_bounding_box.fct')
+    fbox = open('undumag_bounding_box.fct','r')
+    FcBox = np.fromstring(fbox.readline().strip(),dtype=np.float,sep=' ')
+    fbox.close()
+    Xmin = FcBox[0]
+    Xmax = FcBox[1]
+    Ymin = FcBox[2]
+    Ymax = FcBox[3]
+    Zmin = FcBox[4]
+    Zmax = FcBox[5]
+    print('\n--> Done')
   else:
     wError("File undumag_main_facets not found!")
     return
@@ -36504,7 +36924,7 @@ def plot_main_faces():
   Kdump = False
   Kecho = False
 
-  dot()
+  #dot()
   getzone('3d')
 
   facets = MainFacets[0]
@@ -36566,7 +36986,7 @@ def read_main_faces(fname='undumag_main_facets.fct',cs='xyz'):
     for ipoi in range(npoi):
       p = np.fromstring(fread[l].strip(),dtype=np.float,sep=' ')
       if cs.lower() == 'xzy':
-        fac.append([p[0],p[2],-p[1]])
+        fac.append([p[0],p[2],p[1]])
       else:
         fac.append([p[0],p[1],p[2]])
       #endif
@@ -37331,7 +37751,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   Kdump = False
   Kecho = False
 
-  dot()
+  #dot()
   getzone('3d')
 
   null3d(Xmin,Xmax,Zmin,Zmax,Ymin,Ymax)
@@ -37666,6 +38086,9 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
+#+self,if=trace,debugsgp.
+  print(NL,"trace:: _showGeoPythonXYZ:",modus,item,callkey)
+#+self.
 
   isameo = getisame()
 
@@ -37690,7 +38113,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   #endif not NMagPolTot
 
 
-  dot()
+  #dot()
   getzone()
 
   plopt = ''
@@ -37930,13 +38353,12 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
         tclc = os.stat('undumag.clc').st_mtime_ns
         tgeo = os.stat('undumag_main_facets.fct').st_mtime_ns
         if tclc > tgeo:
-          wError("undumag_main_facets.fct is older than undumag.clc!")
-          return
-        else:
-          print('\n--> Reading undumag_main_facets.fct')
-          mfaces,mvoxels = read_main_faces('undumag_main_facets.fct','xzy')
-          MainFacets = [mfaces,mvoxels]
-          print('\n--> Done')
+          print("undumag_main_facets.fct is older than undumag.clc!")
+        #endif
+        print('\n--> Reading undumag_main_facets.fct')
+        mfaces,mvoxels = read_main_faces('undumag_main_facets.fct','xzy')
+        MainFacets = [mfaces,mvoxels]
+        print('\n--> Done')
       else:
         wError("File undumag_main_facets not found!")
         return
@@ -37946,13 +38368,12 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
         tclc = os.stat('undumag.clc').st_mtime_ns
         tgeo = os.stat('undumag_facets.fct').st_mtime_ns
         if tclc > tgeo:
-          wError("undumag_facets.fct is older than undumag.clc!")
-          return
-        else:
-          print('\n--> Reading undumag_facets.fct')
-          faces,voxels = read_faces('undumag_facets.fct','xzy')
-          Facets = [faces,voxels]
-          print('\n--> Done')
+          print("undumag_facets.fct is older than undumag.clc!")
+        #endif
+        print('\n--> Reading undumag_facets.fct')
+        faces,voxels = read_faces('undumag_facets.fct','xzy')
+        Facets = [faces,voxels]
+        print('\n--> Done')
       else:
         wError("File undumag_facets.fct not found!")
         return
@@ -37964,7 +38385,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
       Kdump = False
       Kecho = False
 
-      dot()
+      #dot()
       getzone('3d')
 
       facets = Facets[0]
@@ -38006,8 +38427,10 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
         for i in range(nfacets):
           if voxels[i][1] == col:
             fcolcol.append(facets[i])
+#            print(facets[i])
           #endif
         #endfor
+
         fpl = mplot3d.art3d.Poly3DCollection(fcolcol)
         fpl.set_color(UnduColors[int(col)])
         fpl.set_edgecolor('black')
@@ -38025,12 +38448,11 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
         tclc = os.stat('undumag.clc').st_mtime_ns
         tgeo = os.stat('undumag_voxels.geo').st_mtime_ns
         if tclc > tgeo:
-          wError("undumag_voxels.geo is older than undumag.clc!")
-          return
-        else:
-          print('\n--> Reading undumag_voxels.geo')
-          Nvox = ncread("Nvox","mag:ivox:ix:iy:iz:iplan:icorn:x:y:z:xc:yc:zc:vol:icol","undumag_voxels.geo")
-          print('\n--> Done')
+          print("undumag_voxels.geo is older than undumag.clc!")
+        #endif
+        print('\n--> Reading undumag_voxels.geo')
+        Nvox = ncread("Nvox","mag:ivox:ix:iy:iz:iplan:icorn:x:y:z:xc:yc:zc:vol:icol","undumag_voxels.geo")
+        print('\n--> Done')
       else:
         wError("File undumag_voxels.geo not found!")
         return
@@ -38042,7 +38464,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
       Kdump = False
       Kecho = False
 
-      dot()
+      #dot()
       getzone('3d')
       #nplot("Nvox","x:z:y","mag<10")
       nmag = int(Nvox.mag.max())
@@ -38079,11 +38501,9 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
           tclc = os.stat('undumag.clc').st_mtime_ns
           tgeo = os.stat('undumag.geo').st_mtime_ns
           if tclc > tgeo:
-            wError("undumag.geo is older than undumag.clc!")
-            return
-          else:
-            Ngeo = ncread("Ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
+            print("undumag.geo is older than undumag.clc!")
           #endif
+          Ngeo = ncread("Ngeo","mag:ityp:xc:yc:zc:moth:ix:iy:iz:mat:icol:mx:my:mz:bc:iplan:icorn:x:y:z:cmag:cmoth","undumag.geo")
         #endif
       #endif
 
@@ -38093,7 +38513,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
       Kdump = False
       Kecho = False
 
-      dot()
+      #dot()
       getzone('3d')
       #nplot("Ngeo","x:z:y","mag<10")
       nmag = int(Ngeo.mag.max())
@@ -51891,6 +52311,15 @@ def _ushow_overview():
   undu_overview()
 #enddef
 
+def _ushow_mag_magpols():
+  global MagPolsSel
+  mso = getmarkersize()
+  if mso < 1.: msi = 5.
+  else: msi = mso
+  undu_plot_mag_magnetization(MagPolsSel,msi)
+  setmarkersize(mso)
+#enddef
+
 def _ushow_mat_mh():
   undu_mat_mh()
 #enddef
@@ -53485,7 +53914,8 @@ MRun.add_command(font=MyFont,label='Show first integrals',command=_ushow_int1)
 MRun.add_command(font=MyFont,label='Show second integrals',command=_ushow_int2)
 MRun.add_command(font=MyFont,label='3d trajectory',command=_ushow_traj)
 MRun.add_command(font=MyFont,label='Show field profile',command=_ushow_map_profile)
-MRun.add_command(font=MyFont,label='Show magnetisation',command=_ushow_mat_mh)
+MRun.add_command(font=MyFont,label='Show magnetisation curves',command=_ushow_mat_mh)
+MRun.add_command(font=MyFont,label='Show magnetisation of elements',command=_ushow_mag_magpols)
 
 #MExit = Menu(MenuBar)
 MenuBar.add_command(label='Exit',command=_exit,font=MyFont)

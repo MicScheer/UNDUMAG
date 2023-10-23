@@ -30941,7 +30941,7 @@ def plot_main_faces():
   Kdump = False
   Kecho = False
 
-  dot()
+  #dot()
   getzone('3d')
 
   facets = MainFacets[0]
@@ -31768,7 +31768,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   Kdump = False
   Kecho = False
 
-  dot()
+  #dot()
   getzone('3d')
 
   null3d(Xmin,Xmax,Zmin,Zmax,Ymin,Ymax)
@@ -32103,6 +32103,9 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
+#+self,if=trace,debugsgp.
+  print(NL,"trace:: _showGeoPythonXYZ:",modus,item,callkey)
+#+self.
 
   isameo = getisame()
 
@@ -32127,7 +32130,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   #endif not NMagPolTot
 
 
-  dot()
+  #dot()
   getzone()
 
   plopt = ''
@@ -32399,7 +32402,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
       Kdump = False
       Kecho = False
 
-      dot()
+      #dot()
       getzone('3d')
 
       facets = Facets[0]
@@ -32478,7 +32481,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
       Kdump = False
       Kecho = False
 
-      dot()
+      #dot()
       getzone('3d')
       #nplot("Nvox","x:z:y","mag<10")
       nmag = int(Nvox.mag.max())
@@ -32527,7 +32530,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
       Kdump = False
       Kecho = False
 
-      dot()
+      #dot()
       getzone('3d')
       #nplot("Ngeo","x:z:y","mag<10")
       nmag = int(Ngeo.mag.max())
