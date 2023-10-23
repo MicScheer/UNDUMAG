@@ -1,3 +1,4 @@
+*CMZ :  2.05/01 03/10/2023  16.58.27  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.44.14  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  21.29.40  by  Michael Scheer
 *CMZ :  2.04/09 16/08/2023  07.59.23  by  Michael Scheer
@@ -61,9 +62,9 @@
 
       implicit none
 
-*KEEP,hulldim.
-      integer lenhull,lenedge,lenface
-      common/uhullc/lenhull,lenedge,lenface
+*KEEP,HULLDIM.
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
 
       double precision xin(*),yin(*),zin(*),
@@ -96,6 +97,16 @@
       data ez/0.0d0,0.0d0,1.0d0/
 
       ical=ical+1
+
+      if (nverhullmax.le.0) then
+        kfail=-1
+        print*,"*** Error in util_convex_hull_3d: Common block uhullc not correctly initialized ***"
+        nhull=0
+        nedge=0
+        nface=0
+        return
+      endif
+
 c+self,if=debug3d.
 c      print*,"hull_3d, ical:",ical
 c      if (ical.eq.195) then

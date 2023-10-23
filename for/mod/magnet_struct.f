@@ -1,3 +1,5 @@
+*CMZ :  2.05/01 06/10/2023  08.25.51  by  Michael Scheer
+*CMZ :  2.04/27 02/10/2023  13.45.41  by  Michael Scheer
 *CMZ :  2.04/17 12/09/2023  09.42.21  by  Michael Scheer
 *CMZ :  2.04/16 06/09/2023  16.15.55  by  Michael Scheer
 *CMZ :  2.04/14 06/09/2023  06.43.30  by  Michael Scheer
@@ -12,6 +14,51 @@
 *CMZ :  2.02/01 06/02/2022  11.20.01  by  Michael Scheer
 *-- Author :    Michael Scheer   25/04/2021
       module magnets_structure
+
+      integer nconcave_t
+      character(512), dimension (:), allocatable :: clcconcave
+
+      type T_concave
+
+c          double precision, dimension (:,:,:), allocatable :: faces
+
+      double precision, dimension (:,:), allocatable :: verts,
+     &  fcen,fnorm
+
+      double precision, dimension (:), allocatable ::
+     &  xhull0,yhull0,zhull0,
+     &  xhull,yhull,zhull,xdivs,ydivs,zdivs
+
+      integer, dimension (:,:,:), allocatable :: kvoxels
+      integer, dimension (:,:), allocatable :: kedge,ifaces
+      integer, dimension (:), allocatable :: lifaces,npois,
+     &  kface,khull,kcopy,lface,kconcave
+
+      character(512), dimension (:), allocatable :: cinhom
+
+      double precision
+     &  xyz(3),size(3),trans(3),rot(3,3),Br(3),
+     &  yfracdiv,xmin,ymin,zmin,xmax,ymax,zmax,
+     &  volume,gcen(3),dxdiv,dydiv,dzdiv,yfrac,
+     &  zfracdiv,zfrac,uschamf,dschamf,cylphi,BrN,xyzinh(4),xvolume,yvolume,
+     &  zvolume
+
+      integer :: kmag,nhull,icol,imat,nverts,nface,
+     &  nxdiv,nydiv,nzdiv,matindex,mattype,IsConvex,
+     &  kfacelast,nedge,nvoxels,IsPole,IsSpecial,
+     &  IsBlock,nhull0,IsPart,ncopy=0,kmodule=0,
+     &  IsInhom=0,mxdiv,mydiv,mzdiv,IsRotated,nconcave,npoimax
+
+      character(32) ctype,cnam,cmoth
+      character(1024) cfile
+
+      type(T_Voxel), dimension(:), allocatable ::  t_voxels, t_xcuts
+      type(T_Voxel), dimension(:,:), allocatable :: t_xycuts
+      type(T_Voxel), dimension(:,:,:), allocatable :: t_xyzcuts
+
+      end type T_concave
+
+      type(T_Concave), dimension(:), allocatable :: t_concaves
 
       double precision ::
      &  xcwmin=1.0d30,xcwmax=-1.0d30,
@@ -65,7 +112,7 @@
       type T_Voxel_Copy
         integer, dimension (:), allocatable :: isfacet
         integer kmagnet,kmodule,kcopy,kvoxel,kproto,ispole,nface
-        double precision Br(3),gcen(3)
+        double precision Br(3),Brn,gcen(3)
       end type T_Voxel_Copy
 
       type T_Magnet_Copy

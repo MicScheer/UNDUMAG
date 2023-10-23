@@ -1,3 +1,4 @@
+*CMZ :          20/10/2023  20.40.14  by  Michael Scheer
 *CMZ :  1.03/01 08/10/2014  12.21.58  by  Michael Scheer
 *CMZ :  1.01/02 26/09/2014  11.35.12  by  Michael Scheer
 *CMZ :  1.01/00 24/09/2014  16.31.07  by  Michael Scheer
@@ -11,7 +12,7 @@
 
       implicit none
 
-*KEEP,mshpltincl.
+*KEEP,MSHPLTINCL.
       include 'mshplt.cmn'
 *KEND.
 
@@ -79,7 +80,7 @@
         print*,'*** Warning in mshplt_log_axis: Routine must be called with integer power of 10'
       endif
 
-      if (idecmax.lt.30.and.10**idecmax.lt.smax.or.idecmax.eq.idecmin) then
+      if (idecmax.lt.30.and.10.0**idecmax.lt.smax.or.idecmax.eq.idecmin) then
         idecmax=idecmax+1
       endif
 
