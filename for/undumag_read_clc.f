@@ -1,3 +1,4 @@
+*CMZ :  2.05/01 02/10/2023  16.19.49  by  Michael Scheer
 *CMZ :  2.04/25 28/09/2023  07.22.52  by  Michael Scheer
 *CMZ :  2.04/21 21/09/2023  16.12.51  by  Michael Scheer
 *CMZ :  2.04/11 29/08/2023  14.43.10  by  Michael Scheer
@@ -20,7 +21,7 @@
       implicit none
 
       integer i,j,ieof,lunclc,istat,ipos(2,1000),nwords,
-     &  lmat,nmat,l,ncorn,nfila,lunf
+     &  lmat,nmat,k,kc,l,ncorn,nfila,lunf
 
       character(512) cline,cword
       cundutit='* No User Comment'
@@ -45,6 +46,8 @@
 
       nmodule_t=0
       modegui=0
+
+      nconcave_t=0
 
       open(newunit=lunclc,file=Fclc)
 
@@ -93,6 +96,7 @@
      &  clcbuff(nclcbuff),
      &  clcmag(nclcbuff),
      &  clcspec(nclcbuff),
+     &  clcconcave(nclcbuff),
      &  clcmat(nclcbuff),
      &  clcmod(nclcbuff),
      &  clccoil(nclcbuff),
@@ -321,7 +325,6 @@
             nclcspec=nclcspec+1
             clcspec(nclcspec)=cline(ipos(1,2):ipos(2,2))
             nspecmag_t=nspecmag_t+1
-            if (cline(ipos(1,2):ipos(2,2)).eq.'Special_Pole') niron_t=niron_t+1
             i=i+1
             cline=clcbuff(i)
             call util_string_split(cline,1000,nwords,ipos,istat)
@@ -375,6 +378,35 @@
               print*,trim(cline)
               stop
             endif !shape
+
+          else if(
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Convex_Magnet'.or.
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Convex_Pole'.or.
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Convex_Magnet'.or.
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Convex_Pole') then
+            k=i
+            kc=nconcave_t
+            do l=1,6
+              nconcave_t=nconcave_t+1
+              clcconcave(nconcave_t)=clcbuff(i)
+              if(l.eq.2) then
+                cline=clcbuff(i)
+                call util_string_split(cline,1000,nwords,ipos,istat)
+                cword=cline(ipos(1,1):ipos(2,1))
+              endif
+              print*,trim(clcconcave(nconcave_t))
+              if (kechocalc.ne.0) print*,trim(clcbuff(i))
+              i=i+1
+            enddo
+            call util_lower_case(cword)
+            if (cword.ne.'file') then
+              print*,"*** Error in undumag_read_clc: Bad input for concave item!"
+              print*,"*** Only data file is allowed to define item!"
+              print*,"*** Item will be ignored! Please check line:"
+              print*,trim(clcbuff(k+1))
+              nconcave_t=kc
+            endif
+            i=i-1
 
           else if (cline(ipos(1,2):ipos(2,2)).eq.'Materials') then
             i=i+1

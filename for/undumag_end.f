@@ -1,3 +1,4 @@
+*CMZ :  2.05/01 22/10/2023  14.47.55  by  Michael Scheer
 *CMZ :  2.04/12 30/08/2023  11.37.07  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  16.57.37  by  Michael Scheer
@@ -150,8 +151,8 @@
      &  zppl(1000),bypl(1000),bzpl(1000),hbmatmin,hbmatmax,
      &  bcmaxrec,bcminrec,hmaxrec,hminrec,hmaxiron
 
-      integer luninf,luni,lun,kfail,ifail77,ifail,imoth,iron,imag,ix,iy,iz,
-     &  matmap2,matmap3,n,lunmag,lunst,lunmat,
+      integer luninf,luni,lun,kfail,ifail77,ifail,imoth,iron,kmag,ix,iy,iz,
+     &  matmap2,matmap3,n,lunmag,lunst,lunmat,lmag,
      &  lunpost,idis,mat,mtyp,imat,
      &  iplan,nplan,i,ibmax,ixon,ixonnor,
      &  itry,ixbeff,ixbeffnor,nfirst,nlast,lunkill,irecover,
@@ -426,6 +427,7 @@ c-----------------------------------------------------------------------
 *KEND.
 
       character(64) ctitle,chtime,chrun
+      character(32) cmag,cmoth
       character(24) cbint
 
       save
@@ -511,11 +513,11 @@ c-----------------------------------------------------------------------
           bcironmin=-0.0d0
         endif
 
-        do imag=1,nmag
+        do kmag=1,nmag
 
-          bn=sqrt(bpebc(4,imag)**2+bpebc(5,imag)**2+bpebc(6,imag)**2)
+          bn=sqrt(bpebc(4,kmag)**2+bpebc(5,kmag)**2+bpebc(6,kmag)**2)
 
-          if (imag.le.nrec) then
+          if (kmag.le.nrec) then
             if (bn.gt.bcrecmax) bcrecmax=bn
             if (bn.lt.bcrecmin) bcrecmin=bn
           else
@@ -523,11 +525,11 @@ c-----------------------------------------------------------------------
             if (bn.lt.bcironmin) bcironmin=bn
           endif
 
-          nplan=ibpeplan(imag)
-          write(lunpost,*)nplan,bpebc(1:17,imag)
+          nplan=ibpeplan(kmag)
+          write(lunpost,*)nplan,bpebc(1:17,kmag)
           do iplan=1,nplan
-            write(lunpost,*)bpemag(1:3,1,iplan,imag),
-     &        bpetm(1:3,8,iplan,imag)
+            write(lunpost,*)bpemag(1:3,1,iplan,kmag),
+     &        bpetm(1:3,8,iplan,kmag)
           enddo !iplan
 
         enddo
@@ -622,34 +624,34 @@ c-----------------------------------------------------------------------
       if (intmaglis.ne.0) then
 
         if (idipoles.ne.0) then
-          do imag=1,ndipoles
-            if (dipoles(8,imag).ne.0.0d0) then
-              if (dipoles(8,imag).eq.2.0d0) then
-                dipoles(4,imag)=-dipoles(4,imag)
+          do kmag=1,ndipoles
+            if (dipoles(8,kmag).ne.0.0d0) then
+              if (dipoles(8,kmag).eq.2.0d0) then
+                dipoles(4,kmag)=-dipoles(4,kmag)
               endif
             else
-              dipoles(8,imag)=-1.0d0
+              dipoles(8,kmag)=-1.0d0
             endif
           enddo
         endif !(idipoles.ne.0) then
 
-        do imag=1,nmag
-          if (bpebc(17,imag).ne.0.0d0) then
-            if (bpebc(17,imag).eq.2.0d0) then
-              bpebc(4:6,imag)=-bpebc(4:6,imag)
-              if(bpebc(8,imag).eq.1) then !not rectangular nor cylindrical magnet
-                vmaglab(1:3)=bpebc(4:6,imag)
-                nplan=iabs(ibpeplan(imag))
+        do kmag=1,nmag
+          if (bpebc(17,kmag).ne.0.0d0) then
+            if (bpebc(17,kmag).eq.2.0d0) then
+              bpebc(4:6,kmag)=-bpebc(4:6,kmag)
+              if(bpebc(8,kmag).eq.1) then !not rectangular nor cylindrical magnet
+                vmaglab(1:3)=bpebc(4:6,kmag)
+                nplan=iabs(ibpeplan(kmag))
                 do iplan=1,nplan
-                  bpetm(1,7,iplan,imag)=
-     &              vmaglab(1)*bpetm(1,8,iplan,imag)+
-     &              vmaglab(2)*bpetm(2,8,iplan,imag)+
-     &              vmaglab(3)*bpetm(3,8,iplan,imag)
+                  bpetm(1,7,iplan,kmag)=
+     &              vmaglab(1)*bpetm(1,8,iplan,kmag)+
+     &              vmaglab(2)*bpetm(2,8,iplan,kmag)+
+     &              vmaglab(3)*bpetm(3,8,iplan,kmag)
                 enddo
               endif
             endif
           else
-            bpebc(17,imag)=-1.0d0
+            bpebc(17,kmag)=-1.0d0
           endif
         enddo
       endif
@@ -960,20 +962,24 @@ c Calculate field map{
       endif
 
       if (kmapnohead.eq.0) then
+
         call util_time_and_date(chtime)
+
         if (kmapmode.eq.0) then
           write(lun,'(a)') '* ' // trim(ctitle)
           write(lun,'(a)')"* " // trim(chtime)
-          write(lun,'(a)')"* imoth imag mat ityp matmod x/mm y/mm z/mm Bx/T By/T Bz/T B/T Hx/T Hy/T Hz/T H/T Mx/T My/T Mz/T M/T BxDip/T ByDip/T BzDip/T ifail kfail"
+          write(lun,'(a)')"* imoth imag mat ityp matmod x/mm y/mm z/mm Bx/T By/T Bz/T B/T Hx/T Hy/T Hz/T H/T Mx/T My/T Mz/T M/T BxDip/T ByDip/T BzDip/T ifail kfail cmag cmoth"
         else
           write(lun,'(a)') '* ' // trim(ctitle)
           write(lun,'(a)')"* " // trim(chtime)
           write(lun,'(a)')"* x/mm y/mm z/mm Bx/T By/T Bz/T ifail kfail"
           write(lun,'(a)')"* scaling = 0.001 0.001 0.001 1.0 1.0 1.0 for WAVE"
         endif
+
         if (knointmap.eq.0) then
           write(luni,'(a)')"* xi/mm xe/mm y/mm z/mm ByInt1/Tmm BzInt1/Tmm ByInt2/Tmm**2 BzInt2/Tmm**2"
         endif
+
       endif
 
       if (nxmap*nymap*nzmap.le.0) then
@@ -993,7 +999,7 @@ c Calculate field map{
         bcz=0.0d0
         bc=0.0d0
         if (kmapmode.eq.0) then
-          write(lun,*)"0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0"
+          write(lun,*)"0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0 '' '' "
         else
           write(lun,*)"0.0 0.0 0.0 0.0 0.0 0.0"
         endif
@@ -1013,6 +1019,7 @@ c Calculate field map{
      &      )
         endif
 
+        kmag=0
         do ix=1,nxmap
           x=x+dx
           y=ymapmin-dy
@@ -1110,17 +1117,17 @@ c              write(lun6,*)"field:",ix,iy,iz
               endif
 
               if (kinside.gt.0) then
-                imag=kinside
-                mat=nint(bpebc(9,imag))
-                imoth=nint(bpebc(15,imag))
-                bcx=bpebc(4,imag)
-                bcy=bpebc(5,imag)
-                bcz=bpebc(6,imag)
+                kmag=kinside
+                mat=nint(bpebc(9,kmag))
+                imoth=nint(bpebc(15,kmag))
+                bcx=bpebc(4,kmag)
+                bcy=bpebc(5,kmag)
+                bcz=bpebc(6,kmag)
                 matmap2=matmaps(2,mat)
                 matmap3=matmaps(3,mat)
               else !kinside
                 imoth=0
-                imag=0
+                kmag=0
                 mat=0
                 matmap2=0
                 matmap3=0
@@ -1141,15 +1148,28 @@ c              write(lun6,*)"field:",ix,iy,iz
                 yy=y
                 zz=z
               endif
+
+              cmag='none'
+              cmoth='none'
+
               if (kmapmode.eq.0) then
+                if (kmag.gt.0) then
+                  if (newclc.eq.0) then
+                    write(cmag,'(a)') chmags(:,kmag)
+                    write(cmoth,'(a)') chmoths(:,imoth)
+                  else
+                    cmag=t_magnets(kmag)%cnam
+                    cmoth=t_magnets(kmag)%cmoth
+                  endif
+                endif
                 write(lun,*)
-     &            imoth,imag,mat,matmap2,matmap3,
+     &            imoth,kmag,mat,matmap2,matmap3,
      &            sngl(xx),sngl(yy),sngl(zz),
      &            sngl(bx),sngl(by),sngl(bz),sngl(b),
      &            sngl(hx),sngl(hy),sngl(hz),sngl(h),
      &            sngl(bcx),sngl(bcy),sngl(bcz),sngl(bc),
      &            sngl(bdx),sngl(bdy),sngl(bdz),
-     &            ifail,kkfail
+     &            ifail,kkfail,trim(cmag),' ',trim(cmoth)
               else
                 write(lun,*)
      &            sngl(xx),sngl(yy),sngl(zz),sngl(bx),sngl(by),sngl(bz),ifail,kkfail
@@ -1174,49 +1194,66 @@ c              write(lun6,*)"field:",ix,iy,iz
       kinside=-1
       if (knomagmap.eq.0) then
         irecover=0
-        do imag=1,nrec
+        do kmag=1,nrec
 
           !x1y1z1
-          imoth=nint(bpebc(15,imag))
-          mat=nint(bpebc(9,imag))
+          imoth=nint(bpebc(15,kmag))
+          mat=nint(bpebc(9,kmag))
           matmap2=matmaps(2,mat)
           matmap3=matmaps(3,mat)
 
-          x=bpebc(1,imag) !mm
-          y=bpebc(2,imag) !mm
-          z=bpebc(3,imag) !mm
-          bcx=bpebc(4,imag)
-          bcy=bpebc(5,imag)
-          bcz=bpebc(6,imag)
+          x=bpebc(1,kmag) !mm
+          y=bpebc(2,kmag) !mm
+          z=bpebc(3,kmag) !mm
+          bcx=bpebc(4,kmag)
+          bcy=bpebc(5,kmag)
+          bcz=bpebc(6,kmag)
+
           call undumag_field(x/1000.0d0,y/1000.0d0,z/1000.0d0,hx,hy,hz,ifail)
           if (ifail.gt.0) then
             write(lun6,*)"Undumag_field returned failure at point: ",x,y,z
           else if (ifail.lt.0) then
             irecover=irecover+1
           endif
+
           bx=hx+bcx
           by=hy+bcy
           bz=hz+bcz
           b=sqrt(bx*bx+by*by+bz*bz)
           h=sqrt(hx*hx+hy*hy+hz*hz)
           bc=sqrt(bcx*bcx+bcy*bcy+bcz*bcz)
+
           bdx=-9.0d0
           bdy=-9.0d0
           bdz=-9.0d0
+
+          cmag='none'
+          cmoth='none'
+
           if (kmapmode.eq.0) then
+            if (kmag.gt.0) then
+              if (newclc.eq.0) then
+                write(cmag,'(a)') chmags(:,kmag)
+                write(cmoth,'(a)') chmoths(:,imoth)
+              else
+                lmag=t_voxcopy(kmag)%kmagnet
+                cmag=t_magnets(lmag)%cnam
+                cmoth=t_magnets(lmag)%cmoth
+              endif
+            endif
             write(lun,*)
-     &        imoth,imag,mat,matmap2,matmap3,
+     &        imoth,kmag,mat,matmap2,matmap3,
      &        sngl(x),sngl(y),sngl(z),
      &        sngl(bx),sngl(by),sngl(bz),sngl(b),
      &        sngl(hx),sngl(hy),sngl(hz),sngl(h),
      &        sngl(bcx),sngl(bcy),sngl(bcz),sngl(bc),
      &        sngl(bdx),sngl(bdy),sngl(bdz),
-     &        ifail
+     &        ifail,' 0 ',trim(cmag),' ',trim(cmoth)
           else
             write(lun,*)
      &        sngl(x),sngl(y),sngl(z),sngl(bx),sngl(by),sngl(bz)
           endif
-        enddo ! imag
+        enddo ! kmag
 
         if (irecover.ne.0) then
           write(lun6,*)
@@ -1236,14 +1273,14 @@ c              write(lun6,*)"field:",ix,iy,iz
         hminrec=1.0e30
         hmaxrec=-1.0e30
 
-        do imag=1,nrec
+        do kmag=1,nrec
 
-          easy=bpebc(11:13,imag)
+          easy=bpebc(11:13,kmag)
           easyn=sqrt(easy(1)**2+easy(2)**2+easy(3)**2)
 
-          imoth=nint(bpebc(15,imag))
+          imoth=nint(bpebc(15,kmag))
 
-          mat=nint(bpebc(9,imag))
+          mat=nint(bpebc(9,kmag))
 
           if (newclc.ne.0) then
 
@@ -1268,13 +1305,13 @@ c              write(lun6,*)"field:",ix,iy,iz
           matmap2=matmaps(2,mat)
           matmap3=matmaps(3,mat)
 
-          x=bpebc(1,imag) !mm
-          y=bpebc(2,imag) !mm
-          z=bpebc(3,imag) !mm
+          x=bpebc(1,kmag) !mm
+          y=bpebc(2,kmag) !mm
+          z=bpebc(3,kmag) !mm
 
-          bcx=bpebc(4,imag)
-          bcy=bpebc(5,imag)
-          bcz=bpebc(6,imag)
+          bcx=bpebc(4,kmag)
+          bcy=bpebc(5,kmag)
+          bcz=bpebc(6,kmag)
           bc=sqrt(bcx*bcx+bcy*bcy+bcz*bcz)
 
           call undumag_field(x/1000.0d0,y/1000.0d0,z/1000.0d0,hx,hy,hz,ifail)
@@ -1290,8 +1327,8 @@ c              write(lun6,*)"field:",ix,iy,iz
 
           write(lunmag,'(a,I5,1p5e12.4,2I5)')"1 ",matmap3,easy,h,bc,mat,kbrn
 
-          hmagvox(1,imag)=h
-          hmagvox(2,imag)=bc
+          hmagvox(1,kmag)=h
+          hmagvox(2,kmag)=bc
 
           if (bc.lt.bcminrec) bcminrec=sngl(bc)
           if (bc.gt.bcmaxrec) bcmaxrec=sngl(bc)
@@ -1299,7 +1336,7 @@ c              write(lun6,*)"field:",ix,iy,iz
           if (h.lt.hminrec) hminrec=sngl(h)
           if (h.gt.hmaxrec) hmaxrec=sngl(h)
 
-        enddo ! imag
+        enddo ! kmag
 
         if (hmaxrec-hminrec.lt.1.0e-6) then
           hminrec=-2.0
@@ -1329,25 +1366,25 @@ c              write(lun6,*)"field:",ix,iy,iz
         allocate(hmvoxel(2,niron))
         iron=0
 
-        do imag=nrec+1,nrec+niron
+        do kmag=nrec+1,nrec+niron
 
           iron=iron+1
 
           !x1y1z1
-          imoth=nint(bpebc(15,imag))
+          imoth=nint(bpebc(15,kmag))
 
-          mat=nint(bpebc(9,imag))
+          mat=nint(bpebc(9,kmag))
 
           matmap2=matmaps(2,mat)
           matmap3=matmaps(3,mat)
 
-          x=bpebc(1,imag) !mm
-          y=bpebc(2,imag) !mm
-          z=bpebc(3,imag) !mm
+          x=bpebc(1,kmag) !mm
+          y=bpebc(2,kmag) !mm
+          z=bpebc(3,kmag) !mm
 
-          bcx=bpebc(4,imag)
-          bcy=bpebc(5,imag)
-          bcz=bpebc(6,imag)
+          bcx=bpebc(4,kmag)
+          bcy=bpebc(5,kmag)
+          bcz=bpebc(6,kmag)
 
           call undumag_field(x/1000.0d0,y/1000.0d0,z/1000.0d0,hx,hy,hz,ifail)
 
@@ -1374,20 +1411,35 @@ c              write(lun6,*)"field:",ix,iy,iz
             if (h.gt.hmaxiron) hmaxiron=sngl(h)
           endif
 
+          cmag='none'
+          cmoth='none'
+
           if (kmapmode.eq.0) then
+
+            if (kmag.gt.0) then
+              if (newclc.eq.0) then
+                write(cmag,'(a)') chmags(:,kmag)
+                write(cmoth,'(a)') chmoths(:,imoth)
+              else
+                lmag=t_voxcopy(kmag)%kmagnet
+                cmag=t_magnets(lmag)%cnam
+                cmoth=t_magnets(lmag)%cmoth
+              endif
+            endif
+
             write(lun,*)
-     &        imoth,imag,mat,matmap2,matmap3,
+     &        imoth,kmag,mat,matmap2,matmap3,
      &        sngl(x),sngl(y),sngl(z),
      &        sngl(bx),sngl(by),sngl(bz),sngl(b),
      &        sngl(hx),sngl(hy),sngl(hz),sngl(h),
      &        sngl(bcx),sngl(bcy),sngl(bcz),sngl(bc),
      &        sngl(bdx),sngl(bdy),sngl(bdz),
-     &        ifail
+     &        ifail,' 0 ',trim(cmag),' ',trim(cmoth)
           else
             write(lun,*)
      &        sngl(x),sngl(y),sngl(z),sngl(bx),sngl(by),sngl(bz)
           endif
-        enddo ! imag
+        enddo ! kmag
 
         if (irecover.ne.0) then
           write(lun6,*)
@@ -1503,9 +1555,9 @@ c{ Plot Magnetization of magnets
         call mgset('PLCI',2.)
 
         if (knomagmap.eq.0) then
-          do imag=1,nrec
-            xpl(1)=sngl(hmagvox(1,imag))
-            ypl(1)=sngl(hmagvox(2,imag))
+          do kmag=1,nrec
+            xpl(1)=sngl(hmagvox(1,kmag))
+            ypl(1)=sngl(hmagvox(2,kmag))
             call mpm(1,xpl,ypl)
           enddo
         endif
@@ -1786,9 +1838,9 @@ c      iseqdebug=1
             bzint1infd=0.0d0
 
             if (idipoles.ne.0) then
-              do imag=1,nmag
-                if (bpebc(17,imag).lt.0.0d0) cycle
-                call undumag_dipoles_int(imag,y,z,byi,bzi,ifail)
+              do kmag=1,nmag
+                if (bpebc(17,kmag).lt.0.0d0) cycle
+                call undumag_dipoles_int(kmag,y,z,byi,bzi,ifail)
                 if (ifail.ne.0) then
                   write(lun6,*)"*** Error in undumag_end: Bad return from undumag_dipoles_int ***"
                 endif
@@ -1842,23 +1894,23 @@ c      iseqdebug=1
 
         if (idipoles.ne.0) then
 
-          do imag=1,ndipoles
+          do kmag=1,ndipoles
 
-            y2z2=dipoles(2,imag)**2+dipoles(3,imag)**2
-            py=dipoles(6,imag)*dipoles(4,imag)
-            pz=dipoles(7,imag)*dipoles(4,imag)
-            pryz=py*dipoles(2,imag)+pz*dipoles(3,imag)
+            y2z2=dipoles(2,kmag)**2+dipoles(3,kmag)**2
+            py=dipoles(6,kmag)*dipoles(4,kmag)
+            pz=dipoles(7,kmag)*dipoles(4,kmag)
+            pryz=py*dipoles(2,kmag)+pz*dipoles(3,kmag)
 
             if (y2z2.ne.0.0d0) then
               byint1infd=byint1infd
-     &          +3.0d0*pryz*dipoles(2,imag)*2.0d0/3.0d0/y2z2**2*2.0d0
+     &          +3.0d0*pryz*dipoles(2,kmag)*2.0d0/3.0d0/y2z2**2*2.0d0
      &          -2.0d0/y2z2*py
               bzint1infd=bzint1infd
-     &          +3.0d0*pryz*dipoles(3,imag)*2.0d0/3.0d0/y2z2**2*2.0d0
+     &          +3.0d0*pryz*dipoles(3,kmag)*2.0d0/3.0d0/y2z2**2*2.0d0
      &          -2.0d0/y2z2*pz
             else
               write(lun6,*)"*** Error in undumag_end: Integration of dipole fields fails, since distance to dipole is zero for dipole",
-     &          imag," ***"
+     &          kmag," ***"
             endif
           enddo
         endif !(idipoles.ne.0) then
@@ -3180,9 +3232,9 @@ c} Plot y,z
         i=0
         call util_zeit_kommentar(lun6,"Writing undumag.bad")
         open(newunit=lunkill,file="undumag.bad")
-        do imag=1,nmag
-          if (bpebc(16,imag).ne.0.0d0) then
-            write(lunkill,*)imag,nint(bpebc(16,imag)),bpebc(1:6,imag)
+        do kmag=1,nmag
+          if (bpebc(16,kmag).ne.0.0d0) then
+            write(lunkill,*)kmag,nint(bpebc(16,kmag)),bpebc(1:6,kmag)
             i=i+1
           endif
         enddo
@@ -3195,9 +3247,9 @@ c} Plot y,z
       if (idipoles.ne.0) then
         call util_zeit_kommentar(lun6,"Writing undumag_map.dip")
         open(newunit=lun,file="undumag_map.dip")
-        do imag=1,ndipoles
-          write(lun,'(14e17.7e3)')dipoles(1:3,imag),
-     &      dipoles(4,imag)*dipoles(5:7,imag),dipoles(9:16,imag)
+        do kmag=1,ndipoles
+          write(lun,'(14e17.7e3)')dipoles(1:3,kmag),
+     &      dipoles(4,kmag)*dipoles(5:7,kmag),dipoles(9:16,kmag)
         enddo
         flush(lun)
         close(lun)
@@ -3404,20 +3456,20 @@ c{ Plot By, Bz
       write(lunw,*)efx,efy,efz
       write(lunw,*)tiny,window
 
-      do imag=1,nmag
-        write(lunw,*)imag
-        write(lunw,*)bpebc(:,imag)
-        nplan=ibpeplan(imag)
-        write(lunw,*)nplan,ibpecol(imag)
+      do kmag=1,nmag
+        write(lunw,*)kmag
+        write(lunw,*)bpebc(:,kmag)
+        nplan=ibpeplan(kmag)
+        write(lunw,*)nplan,ibpecol(kmag)
         do iplan=1,nplan
-          ncorn=ibpecorn(iplan,imag)
+          ncorn=ibpecorn(iplan,kmag)
           write(lunw,*)ncorn
           do icorn=1,ncorn
-            write(lunw,*)bpemag(1:3,icorn,iplan,imag)
-            write(lunw,*)bperot(1:3,icorn,iplan,imag)
+            write(lunw,*)bpemag(1:3,icorn,iplan,kmag)
+            write(lunw,*)bperot(1:3,icorn,iplan,kmag)
           enddo
           do i=1,8
-            write(lunw,*)bpetm(1:3,i,iplan,imag)
+            write(lunw,*)bpetm(1:3,i,iplan,kmag)
           enddo
         enddo
       enddo
