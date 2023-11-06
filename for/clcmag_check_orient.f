@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 26/10/2023  10.06.10  by  Michael Scheer
 *CMZ :  2.04/02 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/01 13/02/2023  13.19.45  by  Michael Scheer
 *CMZ :  2.03/00 31/07/2022  18.19.49  by  Michael Scheer
@@ -14,7 +15,7 @@
 
       double precision x,y,z,gcen(3),p1(3),p2(3),p3(3),vnormal(3),dist
 
-      integer :: kdebug=1,
+      integer :: kdebug=0,
      &  l,iplan,n,ivox,imag,nvox,ip,j,iover,istat
 
       type(T_Magnet) :: tmag

@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 03/11/2023  20.41.17  by  Michael Scheer
 *CMZ :  2.05/01 02/10/2023  16.19.49  by  Michael Scheer
 *CMZ :  2.04/25 28/09/2023  07.22.52  by  Michael Scheer
 *CMZ :  2.04/21 21/09/2023  16.12.51  by  Michael Scheer
@@ -47,7 +48,9 @@
       nmodule_t=0
       modegui=0
 
+      nclccave_t=0
       nconcave_t=0
+      nbrnmat=0
 
       open(newunit=lunclc,file=Fclc)
 
@@ -93,6 +96,7 @@
 
       allocate(
      &  magmodule(nclcbuff),
+     &  magmodulecav(nclcbuff),
      &  clcbuff(nclcbuff),
      &  clcmag(nclcbuff),
      &  clcspec(nclcbuff),
@@ -126,7 +130,7 @@
           endif
           if (clcbuff(nclcbuff)(1:1).eq.'&') then
             !print*,cline(ipos(1,2):ipos(2,2))
-            !call util_break
+            !all util_break
             print*,"*** Error in undumag_read_clc: Missing data lines after"
             print*,trim(clcbuff(nclcbuff))
             stop
@@ -168,7 +172,7 @@
           if (cline(ipos(1,2):ipos(2,2)).eq.'User_Comment') then
             i=i+1
           else if (cline(ipos(1,2):ipos(2,2)).eq.'Inhomogeneity') then
-            !call util_break
+            !all util_break
             ninhom_t=ninhom_t+1
             clcinhom(ninhom_t)=cline(ipos(1,2):ipos(2,2))
             i=i+1
@@ -181,7 +185,7 @@
               if (clcinhom(ninhom_t)(ipos(1,2):ipos(2,2)).eq.'End') exit
               i=i+1
             enddo
-            !call util_break
+            !all util_break
           else if (cline(ipos(1,2):ipos(2,2)).eq.'Pole' .or.
      &        cline(ipos(1,2):ipos(2,2)).eq.'Magnet') then
             nmag_t=nmag_t+1
@@ -380,31 +384,33 @@
             endif !shape
 
           else if(
-     &        cline(ipos(1,2):ipos(2,2)).eq.'Convex_Magnet'.or.
-     &        cline(ipos(1,2):ipos(2,2)).eq.'Convex_Pole'.or.
-     &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Convex_Magnet'.or.
-     &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Convex_Pole') then
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Concave_Magnet'.or.
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Concave_Pole'.or.
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Concave_Magnet'.or.
+     &        cline(ipos(1,2):ipos(2,2)).eq.'Special_Concave_Pole') then
+            nconcave_t=nconcave_t+1
+            magmodulecav(nconcave_t)=nmodule_t+1
             k=i
-            kc=nconcave_t
+            kc=nclccave_t
             do l=1,6
-              nconcave_t=nconcave_t+1
-              clcconcave(nconcave_t)=clcbuff(i)
+              nclccave_t=nclccave_t+1
+              clcconcave(nclccave_t)=clcbuff(i)
               if(l.eq.2) then
                 cline=clcbuff(i)
                 call util_string_split(cline,1000,nwords,ipos,istat)
                 cword=cline(ipos(1,1):ipos(2,1))
               endif
-              print*,trim(clcconcave(nconcave_t))
+c              print*,trim(clcconcave(nclccave_t))
               if (kechocalc.ne.0) print*,trim(clcbuff(i))
               i=i+1
             enddo
             call util_lower_case(cword)
-            if (cword.ne.'file') then
+            if (cword.ne.'file'.and.cword.ne.'stl_ascii') then
               print*,"*** Error in undumag_read_clc: Bad input for concave item!"
-              print*,"*** Only data file is allowed to define item!"
+              print*,"*** Only data file or stl-ascii file is allowed to define item!"
               print*,"*** Item will be ignored! Please check line:"
               print*,trim(clcbuff(k+1))
-              nconcave_t=kc
+              nclccave_t=kc
             endif
             i=i-1
 

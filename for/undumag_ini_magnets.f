@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 26/10/2023  11.07.25  by  Michael Scheer
 *CMZ :  2.05/01 02/10/2023  16.19.49  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  10.23.44  by  Michael Scheer
 *CMZ :  2.04/02 22/08/2023  09.03.52  by  Michael Scheer
@@ -30,7 +31,7 @@ c      print*,"bpebc(18:20),corrtiny, dedgefb, simpson-file, chicut und andere V
       call undumag_read_modules
 
       ! Treat concave shapes
-      if (nconcave_t.gt.0) then
+      if (nclccave_t.gt.0) then
         call clc_concave_to_convex
       endif
 

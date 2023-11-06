@@ -1,3 +1,4 @@
+*CMZ :  2.05/03 06/11/2023  13.51.20  by  Michael Scheer
 *CMZ :  2.04/13 31/08/2023  13.05.39  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/02 03/03/2022  12.09.38  by  Michael Scheer
@@ -24,10 +25,6 @@
 
       character(32) c32
 
-      if (ncoils_t.le.0) return
-
-      allocate(t_coils(ncoils_t))
-
       nrace=0
       nwind=0
       ncrace=0
@@ -36,6 +33,13 @@
       nrbar=0
       nthwir=0
       ncwires=0
+
+      if (ncoils_t.le.0) then
+        allocate(wire(nwitems,1)) !to avoid problmens in undumag_bpolyplot
+        return
+      endif
+
+      allocate(t_coils(ncoils_t))
 
       nw=0
       nwc=0

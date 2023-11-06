@@ -93,15 +93,9 @@
       implicit none
 
 *KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+      include 'seqdebug.cmn'
 *KEEP,random.
-      integer*8 irancalls
-      integer, parameter :: irnsize=64
-      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
-      common /randomc/ irancalls,irnseed,irnmode,irnseedi
-
-      namelist /randomn/ irnmode,irnseed
+      include 'random.cmn'
 *KEND.
 
       double precision, dimension (:,:,:,:), allocatable :: bmap

@@ -9,7 +9,12 @@ cd $UNDUMAG_INCL
 
 cd main
 
-rm -f ../bin/undumag.exe
+#rm -f ../bin/undumag.exe
+rm -f *.mod
+
+cp ../for/bpolyederf90m.mod .
+cp ../for/undumagf90m.mod .
+cp ../for/commandlinef90m.mod .
 
 gfortran -O2 -cpp \
 -fd-lines-as-comments \

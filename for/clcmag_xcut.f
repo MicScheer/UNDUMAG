@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.27.12  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
@@ -40,8 +41,7 @@
       integer, dimension (:,:), allocatable :: kedge
       integer, dimension (:), allocatable :: khull,kface
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface
-      common/uhullc/lenhull,lenedge,lenface
+      include 'hulldim.cmn'
 *KEND.
       type(T_Magnet) :: tmag
 
@@ -96,7 +96,7 @@ c        t_magnets(imag)%dxdiv=t_magnets(imag)%size(1)/t_magnets(imag)%nxdiv
 
       gcen=tmag%gcen
 
-      !call util_break
+      !all util_break
 
       xyz=tmag%xyz
 
@@ -407,7 +407,7 @@ c        t_magnets(imag)%dxdiv=t_magnets(imag)%size(1)/t_magnets(imag)%nxdiv
       endif
 
 
-      !call util_break
+      !all util_break
 
 c      if (imag.eq.2) then
 c        do ix=1,nxdiv

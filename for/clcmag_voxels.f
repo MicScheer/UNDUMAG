@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/23 27/09/2023  07.36.57  by  Michael Scheer
 *CMZ :  2.04/20 20/09/2023  15.31.58  by  Michael Scheer
 *CMZ :  2.04/17 12/09/2023  14.13.06  by  Michael Scheer
@@ -240,7 +241,7 @@ c      ifacets=0
 
         ctype=t_magnets(imag)%ctype
 
-        !call util_break
+        !all util_break
         if (ctype.eq.'Cylinder') then
           radin=t_magnets(imag)%size(1)
           radout=t_magnets(imag)%size(2)

@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 02/11/2023  14.05.20  by  Michael Scheer
 *CMZ :  2.05/01 22/10/2023  14.47.55  by  Michael Scheer
 *CMZ :  2.04/12 30/08/2023  11.37.07  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
@@ -98,16 +99,10 @@
 
       implicit none
 
-*KEEP,SEQDEBUG.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
-*KEEP,RANDOM.
-      integer*8 irancalls
-      integer, parameter :: irnsize=64
-      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
-      common /randomc/ irancalls,irnseed,irnmode,irnseedi
-
-      namelist /randomn/ irnmode,irnseed
+*KEEP,debugutil,T=F77.
+      include 'debugutil.cmn'
+*KEEP,random.
+      include 'random.cmn'
 *KEND.
 
       double precision, dimension (:,:,:,:), allocatable :: bmap
@@ -174,256 +169,16 @@
 
       complex*16 aradx(nphp),arady(nphp),aradz(nphp)
 
+      integer :: idebug=0
+
       integer ndim,istatus,ifreq,istep,lunz,nz
       real hpaw(npawp)
       common/pawc/hpaw
 
-*KEEP,MSHPLT.
-      real
-     &  pttomm_ps,pttocm_ps, !convert from pt to mm or cm respectively
-     &  scale_ps, isscale_ps, !current scale to convert from pt
-     &  scalex_ps, !current scale to convert x to pad system
-     &  scaley_ps, !current scale to convert y to pad system
-     &  xold_ps,yold_ps, !old pen position on pad
-     &  x_ps,y_ps, !current pen position on pad
-     &  rlinewidth_ps !line width on pad
-     & ,chhe_ps, chhe_index_ps ! character height
-     & ,ticsiz_ps ! tic height
-     & ,ang_ps,tang_ps ! current angle and text angle
-     &  ,offgtitx_ps !offset of global title on pad
-     &  ,offgtity_ps !offset of global title on pad
-     &  ,offdatex_ps !offset of date on pad
-     &  ,offdatey_ps !offset of date on pad
-     &  ,aLabHeight_ps !character height of axis label
-     &  ,xoffexp_ps !xoffset of power term
-     &  ,yoffexp_ps !yoffset of power term
-     &  ,xlaboff_ps !offset of x-axis label on pad
-     &  ,xtitoff_ps !offset of x-axis title on pad
-     &  ,ylaboff_ps ! offset of y-axis label on pad
-     &  ,ytitoff_ps !offset of y-axis title on pad
-     &  ,ztitoff_ps !offset of z-axis title on pad
-     &  ,zlaboff_ps ! offset of z-axis label on pad
-     &  ,xsiz_ps,ysiz_ps !size on pad of plotting canvas
-     &  ,wxmin_ps,wxmax_ps,wymin_ps,wymax_ps !world
-     &  ,xleft_ps,xright_ps,ybottom_ps,ytop_ps ! pad on pad
-     &  ,xsizorig_ps,ysizorig_ps !size on pad of plotting canvas for paper scale
-     &  ,xleftorig_ps,xrightorig_ps,ybottomorig_ps,ytoporig_ps ! orig pad on paper
-     &  ,rmtyp_ps(2,0:100) !postscript encoding of characters
-     &  ,rmsiz_ps ! marker size
-     &  ,phi_ps,theta_ps ! 3d viewing angles
-     &  ,pi_ps !Pi
-     &  ,xmin3d_ps,xmax3d_ps
-     &  ,ymin3d_ps,ymax3d_ps
-     &  ,zmin3d_ps,zmax3d_ps
-     &  ,xmgl_ps,xmgr_ps,ymgu_ps,ymgl_ps !old hplot variables for margins
-     &  ,xwin_ps,ywin_ps ! horizontal and vertical distance of pads
-     &  ,ygti_ps !y-offset of global title for hplot
-     &  ,gsiz_ps !character size of global title for hplot
-     &  ,xcen_ps,ycen_ps !center on canvas
-     &  ,scaletxt_ps ! Scaling for text entities
-     &  ,ihigzmode_ps !HIGZ-compatibility mode
-     &  ,tsiz_ps ! axis-title-size in HIGZ-mode
-     &  ,coln_ps,cnLine_ps,cnFill_ps,cnMarker_ps,cnText_ps,cnFrame_ps !color norms
-     &  ,clips_ps(2,1000) !clipping range
-     &  ,radtodeg_ps
-     &  ,xpcorn_ps(8),ypcorn_ps(8) !3d frame box
-     &  ,ifbox_ps,xfb_ps(9),yfb_ps(9)
-
-      parameter(pttocm_ps=72/2.54,pttomm_ps=72/25.4)
-
-      integer nmaxfile_ps
-      parameter(nmaxfile_ps=10000)
-
-      integer
-     &  lun_ps,istat_ps
-     &  ,ilabmod_ps !mode off plotting label
-     &  ,inolabs_ps !no axis labeling
-     &  ,irunviewer_ps !start live viewer
-     &  ,iviewinter_ps !interactive stopping of live viewer
-     &  ,mtyp_ps ! current marker type
-     &  ,icolor_ps, ired_ps,igreen_ps,iblue_ps !color, if <1, rgb values are used
-     &  ,ilinestyle_ps !line style: 1: solid, 2: dashed, 3: dotted, 4: dashed-dotted
-     &  ,kzone_ps, itouched_ps !current zone and flag of usage
-     &  ,nzone_ps,nxzone_ps,nyzone_ps !zones of canvas
-     &  ,ifirst_ps !first zone for plotting
-     &  ,isamecanvas_ps,isameframe_ps
-     &  ,nfile_ps !file counter
-     &  ,lunall_ps(nmaxfile_ps) !LUNs of plotfiles
-     &  ,kbbxl_ps,kbbxr_ps,kbbyb_ps,kbbyt_ps !bounding box (kbbxl_ps,kbbxr_ps,...)
-     &  ,inewpage_ps !new page
-     &  ,kFrameColor_ps,kFrameRed_ps,kFrameBlue_ps,kFrameGreen_ps
-     &  ,kFillColor_ps,kFillRed_ps,kFillBlue_ps,kFillGreen_ps
-     &  ,kLineColor_ps,kLineRed_ps,kLineBlue_ps,kLineGreen_ps
-     &  ,kTextColor_ps,kTextRed_ps,kTextBlue_ps,kTextGreen_ps
-     &  ,kMarkerColor_ps,kMarkerRed_ps,kMarkerBlue_ps,kMarkerGreen_ps
-     &  ,idrawgtit_ps !draw global title on top of page
-     &  ,lunbase_ps
-     &  ,log10x_ps,log10y_ps,log10z_ps !flags for logarithmic axis
-     &  ,nclips_ps ! number of clipping points
-     &  ,mode3d_ps
-     &  ,isbox_ps,isdate_ps,isoffdate_ps
-     &  ,kBox_ps,kDate_ps ! to plot surrounding box and date on top of plots
-
-      character(2048)
-     &  file_ps,viewer_ps,cline_ps,filebase_ps,
-     &  xtit_ps,ytit_ps,ztit_ps,gtit_ps !axis-title and global title
-     &  ,fileall_ps(nmaxfile_ps) !plotfiles
-
-      character(4) chmarker_ps !current marker
-
-      integer nbuffsize_ps,ibuffpos_ps
-      parameter(nbuffsize_ps=100000)
-      character(2048) chbuff_ps(nbuffsize_ps)
-      character(4) chch_ps(1000)
-
-      common/mshpltc/
-     &  scale_ps, isscale_ps,scalex_ps,scaley_ps,
-     &  xold_ps,yold_ps,x_ps,y_ps,rlinewidth_ps,chhe_ps, chhe_index_ps,
-     &  ticsiz_ps,
-     &  ang_ps,tang_ps
-     & ,xlaboff_ps,ylaboff_ps
-     & ,xtitoff_ps,ytitoff_ps
-     &  ,ztitoff_ps !offset of z-axis title on pad
-     &  ,zlaboff_ps ! offset of z-axis label on pad
-     & ,xsiz_ps,ysiz_ps
-     &  ,wxmin_ps,wxmax_ps,wymin_ps,wymax_ps !world
-     &  ,xleft_ps,xright_ps,ybottom_ps,ytop_ps ! pad on pad
-     &  ,ilabmod_ps,rmtyp_ps,rmsiz_ps
-     & ,lun_ps,istat_ps,inolabs_ps,irunviewer_ps,iviewinter_ps,mtyp_ps
-     &  ,file_ps,viewer_ps,filebase_ps
-     &  ,ibuffpos_ps,chbuff_ps,chch_ps,chmarker_ps,cline_ps
-     &  ,phi_ps,theta_ps ! 3d viewing angles
-     &  ,pi_ps !Pi
-     &  ,icolor_ps, ired_ps,igreen_ps,iblue_ps !color, if <1, rgb values are used
-     &  ,ilinestyle_ps !line style: 1: solid, 2: dashed, 3: dotted, 4: dashed-dotted
-     &  ,xmin3d_ps,xmax3d_ps
-     &  ,ymin3d_ps,ymax3d_ps
-     &  ,zmin3d_ps,zmax3d_ps
-     &  ,offgtitx_ps !offset of global title on pad
-     &  ,offgtity_ps !offset of global title on pad
-     &  ,offdatex_ps !offset of date on pad
-     &  ,offdatey_ps !offset of date on pad
-     &  ,xmgl_ps,xmgr_ps,ymgu_ps,ymgl_ps !old hplot variables for margins
-     &  ,xwin_ps,ywin_ps ! horizontal and vertical distance of pads
-     &  ,xsizorig_ps,ysizorig_ps !size on pad of plotting canvas for paper scale
-     &  ,xleftorig_ps,xrightorig_ps,ybottomorig_ps,ytoporig_ps ! orig pad on paper
-     &  ,kzone_ps, itouched_ps !current zone and flag of usage
-     &  ,nzone_ps,nxzone_ps,nyzone_ps !zones of canvas
-     &  ,ifirst_ps !first zone for plotting
-     &  ,isamecanvas_ps,isameframe_ps
-     &  ,xtit_ps,ytit_ps,ztit_ps,gtit_ps !axis-title and global title
-     &  ,nfile_ps !file counter
-     &  ,lunall_ps !LUNs of plotfiles
-     &  ,fileall_ps !plotfiles
-     &  ,kbbxl_ps,kbbxr_ps,kbbyb_ps,kbbyt_ps !bounding box (kbbxl_ps,kbbxr_ps,...)
-     &  ,inewpage_ps !new page
-     &  ,kBox_ps,kDate_ps ! to plot surrounding box and date on top of plots
-     &  ,ygti_ps !y-offset of global title for hplot
-     &  ,gsiz_ps !character size of global title for hplot
-     &  ,kFrameColor_ps,kFrameRed_ps,kFrameBlue_ps,kFrameGreen_ps
-     &  ,kLineColor_ps,kLineRed_ps,kLineBlue_ps,kLineGreen_ps
-     &  ,kFillColor_ps,kFillRed_ps,kFillBlue_ps,kFillGreen_ps
-     &  ,kTextColor_ps,kTextRed_ps,kTextBlue_ps,kTextGreen_ps
-     &  ,kMarkerColor_ps,kMarkerRed_ps,kMarkerBlue_ps,kMarkerGreen_ps
-     &  ,xcen_ps,ycen_ps !center on canvas
-     &  ,scaletxt_ps ! Scaling for text entities
-     &  ,ihigzmode_ps !HIGZ-compatibility mode
-     &  ,idrawgtit_ps !draw global title on top of page
-     &  ,tsiz_ps ! axis-title-size in HIGZ-mode
-     &  ,lunbase_ps
-     &  ,coln_ps,cnLine_ps,cnFill_ps,cnMarker_ps,cnText_ps,cnFrame_ps !color norms
-     &  ,log10x_ps,log10y_ps,log10z_ps !flags for logarithmic axis
-     &  ,aLabHeight_ps !character height of axis label
-     &  ,clips_ps,nclips_ps
-     &  ,radtodeg_ps
-     &  ,mode3d_ps
-     &  ,isbox_ps,isdate_ps,isoffdate_ps
-     &  ,xoffexp_ps !xoffset of power term
-     &  ,yoffexp_ps !yoffset of power term
-     &  ,xpcorn_ps,ypcorn_ps
-     &  ,ifbox_ps,xfb_ps,yfb_ps
-*KEEP,PHYCONPARAM.
-c-----------------------------------------------------------------------
-c     phyconparam.cmn
-c-----------------------------------------------------------------------
-
-      complex*16, parameter :: zone1=(1.0d0,0.0d0), zi1=(0.0d0,1.0d0)
-
-      complex*16, dimension(4,3), parameter ::
-     &  vstokes=reshape([
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0, -0.70710678118654746d0),
-     &  ( 0.0000000000000000d0, -0.70710678118654746d0),
-     &  ( 0.70710678118654746d0, 0.0000000000000000d0),
-     &  (-0.70710678118654746d0,-0.70710678118654746d0),
-     &  ( 0.70710678118654746d0, 0.0000000000000000d0),
-     &  (-0.70710678118654746d0, 0.0000000000000000d0),
-     &  (-0.70710678118654746d0, 0.0000000000000000d0)
-     &  ],[4,3])
-
-c      vstokes(1,1)=( 0.0d0,        0.0d0)      !horizontal polarization
-c      vstokes(1,2)=( 0.0d0,        0.0d0)
-c      vstokes(1,3)=(-sqrt(1./2.),       -sqrt(1./2.))
-c
-c      vstokes(2,1)=( 0.0d0,        0.0d0)      !right handed polarization
-c      vstokes(2,2)=( 0.0d0,       -sqrt(1./2.))
-c      vstokes(2,3)=(+sqrt(1./2.),        0.0d0)
-c
-c      vstokes(3,1)=( 0.0d0,        0.0d0)      !left handed polarization
-c      vstokes(3,2)=( 0.0d0,       -sqrt(1./2.))
-c      vstokes(3,3)=(-sqrt(1./2.),        0.0d0)
-c
-c      vstokes(4,1)=( 0.0d0,        0.0d0)      !45 degree linear polarization
-c      vstokes(4,2)=( sqrt(1./2.),        0.0d0)
-c      vstokes(4,3)=(-sqrt(1./2.),        0.0d0)
-
-      double precision, parameter ::
-     &  HBAREV1=6.58211889D-16
-     &  ,CLIGHT1=2.99792458D8
-     &  ,EMASSKG1=9.10938188D-31
-     &  ,EMASSE1=0.510998902D6
-     &  ,EMASSG1=0.510998902D-3
-     &  ,ECHARGE1=1.602176462D-19
-     &  ,ERAD1=2.8179380D-15
-     &  ,EPS01=8.854187817D-12
-     &  ,PI1=3.141592653589793D0
-     &  ,rmu04pi1=1.0D-7
-     &  ,dnull1=0.0d0
-     &  ,done1=1.0d0
-     & ,HPLANCK1=6.626176D-34
-
-      double precision, parameter ::
-     & GRARAD1=PI1/180.0d0
-     & ,RADGRA1=180.0d0/PI1
-     & ,HBAR1=HBAREV1*ECHARGE1
-     & ,WTOE1=CLIGHT1*HPLANCK1/ECHARGE1*1.0d9
-     & ,CQ1=55.0d0/32.0d0/DSQRT(3.0D0)*HBAR1/EMASSKG1/CLIGHT1
-     & ,CGAM1=4.0d0/3.0d0*PI1*ERAD1/EMASSG1**3
-     & ,POL1CON1=8.0d0/5.0d0/DSQRT(3.0D0)
-     & ,POL2CON1=8.0d0/5.0d0/DSQRT(3.0D0)/2.0d0/PI1/3600.0d0
-     &  *EMASSKG1/HBAR1/ERAD1*EMASSG1**5
-     & ,TWOPI1=2.0D0*PI1
-     & ,HALFPI1=PI1/2.0D0
-     & ,sqrttwopi1=sqrt(twopi1)
-     & ,rmu01=4.0D0*PI1/1.0D7
-     & ,alpha1=echarge1**2/(4.0d0*pi1*eps01*hbar1*clight1)
-     & ,gaussn1=1.0d0/sqrt(twopi1)
-     & ,cK934=ECHARGE1/(2.0d0*PI1*EMASSKG1*CLIGHT1)/100.0d0
-     & ,powcon1=cgam1/2.0d0/pi1*clight1*(clight1/1.0d9)**2*emassg1
-     &  ,gamma1=1.0d0/emassg1
-     &  ,emom1=emasse1*dsqrt((gamma1-1.0d0)*(gamma1+1.0d0))
-     &  ,rho1=emom1/clight1
-     &  ,omegac1=1.5d0*gamma1**3*clight1/rho1
-     &  ,ecdipev1=omegac1*hbar1/echarge1
-     &  ,ecdipkev1=ecdipev1/1000.0d0
-
-c-----------------------------------------------------------------------
-c     end of phyconparam.cmn
-c-----------------------------------------------------------------------
+*KEEP,mshplt.
+      include 'mshplt.cmn'
+*KEEP,phyconparam.
+      include 'phyconparam.cmn'
 *KEND.
 
       character(64) ctitle,chtime,chrun
@@ -458,6 +213,11 @@ c-----------------------------------------------------------------------
 
       flush(lunst)
       close(lunst)
+
+      if (idebug.eq.1) then
+        i_debug=1
+        !all util_break
+      endif
 
       if (krunnum.ne.0) then
         write(chrun,*)kundurun
@@ -537,6 +297,11 @@ c-----------------------------------------------------------------------
         close(lunpost)
 
       endif !(maxiter.gt.0) then
+
+      if (idebug.eq.1) then
+        i_debug=2
+        !all util_break
+      endif
 
       if (maxiter.gt.0.and.maxiteriron.gt.0) call undumag_residuals_iron
 
@@ -798,6 +563,11 @@ c-----------------------------------------------------------------------
         endif
       enddo !ix
 
+      if (idebug.eq.1) then
+        i_debug=-1
+        !all util_break
+      endif
+
       if (irecover.ne.0) then
         write(lun6,*)
         write(lun6,*)"*** Warning in undumag_end:  On-axis field calculations with ",irecover, " recovered errors ***"
@@ -924,6 +694,11 @@ c Calculate on-axis field{
       flush(lun)
       close(lun)
 
+      if (idebug.eq.1) then
+        i_debug=3
+        !all util_break
+      endif
+
 c Calculate on-axis field}
 
       if (idipoles.ne.0) then
@@ -947,6 +722,11 @@ c Calculate on-axis field}
         close(lun)
 
       endif !(idipoles.ne.0) then
+
+      if (idebug.eq.1) then
+        i_debug=4
+        !all util_break
+      endif
 
 c Calculate field map{
 
@@ -1027,6 +807,10 @@ c Calculate field map{
             y=y+dy
             z=zmapmin-dz
             do iz=1,nzmap
+c              if(ix.eq.109.and.iy.eq.1.and.iz.eq.82) then
+c                i_debug=-7
+c                !all util_break
+c              endif
               z=z+dz
               if (knomagmap.eq.0.or.knopolmap.eq.0) then
                 kinside=-1
@@ -1080,7 +864,7 @@ c Calculate field map{
                 zz=cosa*zr-sina*yr+cenmaprotxz
                 yy=sina*zr+cosa*yr+cenmaprotxy
               endif
-c              if (ix.eq.70) iseqdebug=1
+c              if (ix.eq.70) i_debug=1
 
               ifail=0
               if (itry.eq.0) ifail=-1
@@ -1116,7 +900,16 @@ c              write(lun6,*)"field:",ix,iy,iz
                 irecover=irecover+1
               endif
 
-              if (kinside.gt.0) then
+              if (kinside.gt.nmagtot_t) then
+                write(lun6,*)"*** Error in undumag_end: kInside .gt. nMagTot_t ***"
+                write(lun6,*)"kInside, nMagTot:t",kinside,nmagtot_t
+                write(lun6,*)"x:y:z",xx,yy,zz
+                print*,itry,ix,iy,iz
+                write(lun6,*)"*** Probably colliding magnets ***"
+                stop
+              endif
+
+              if (kinside.gt.0.and.kinside.le.nmagtot_t) then
                 kmag=kinside
                 mat=nint(bpebc(9,kmag))
                 imoth=nint(bpebc(15,kmag))
@@ -1495,6 +1288,11 @@ c              write(lun6,*)"field:",ix,iy,iz
 
 c Calculate field map}
 
+      if (idebug.eq.1) then
+        i_debug=5
+        !all util_break
+      endif
+
       call util_zeit_kommentar(lun6,"Writing undumag_mh_rec.eps")
       call mshplt_init(20,15.,15.,25,25,600,600,
      &  'undumag_mh_rec.eps','','',0.)
@@ -1754,7 +1552,7 @@ c      write(lun6,*)"matrix:",matrix
       kinside=0
       write(lun6,*)
       write(lun6,*)"Conv. points and field H[T] there:"
-c      iseqdebug=1
+c      i_debug=1
       do i=1,nxconv
         call undumag_field(xconv(i),yconv,zconv,hx,hy,hz,ifail)
         if (ifail.gt.0) then
@@ -1812,7 +1610,7 @@ c      iseqdebug=1
 
       if (maxiter.gt.0.and.nxmap.gt.0) then
 
-        !call util_break
+        !all util_break
         call util_zeit_kommentar(lun6,"Writing undumag_integrals_inf.map")
 
         open(newunit=luninf,file="undumag_integrals_inf.map")
@@ -1872,6 +1670,11 @@ c      iseqdebug=1
 
         flush(luninf)
         close(luninf)
+
+        if (idebug.eq.1) then
+          i_debug=6
+          !all util_break
+        endif
 
         bxint1inf=0.0d0
         byint1inf=0.0d0
@@ -2593,6 +2396,11 @@ c Correct for endpole effects
 
         endif
 
+        if (idebug.eq.1) then
+          i_debug=7
+          !all util_break
+        endif
+
         call util_zeit_kommentar(lun6,"Writing undumag_byeff_dipoles.dat")
         open(newunit=lun,file="undumag_byeff_dipoles.dat")
 
@@ -2745,6 +2553,11 @@ c Correct for endpole effects
           write(lun6,*)
 
         endif !ixbeff
+
+        if (idebug.eq.1) then
+          i_debug=8
+          !all util_break
+        endif
 
         write(lun6,*)"XminBeff, XmaxBeff (dipole approx.):",
      &    sngl(xminbeff),sngl(xmaxbeff)

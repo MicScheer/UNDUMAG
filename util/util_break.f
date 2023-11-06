@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 02/11/2023  10.56.40  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  09.16.02  by  Michael Scheer
 *CMZ :  2.04/03 01/03/2023  12.23.09  by  Michael Scheer
 *CMZ :  2.04/00 04/10/2022  08.13.33  by  Michael Scheer
@@ -6,11 +7,9 @@
 *-- Author :    Michael Scheer   03/12/2014
       subroutine util_break
 *KEEP,debugutil,T=F77.
-      double precision x_debug,y_debug,z_debug,a_debug(100)
-      integer i_debug,k_debug
-
-      common/c_debug/x_debug,y_debug,z_debug,a_debug,i_debug,k_debug
+      include 'debugutil.cmn'
 *KEND.
       print*,"i_debug:",i_debug
+      print*,trim(c64_debug)
       return
       end

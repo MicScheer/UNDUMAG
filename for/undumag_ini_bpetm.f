@@ -15,13 +15,8 @@
 
 c+seq,debugutil.
 
-*KEEP,RANDOM.
-      integer*8 irancalls
-      integer, parameter :: irnsize=64
-      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
-      common /randomc/ irancalls,irnseed,irnmode,irnseedi
-
-      namelist /randomn/ irnmode,irnseed
+*KEEP,random.
+      include 'random.cmn'
 *KEND.
 
       double precision rmag(3),vnormlab(3),r1(3),r1lab(3),vmaglab(3),

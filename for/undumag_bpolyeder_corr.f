@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 02/11/2023  14.14.41  by  Michael Scheer
 *CMZ :  2.02/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.01/03 15/07/2019  11.55.46  by  Michael Scheer
 *CMZ :  2.01/02 27/04/2018  13.35.13  by  Michael Scheer
@@ -44,9 +45,11 @@ c                          determinant is -1, which yields to errors??.
       use commandlinef90m
 
       implicit none
+
 *KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+      include 'seqdebug.cmn'
+*KEEP,debugutil,T=F77.
+      include 'debugutil.cmn'
 *KEND.
 
       double precision xin,yin,zin,bxout,byout,bzout
@@ -64,12 +67,13 @@ c                          determinant is -1, which yields to errors??.
       parameter (pi4inv=0.0795774715459477d0)
 
       integer ical,kc
-      integer itiny,iwtiny,jtiny
+      integer itiny,iwtiny,jtiny,ifound
       integer imag,iplan,icorn,i,j,k,ip2,kwarn,ic
       integer nx,ny,nz,ifail,ishim,ishima,iimag,nmag1,nmag2,iout,
      &  kfail(nthreadp),kinsidelocal(nthreadp)
 
       integer nmaxth,ith
+      integer :: idebug=0
 
       save bo,nmaxth,ith,ical,kinsidelocal
 
@@ -120,12 +124,19 @@ c      write(lun6,*)"eder",ical,nmaxth
       kinsidelocal=kinside
       kfail=0
 
+      iseqdebug=0
+
 !$OMP PARALLEL NUM_THREADS(nmaxth) DEFAULT(PRIVATE) SHARED(kfail,iseqdebug,kinsidelocal,ical,bpetm,window,bpebc,bpemag,ibpeplan,ibpecorn,bperot,bo,iwarnbound,nwarnbound) FIRSTPRIVATE(nmag,itiny,jtiny,iwtiny,tiny,xx,yy,zz)
 c      if (ical.eq.4) stop
       ith=OMP_GET_THREAD_NUM()+1
       bo(1:3,ith)=0.0d0
 !$OMP DO
       do imag=1,nmag
+
+        if (iseqdebug.eq.-9.and.imag.eq.3) then
+c          c64_debug='in corrp'
+          call util_break
+        endif
 
         if (bpebc(17,imag).lt.0.0d0) then
           cycle
@@ -465,16 +476,25 @@ c        write(lun6,'(3g15.5)'),xin,imag,imag,bo(2,ith)
 
       if (kinside.ne.-1) then
         kinside=0
+        ifound=0
         do ic=1,nmaxth
           kinside=kinside+kinsidelocal(ic)
-          if (kinsidelocal(ic).ne.0) then
-            do kc=1,nmaxth
-              if (kc.eq.ic) cycle
-              if (kinsidelocal(kc).ne.0) then
-                write(lun6,*)kinsidelocal
-              endif
-            enddo
+          if(kinsidelocal(ic).gt.0) ifound=ifound+1
+          if (ifound.gt.1) then
+            write(lun6,*)"*** Error in undumag_bpolyeder_corr: Colliding Magnet: ",kinsidelocal(ic)
+            stop
           endif
+          if (idebug.ne.0) then
+            if (kinsidelocal(ic).ne.0) then
+              do kc=1,nmaxth
+                if (kc.eq.ic) cycle
+                if (kinsidelocal(kc).ne.0) then
+                  write(lun6,*)"nThread, kinsidelocal(nThread)",
+     &              kc,kinsidelocal(kc)
+                endif
+              enddo
+            endif
+          endif !idebug
         enddo
       endif
 

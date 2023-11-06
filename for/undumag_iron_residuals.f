@@ -14,8 +14,7 @@
       implicit none
 
 *KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+      include 'seqdebug.cmn'
 *KEND.
 
       double precision bn,h3(3),h3n,femag

@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 04/11/2023  11.41.40  by  Michael Scheer
 *CMZ :  2.05/01 03/10/2023  16.58.27  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.44.14  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  21.29.40  by  Michael Scheer
@@ -62,9 +63,8 @@
 
       implicit none
 
-*KEEP,HULLDIM.
-      integer lenhull,lenedge,lenface,nverhullmax
-      common/uhullc/lenhull,lenedge,lenface,nverhullmax
+*KEEP,hulldim.
+      include 'hulldim.cmn'
 *KEND.
 
       double precision xin(*),yin(*),zin(*),
@@ -73,7 +73,7 @@
      &  p1(3),p2(3),p3(3),pt1(3),pt2(3),pt3(3),
      &  p21(3),vnor(3),dist,pt1r(3),pn,
      &  gcen(3),gceno(3),tinyin,tiny,tiny2,rotmat(3,3),rotg(3,3),rotm(3,3),
-     &  rotws(3,3),gcenin(3),pcen(3)
+     &  rotws(3,3),gcenin(3)
 
       double precision, dimension (:), allocatable ::  x2,y2,z2,x,y,z
 
@@ -110,7 +110,7 @@
 c+self,if=debug3d.
 c      print*,"hull_3d, ical:",ical
 c      if (ical.eq.195) then
-c        !call util_break
+c        !all util_break
 c      endif
 c+self.
       idimfail=0
@@ -659,7 +659,7 @@ c15Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
         if (mface.le.0.or.kedge(4,medge).ne.0) then
           cerror="*** Bad pointer of face or bad edge in util_convex_hull_3d ***"
           kfail=20
-          !!call util_break
+          !all util_break
           goto 9999
         endif
 
@@ -938,7 +938,7 @@ c        print*,q
               ifound=1
               if (kedge(3,ledge).eq.0) then
                 cerror="*** Error in util_convex_hull_3d: Bad edge ***"
-                !!call util_break
+                !all util_break
                 kfail=kfail+1
               endif
               if (kedge(4,ledge).eq.0) then
@@ -975,8 +975,6 @@ c        print*,q
 
       enddo !while (nedgeheap.gt.0)
 
-89    continue
-
       nhull=0
 
       do iedge=1,nedge
@@ -985,7 +983,7 @@ c        print*,q
           write(6,*)
           write(6,*)"*** Error in util_convex_hull_3d: Bad edges ***"
           write(6,*)
-          !!call util_break
+          !all util_break
           kfail=86
         endif
         ifound=0
@@ -1078,14 +1076,14 @@ c        print*,q
 9999  continue
 
 c      if (ical.eq.195) then
-c        !call util_break
+c        !all util_break
 c      endif
 
       deallocate(kfaceheap,kedgeheap,ibuff,ibuffp,ibuffm,kbuff,iplans,istore,
      &  iveto,kveto,x,y,z,x2,y2,z2)
 
 c      if (ical.eq.195) then
-c        !call util_break
+c        !all util_break
 c      endif
 
       if (idimfail.ne.0) then

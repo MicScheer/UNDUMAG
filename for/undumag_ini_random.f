@@ -9,12 +9,7 @@
       implicit none
 
 *KEEP,random.
-      integer*8 irancalls
-      integer, parameter :: irnsize=64
-      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
-      common /randomc/ irancalls,irnseed,irnmode,irnseedi
-
-      namelist /randomn/ irnmode,irnseed
+      include 'random.cmn'
 *KEND.
 
       integer lunio,i,k

@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 29/10/2023  11.14.03  by  Michael Scheer
 *CMZ :  2.05/01 11/10/2023  17.22.07  by  Michael Scheer
 *-- Author :    Michael Scheer   02/10/2023
       subroutine clc_cut_concave(tc1,tc2,kcut)
@@ -28,13 +29,12 @@ c      double precision u33(3,3),w33(3,3)
      &  ntri,itri,idebug=0,iscutplan
 
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface,nverhullmax
-      common/uhullc/lenhull,lenedge,lenface,nverhullmax
+      include 'hulldim.cmn'
 *KEND.
 
       Type(T_Concave) tc1,tc2
 
-      save nallo
+      save
 
       if (nallo.lt.0) then
         nallo=-nallo
@@ -47,7 +47,7 @@ c      double precision u33(3,3),w33(3,3)
 
       if (nallo.lt.max(npoimax,nface)**2) then
         deallocate(xb,yb,zb,verts,ifaces1,ifaces2,npois1,npois2,khull,
-     &    verts2d,ivera2d)
+     &    verts2d,ivera2d,vwork,ifaces,lifaces,lifaces1,lifaces2,npois)
         nallo=2*max(npoimax,nface)**2
         allocate(xb(nallo),yb(nallo),zb(nallo),verts2d(2,nallo),
      &    vwork(3,nallo),verts(3,nallo),
@@ -57,7 +57,7 @@ c      double precision u33(3,3),w33(3,3)
       endif
 
       npoimax=tc1%npoimax
-      nface=tc1%nface
+      nface=tc1%tmag%nface
       ifaces(1:npoimax,1:nface)=tc1%ifaces(1:npoimax,1:nface)
       npois(1:nface)=tc1%npois(1:nface)
       lifaces(1:nface)=tc1%lifaces(1:nface)
@@ -67,7 +67,7 @@ c      double precision u33(3,3),w33(3,3)
       kcut=0
       if (tc1%isconvex.ne.0.or.tc1%nconcave.eq.0) return
 
-      !call util_break
+      !all util_break
 
       ! Triangulation
 
@@ -164,30 +164,29 @@ c      double precision u33(3,3),w33(3,3)
       call util_rotate_vector_to_y_axis(vnor,rotmat,istatus)
       rotinv=transpose(rotmat)
 
-c      call util_matrix_multiplication(3,3,3,rotmat,rotinv,u33,w33)
-c      do i=1,3
-c        print*,u33(i,1:3)
-c      enddo
-c      stop
       call util_mat_mul_vec_3x3(rotmat,pcen,pcenrot)
       do i=1,nverts
         call util_mat_mul_vec_3x3(rotmat,verts(:,i),vwork(:,i))
-        write(88,*)sngl(verts(:,i)),sngl(vwork(:,i)),i
-        flush(88)
+        if (idebug.ne.0) then
+          write(88,*)sngl(verts(:,i)),sngl(vwork(:,i)),i
+          flush(88)
+        endif
       enddo
       verts=vwork
 
-      write(80,*)nverts
-      do i=1,nverts
-        write(80,*)verts(:,i)
-      enddo
-      write(80,*)nface
-      do iplan=1,nface
-        npoi=npois(iplan)
-        write(80,*)npoi
-        write(80,*)ifaces(1:npoi,iplan)
-      enddo
-      flush(80)
+      if (idebug.ne.0) then
+        write(80,*)nverts
+        do i=1,nverts
+          write(80,*)verts(:,i)
+        enddo
+        write(80,*)nface
+        do iplan=1,nface
+          npoi=npois(iplan)
+          write(80,*)npoi
+          write(80,*)ifaces(1:npoi,iplan)
+        enddo
+        flush(80)
+      endif
 
       cut=pcenrot(2)
 
@@ -201,7 +200,7 @@ c      stop
       verts1=verts
       verts2=verts
 
-      if (idebug.ne.0) call util_break
+      !if (idebug.ne.0) !all util_break
       !print*,cut
       do iplan=1,nface
 
@@ -272,7 +271,7 @@ c              print*,xc(ic),zc(ic)
 
         if (ic.ne.0) then
 
-c          call util_break
+c          !all util_break
 
           do i=1,ic
             ifound=0
@@ -380,13 +379,15 @@ c              endif
         tc1%verts(:,ipoi)=[xb(ipoi),yb(ipoi),zb(ipoi)]
       enddo
 
-      if (nface1.gt.tc1%nface.or.npoimax.gt.tc1%npoimax) then
-        deallocate(tc1%ifaces)
+      if (nface1.gt.tc1%tmag%nface.or.npoimax.gt.tc1%npoimax) then
+        if(tc1%tmag%nface.gt.0) then
+          deallocate(tc1%ifaces)
+          deallocate(tc1%lifaces,tc1%npois)
+        endif
         allocate(tc1%ifaces(npoimax,nface1))
-        deallocate(tc1%lifaces,tc1%npois)
         allocate(tc1%lifaces(nface1),tc1%npois(nface1))
       endif
-      tc1%nface=nface1
+      tc1%tmag%nface=nface1
       tc1%npoimax=npoimax
 
       n1=1
@@ -415,10 +416,13 @@ c              endif
       call util_weed_points(n2,xb,yb,zb,hulltiny**2)
 
       if (n2.gt.tc2%nverts) then
+        if (tc2%nverts.gt.0) deallocate(tc2%verts)
         allocate(tc2%verts(3,n2))
-        deallocate(tc2%verts)
       endif
+
       tc2%nverts=n2
+
+      !all util_break
 
       do ipoi=1,n2
         if (idebug.ne.0) then
@@ -428,13 +432,15 @@ c              endif
         tc2%verts(:,ipoi)=[xb(ipoi),yb(ipoi),zb(ipoi)]
       enddo
 
-      if (nface2.gt.tc2%nface.or.npoimax.gt.tc2%npoimax) then
-        deallocate(tc2%ifaces)
+      if (nface2.gt.tc2%tmag%nface.or.npoimax.gt.tc2%npoimax) then
+        if (tc2%tmag%nface.gt.0) then
+          deallocate(tc2%ifaces)
+          deallocate(tc2%lifaces,tc2%npois)
+        endif
         allocate(tc2%ifaces(npoimax,nface2))
-        deallocate(tc2%lifaces,tc2%npois)
         allocate(tc2%lifaces(nface2),tc2%npois(nface2))
       endif
-      tc2%nface=nface2
+      tc2%tmag%nface=nface2
       tc2%npoimax=npoimax
 
       n2=1

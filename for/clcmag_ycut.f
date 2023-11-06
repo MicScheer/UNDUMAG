@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.32.07  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
@@ -37,8 +38,7 @@
       integer, dimension (:,:), allocatable :: kedge
       integer, dimension (:), allocatable :: khull,kface
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface
-      common/uhullc/lenhull,lenedge,lenface
+      include 'hulldim.cmn'
 *KEND.
       character(128) ctype
 
@@ -457,7 +457,7 @@ c              stop
       endif
 
 
-      !call util_break
+      !all util_break
 
       yvolmag=0.0d0
       do ix=1,nxdiv

@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.03/00 13/07/2022  14.49.18  by  Michael Scheer
 *CMZ :  2.02/01 20/01/2022  09.10.26  by  Michael Scheer
@@ -58,7 +59,7 @@
           do k=1,nvar_t
             print*,nclcvar,k,par(k),trim(cpar(k))
           enddo
-          !call util_break
+          !all util_break
         endif
       enddo
 

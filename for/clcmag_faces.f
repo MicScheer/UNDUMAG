@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 31/10/2023  13.43.09  by  Michael Scheer
 *CMZ :  2.04/17 12/09/2023  14.03.08  by  Michael Scheer
 *CMZ :  2.04/13 03/09/2023  11.20.18  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
@@ -29,14 +30,8 @@
 
         ctype=t_magnets(imag)%ctype
         if (ctype.eq.'Cylinder') cycle
-
         nf=t_magnets(imag)%nface
-        allocate(
-     &    t_magnets(imag)%fcen(3,nf),
-     &    t_magnets(imag)%fnorm(3,nf),
-     &    t_magnets(imag)%lface(nf)
-     &    )
-
+        allocate(t_magnets(imag)%fcen(3,nf),t_magnets(imag)%fnorm(3,nf))
         k=0
         do iface=1,nf
           k=k+1

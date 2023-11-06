@@ -1,4 +1,5 @@
-*CMZ :          11/09/2023  14.37.58  by  Michael Scheer
+*CMZ :  2.05/02 30/10/2023  09.34.16  by  Michael Scheer
+*CMZ :  2.04/17 11/09/2023  14.37.58  by  Michael Scheer
 *CMZ :  2.04/16 10/09/2023  19.49.45  by  Michael Scheer
 *CMZ :  2.02/02 05/07/2022  11.16.26  by  Michael Scheer
 *CMZ :  2.02/01 03/11/2021  13.16.39  by  Michael Scheer
@@ -41,14 +42,10 @@
           p2=[xin(i2),yin(i2),zin(i2)]
           do i3=1,nin
             if (i3.eq.i1.or.i3.eq.i2) cycle
-c            if (i1.eq.29.and.i2.eq.37.and.i3.eq.41) call util_break
             p3=[xin(i3),yin(i3),zin(i3)]
             cen=(p1+p2+p3)/3.0d0
             p21=p2-p1
             p32=p3-p2
-c            vnor(1)=p21(2)*p32(3)-p21(3)*p32(2)
-c            vnor(2)=p21(3)*p32(1)-p21(1)*p32(3)
-c            vnor(3)=p21(1)*p32(2)-p21(2)*p32(1)
             dist=0.0d0
             ipos=0
             ineg=0

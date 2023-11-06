@@ -89,13 +89,13 @@ if nargs > 1:
 
 if nargs > 2: Idebug = int(args[2])
 
-global Undu_tree,Scomp_bounds,Scomp_omp,Scomp,Texe,Tlib,Scomp_nowarn
+global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Scomp_nowarn
 
 ff = 'x86_64-w64-mingw32-gfortran-win32'
 Scomp = ff + " -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
 Scomp_nowarn = ff + " -w -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_bounds = ff + " -std=legacy -c -O2 -cpp -fcheck=bounds -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_omp = ff + " -std=legacy -c -O2 -cpp -finit-local-zero -fcheck=bounds -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
+Scomp_all = ff + " -std=legacy -c -O2 -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_omp = ff + " -std=legacy -c -O2 -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
 
 def get_undu_tree():
 
@@ -163,7 +163,7 @@ def get_undu_tree():
 
 def undu_update():
 
-  global UI,Undu_tree,Texe,Scomp_bounds,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
+  global UI,Undu_tree,Texe,Scomp_all,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
 
   kmain = 0
 
@@ -210,11 +210,11 @@ def undu_update():
     elif ddd == 'urad':
       lib = UI + 'lib/liburad.a'
       libm = UI + 'lib/liburad_module.a'
-      scomp = Scomp_bounds  # uradcfft does boundary tricks
+      scomp = Scomp_all  # uradcfft does boundary tricks
     elif ddd == 'util':
       lib = UI + 'lib/libutil.a'
       libm = UI + 'lib/libutil_module.a'
-      scomp = Scomp_bounds
+      scomp = Scomp_all
     #endif
 
     try:

@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 31/10/2023  13.40.07  by  Michael Scheer
 *CMZ :  2.04/25 28/09/2023  08.00.38  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.03.22  by  Michael Scheer
 *CMZ :  2.04/20 20/09/2023  10.48.38  by  Michael Scheer
@@ -25,20 +26,15 @@
 
       implicit none
 
-*KEEP,grarad,T=F77.
-c-----------------------------------------------------------------------
-c     grarad.cmn
-c-----------------------------------------------------------------------
-      double precision, parameter ::
-     &  PI1=3.141592653589793D0,
-     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
-     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
+*KEEP,grarad.
+      include 'grarad.cmn'
 *KEND.
 
       character(2048) cline,cbuff(5),cfile,cline1
       character(128) cword,ckey
 
       double precision, dimension (:), allocatable :: xp,yp,zp,xpc,ypc,zpc
+      double precision, dimension (:,:), allocatable :: brnmatc
 
       double precision undumag_variable_getval,size(3),dphi
 
@@ -52,8 +48,7 @@ c-----------------------------------------------------------------------
      &  nxdiv,nydiv,nzdiv,nhull,nface,nedge,kfacelast,kblockch
 
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface,nverhullmax
-      common/uhullc/lenhull,lenedge,lenface,nverhullmax
+      include 'hulldim.cmn'
 *KEND.
 
       integer ipos(2,1000),jpos(2,1000),nwords,istat,ibrn,ifound
@@ -63,18 +58,51 @@ c-----------------------------------------------------------------------
 
       !xhull,yhull,zhull are absolute at the end of this routine
 
-      !call util_break
-      nmag=nmag_t+nspecmag_t+nclccop_t
+      !all util_break
+      nmag=nmag_t+nspecmag_t+nclccop_t+nconcave_t
+      nallotmag_t=nmag
 
       allocate(t_magnets(nmag),t_magnets_copy(nmag))
-      allocate(brnmat(2,nmag_t+nspecmag_t))
-
-      nbrnmat=0
 
       nmag=0
       niron=0
+      nspecmag=0
+
+      if (ncornmax*nplanmax.gt.nvertmax) nvertmax=ncornmax*nplanmax
+
       ncornmax=nvertmax
       nplanmax=2*nvertmax
+
+      do m=1,nconcave_t
+        nmag=nmag+1
+        nmag_t=nmag_t+1
+        t_magnets(m)=t_concaves(m)%tmag
+        t_magnets(m)%kmag=nmag
+        if(t_magnets(m)%IsPole.ne.0) niron=niron+1
+        if(t_magnets(m)%IsSpecial.ne.0) then
+          nspecmag=nspecmag+1
+          nspecmag_t=nspecmag_t+1
+        endif
+        nxdiv=t_magnets(nmag)%nxdiv
+        nydiv=t_magnets(nmag)%nydiv
+        nzdiv=t_magnets(nmag)%nzdiv
+        allocate(t_magnets(nmag)%kvoxels(nxdiv,nydiv,nzdiv))
+        t_magnets(nmag)%kvoxels=0
+        allocate(t_magnets(nmag)%t_xyzcuts(nxdiv,nydiv,nzdiv))
+        allocate(t_magnets(nmag)%t_xycuts(nxdiv,nydiv))
+        allocate(t_magnets(nmag)%t_xcuts(nxdiv))
+      enddo
+
+      if(nbrnmat.eq.0) then
+        allocate(brnmat(2,nmag_t+nspecmag_t))
+      else
+        allocate(brnmatc(2,nbrnmat))
+        brnmatc(:,1:nbrnmat)=brnmat(:,1:nbrnmat)
+        deallocate(brnmat)
+        allocate(brnmat(2,nbrnmat+nmag_t+nspecmag_t))
+        brnmat(:,1:nbrnmat)=brnmatc(:,1:nbrnmat)
+        deallocate(brnmatc)
+      endif
 
       lenface=ncornmax*nplanmax+nplanmax
       lenhull=lenface
@@ -724,6 +752,7 @@ c-----------------------------------------------------------------------
         allocate(t_magnets(nmag)%khull(npoi))
         allocate(t_magnets(nmag)%kface(kfacelast))
         allocate(t_magnets(nmag)%kedge(4,nedge))
+        allocate(t_magnets(nmag)%lface(nface))
 
         t_magnets(nmag)%nhull=npoi
         t_magnets(nmag)%khull(1:npoi)=khull(1:npoi)
@@ -763,6 +792,8 @@ c-----------------------------------------------------------------------
         t_magnets(nmag)%kfacelast=kfacelast
         t_magnets(nmag)%kface(1:kfacelast)=kface(1:kfacelast)
 
+        call util_klface(kface,kfacelast,nface,t_magnets(nmag)%lface)
+
         nplanmax=max(nplanmax,nface)
 
         nxdiv=t_magnets(nmag)%nxdiv
@@ -783,8 +814,7 @@ c-----------------------------------------------------------------------
 
       deallocate(xp,yp,zp,xpc,ypc,zpc,kface,kedge,khull)
 
-      !call util_break
-
+      !all util_break
 
       nmag_t=0
       nspecmag_t=0
