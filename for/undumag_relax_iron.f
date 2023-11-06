@@ -69,14 +69,7 @@
       double precision vnor,vx,vy,vz
 
 *KEEP,bcbuff.
-      integer nbcbuffp
-      parameter (nbcbuffp=3)
-
-      double precision
-     &  hbuff(nbcbuffp),bcbuff(nbcbuffp),bcbuffspl(nbcbuffp),hhbuff(nbcbuffp),
-     &  bcbuffmin,bcbuffmax,dbcbuff
-
-c      common/bcbuffc/hbuff,bcbuff,bcbuffspl,bcbuffmin,bcbuffmax,dbcbuff
+      include 'bcbuff.cmn'
 *KEND.
 
       integer kfail,ifail,imoth,lmag,kmag,imag,iter,k,i,iron1,iron2,

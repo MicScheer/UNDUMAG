@@ -28,8 +28,7 @@ c +DECK,util_shrink_xyz.
      &  kplan(3),ifound,npoi,k,kpoi,l
 
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface
-      common/uhullc/lenhull,lenedge,lenface
+      include 'hulldim.cmn'
 *KEND.
 
 

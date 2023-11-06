@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 30/10/2023  09.30.19  by  Michael Scheer
 *CMZ :  2.04/23 27/09/2023  09.36.23  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  16.33.57  by  Michael Scheer
 *CMZ :  2.04/17 11/09/2023  20.47.28  by  Michael Scheer
@@ -19,19 +20,18 @@
 
       integer khull(*),kedge(4,*),kface(*)
       integer :: i,nin,iface,ipoi,nhull,nedge,nface,kfacelast,npoi,kfail,k,kpoi,
-     &  ical=0,idebug=0
+     &  ical=0
+      integer :: idebug=0
 
 c+seq,debugutil.
-      save ical
+      save ical,idebug
 
       ical=ical+1
-c      if (ical.eq.10) idebug=1
 
       if (idebug.ne.0) then
         print*
         print*,"Check:",ical
         print*
-c      return
       endif
 
       kfail=0
@@ -100,6 +100,8 @@ c      return
       enddo
 
       if (idebug.ne.0) flush(77)
-
+c      stop
+c+self,if=p.
+c+self.
       return
       end

@@ -89,12 +89,12 @@ if nargs > 1:
 
 if nargs > 2: Idebug = int(args[2])
 
-global Undu_tree,Scomp_bounds,Scomp_omp,Scomp,Texe,Tlib,Scomp_nowarn
+global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Scomp_nowarn
 
 Scomp = "gfortran -std=legacy -c -g -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
 Scomp_nowarn = "gfortran -w -std=legacy -c -g -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_bounds = "gfortran -std=legacy -c -g -cpp -fcheck=bounds -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_omp = "gfortran -std=legacy -c -g -cpp -finit-local-zero -fcheck=bounds -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
+Scomp_all = "gfortran -std=legacy -c -g -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_omp = "gfortran -std=legacy -c -g -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
 
 def get_undu_tree():
 
@@ -162,7 +162,7 @@ def get_undu_tree():
 
 def undu_update():
 
-  global UI,Undu_tree,Texe,Scomp_bounds,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
+  global UI,Undu_tree,Texe,Scomp_all,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
 
   kmain = 0
 
@@ -209,24 +209,24 @@ def undu_update():
     elif ddd == 'urad':
       lib = UI + 'lib/liburad_debug.a'
       libm = UI + 'lib/liburad_module_debug.a'
-      scomp = Scomp_bounds  # uradcfft does boundary tricks
+      scomp = Scomp_all  # uradcfft does boundary tricks
     elif ddd == 'util':
       lib = UI + 'lib/libutil_debug.a'
       libm = UI + 'lib/libutil_module_debug.a'
-      scomp = Scomp_bounds
+      scomp = Scomp_all
     #endif
 
     try:
       Tlib = os.stat(lib).st_mtime_ns
       if Tlib > Texe: kmain = 1
     except:
-      pass
+      kmain = 1
     #endtry
     try:
       Tlib = os.stat(libm).st_mtime_ns
       if Tlib > Texe: kmain = 1
     except:
-      pass
+      kmain = 1
     #endtry
 
     scompmod = "cd " + dd + "/mod && " + scomp

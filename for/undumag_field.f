@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 02/11/2023  11.04.17  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/01 12/04/2021  14.05.35  by  Michael Scheer
 *CMZ :  2.02/00 21/01/2021  13.24.48  by  Michael Scheer
@@ -29,9 +30,8 @@
 
       implicit none
 
-*KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+*KEEP,debugutil,T=F77.
+      include 'debugutil.cmn'
 *KEND.
 
       double precision x,y,z,hx,hy,hz,bxout,byout,bzout,xcut,bx,by,bz
@@ -64,13 +64,19 @@ c      kinside=0 ! use as flag, see undmag_end
 
       linside=kinside
 
+c      if (i_debug.le.-7) then
+c        call util_break
+c      endif
+
       if (nmag.ne.0) then
 
 
         !x1y1z1
         kfail=ifailin
         call undumag_bpolyeder(x,y,z,bxout,byout,bzout,kfail)
+
         if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+
         if (kinside.gt.0) then
           linside=kinside
           kinside=0

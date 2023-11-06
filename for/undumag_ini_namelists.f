@@ -15,15 +15,9 @@
       implicit none
 
 *KEEP,random.
-      integer*8 irancalls
-      integer, parameter :: irnsize=64
-      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
-      common /randomc/ irancalls,irnseed,irnmode,irnseedi
-
-      namelist /randomn/ irnmode,irnseed
+      include 'random.cmn'
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface,nverhullmax
-      common/uhullc/lenhull,lenedge,lenface,nverhullmax
+      include 'hulldim.cmn'
 *KEND.
 
       integer lunnam,istat

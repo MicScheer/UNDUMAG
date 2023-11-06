@@ -1,0 +1,48 @@
+$PerLen = 100.
+
+& User_Comment
+Concave
+
+& Special_Magnet
+File umag uMag 2           !key, name, mother, color
+-50.0 0.0 0.0                  !position
+1. 0. 1. 0. 1       !length bc and components of mag. vector, material index
+1 1 1 1. 1. !segmentation
+tetra.dat
+
+& Copy
+umag cop1 Cop1 !comment
+
+& Translate
+umag
+-20. -10. 0.
+
+& Special_Concave_Magnet
+STL_Ascii umagC uMagC 3           !key, name, mother, color
+0.0 20.0 -30.0                  !position
+1. 0. 1. 0. 1       !length bc and components of mag. vector, material index
+1 1 1 1. 1. !segmentation
+cube.stl 1
+
+& Copy
+umagC cop1C Cop1C !comment
+
+& Translate
+umagC
+50. 10. 0.
+
+************
+& Module
+ 0. 0. 0. 1 1 !offset of module, number and number of associated module
+****
+1 !number of arrays within module
+$PerLen 1. 0. 0. 0. !spacing and direction of arrangement, rotation angle
+1. 1. 1. !scaling and symmetry of magnetization vector
+************
+
+& Materials
+2 ! number of materials
+1 1 1 undumag_mu_77K.dat
+2 2 3 Vanadium_Permendur_Radia.dat
+2 2 0 iron_muinf_sat-2.34.dat
+1 1 1 undumag_mu_unity.dat

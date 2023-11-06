@@ -26,8 +26,7 @@ c force box
       implicit none
 
 *KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+      include 'seqdebug.cmn'
 *KEND.
 
       double precision x,y,z,bxout,byout,bzout,bc(3)

@@ -33,8 +33,7 @@
      &  idebug=0
 
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface,nverhullmax
-      common/uhullc/lenhull,lenedge,lenface,nverhullmax
+      include 'hulldim.cmn'
 *KEND.
 c+seq,debugutil.
       save ical

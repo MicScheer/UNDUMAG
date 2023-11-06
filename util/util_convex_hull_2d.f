@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 30/10/2023  09.33.51  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  09.44.39  by  Michael Scheer
 *CMZ :  2.03/00 26/08/2022  13.47.55  by  Michael Scheer
 *CMZ :  2.02/02 05/07/2022  10.41.27  by  Michael Scheer
@@ -60,19 +61,6 @@ c+self.
       xmin=1.0d30
       xmax=-1.0d30
 
-c+self,if=debug2d.
-      if (ifailin.lt.0) then
-        call util_break
-        Print*,"=========================================="
-        Print*,ical
-        Print*,"------------------------"
-
-        do i=1,n
-          print*,ical," 1 ",i,x(i),y(i)
-          write(772,*)ical," 1 ",i,x(i),y(i)," 0 "
-        enddo
-       endif
-c+self.,if=debug2d.
 
       do i=1,n
         if (x(i).lt.xmin) then

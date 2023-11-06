@@ -21667,7 +21667,7 @@ def nplbxy(nt='?',varlis='x:y:bx:by',select='',scale=-9999.0,plopt='',
             tit='',xtit='',ytit='',label='',color='default'):
   x,y,bx,by = ncopv(nt,varlis,select)
   vplbxy(x,y,bx,by,scale,plopt,tit,xtit,ytit,label,color)
-#enddef nplbxyz
+#enddef nplbxy
 
 def nplbxyz(nt='?',varlis='x:y:z:bx:by:bz',select='',scale=1.,plopt='',
             tit='',xtit='',ytit='',ztit='',label='',color='default'):

@@ -25,8 +25,7 @@
      &  kfacelast,i,l,nhmag,kmag
 
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface
-      common/uhullc/lenhull,lenedge,lenface
+      include 'hulldim.cmn'
 *KEND.
 
       character(32) cnam,cmoth

@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/01 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/00 14/01/2023  14.39.42  by  Michael Scheer
 *CMZ :  2.03/00 31/07/2022  18.33.07  by  Michael Scheer
@@ -48,7 +49,7 @@
         enddo
       enddo !nmag_t
 
-      !call util_break
+      !all util_break
       allocate(maginhom_t(nmaginhom_t))
       nmaginhom_t=0
 

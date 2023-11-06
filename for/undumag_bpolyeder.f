@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 02/11/2023  14.14.41  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/00 26/10/2020  14.56.48  by  Michael Scheer
 *CMZ :  2.01/08 13/08/2020  12.32.35  by  Michael Scheer
@@ -59,33 +60,33 @@ c oder Reduce olegqz.red, qxqyqz.red, rec_int.red etc.
       use commandlinef90m
 
       implicit none
+*KEEP,debugutil,T=F77.
+      include 'debugutil.cmn'
 *KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+      include 'seqdebug.cmn'
 *KEND.
 
       double precision xin,yin,zin,bxout,byout,bzout
       double precision r1(3),r2(3),dlab(3),blab(3)
       double precision ts(3,3),tsinv(3,3),bplan(3),bcvn,vnormlab(3)
-      double precision xx,yy,zz,xxrot,yyrot,zzrot,xx00,xxsh
-      double precision a,b,z,qx,qy,qz,qxp,qyp,qzp,qxm,qym,qzm,
+      double precision xx,yy,zz,xxrot,yyrot,zzrot
+      double precision a,b,z,qx,qy,qz,
      &  pi4inv,reverse,tiny2,
-     &  bxm,bym,bzm,bxp,byp,bzp,rr0,rrm
+     &  bxm,bym,bzm,bxp,byp,bzp
       double precision q(3,3),vmagrot(3),vmaglab(3),h(3),
      &  xr(2),yr(2),zr(2),dum,dume,bo(3,nthreadp)
 
-      double precision xmin,xmax,ymin,ymax,zmin,zmax,bx,by,bz
+c      double precision xmin,xmax,ymin,ymax,zmin,zmax,bx,by,bz
 
       parameter (pi4inv=0.0795774715459477d0)
 
-      integer ical
+      integer ical,ifound
       integer itiny,iwtiny,jtiny
       integer imag,iplan,ncorn,icorn,i,j,k,ip2,kwarn,kwarni,ic
-      integer nx,ny,nz,ifailin,ifail,ifailm,ifailp,ishim,ishima,iimag,
-     &  nmag1,nmag2,iout,linside,
+      integer ifailin,ifail,ifailm,ifailp,iout,linside,
      &  kfail(nthreadp),kinsidelocal(nthreadp)
 
-      integer nmaxth,ith,istat
+      integer nmaxth,ith
 
       save bo,nmaxth,ith,ical,kinsidelocal
 
@@ -141,6 +142,8 @@ c        write(lun6,*)"Number of CPU cores used:",nmaxth
       kwarn=0
       kfail=0
 
+      iseqdebug=0
+
 !$OMP PARALLEL NUM_THREADS(nmaxth) DEFAULT(PRIVATE)
 !$OMP& SHARED(kfail,iseqdebug,kinsidelocal,ical,bpetm,window,bpebc,bpemag,ibpeplan,ibpecorn,bperot,bo,iwarnbound,nwarnbound)
 !$OMP& FIRSTPRIVATE(nmag,itiny,jtiny,iwtiny,tiny,xin,yin,zin,xx,yy,zz,kwarni,kwarn,lun6)
@@ -154,6 +157,7 @@ c        write(lun6,*)"Number of CPU cores used:",nmaxth
         endif
 
         bcvn=0.0d0
+c        if(iseqdebug.eq.-8) print*,"1:",ith,imag,kinsidelocal(ith)
 
         if (abs(xx-bpebc(1,imag)).le.window) then
 
@@ -178,21 +182,12 @@ c check, if we are inside of magnet; we assume convex shape
                   vnormlab(3)=bpetm(3,8,iplan,imag)
 
                   if( dlab(1)*vnormlab(1)+dlab(2)*vnormlab(2)+
-     &                dlab(3)*vnormlab(3).gt.0.d0) then
+     &                dlab(3)*vnormlab(3).gt.0.0d0) then
                     iout=1
                     goto 97
                   endif
 
                 enddo !iplan
-
-c                if (imag.gt.1) then
-c                  write(lun6,*)'*** Eder:',nmaxth,ith,kinsidelocal(1:nmaxth)
-c                  stop
-c                endif
-c                if (iout.eq.-1) then
-c                  write(lun6,*)ith,imag,sngl(xx),sngl(yy),sngl(zz)
-c                  kinsidelocal(ith)=imag
-c                endif !iout
 
 97              continue
               endif !inside?
@@ -223,8 +218,6 @@ c                if (iseqdebug.ne.0) dum=bcvn
                   do icorn=1,ncorn
 
                     ip2=icorn+1
-
-19                  continue
 
                     r1(1)=bperot(1,icorn,iplan,imag)-xxrot
                     r1(2)=bperot(2,icorn,iplan,imag)-yyrot
@@ -267,6 +260,7 @@ c                      if (bcvn.ne.0.0d0) then
      &                    .or.
      &                    (kwarn.ne.0)) then
                         kfail(ith)=imag
+c                        if(iseqdebug.eq.-8) print*,"3:",ith,imag
 c                        goto 799
                       endif !qx,qy,qz, kwarn
 
@@ -299,6 +293,7 @@ c                    write(lun6,*)"blab",blab
 c                    write(lun6,*)"tsinv",tsinv
                     endif
                     kfail(ith)=imag
+c                    if(iseqdebug.eq.-8) print*,"4:",ith,imag
 c                    stop
                   endif
 
@@ -309,6 +304,10 @@ c                    stop
                 endif !ncorn
 
               enddo ! iplan=1,nplan
+
+              if (iout.eq.-1) then
+                kinsidelocal(ith)=imag
+              endif !iout
 
             else !bpebc(8,imag) .eq. 1
 
@@ -485,8 +484,6 @@ c799     continue
 !$OMP END DO
 !$OMP END PARALLEL
 
-9999  continue
-
       do ic=1,nmaxth
         ifail=ifail+kfail(ic)
         bxout=bxout+bo(1,ic)
@@ -496,8 +493,14 @@ c799     continue
 
       if (kinside.ne.-1) then
         kinside=0
+        ifound=0
         do ic=1,nmaxth
           kinside=kinside+kinsidelocal(ic)
+          if (kinsidelocal(ic).gt.0) ifound=ifound+1
+          if (ifound.gt.1) then
+            write(lun6,*)"*** Error in subroutine undumag_bpolyeder: Colliding Magnet: ",kinsidelocal(ic)
+            stop
+          endif
         enddo
       endif
 

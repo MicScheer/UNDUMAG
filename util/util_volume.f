@@ -18,8 +18,7 @@
       integer, dimension(:), allocatable :: kface,khull
 
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface
-      common/uhullc/lenhull,lenedge,lenface
+      include 'hulldim.cmn'
 *KEND.
 
 

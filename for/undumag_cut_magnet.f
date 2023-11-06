@@ -45,9 +45,8 @@
 
       integer :: ical=0
 
-*KEEP,HULLDIM.
-      integer lenhull,lenedge,lenface
-      common/uhullc/lenhull,lenedge,lenface
+*KEEP,hulldim.
+      include 'hulldim.cmn'
 *KEND.
 
       ical=ical+1

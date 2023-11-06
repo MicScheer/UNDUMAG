@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.23.37  by  Michael Scheer
 *CMZ :  2.04/02 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/01 25/01/2023  06.16.23  by  Michael Scheer
@@ -28,7 +29,7 @@
 
       type(T_Voxel) :: tvox
 
-      !call util_break
+      !all util_break
 
       npoi=0
       do iplan=1,nplanmax
@@ -104,6 +105,6 @@
 
       deallocate(xh,yh,zh,xhc,yhc,zhc,kedge,kface)
 
-      !call util_break
+      !all util_break
       return
       end
