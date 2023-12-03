@@ -157,7 +157,7 @@ def set_console_title(console='Python'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -560,7 +560,7 @@ def util_spline_coef(x,y,yp1=9999.,ypn=9999.):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -1187,7 +1187,7 @@ Kplots, Nwins, Zones, Kzone, Nxzone, Nyzone, Zone, Axes, Legend, CanButId, CanBu
 Iplotopt, Ispline, Kecho, Kdump,Kpdf, Ndump,Npdf, Icmap, \
 MarkerSize, MarkerType, MarkerColor, \
 Markersize, Markertype, Markercolor, \
-Fillstyle, FillStyle, WaveFilePrefix, \
+Fillstyle, FillStyle, WaveFilePrefix,WaveDump, \
 Mode3d,Mode3D, Mode2d,Mode2D, \
 Textcolor,Linestyle, Linewidth, Linecolor, Author, \
 Histcolor, Histedgecolor, HistEdgeColor, Histbarwidth, Kdate, Kstat, Kfit, \
@@ -3939,7 +3939,7 @@ def hdump(hist='?',filh='hdump.dat'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4027,7 +4027,7 @@ def hprint(hist='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4104,7 +4104,7 @@ def hfun(hist='?',fun='x', nx=101, xmin=-0.5, xmax=100.5):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4215,7 +4215,7 @@ def h1header_update(hist='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4385,7 +4385,7 @@ def h1reset(h):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4464,7 +4464,7 @@ def hdelete(h='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4549,7 +4549,7 @@ def hmin(h='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4632,7 +4632,7 @@ def hmax(h='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4702,7 +4702,7 @@ def printplopt():
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4777,7 +4777,7 @@ def plotoptions(plopt=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -4972,7 +4972,7 @@ def mhb_mkdir(chdir='!'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5077,7 +5077,7 @@ def mhb_ldir():
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5152,7 +5152,7 @@ def mhb_pwd(isilent=0,iretval=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5222,7 +5222,7 @@ def mhb_cd(cdir='!'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5341,7 +5341,7 @@ def zoom(xmin,xmax,ymin=-1.2345e30,ymax=1.2345e30,zmin=1.2345e30,zmax=1.2345e30)
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5396,7 +5396,7 @@ def zoom3d(xmin,xmax,ymin=-1.2345e30,ymax=1.2345e30,zmin=1.2345e30,zmax=1.2345e3
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5485,7 +5485,7 @@ def pplot(pname="WavePlot.pdf",w=0,h=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5554,7 +5554,7 @@ def h1pack(idh='?', data=None):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5636,7 +5636,7 @@ def hcopn(idh='?', nt='', varlis='x:y:ey', ntit='!',kweedzero=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5773,7 +5773,7 @@ def nrandom(nt='?',varlis='', n=100, mode='u', iplot=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -5860,7 +5860,7 @@ def nhull2d(nt='?',varlis='',select='', iplot=1, iretval=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -6070,7 +6070,7 @@ def vhull2d(vx,vy,varlis='',iplot=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -6374,7 +6374,7 @@ def nhull3dbad(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,color='!'
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -6790,7 +6790,7 @@ def nappend(nt='?', nt2=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -6878,7 +6878,7 @@ def nfill(nt='?', data=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -7005,7 +7005,7 @@ def npeaksabs(nt='?', varlis='', select='', pkmin=0.5,nsmooth=0,isilent=0,iretva
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -7133,7 +7133,7 @@ def hpeaks(h='?', select='', pkmin=0.5,nsmooth=0,isilent=0,iretval=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -7212,7 +7212,7 @@ def npeaks(nt='?', varlis='', select='', pkmin=0.5,nsmooth=0,isilent=0,iretval=0
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -7335,7 +7335,7 @@ def nstat(nt='?',var='',select='', iretval=1, isilent=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -7499,7 +7499,7 @@ def nmax(nt='?',var='',select='',iretval=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -7610,7 +7610,7 @@ def nmin(nt='?',var='',select='', iretval=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -7721,7 +7721,7 @@ def nminmax(nt='?',var='',select='',iretval=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -8050,7 +8050,7 @@ def nrenvars(nt,varlis):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -8139,7 +8139,7 @@ def nparse(nt,varlis):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -8329,7 +8329,7 @@ def set_linecolor(lcol='r'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -8397,7 +8397,7 @@ def h2fill(idh='?', x=1.e30, y=1.e30, w=1.):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -8615,7 +8615,7 @@ def h1fill(idh=-1, x=1.e30, wei=1.):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -8775,7 +8775,7 @@ def hbook2(idh=-1, tit='Histogram2D',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -8940,7 +8940,7 @@ def h2reset(idh):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -9079,7 +9079,7 @@ def hbook1(idh=-1, tit='Histogram1D', nx=10, xmin=0., xmax=1., overwrite=False):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -9211,7 +9211,7 @@ def nscan(nt='?',varlis='',select='',isilent=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -9340,7 +9340,7 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -9636,7 +9636,7 @@ def nintern(nt='?',varlis='',select='',xint='!'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -9754,7 +9754,7 @@ def ninter(nt='?',varlis='',select='',xint='!'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -9926,7 +9926,7 @@ def nspline(nt='?',varlis='',select='',xspl='!',periodic=False):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -10060,7 +10060,7 @@ def nsolve(nt='?',varlis='',select='',val=0.0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -10184,7 +10184,7 @@ def ndump(nt='',varlis='',select='',fout='ndump.dat', sep=' ',floatform='%.5e',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -10343,7 +10343,7 @@ def nreset(nt='?', varlis=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -10453,7 +10453,7 @@ def ndelete(nt='?',isilent=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -10550,7 +10550,7 @@ def ncre(ntname='', nttit='', varlis='', ioverwrite=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -10701,7 +10701,7 @@ def GetIndexH2(idh='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -10802,7 +10802,7 @@ def GetIndexN(nt='?', isilent=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -10922,7 +10922,7 @@ def GetIndexNct(idh='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11006,7 +11006,7 @@ def GetIndexH1(idh='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11111,7 +11111,7 @@ def GetIndex(idh='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11213,7 +11213,7 @@ def h1opt(idh):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11341,7 +11341,7 @@ def voptpar(vx,vy):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11457,7 +11457,7 @@ def h1print(idh='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11537,7 +11537,7 @@ def H1Info(idh='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11639,7 +11639,7 @@ def H2Info(idh='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11762,7 +11762,7 @@ def H1List():
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11870,7 +11870,7 @@ def nentry(nt='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -11952,7 +11952,7 @@ def ninfo(nt='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -12054,7 +12054,7 @@ def nlist():
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -12124,7 +12124,7 @@ def NctList():
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -12193,7 +12193,7 @@ def ncolumns(fname='ntuple.dat', skiphead=-1, sep=' '):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -12299,7 +12299,7 @@ def ncolumnsguess(fname='ntuple.dat'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -12416,7 +12416,7 @@ silent=0, comment='*', sep=' ',iguessncols=1, iplot=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -12503,7 +12503,7 @@ silent=0, comment='*', sep=' ', iguessncols=1, iplot=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -12587,7 +12587,7 @@ comment='*', sep=' '):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -12747,7 +12747,7 @@ comment='*', sep=' ',iguessncols=1, ioverwrite=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -12912,7 +12912,7 @@ def nproj2(nt='?', xy='', weight=1., select='',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -13251,7 +13251,7 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -13566,7 +13566,7 @@ def hstat1d(idh='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -13613,7 +13613,7 @@ def hstat1d(idh='?'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -13726,7 +13726,7 @@ def vstat(x='?',y=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -13773,7 +13773,7 @@ def vstat(x='?',y=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -13877,7 +13877,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -13924,7 +13924,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -14113,6 +14113,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       vwritexyz(x,yave,stdy,fout)
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif
 
   elif Iprof:
@@ -14136,6 +14137,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       vwritexyz(x,yave,stdyprof,fout)
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif
 
     iplot=1
@@ -14147,6 +14149,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       vwritexy(x,y,fout)
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif
     iplot=1
   elif plopt == 'he' or Ihist and Ierr:
@@ -14157,6 +14160,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       vwritexyz(x,y,ey,fout)
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif
   elif Iline and Imarker:
     plt.plot(x,y,c=Linecolor,ls=Linestyle,lw=Linewidth,marker=Markertype,fillstyle=Fillstyle, mfc=Markercolor, mec=Markercolor, ms=Markersize, mew=1)
@@ -14166,6 +14170,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       vwritexy(x,y,fout)
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif
   elif Ispline:
     xmin = x.min(); xmax = x.max()
@@ -14177,6 +14182,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       vwritexy(splx,yspl,fout)
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif
     if Imarker: plt.plot(x,y,ls='',marker=Markertype,fillstyle=Fillstyle, mfc=Markercolor, mec=Markercolor, ms=Markersize, mew=1)
     iplot=1
@@ -14188,6 +14194,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       vwritexy(x,y,fout)
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif
   elif Iline:
     plt.plot(x,y,c=Linecolor,ls=Linestyle,lw=Linewidth)
@@ -14197,6 +14204,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       vwritexy(x,y,fout)
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif
   elif Imarker:
     plt.plot(x,y,ls='',marker=Markertype,fillstyle=Fillstyle, mfc=Markercolor, mec=Markercolor, ms=Markersize, mew=1)
@@ -14206,6 +14214,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       vwritexy(x,y,fout)
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif Kdump
   #endif plopt == 'e' or Ierr
 
@@ -14295,7 +14304,7 @@ def hplot(idh, plopt='!', Tit='!', xTit='', yTit='', zTit = '', legend='', block
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -14373,7 +14382,7 @@ def hplave(idh, plopt='!', Tit='!', xTit='', yTit='', zTit = '', legend='', bloc
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -14589,7 +14598,7 @@ def window(title='', geom="!", block=False, projection = '2d',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -14732,7 +14741,7 @@ def win2(title='Win_2', geom="!", block=False, projection = '2d', getconsole=Tru
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -14774,7 +14783,7 @@ def winr(title='Win_r', geom="!", block=False, projection = '2d', getconsole=Tru
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -14820,7 +14829,7 @@ def winl(title='Win_l', geom="!", block=False, projection = '2d', getconsole=Tru
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -14876,7 +14885,7 @@ def showplot(visible=True):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -15053,7 +15062,7 @@ def hplot2d(idh, plopt='3d', block=False, scalex=1., scaley=1., scalez=1.,
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -15332,6 +15341,7 @@ def hplot2d(idh, plopt='3d', block=False, scalex=1., scaley=1., scalez=1.,
     fout = WaveFilePrefix + str(Ndump) + ".dat"
     vwritexyz(x,y,z,fout)
     print("\nData written to ",fout)
+    WaveDump = fout
   #endif Kdump
 
   if Kpdf:
@@ -15395,7 +15405,7 @@ def samezone(isame=1):
   if not isame: Isame = 0
 #enddef samezone(isame=1)
 
-def nextzone(projection='2d', visible=True):
+def nextzone(projection='2d', visible=True, isame=0):
 
   global Nxzone, Nyzone, Kzone, Isame, Kecho, Kplots, Kzone
 
@@ -15408,7 +15418,10 @@ def nextzone(projection='2d', visible=True):
     return
   #endtry
 
-  Isame = 0
+  Isame = isame
+  if isame: same = 's'
+  else: same = ''
+
   Kplots[Kzone-1] = 0
   reset_zoom()
 
@@ -15421,7 +15434,7 @@ def nextzone(projection='2d', visible=True):
     zone(nx,ny,kzone,'s',projection=projection,visible=visible)
   else:
     kzone = 1
-    zone(nx,ny,kzone,'',projection=projection,visible=visible)
+    zone(nx,ny,kzone,same,projection=projection,visible=visible)
   #endif kzone == nx * ny
 
 #def nextzone(projection='2d', visible=True)
@@ -15442,7 +15455,7 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -15624,7 +15637,7 @@ def window_close(win=-1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -15704,7 +15717,7 @@ def window_clear(win=-1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -15792,7 +15805,7 @@ def set_title(title='Title',tfs=-9.,titx=-9.,tity=-9):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -15868,7 +15881,7 @@ def set_x_title(xtit='xTit',pos=0.5):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -15935,7 +15948,7 @@ def set_y_title(ytit='yTit', pos=0.5):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16002,7 +16015,7 @@ def set_z_title(ztit='zTit',pos=0.5):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16071,7 +16084,7 @@ def set_titles(gtit='',pltit='Title',xtit='xTit', ytit='yTit', ztit=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16142,7 +16155,7 @@ def set_global_title(gtit='', fontsize='!'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16222,7 +16235,7 @@ def txyz(pltit='Title',xtit='', ytit='', ztit='', tfs=-9., xyzfs=-9,
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16370,7 +16383,7 @@ def null3d(xmin=-10., xmax=10., ymin=-10., ymax=10., zmin=-10., zmax=10.):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16423,7 +16436,7 @@ def null(xmin=-10., xmax=10., ymin=-10., ymax=10.):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16614,7 +16627,7 @@ def run_on_figure(x=0.03,y=0.95,fontsize='!',ishow=1, iforce=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16738,7 +16751,7 @@ def date_on_figure(x=0.04,y=0.02,fontsize='!',ishow=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16840,7 +16853,7 @@ def optnrun(krun=False):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16881,7 +16894,7 @@ def optrun(krun=True):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16922,7 +16935,7 @@ def optndate(kdate=False):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -16963,7 +16976,7 @@ def optdate(kdate=True):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -17014,7 +17027,7 @@ def set_author(author=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -17068,7 +17081,7 @@ def hcopy1d(idh,idnew,tit='',scalex=1.,scaley=1., reset=0, overwrite=True):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -17183,7 +17196,7 @@ def hcopy2d(idh,idnew,tit='',scalex=1.,scaley=1., scalez=1., reset=0, overwrite=
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -17732,7 +17745,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -17900,6 +17913,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
       Ndump += 1
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif
 
   elif len(varlis) == 2:
@@ -18007,6 +18021,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
         #eval("vwritexy(" + sx + "," + sy + ",'" + fout + "')")
         eval("vwritexy(sx,sy,'" + fout + "')")
         print("\nData written to ",fout)
+        WaveDump = fout
       #endif
 
       if Kstat:
@@ -18076,6 +18091,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
           fout = WaveFilePrefix + str(Ndump) + ".dat"
           eval("vwritexyz(" + sx + "," + sy + "," + sw + ",'" + fout + "')")
           print("\nData written to ",fout)
+          WaveDump = fout
         #endif
 
     #endif len(weights) = 0
@@ -18148,6 +18164,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
       fout = WaveFilePrefix + str(Ndump) + ".dat"
       eval("vwritexyz(" + sx + "," + sy + "," + sz + ",'" + fout + "')")
       print("\nData written to ",fout)
+      WaveDump = fout
     #endif Kdump
 
   elif len(varlis) == 4:
@@ -18291,7 +18308,7 @@ def vprint(v):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -18358,7 +18375,7 @@ def vprintxy(x,y):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -18437,7 +18454,7 @@ def vplxy(x='!',y='!',plopt='',label='',color='!',fillcolor='none'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -18663,7 +18680,7 @@ def vplxyey(x,y,ey='',plopt='o',label='',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -18744,7 +18761,7 @@ def vplxyerr(x,y,ey='',ex='',plopt='o',label='',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -18827,7 +18844,7 @@ def vinter(x,y,xint='!'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -18935,7 +18952,7 @@ def vintern(x,y,xint='!'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -19109,7 +19126,7 @@ def vspline_index(x,y,nspl=1001, periodic=False, ypp1=0.0, yppn=0.0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -19229,7 +19246,7 @@ def vspline(x,y,xspl='!', periodic=False, ypp1=0.0, yppn=0.0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -19401,7 +19418,7 @@ def vspline_old(x,y,xspl='!', periodic=False):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -19618,7 +19635,7 @@ def nupdate_header(nt,reindex=1):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -19775,7 +19792,7 @@ def vsolve(x,y,val=0.0,xmin=-1.0e30,xmax=1.0e30):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -19901,7 +19918,7 @@ def vsolvelin(x,y,val=0.0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -19971,7 +19988,7 @@ def voptspl(x,y):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -20076,7 +20093,7 @@ def ncopn(nt,ncnam,varlis='',select='',ioverwrite=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -20183,7 +20200,7 @@ def ncopv(nt,varlis,select=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -20314,7 +20331,7 @@ def nclone(nt,ncnam,nctit='',ioverwrite=0):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -21227,7 +21244,7 @@ def getzone(projection=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -21382,7 +21399,7 @@ def set_console_title(console='Python'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -21455,7 +21472,7 @@ def get_console(console=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -21534,7 +21551,7 @@ def getax(visible=True):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -21607,7 +21624,7 @@ def vplbxy(x,y,u,v,scale=-9999.0,plopt='',tit='',xtit='',ytit='',ztit='',label='
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -21707,7 +21724,7 @@ def vplbxyz(x,y,z,u,v,w,scale,plopt='',tit='',xtit='',ytit='',ztit='',label='',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -21788,7 +21805,7 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -21936,7 +21953,7 @@ def vplxyzt(x,y,z,t,plopt='',tit='',xtit='',ytit='',ztit='', label='',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -22010,7 +22027,7 @@ def textbox(text,x=0.05, y=0.95, tcolor=None, bgcolor='white', alpha=0.9,
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -22093,7 +22110,7 @@ def vfitpoly(nord,x,y, ey='', cov='default', isilent=0, ninter=101, iretval=1,
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -22420,7 +22437,7 @@ def hfit(idh, fitfun, select='',absolute_sigma='default', parstart=None,
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -22569,7 +22586,7 @@ def vfit(fitfun, x, y, ey = '', absolute_sigma='default', parstart=None,
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -22779,7 +22796,7 @@ def vfitexp(x,y, ey = '', absolute_sigma='default', parstart=None,
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -22853,7 +22870,7 @@ def vfitexp2(x,y, ey = '', absolute_sigma='default', parstart=None,
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -22933,7 +22950,7 @@ def vfitgauss(x,y, ey = '', absolute_sigma='default',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -23005,7 +23022,7 @@ def vfitcosh(x,y, ey = '', absolute_sigma='default',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -23077,7 +23094,7 @@ def vfitcos(x,y, ey = '', absolute_sigma='default',
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -23146,7 +23163,7 @@ def hget(idh=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -23224,7 +23241,7 @@ def nget(idn=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -24502,7 +24519,9 @@ wpwd = mhb_pwd
 
 nentries = nentry
 nplp = nprof
+xstat = set_x_stat
 setxstat = set_x_stat
+ystat = set_y_stat
 setystat = set_y_stat
 getxstat = get_x_stat
 getystat = get_y_stat
@@ -24529,7 +24548,7 @@ def plotoptions_unklar(plopt=''):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -24813,6 +24832,28 @@ def vminmax(x='?',y=''):
   #endif
 
 #enddef
+
+def getwavedump():
+  global WaveDump
+  try:
+    return WaveDump
+  except:
+    return 'Err'
+    print('*** WaveDump not defined, set option Kdump in waveplot.cfg')
+  #endtry
+#enddef
+
+def ngetdump(nt='Ndmp',varlis='x:y:z'):
+  global WaveDump
+  wd = getwavedump()
+  if wd != 'Err':
+    ntup = ncread(nt,varlis,wd)
+    return nget(nt)
+  else:
+    print('*** Could not read WaveDump ***')
+  #endif
+#enddef
+
 # End of sequence m_hbook
 ########################################################
 
@@ -27393,7 +27434,7 @@ def undu_b():
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -30423,7 +30464,7 @@ def undu_geo(plopt='sameline'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -30619,7 +30660,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -30774,7 +30815,7 @@ def undu_mags(plopt='sameline'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -34793,7 +34834,7 @@ def undu_geo(plopt='sameline'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -34989,7 +35030,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \
@@ -35144,7 +35185,7 @@ def undu_mags(plopt='sameline'):
   MarkerSize, MarkerType, MarkerColor, \
   Markersize, Markertype, Markercolor, \
   Fillstyle, FillStyle, \
-  Textcolor, WaveFilePrefix, \
+  Textcolor, WaveFilePrefix,WaveDump, \
   LineStyle, LineWidth, LineColor, \
   Linestyle, Linewidth, Linecolor, \
   Author, \

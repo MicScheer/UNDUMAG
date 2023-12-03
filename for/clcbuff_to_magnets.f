@@ -1,3 +1,4 @@
+*CMZ :          01/12/2023  13.39.21  by  Michael Scheer
 *CMZ :  2.05/02 31/10/2023  13.40.07  by  Michael Scheer
 *CMZ :  2.04/25 28/09/2023  08.00.38  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.03.22  by  Michael Scheer
@@ -145,6 +146,7 @@
           t_magnets(nmag)%kmag=nmag
           t_magnets(nmag)%kmodule=magmodule(nmag)
           t_magnets(nmag)%IsSpecial=0
+          t_magnets(nmag)%IwasConcave=0
           cycle
         else if (cline(ipos(1,1):ipos(2,1)).eq.'Special_Magnet'.or.
      &      cline(ipos(1,1):ipos(2,1)).eq.'Special_Pole') then
@@ -153,6 +155,7 @@
           t_magnets(nmag)%kmag=nmag
           t_magnets(nmag)%kmodule=0
           t_magnets(nmag)%IsSpecial=1
+          t_magnets(nmag)%IwasConcave=0
           cycle
         endif
 

@@ -1,3 +1,4 @@
+*CMZ :          27/11/2023  18.54.15  by  Michael Scheer
 *CMZ :  2.04/28 29/09/2023  11.43.35  by  Michael Scheer
 *CMZ :  2.04/22 22/09/2023  12.32.06  by  Michael Scheer
 *CMZ :  2.04/21 21/09/2023  16.03.24  by  Michael Scheer
@@ -570,15 +571,11 @@ c                call util_string_append(cline,'],',nfirst,nlast)
 
             nUnduMag=nUnduMag+1
 
-            write(c32,*)nUnduMag
-            write(lunrad,'(a)')"nUnduMag = " // trim(adjustl(c32))
             write(lunrad,'(a)')"UnduMag.append(" //
      &        trim(adjustl(t_magcopy(imp)%cnam)) // ")"
 
             nMagPolTot=nMagPolTot+1
 
-            write(c32,*)nMagPolTot
-            write(lunrad,'(a)')"nMagPolTot = " // trim(adjustl(c32))
             write(lunrad,'(a)')"AllMagPols.append(" //
      &        trim(adjustl(t_magcopy(imp)%cnam)) // ')'
             write(lunrad,'(a)')
@@ -592,57 +589,92 @@ c                call util_string_append(cline,'],',nfirst,nlast)
               write(lunrad,'(a)')
             endif
 
-          else !Cylinder
+          else
 
-            do ivox=1,nvoxcopy_t
+            nUnduPol=nUnduPol+1
 
-              kproto=t_voxcopy(ivox)%kproto
-              if (t_magnets(kproto)%ctype.ne.'Cylinder') cycle
+            write(c32,*)nUnduPol
+            write(lunrad,'(a)')"nUnduPol = " // trim(adjustl(c32))
+            write(lunrad,'(a)')"UnduPol.append(" //
+     &        trim(adjustl(t_magcopy(imp)%cnam)) // ")"
 
-              kmagnet=t_voxcopy(ivox)%kmagnet
-              kvoxel=t_voxcopy(ivox)%kvoxel
+            nMagPolTot=nMagPolTot+1
 
-              nUnduPol=nUnduPol+1
+            write(lunrad,'(a)')"AllMagPols.append(" //
+     &        trim(adjustl(t_magcopy(imp)%cnam)) // ')'
+            write(lunrad,'(a)')
 
-              cline=adjustl(t_magcopy(imp)%cnam)
-              call util_string_append(cline,'_',nfirst,nlast)
-              ixdiv=t_magnets(kproto)%t_voxels(kvoxel)%ixdiv
-              call util_string_append_num(cline,ixdiv,nfirst,nlast)
-              call util_string_append(cline,'_',nfirst,nlast)
-              iydiv=t_magnets(kproto)%t_voxels(kvoxel)%iydiv
-              call util_string_append_num(cline,iydiv,nfirst,nlast)
-              call util_string_append(cline,'_',nfirst,nlast)
-              izdiv=t_magnets(kproto)%t_voxels(kvoxel)%izdiv
-              call util_string_append_num(cline,izdiv,nfirst,nlast)
-              cnam=trim(cline)
-
-              write(c32,*)nUnduPol
-              write(lunrad,'(a)')"nUnduPol = " // trim(adjustl(c32))
-              write(lunrad,'(a)')"UnduPol.append(" //trim(cnam)// ')'
-
-              nMagPolTot=nMagPolTot+1
-
-              write(c32,*)nMagPolTot
-              write(lunrad,'(a)')"nMagPolTot = " // trim(adjustl(c32))
-              write(lunrad,'(a)')"AllMagPols.append(" //trim(cnam)// ')'
+            if (t_magcopy(imp)%cnam.eq.chforcemag) then
               write(lunrad,'(a)')
+              write(lunrad,'(a)')"iForceTyp = 1"
+              write(lunrad,'(a)') trim(clunrad)
+              write(c32,*)nUnduMag
+              write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
+              write(lunrad,'(a)')
+            endif
 
-              if (t_magcopy(imp)%cnam.eq.chforcemag) then
-                write(lunrad,'(a)')' '
-                write(lunrad,'(a)')"iForceTyp = 1"
-                write(c32,*)nUnduPol
-                write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
-                write(lunrad,'(a)')
-                print*,"*** Warning in clcmag_to_radia_python: Force calculations for cylinders not yet tested..."
-              endif
+          endif !Pole/Mag
 
-            enddo !nvox
+        else !Cylinder
 
-          endif !(t_magnets(kproto)%ctype.ne.'Cylinder') then
+          do ivox=1,nvoxcopy_t
 
-        endif !Pole/Mag
+            kproto=t_voxcopy(ivox)%kproto
+            if (t_magnets(kproto)%ctype.ne.'Cylinder') cycle
+
+            if (t_magnets(kproto)%IsPole.eq.0) then
+              nUnduMag=nUnduMag+1
+            else
+              nUnduPol=nUnduPol+1
+            endif
+
+            kmagnet=t_voxcopy(ivox)%kmagnet
+            kvoxel=t_voxcopy(ivox)%kvoxel
+
+            cline=adjustl(t_magcopy(imp)%cnam)
+            call util_string_append(cline,'_',nfirst,nlast)
+            ixdiv=t_magnets(kproto)%t_voxels(kvoxel)%ixdiv
+            call util_string_append_num(cline,ixdiv,nfirst,nlast)
+            call util_string_append(cline,'_',nfirst,nlast)
+            iydiv=t_magnets(kproto)%t_voxels(kvoxel)%iydiv
+            call util_string_append_num(cline,iydiv,nfirst,nlast)
+            call util_string_append(cline,'_',nfirst,nlast)
+            izdiv=t_magnets(kproto)%t_voxels(kvoxel)%izdiv
+            call util_string_append_num(cline,izdiv,nfirst,nlast)
+            cnam=trim(cline)
+
+            if (t_magnets(kproto)%IsPole.eq.0) then
+              write(lunrad,'(a)')"UnduMag.append(" //trim(cnam)// ')'
+            else
+              write(lunrad,'(a)')"UnduPol.append(" //trim(cnam)// ')'
+            endif
+
+            nMagPolTot=nMagPolTot+1
+
+            write(lunrad,'(a)')"AllMagPols.append(" //trim(cnam)// ')'
+            write(lunrad,'(a)')
+
+            if (t_magcopy(imp)%cnam.eq.chforcemag) then
+              write(lunrad,'(a)')' '
+              write(lunrad,'(a)')"iForceTyp = 1"
+              write(c32,*)nUnduPol
+              write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
+              write(lunrad,'(a)')
+              print*,"*** Warning in clcmag_to_radia_python: Force calculations for cylinders not yet tested..."
+            endif
+
+          enddo !nvox
+
+        endif !(t_magnets(kproto)%ctype.ne.'Cylinder') then
 
       enddo !imp=1,nmagtot_t
+
+      write(c32,*)nUnduMag
+      write(lunrad,'(a)')"nUnduMag = " // trim(adjustl(c32))
+      write(c32,*)nUnduPol
+      write(lunrad,'(a)')"nUnduPol = " // trim(adjustl(c32))
+      write(c32,*)nMagPolTot
+      write(lunrad,'(a)')"nMagPolTot = " // trim(adjustl(c32))
 
       deallocate(brrec)
 
