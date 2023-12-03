@@ -1,0 +1,5124 @@
++TITLE.
+UNDUMAG  2.05/03  06/11/2023  14.09.16
++PATCH,FOR.
+*CMZ :  0.00/00 20/04/2016  13.00.13  by  Michael Scheer
++DECK,clcbuff_to_magnets.
+*CMZ :          01/12/2023  13.39.21  by  Michael Scheer
+*CMZ :  2.05/02 31/10/2023  13.40.07  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.00.38  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.03.22  by  Michael Scheer
+*CMZ :  2.04/20 20/09/2023  10.48.38  by  Michael Scheer
+*CMZ :  2.04/16 12/09/2023  13.51.34  by  Michael Scheer
+*CMZ :  2.04/14 06/09/2023  06.47.58  by  Michael Scheer
+*CMZ :  2.04/11 26/08/2023  10.27.59  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  08.02.18  by  Michael Scheer
+*CMZ :  2.04/07 09/08/2023  16.11.22  by  Michael Scheer
+*CMZ :  2.04/05 14/03/2023  20.06.46  by  Michael Scheer
+*CMZ :  2.04/03 04/03/2023  12.23.20  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  16.43.57  by  Michael Scheer
+*CMZ :  2.04/01 22/01/2023  13.04.45  by  Michael Scheer
+*CMZ :  2.04/00 17/01/2023  09.24.20  by  Michael Scheer
+*CMZ :  2.03/00 22/08/2022  12.31.51  by  Michael Scheer
+*CMZ :  2.02/01 29/01/2022  15.17.16  by  Michael Scheer
+*-- Author :    Michael Scheer   20/04/2021
+      subroutine clcbuff_to_magnets
+
+      use commandlinef90m
+      use bpolyederf90m
+      use undumagf90m
+      use magnets_structure
+      use displacement
+      use utilmod
+
+      implicit none
+
++seq,grarad.
+
+      character(2048) cline,cbuff(5),cfile,cline1
+      character(128) cword,ckey
+
+      double precision, dimension (:), allocatable :: xp,yp,zp,xpc,ypc,zpc
+      double precision, dimension (:,:), allocatable :: brnmatc
+
+      double precision undumag_variable_getval,size(3),dphi
+
+      double precision x,dx,dy,dz,Br(5),xc,yc,zc,gcen(3),chamf,
+     &  r,h,phi,radin,radout,height,angle,xyz(3),vol
+
+      integer, dimension (:,:), allocatable :: kedge
+      integer, dimension (:), allocatable :: khull,kface
+
+      integer i,k,l,m,kb,ib,ip,npoi,ir,ih,iphi,limit,
+     &  nxdiv,nydiv,nzdiv,nhull,nface,nedge,kfacelast,kblockch
+
++seq,hulldim.
+
++self,if=debcm.
+      integer n,ipoi,iplan
++self.
+      integer ipos(2,1000),jpos(2,1000),nwords,istat,ibrn,ifound
+
+      integer ifailhull,lun,ieof,kfail
+      logical lexist
+
+      !xhull,yhull,zhull are absolute at the end of this routine
+
+      !all util_break
+      nmag=nmag_t+nspecmag_t+nclccop_t+nconcave_t
+      nallotmag_t=nmag
+
+      allocate(t_magnets(nmag),t_magnets_copy(nmag))
+
+      nmag=0
+      niron=0
+      nspecmag=0
+
+      if (ncornmax*nplanmax.gt.nvertmax) nvertmax=ncornmax*nplanmax
+
+      ncornmax=nvertmax
+      nplanmax=2*nvertmax
+
+      do m=1,nconcave_t
+        nmag=nmag+1
+        nmag_t=nmag_t+1
+        t_magnets(m)=t_concaves(m)%tmag
+        t_magnets(m)%kmag=nmag
+        if(t_magnets(m)%IsPole.ne.0) niron=niron+1
+        if(t_magnets(m)%IsSpecial.ne.0) then
+          nspecmag=nspecmag+1
+          nspecmag_t=nspecmag_t+1
+        endif
+        nxdiv=t_magnets(nmag)%nxdiv
+        nydiv=t_magnets(nmag)%nydiv
+        nzdiv=t_magnets(nmag)%nzdiv
+        allocate(t_magnets(nmag)%kvoxels(nxdiv,nydiv,nzdiv))
+        t_magnets(nmag)%kvoxels=0
+        allocate(t_magnets(nmag)%t_xyzcuts(nxdiv,nydiv,nzdiv))
+        allocate(t_magnets(nmag)%t_xycuts(nxdiv,nydiv))
+        allocate(t_magnets(nmag)%t_xcuts(nxdiv))
+      enddo
+
+      if(nbrnmat.eq.0) then
+        allocate(brnmat(2,nmag_t+nspecmag_t))
+      else
+        allocate(brnmatc(2,nbrnmat))
+        brnmatc(:,1:nbrnmat)=brnmat(:,1:nbrnmat)
+        deallocate(brnmat)
+        allocate(brnmat(2,nbrnmat+nmag_t+nspecmag_t))
+        brnmat(:,1:nbrnmat)=brnmatc(:,1:nbrnmat)
+        deallocate(brnmatc)
+      endif
+
+      lenface=ncornmax*nplanmax+nplanmax
+      lenhull=lenface
+      lenedge=lenface*2
+
+      allocate(
+     &  xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
+     &  xpuffer2(ncornmax),ypuffer2(ncornmax),zpuffer2(ncornmax),
+     &  xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax),
+     &  xp(ncornmax),yp(ncornmax),zp(ncornmax),
+     &  xpc(ncornmax),ypc(ncornmax),zpc(ncornmax),
+     &  kface(lenface),kedge(4,lenedge),khull(lenhull))
+
+      ib=0
+      kb=0
+
+      limit=nclcmag+nclcspec
+
+      do while (ib.lt.limit)
+
+        if (kb.eq.0.and.ib.ge.nclcmag) then
+          ib=0
+          kb=1
+          limit=nclcspec
+        endif
+
+        ib=ib+1
+
+        if (kb.eq.0) then
+          cline = clcmag(ib)
+        else
+          cline = clcspec(ib)
+        endif
+
+        call util_string_split(cline,1000,nwords,ipos,istat)
+
+        if (cline(ipos(1,1):ipos(2,1)).eq.'Magnet'.or.
+     &      cline(ipos(1,1):ipos(2,1)).eq.'Pole') then
+          nmag=nmag+1
+          t_magnets(nmag)%kmag=nmag
+          t_magnets(nmag)%kmodule=magmodule(nmag)
+          t_magnets(nmag)%IsSpecial=0
+          t_magnets(nmag)%IwasConcave=0
+          cycle
+        else if (cline(ipos(1,1):ipos(2,1)).eq.'Special_Magnet'.or.
+     &      cline(ipos(1,1):ipos(2,1)).eq.'Special_Pole') then
+          nspecmag=nspecmag+1
+          nmag=nmag+1
+          t_magnets(nmag)%kmag=nmag
+          t_magnets(nmag)%kmodule=0
+          t_magnets(nmag)%IsSpecial=1
+          t_magnets(nmag)%IwasConcave=0
+          cycle
+        endif
+
+        ckey=cline(ipos(1,1):ipos(2,1))
+
+        if (kb.eq.0) then
+          cbuff=clcmag(ib:ib+4)
+        else
+          cbuff=clcspec(ib:ib+4)
+        endif
+
+        ib=ib+4
+
+        t_magnets(nmag)%cnam=cline(ipos(1,2):ipos(2,2))
+        t_magnets(nmag)%cmoth=cline(ipos(1,3):ipos(2,3))
+
+        do m=1,nmag-1
+          if (t_magnets(m)%cnam.eq.t_magnets(nmag)%cnam) then
+            print*,""
+            print*,"*** Error in clcbuff_to_magnets: Duplicate magnet ",
+     &        t_magnets(m)%cnam
+            print*,""
+            stop "*** Program UNDUMAG aborted ***"
+          endif
+        enddo
+
+        t_magnets(nmag)%cfile=''
+
+        cword=cline(ipos(1,4):ipos(2,4))
+
+        if (cword(1:1).eq.'$') then
+          t_magnets(nmag)%icol=nint(undumag_variable_getval(cword))
+        else
+          read(cword,*)t_magnets(nmag)%icol
+        endif
+
+        cline=cbuff(2)
+        call util_string_split(cline,1000,nwords,ipos,istat)
+
+        do i=1,3
+          cword=cline(ipos(1,i):ipos(2,i))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%xyz(i)=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%xyz(i)
+          endif
+        enddo
+
+        xc=t_magnets(nmag)%xyz(1)
+        yc=t_magnets(nmag)%xyz(2)
+        zc=t_magnets(nmag)%xyz(3)
+
+        cline=cbuff(3)
+        call util_string_split(cline,1000,nwords,ipos,istat)
+
+        if (kb.eq.0) then
+          cline1=clcmag(ib-5)
+        else
+          cline1=clcspec(ib-5)
+        endif
+
+        if (cline1.eq.'Pole'.or.cline1.eq. 'Special_Pole') then
+          niron=niron+1
+          cword = cline(ipos(1,1):ipos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%imat=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%imat
+          endif
+          t_magnets(nmag)%IsPole=1
+        else
+          do i=1,5
+            cword=cline(ipos(1,i):ipos(2,i))
+            if (cword(1:1).eq.'$') then
+              cword=cline(ipos(1,i):ipos(2,i))
+              Br(i)=undumag_variable_getval(cword)
+            else
+              read(cword,*)br(i)
+            endif
+          enddo
+          t_magnets(nmag)%IsPole=0
+          if (norm2(br(2:4)).ne.0.0d0) br(2:4)=br(2:4)/norm2(br(2:4))
+          if (br(5).eq.0.0d0) br=0.0d0
+
+          t_magnets(nmag)%brn=br(1)
++self,if=trace
+          print*,"--trace: CLCBUFF_TO_MAGNETS:",nmag,t_magnets(nmag)%brn
++self.
+          t_magnets(nmag)%br=br(2:4)*br(1)
+          t_magnets(nmag)%imat=nint(br(5))
+
+          ifound=0
+          do ibrn=1,nbrnmat
+            if (br(1).eq.brnmat(2,ibrn).and.br(5).eq.brnmat(1,ibrn)) then
+              ifound=1
+              exit
+            endif
+          enddo
+          if (ifound.eq.0) then
+            nbrnmat=nbrnmat+1
+            brnmat(1,nbrnmat)=br(5) !material index
+            brnmat(2,nbrnmat)=br(1) !Br
+          endif
+        endif  !Pole
+
+        t_magnets(nmag)%ctype=ckey(1:32)
+        t_magnets(nmag)%IsBlock=0
+        t_magnets(nmag)%IsRotated=0
+
+        if (ckey.eq.'Block') then
+
+          if (irecrepl.ne.0) then
+            t_magnets(nmag)%IsBlock=1
+          else
+            t_magnets(nmag)%IsBlock=-1
+          endif
+
+          cline=cbuff(4)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          do i=1,3
+            cword=cline(jpos(1,i):jpos(2,i))
+            if (cword(1:1).eq.'$') then
+              t_magnets(nmag)%size(i)=undumag_variable_getval(cword)
+            else
+              read(cword,*)t_magnets(nmag)%size(i)
+            endif
+            if (t_magnets(nmag)%IsPole.eq.0.and.coating.ne.0.0d0) then
+              t_magnets(nmag)%size(i)=t_magnets(nmag)%size(i)-2.0d0*coating
+            endif
+            if (t_magnets(nmag)%size(i).le.0.0d0) then
+              t_magnets(nmag)%brn=0.0d0
+              t_magnets(nmag)%br=0.0d0
+            endif
+          enddo
+
+          cline=cbuff(5)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          cword=cline(jpos(1,1):jpos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nxdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nxdiv
+          endif
+
+          cword=cline(jpos(1,2):jpos(2,2))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nydiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nydiv
+          endif
+
+          cword=cline(jpos(1,3):jpos(2,3))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nzdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nzdiv
+          endif
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%yfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%yfracdiv
+          endif
+
+          cword=cline(jpos(1,5):jpos(2,5))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%zfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%zfracdiv
+          endif
+
+          xc=t_magnets(nmag)%xyz(1)
+          yc=t_magnets(nmag)%xyz(2)
+          zc=t_magnets(nmag)%xyz(3)
+
+          npoi=8
+
+          xp(1)=xc-t_magnets(nmag)%size(1)/2.0d0
+          xp(2)=xc+t_magnets(nmag)%size(1)/2.0d0
+          xp(3)=xp(2)
+          xp(4)=xp(1)
+          xp(5:8)=xp(1:4)
+
+          yp(1:4)=yc-t_magnets(nmag)%size(2)/2.0d0
+          yp(5:8)=yc+t_magnets(nmag)%size(2)/2.0d0
+
+          zp(1:2)=zc-t_magnets(nmag)%size(3)/2.0d0
+          zp(3:4)=zc+t_magnets(nmag)%size(3)/2.0d0
+          zp(5:8)=zp(1:4)
+
+          else if (
+     &        ckey.eq.'BlockChamf'.or.
+     &        ckey.eq.'BlockUsChamf'.or.
+     &        ckey.eq.'BlockDsChamf'
+     &        ) then
+
+          cline=cbuff(4)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          do i=1,3
+            cword=cline(jpos(1,i):jpos(2,i))
+            if (cword(1:1).eq.'$') then
+              t_magnets(nmag)%size(i)=undumag_variable_getval(cword)
+            else
+              read(cword,*)t_magnets(nmag)%size(i)
+            endif
+            if (t_magnets(nmag)%size(i).le.0.0d0) then
+              t_magnets(nmag)%brn=0.0d0
+              t_magnets(nmag)%br=0.0d0
+            endif
+          enddo
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            chamf=undumag_variable_getval(cword)
+          else
+            read(cword,*) chamf
+          endif
+
+          kblockch=0
+          t_magnets(nmag)%UsChamf=chamf
+          t_magnets(nmag)%DsChamf=chamf
+
+          if (ckey.eq.'BlockUsChamf') then
+            kblockch=-1
+            t_magnets(nmag)%DsChamf=0.0d0
+          else if (ckey.eq.'BlockDsChamf') then
+            kblockch=1
+            t_magnets(nmag)%UsChamf=0.0d0
+          endif
+
+          npoi=12
+
+          dx=t_magnets(nmag)%size(1)
+          dy=t_magnets(nmag)%size(2)
+          dz=t_magnets(nmag)%size(3)
+
+          if (dx.le.0.0d0.or.dy.le.0.0d0.or.dz.le.0.0d0) then
+            t_magnets(nmag)%brn=0.0d0
+            t_magnets(nmag)%br=0.0d0
+          endif
+
+          if (t_magnets(nmag)%IsPole.ne.0.) then
+            call util_shrink_blockchamf(dx,dy,dz,chamf,kblockch,
+     &        coating*0.0d0,npoi,xp,yp,zp)
+          else
+            call util_shrink_blockchamf(dx,dy,dz,chamf,kblockch,
+     &        coating,npoi,xp,yp,zp)
+          endif
+
+          xp=xp+xc
+          yp=yp+yc
+          zp=zp+zc
+
+          cline=cbuff(5)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          cword=cline(jpos(1,1):jpos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nxdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nxdiv
+          endif
+
+          cword=cline(jpos(1,2):jpos(2,2))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nydiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nydiv
+          endif
+
+          cword=cline(jpos(1,3):jpos(2,3))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nzdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nzdiv
+          endif
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%yfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%yfracdiv
+          endif
+
+          cword=cline(jpos(1,5):jpos(2,5))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%zfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%zfracdiv
+          endif
+
+        else if (ckey.eq.'Cylinder') then
+
+          cline=cbuff(4)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          do i=1,3
+            cword=cline(jpos(1,i):jpos(2,i))
+            if (cword(1:1).eq.'$') then
+              t_magnets(nmag)%size(i)=undumag_variable_getval(cword)
+            else
+              read(cword,*)t_magnets(nmag)%size(i)
+            endif
+            if (t_magnets(nmag)%size(i).le.0.0d0) then
+              t_magnets(nmag)%brn=0.0d0
+              t_magnets(nmag)%br=0.0d0
+            endif
+          enddo
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%size(i)=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%cylphi
+          endif
+
+          cline=cbuff(5)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          cword=cline(jpos(1,1):jpos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nxdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nxdiv
+          endif
+
+          cword=cline(jpos(1,2):jpos(2,2))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nydiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)nydiv
+            phi=t_magnets(nmag)%cylphi
+            nydiv=max(nydiv,int(phi/30.0))
+            if (nydiv.lt.3) nydiv=3
+            t_magnets(nmag)%nydiv=nydiv
+          endif
+
+          cword=cline(jpos(1,3):jpos(2,3))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nzdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nzdiv
+          endif
+
+          radin=t_magnets(nmag)%size(1)
+          radout=t_magnets(nmag)%size(2)
+          height=t_magnets(nmag)%size(3)
+          angle=t_magnets(nmag)%cylphi
+
+          xyz=t_magnets(nmag)%xyz
+
+          if (radin.lt.tiny) radin=tiny
+
+          npoi=4*(nydiv+1)
+
+          if(npoi.gt.ncornmax) then
+
+            ncornmax=npoi
+            nplanmax=2*ncornmax
+            lenface=ncornmax*nplanmax*2
+            lenedge=lenface*2
+            lenhull=lenface
+
+            deallocate(xp,yp,zp,xpc,ypc,zpc,
+     &        kface,kedge,khull,
+     &        xpuffer1,ypuffer1,zpuffer1,
+     &        xpuffer2,ypuffer2,zpuffer2,
+     &        xpuffer3,ypuffer3,zpuffer3
+     &        )
+            allocate(
+     &        xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
+     &        xpuffer2(ncornmax),ypuffer2(ncornmax),zpuffer2(ncornmax),
+     &        xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax),
+     &        xp(ncornmax),yp(ncornmax),zp(ncornmax),
+     &        xpc(ncornmax),ypc(ncornmax),zpc(ncornmax),
+     &        kface(lenface),kedge(4,lenedge),khull(lenhull))
+          endif
+
+          ip=0
+          r=radin
+          npoi=0
+          dphi=angle/dble(nydiv)*grarad1
+          do ir=1,2
+            h=-height/2.0d0
+            do ih=1,2
+              phi=-angle/2.0d0*grarad1
+              do iphi=1,nydiv+1
+                ip=ip+1
+                xp(ip)=r*sin(phi)+xc
+                yp(ip)=h+yc
+                zp(ip)=r*cos(phi)+zc
+                phi=phi+dphi
+              enddo
+              h=height/2.0d0
+            enddo
+            r=radout
+          enddo
+
+          npoi=ip
+
+          call clcmag_cut_cyl(nmag)
+
+        else if (ckey.eq.'Corners'.or.ckey.eq.'File') then
+
+          cline=cbuff(4)
+          call util_string_split(cline,1000,nwords,jpos,istat)
+
+          cword=cline(jpos(1,1):jpos(2,1))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nxdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nxdiv
+          endif
+
+          cword=cline(jpos(1,2):jpos(2,2))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nydiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nydiv
+          endif
+
+          cword=cline(jpos(1,3):jpos(2,3))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%nzdiv=nint(undumag_variable_getval(cword))
+          else
+            read(cword,*)t_magnets(nmag)%nzdiv
+          endif
+
+          cword=cline(jpos(1,4):jpos(2,4))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%yfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%yfracdiv
+          endif
+
+          cword=cline(jpos(1,5):jpos(2,5))
+          if (cword(1:1).eq.'$') then
+            t_magnets(nmag)%zfracdiv=undumag_variable_getval(cword)
+          else
+            read(cword,*)t_magnets(nmag)%zfracdiv
+          endif
+
+          if (ckey.eq.'Corners') then
+
+            read(cbuff(5),*) npoi
+
+            if(npoi.gt.ncornmax) then
+              ncornmax=npoi
+              deallocate(xp,yp,zp,xpc,ypc,zpc,kface,kedge,khull,
+     &          xpuffer1,ypuffer1,zpuffer1,
+     &          xpuffer2,ypuffer2,zpuffer2,
+     &          xpuffer3,ypuffer3,zpuffer3
+     &          )
+              allocate(
+     &          xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
+     &          xpuffer2(ncornmax),ypuffer2(ncornmax),zpuffer2(ncornmax),
+     &          xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax),
+     &          xp(ncornmax),yp(ncornmax),zp(ncornmax),
+     &          xpc(ncornmax),ypc(ncornmax),zpc(ncornmax),
+     &          kface((npoi+1)*npoi),kedge(4,2*npoi-2),khull(ncornmax))
+            endif
+
+            do i=1,npoi
+
+              ib=ib+1
+              if (kb.eq.0) then
+                cline=clcmag(ib)
+              else
+                cline=clcspec(ib)
+              endif
+
+              call util_string_split(cline,1000,nwords,ipos,istat)
+
+              do k=1,3
+                cword=cline(ipos(1,k):ipos(2,k))
+                if (cword(1:1).eq.'$') then
+                  x=undumag_variable_getval(cword)
+                else
+                  read(cword,*)x
+                endif
+                if (k.eq.1) then
+                  xp(i)=x+xc
+                else if (k.eq.2) then
+                  yp(i)=x+yc
+                else if (k.eq.3) then
+                  zp(i)=x+zc
+                endif
+              enddo !k
+
+            enddo !npoi
+
+          else !ckey
+
+            cfile=cbuff(5)
+            cline=trim(cfile)
+            l=len_trim(cfile)
+            if (cfile(1:1).eq."'") then
+              cline=cfile(2:l-1)
+            endif
+            cfile=cline
+            t_magnets(nmag)%cfile=trim(cfile)
+
+            inquire(file=trim(cfile),exist=lexist)
+            if (lexist.eqv..false.) then
+              write(lun6,*)"*** Error in clcbuff_to_magnets: File"
+              write(lun6,*)trim(cfile)
+              write(lun6,*)"not found ***"
+              stop
+            endif
+
+            open(newunit=lun,file=trim(cfile),status='old')
+            npoi=0
+            do while(.true.)
+              call util_skip_comment_empty_end(lun,ieof)
+              if (ieof.ne.0) exit
+              read(lun,'(a)')cline
+              npoi=npoi+1
+            enddo
+            rewind(lun)
+
+            if(npoi.gt.ncornmax) then
+              ncornmax=npoi
+              deallocate(xp,yp,zp,kface,kedge,khull,
+     &          xpuffer1,ypuffer1,zpuffer1,
+     &          xpuffer2,ypuffer2,zpuffer2,
+     &          xpuffer3,ypuffer3,zpuffer3)
+              allocate(xp(ncornmax),yp(ncornmax),zp(ncornmax),
+     &          kface((npoi+1)*npoi),kedge(4,2*npoi-2),khull(npoi),
+     &          xpuffer1(ncornmax),ypuffer1(ncornmax),zpuffer1(ncornmax),
+     &          xpuffer2(ncornmax),ypuffer2(ncornmax),zpuffer2(ncornmax),
+     &          xpuffer3(ncornmax),ypuffer3(ncornmax),zpuffer3(ncornmax)
+     &          )
+            endif
+
+            do i=1,npoi
+              call util_skip_comment_empty_end(lun,ieof)
+              read(lun,'(a)')cline
+              call util_string_split(cline,1000,nwords,ipos,istat)
+              do k=1,3
+                cword=cline(ipos(1,k):ipos(2,k))
+                if (cword(1:1).eq.'$') then
+                  x=undumag_variable_getval(cword)
+                else
+                  read(cword,*)x
+                endif
+                if (k.eq.1) then
+                  xp(i)=x+xc
+                else if (k.eq.2) then
+                  yp(i)=x+yc
+                else if (k.eq.3) then
+                  zp(i)=x+zc
+                endif
+              enddo !k
+            enddo !npoi
+
+          endif !Corners and File
+
+        else
+
+          write(lun6,*)"*** Error in clcbuff_to_magnets: Unknown magnet type:"
+          write(lun6,*)trim(ckey)
+          stop
+
+        endif
+
++self,if=debcm.
+        do i=1,npoi
+          write(887,*)xp(i),yp(i),zp(i),i
+        enddo
+        flush(887)
+        close(887)
++self.
+
+        if (t_magnets(nmag)%IsPole.eq.0.and.t_magnets(nmag)%brn.eq.0.0d0) then
+          !print*,"Test:",nmag,t_magnets(nmag)%brn
+          nmag=nmag-1
+          cycle
+        endif
+
+        call util_convex_hull_3d_overwrite(nmag,npoi,xp,yp,zp,khull,kedge,kface,
+     &    nhull,nedge,nface,kfacelast,hulltiny,ifailhull)
+
++self,if=debcm.
+        l=0
+        do iplan=1,nface
+          l=l+1
+          n=kface(l)
+          do i=1,n
+            l=l+1
+            ipoi=kface(l)
+            write(900,*)iplan,i,l,ipoi,xp(ipoi),yp(ipoi),zp(ipoi)
+          enddo
+        enddo
++self.
+        if (ifailhull.ne.0.or.nhull.lt.4) then
+          write(lun6,*)"*** Error in clcbuff_to_magnets: Subroutine util_convex_hull_3d failed for ",
+     &      trim(t_magnets(nmag)%cnam)
+          stop
+        endif
+
+        if (ifailhull.ne.0.or.nhull.lt.4) then
+          write(lun6,*)"*** Error in clcbuff_to_magnets: Subroutine util_convex_hull_3d failed for ",
+     &      trim(t_magnets(nmag)%cnam)
+          stop
+        endif
+
+        npoi=nhull
+
+        allocate(t_magnets(nmag)%xhull0(npoi))
+        allocate(t_magnets(nmag)%yhull0(npoi))
+        allocate(t_magnets(nmag)%zhull0(npoi))
+        allocate(t_magnets(nmag)%xhull(npoi))
+        allocate(t_magnets(nmag)%yhull(npoi))
+        allocate(t_magnets(nmag)%zhull(npoi))
+        allocate(t_magnets(nmag)%khull(npoi))
+        allocate(t_magnets(nmag)%kface(kfacelast))
+        allocate(t_magnets(nmag)%kedge(4,nedge))
+        allocate(t_magnets(nmag)%lface(nface))
+
+        t_magnets(nmag)%nhull=npoi
+        t_magnets(nmag)%khull(1:npoi)=khull(1:npoi)
+
+        gcen=0.0d0
+        do i=1,npoi
+          t_magnets(nmag)%xhull0(i)=xp(i)
+          t_magnets(nmag)%yhull0(i)=yp(i)
+          t_magnets(nmag)%zhull0(i)=zp(i)
+          t_magnets(nmag)%xhull(i)=xp(i)
+          t_magnets(nmag)%yhull(i)=yp(i)
+          t_magnets(nmag)%zhull(i)=zp(i)
+          gcen=gcen+[xp(i),yp(i),zp(i)]
+        enddo
+
+        if (t_magnets(nmag)%ctype.eq.'Cylinder') then
+          size=t_magnets(nmag)%size
+          vol=(size(2)**2-size(1)**2)*size(3)*t_magnets(nmag)%cylphi/360.0d0*pi1
+        else
+          call util_volume(npoi,xp,yp,zp,hulltiny,vol,kfail)
+          if (kfail.ne.0) then
+            write(lun6,*)"*** Error in clcbuff_to_magnets: Subroutine util_volume failed for ",
+     &        trim(t_magnets(nmag)%cnam)
+            stop
+          endif
+        endif
+
+        t_magnets(nmag)%volume=vol
+
+        gcen=gcen/npoi
+        t_magnets(nmag)%gcen=gcen
+
+        t_magnets(nmag)%kedge(:,1:nedge)=kedge(:,1:nedge)
+        t_magnets(nmag)%nedge=nedge
+        t_magnets(nmag)%kedge(:,1:nedge)=kedge(:,1:nedge)
+        t_magnets(nmag)%nface=nface
+        t_magnets(nmag)%kfacelast=kfacelast
+        t_magnets(nmag)%kface(1:kfacelast)=kface(1:kfacelast)
+
+        call util_klface(kface,kfacelast,nface,t_magnets(nmag)%lface)
+
+        nplanmax=max(nplanmax,nface)
+
+        nxdiv=t_magnets(nmag)%nxdiv
+        nydiv=t_magnets(nmag)%nydiv
+        nzdiv=t_magnets(nmag)%nzdiv
+
+        if (t_magnets(nmag)%ctype.ne.'Cylinder') then
+          t_magnets(nmag)%nvoxels=0
+        endif
+
+        allocate(t_magnets(nmag)%kvoxels(nxdiv,nydiv,nzdiv))
+        t_magnets(nmag)%kvoxels=0
+        allocate(t_magnets(nmag)%t_xyzcuts(nxdiv,nydiv,nzdiv))
+        allocate(t_magnets(nmag)%t_xycuts(nxdiv,nydiv))
+        allocate(t_magnets(nmag)%t_xcuts(nxdiv))
+
+      enddo !nclcmag
+
+      deallocate(xp,yp,zp,xpc,ypc,zpc,kface,kedge,khull)
+
+      !all util_break
+
+      nmag_t=0
+      nspecmag_t=0
+      do i=1,nmag
+        if (t_magnets(i)%IsSpecial.eq.1) then
+          nspecmag_t=nspecmag_t+1
+        else
+          nmag_t=nmag_t+1
+        endif
+      enddo
+
+      nplanmax_t=nplanmax
+      ncornmax_t=ncornmax
+
+      nmagtot_t=nmag_t+nspecmag_t
+
+      deallocate(magmodule)
+
+      return
+      end
++DECK,clccoil_to_coils.
+*CMZ :  2.05/03 06/11/2023  13.51.20  by  Michael Scheer
+*CMZ :  2.04/13 31/08/2023  13.05.39  by  Michael Scheer
+*CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
+*CMZ :  2.02/02 03/03/2022  12.09.38  by  Michael Scheer
+*CMZ :  2.02/01 19/10/2021  13.27.41  by  Michael Scheer
+*-- Author :    Michael Scheer   20/04/2021
+      subroutine clccoil_to_coils
+
+      use undumagf90m
+      use commandlinef90m
+      use magnets_structure
+
+      implicit none
+
+      character(2048) cline,cline1
+      character(128) cword,ckey
+
+      double precision curr,x1,y1,z1,x2,y2,z2,
+     &  wind19(19),bx,by,bz,p(100)
+
+      integer i,ib,nw,icolor
+      integer ipos(2,1000),nwords,nc,nwc,istat,nf,nfila
+
+      integer lunf,ieof
+
+      character(32) c32
+
+      nrace=0
+      nwind=0
+      ncrace=0
+      narc=0
+      ncarc=0
+      nrbar=0
+      nthwir=0
+      ncwires=0
+
+      if (ncoils_t.le.0) then
+        allocate(wire(nwitems,1)) !to avoid problmens in undumag_bpolyplot
+        return
+      endif
+
+      allocate(t_coils(ncoils_t))
+
+      nw=0
+      nwc=0
+      nc=0
+      ib=0
+
+      if (kechocalc.ne.0) then
+        print*,""
+        print*,"Entered clcoil_to_coils:"
+        print*,""
+      endif
+
+      do while (ib.lt.nclccoil-1)
+
+        ib=ib+1
+        cline=clccoil(ib)
+
+        if (kechocalc.ne.0) print*,trim(cline)
+
+        call clcstring_to_vars(cline)
+        call util_string_split(cline,1000,nwords,ipos,istat)
+
+        if (cline(ipos(1,1):ipos(2,1)).eq.'Coil') cycle
+
+        ckey=trim(adjustl(cline(ipos(1,1):ipos(2,1))))
+        nc=nc+1
+
+        if (nwords.gt.1) then
+          t_coils(nc)%cnam=cline(ipos(1,2):ipos(2,2))
+        else
+          write(c32,*)nc
+          t_coils(nc)%cnam="Coil_" // adjustl(trim(c32))
+        endif
+
+        t_coils(nc)%ctype=trim(ckey)
+
+        ib=ib+1
+        cline=clccoil(ib)
+        if (kechocalc.ne.0) print*,trim(cline)
+        call clcstring_to_vars(cline)
+        call util_string_split(cline,1000,nwords,ipos,istat)
+        cword=cline(ipos(1,1):ipos(2,1))
+
+        if (ckey.eq.'Filaments') then
+
+          read(cword,*)nf
+          t_coils(nc)%iibuff=ib
+
+          nfila=0
+          do i=1,nf
+            ib=ib+1
+            cline=clccoil(ib)
+            if (kechocalc.ne.0) print*,trim(cline)
+            call clcstring_to_vars(cline)
+            call util_string_split(cline,1000,nwords,ipos,istat)
+            cword=cline(ipos(1,1):ipos(2,1))
+            read(cword,*)curr
+c            if (curr.eq.0.0d0) cycle
+            cword=cline(ipos(1,2):ipos(2,2))
+            read(cword,*)x1
+            cword=cline(ipos(1,3):ipos(2,3))
+            read(cword,*)y1
+            cword=cline(ipos(1,4):ipos(2,4))
+            read(cword,*)z1
+            cword=cline(ipos(1,5):ipos(2,5))
+            read(cword,*)x2
+            cword=cline(ipos(1,6):ipos(2,6))
+            read(cword,*)y2
+            cword=cline(ipos(1,7):ipos(2,7))
+            read(cword,*)z2
+            if ((x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+            nfila=nfila+1
+          enddo
+
+          if (nfila.eq.0) then
+            nc=nc-1
+          endif
+
+          ncwires=ncwires+nfila
+          t_coils(nc)%iebuff=ib
+          t_coils(nc)%params(1)=nfila
+
+        else if (ckey.eq.'File') then
+
+          nfila=0
+          cline=trim(adjustl(clccoil(ib)))
+          t_coils(nc)%cparams=trim(cline)
+          open(newunit=lunf,file=cline,status='old')
+
+          do while (.true.)
+            call util_skip_comment_empty_end(lunf,ieof)
+            if (ieof.ne.0) exit
+            read(lunf,'(a)') cline
+            if (kechocalc.ne.0) print*,trim(cline)
+            call clcstring_to_vars(cline)
+            read(cline,*)curr,x1,y1,z1,x2,y2,z2,icolor
+c            if (curr.eq.0.0d0.or.(x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+            if ((x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+            nfila=nfila+1
+          enddo
+          close(lunf)
+
+          if (nfila.eq.0) then
+            nc=nc-1
+          endif
+
+          ncwires=ncwires+nfila
+          t_coils(nc)%params(1)=nfila
+
+        else if (ckey.eq.'RectWindings') then
+          read(cline,*)t_coils(nc)%params(1:19)
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
+          nwind=nwind+1
+        else if (ckey.eq.'Rectangular') then
+          read(cline,*)t_coils(nc)%params(1:17)
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
+          nrace=nrace+1
+        else if (ckey.eq.'RectangCirc') then
+          read(cline,*)t_coils(nc)%params(1:17)
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
+          ncrace=ncrace+1
+        else if (ckey.eq.'RectArc') then
+          ib=ib+1
+          cline1=clccoil(ib)
+          if (kechocalc.ne.0) print*,trim(cline1)
+          call clcstring_to_vars(cline1)
+          cline=trim(adjustl(cline)) // " " // trim(adjustl(cline1))
+          read(cline,*)t_coils(nc)%params(1:21)
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
+          narc=narc+1
+        else if (ckey.eq.'CircArc') then
+          ib=ib+1
+          cline1=clccoil(ib)
+          if (kechocalc.ne.0) print*,trim(cline1)
+          call clcstring_to_vars(cline1)
+          cline=trim(adjustl(cline)) // " " // trim(adjustl(cline1))
+          read(cline,*)t_coils(nc)%params(1:20)
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
+          ncarc=ncarc+1
+        else if (ckey.eq.'RectBar') then
+          ib=ib+1
+          cline1=clccoil(ib)
+          if (kechocalc.ne.0) print*,trim(cline1)
+          cline1=clccoil(ib)
+          call clcstring_to_vars(cline1)
+          cline=trim(adjustl(cline)) // " " // trim(adjustl(cline1))
+          read(cline,*)t_coils(nc)%params(1:19)
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
+          nrbar=nrbar+1
+        else if (ckey.eq.'ThickWire') then
+          ib=ib+1
+          cline1=clccoil(ib)
+          if (kechocalc.ne.0) print*,trim(cline1)
+          call clcstring_to_vars(cline1)
+          cline=trim(adjustl(cline)) // " " // trim(adjustl(cline1))
+          read(cline,*)t_coils(nc)%params(1:18)
+c          if (t_coils(nc)%params(1).eq.0.0d0) then
+c            nc=nc-1
+c            cycle
+c          endif
+          nthwir=nthwir+1
+        endif !ckey
+
+      enddo !nclccoil
+
+      if (ncwires.gt.0) then
+        allocate(wire(nwitems,ncwires))
+        wire=0.0d0
+      endif
+
+      if (nwind.gt.0) then
+        allocate(wind(19,nwind))
+        wind=0.0d0
+      endif
+
+      if (nrace.gt.0) then
+        allocate(race(17,nrace))
+        race=0.0d0
+      endif
+
+      if (ncrace.gt.0) then
+        allocate(crace(17,ncrace))
+        crace=0.0d0
+      endif
+
+      if (narc.gt.0) then
+        allocate(arc(21,narc))
+        arc=0.0d0
+      endif
+
+      if (ncarc.gt.0) then
+        allocate(carc(20,ncarc))
+        carc=0.0d0
+      endif
+
+      if (nrbar.gt.0) then
+        allocate(rectbar(19,nrbar))
+        rectbar=0.0d0
+      endif
+
+      if (nthwir.gt.0) then
+        allocate(thickwire(18,nthwir))
+        thickwire=0.0d0
+      endif
+
+      ncoils_t=nc
+
+      ncwires=0
+      nrace=0
+      nwind=0
+      ncrace=0
+      narc=0
+      ncarc=0
+      nrbar=0
+      nthwir=0
+
+      nw=0
+      nc=0
+      ib=0
+
+      do nc=1,ncoils_t
+
+        p(1:100)=t_coils(nc)%params(1:100)
+        ckey=trim(adjustl(t_coils(nc)%ctype))
+
+        if (ckey.eq.'Filaments') then
+
+          nwc=nwc+1
+
+          do ib=t_coils(nc)%iibuff+1,t_coils(nc)%iebuff
+            cline=clccoil(ib)
+            call clcstring_to_vars(cline)
+            call util_string_split(cline,1000,nwords,ipos,istat)
+            cword=cline(ipos(1,1):ipos(2,1))
+            read(cword,*)curr
+c            if (curr.eq.0.0d0) cycle
+            cword=cline(ipos(1,2):ipos(2,2))
+            read(cword,*)x1
+            cword=cline(ipos(1,3):ipos(2,3))
+            read(cword,*)y1
+            cword=cline(ipos(1,4):ipos(2,4))
+            read(cword,*)z1
+            cword=cline(ipos(1,5):ipos(2,5))
+            read(cword,*)x2
+            cword=cline(ipos(1,6):ipos(2,6))
+            read(cword,*)y2
+            cword=cline(ipos(1,7):ipos(2,7))
+            read(cword,*)z2
+            if ((x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+            ncwires=ncwires+1
+            cword=cline(ipos(1,8):ipos(2,8))
+            read(cword,*)icolor
+            wire(1,ncwires)=1 !type
+            wire(2,ncwires)=curr
+            wire(3,ncwires)=x1
+            wire(4,ncwires)=y1
+            wire(5,ncwires)=z1
+            wire(6,ncwires)=x2
+            wire(7,ncwires)=y2
+            wire(8,ncwires)=z2
+            wire(9,ncwires)=icolor
+            wire(10,ncwires)=nc
+            wire(11,ncwires)=nwc
+          enddo
+
+        else if (ckey.eq.'File') then
+          cline=t_coils(nc)%cparams
+          open(newunit=lunf,file=cline,status='old')
+          nwc=nwc+1
+          do i=1,nint(t_coils(nc)%params(1))
+            call util_skip_comment_empty_end(lunf,ieof)
+            read(lunf,'(a)') cline
+            call clcstring_to_vars(cline)
+            read(cline,*)curr,x1,y1,z1,x2,y2,z2,icolor
+            if ((x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+c            if (curr.eq.0.0d0.or.(x1-x2)**2+(y2-y1)**2+(z2-z1)**2.eq.0.0d0) cycle
+            ncwires=ncwires+1
+            wire(1,ncwires)=1 !type
+            wire(2,ncwires)=curr
+            wire(3,ncwires)=x1
+            wire(4,ncwires)=y1
+            wire(5,ncwires)=z1
+            wire(6,ncwires)=x2
+            wire(7,ncwires)=y2
+            wire(8,ncwires)=z2
+            wire(9,ncwires)=icolor
+            wire(10,ncwires)=nc
+            wire(11,ncwires)=nwc
+          enddo
+          close(lunf)
+        else if (ckey.eq.'RectWindings') then
+          wind19=t_coils(nc)%params(1:19)
+          nwind=nwind+1
+          wind(1,nwind)=wind19(1)
+          wind(2:17,nwind)=wind19(4:19)
+          wind(18:19,nwind)=wind19(2:3)
+        else if (ckey.eq.'Rectangular') then
+          nrace=nrace+1
+          race(1:17,nrace)=t_coils(nc)%params(1:17)
+        else if (ckey.eq.'RectangCirc') then
+          ncrace=ncrace+1
+          crace(1:17,ncrace)=t_coils(nc)%params(1:17)
+        else if (ckey.eq.'RectArc') then
+          narc=narc+1
+          arc(1:21,narc)=t_coils(nc)%params(1:21)
+        else if (ckey.eq.'CircArc') then
+          ncarc=ncarc+1
+          carc(1:20,ncarc)=t_coils(nc)%params(1:20)
+        else if (ckey.eq.'RectBar') then
+          nrbar=nrbar+1
+          rectbar(1:19,nrbar)=t_coils(nc)%params(1:19)
+        else if (ckey.eq.'ThickWire') then
+          nthwir=nthwir+1
+          thickwire(1:18,nthwir)=t_coils(nc)%params(1:18)
+        endif !ckey
+
+      enddo !nclccoil
+
+      call undumag_bcoils(0.0d0,0.0d0,0.0d0,bx,by,bz,istat)
+
+      return
+      end
++DECK,clcmag_to_radia_python.
+*CMZ :          27/11/2023  18.54.15  by  Michael Scheer
+*CMZ :  2.04/28 29/09/2023  11.43.35  by  Michael Scheer
+*CMZ :  2.04/22 22/09/2023  12.32.06  by  Michael Scheer
+*CMZ :  2.04/21 21/09/2023  16.03.24  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.10.06  by  Michael Scheer
+*CMZ :  2.04/19 18/09/2023  10.41.10  by  Michael Scheer
+*CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
+*CMZ :  2.02/01 09/02/2022  19.36.16  by  Michael Scheer
+*CMZ :  2.02/00 09/01/2021  12.08.32  by  Michael Scheer
+*CMZ :  2.01/03 15/02/2019  12.47.44  by  Michael Scheer
+*CMZ :  2.00/00 11/04/2018  15.45.12  by  Michael Scheer
+*CMZ :  1.25/04 04/04/2018  11.40.25  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  13.27.59  by  Michael Scheer
+*CMZ :  1.23/07 12/10/2017  08.25.43  by  Michael Scheer
+*CMZ :  1.23/05 06/10/2017  09.00.40  by  Michael Scheer
+*CMZ :  1.23/02 11/09/2017  15.35.11  by  Michael Scheer
+*CMZ :  1.18/01 08/06/2017  14.20.17  by  Michael Scheer
+*CMZ :  1.15/10 11/04/2017  11.14.47  by  Michael Scheer
+*CMZ :  1.15/00 24/03/2017  10.28.46  by  Michael Scheer
+*CMZ :  1.14/00 21/03/2017  17.33.35  by  Michael Scheer
+*CMZ :  1.11/04 24/01/2017  10.15.10  by  Michael Scheer
+*CMZ :  1.11/03 13/01/2017  15.10.38  by  Michael Scheer
+*CMZ :  1.11/00 03/01/2017  16.16.45  by  Michael Scheer
+*-- Author :    Michael Scheer   12/12/2016
+      subroutine clcmag_to_radia_python
+
+      use undumagf90m
+      use bpolyederf90m
+      use commandlinef90m
+      use magnets_structure
+
+! Interface to RADIA under Python.
+! It writes the geometry to snipplets for RADIA
+! Restriction:
+! Isotropic materials must have a magnetization less then 0.01
+!
+! RADIA coordinate system: y is longitudinal, z is vertical
+! UNDUMAG: x is longitudinal, y is vertical
+
+      implicit none
+
++seq,phyconparam.
+
+      double precision, dimension (:), allocatable :: x,y,z,brrec
+
+      integer, dimension (:), allocatable :: khull,imatrec,imatiron,
+     &  imatmagpol
+
+      double precision :: gcen(3)
+
+      real :: hfe,bfe
+
+      integer ::
+     &  nsymx,nsymy,nsymz,npoi,nmatfe,nlast,nfirst,nface,ncyl,ncolor,mater
+     &  ,lunrad,lunfe,lmat,kproto,kpoi,k,ironmode,iron,imp,ipoi,imag,imat
+     &  ,ifound,i,iface,ieof,nbr,nUnduMag,nUnduPol,nMagPolTot,lenout,lunproc,
+     &  istat=0,ivox,kmagnet,kvoxel,ixdiv,iydiv,izdiv
+
+      character(2048) cline,cbuff(10),cout,clunrad
+      character(64) chmat,cnam
+      character(32) c32,c32x,c32y,c32z
+      character(17) chtime
+
+      ncyl=0
+
+      maxpoints=max(maxpoints,ncornmax*nplanmax)
+
+      allocate(x(maxpoints),y(maxpoints),z(maxpoints),khull(maxpoints))
+      allocate(brrec(nmagtot_t),imatrec(nmagtot_t),
+     &  imatiron(nmagtot_t),imatmagpol(nmagtot_t))
+
+      nbr=0
+      nmatfe=0
+      brrec=0.0d0
+      imatrec=0
+
+      do imag=1,nmagtot_t
+        kproto=t_magcopy(imag)%kproto
+        ifound=0
+        if (t_magnets(kproto)%ispole.ne.0) then
+          do i=1,nmatfe
+            if (t_magnets(kproto)%imat.eq.imatiron(i)) then
+              ifound=1
+              imatmagpol(imag)=i
+              exit
+            endif
+          enddo
+          if (ifound.eq.1) then
+            cycle
+          endif
+          nmatfe=nmatfe+1
+          imatiron(nmatfe)=t_magnets(kproto)%imat
+          imatmagpol(imag)=nmatfe
+        else
+          do i=1,nbr
+            if (brrec(i).eq.t_magcopy(imag)%brn.and.
+     &          t_magnets(kproto)%imat.eq.imatrec(i)) then
+              ifound=1
+              imatmagpol(imag)=i
+              exit
+            endif
+          enddo
+          if (ifound.eq.1) cycle
+          nbr=nbr+1
+          brrec(nbr)=t_magcopy(imag)%brn
+          imatrec(nbr)=t_magnets(kproto)%imat
+          imatmagpol(imag)=nbr
+        endif
+      enddo
+
+      nsymx=1
+      nsymy=1
+      nsymz=1
+
+      if (ixsymo.lt.0) nsymx=nsymx*2
+      if (iysymo.lt.0) nsymy=nsymy*2
+      if (izsymo.lt.0) nsymz=nsymz*2
+
+      open(newunit=lunrad,file='undumag_radia.py')
+
+      write(lunrad,'(a)')'#-- Begin of lines generated by UNDUMAG --'
+      write(lunrad,'(a)')'#-- Version ' // trim(chuvers) // ' --'
+      write(lunrad,'(a)')' '
+      write(lunrad,'(a)')'from __future__ import print_function #Python 2.7 compatibility'
+      write(lunrad,'(a)') 'import radia as rad'
+      write(lunrad,'(a)') 'import numpy as np'
+      write(lunrad,'(a)') 'import time, os, sys, platform'
+      write(lunrad,'(a)') 'from numpy import *'
+      write(lunrad,'(a)') 'from pyhull import qconvex'
+      write(lunrad,'(a)')' '
+      write(lunrad,'(a)') 'NL = "\n"'
+      write(lunrad,'(a)')' '
+      write(lunrad,'(a)')"print('\nRADIA Library Version:', rad.UtiVer(), '\n')"
+      write(lunrad,'(a)')
+
+      write(c32x,*) kundurun
+      call util_time_and_date(chtime)
+      write(lunrad,'(a)')'# Run: ' // trim(c32x) // ' ' // chtime
+
+      write(lunrad,'(a)')" "
+      write(lunrad,'(a)')"# Comment: "//trim(unducomment)
+      write(lunrad,'(a)')
+      write(lunrad,'(a)')'comment = "' // trim(unducomment) // '"'
+      write(lunrad,'(a)')
+
+      write(lunrad,'(a)')'# --- Variables of undumag.nam ---'
+      write(clunrad,*)
+
+      write(c32x,*)ixsymo
+      write(lunrad,'(a)')'iUnduXsym = ' // c32x
+      write(c32x,*)iysymo
+      write(lunrad,'(a)')'iUnduYsym = ' // c32x
+      write(c32x,*)izsymo
+      write(lunrad,'(a)')'iUnduZsym = ' // c32x
+
+      write(c32x,*)
+     &  xsym
+      write(lunrad,'(a)')'UnduSymX = ' // c32x
+      write(c32x,*)
+     &  iunduplot
+      write(lunrad,'(a)')"kDraw = " // c32x
+      write(c32x,*)
+     &  unduplot_theta
+      write(lunrad,'(a)')"unduplot_theta = " // c32x
+      write(c32x,*)
+     &  unduplot_phi
+      write(lunrad,'(a)')"unduplot_phi = " // c32x
+
+      write(c32x,*)xcenter
+      write(lunrad,'(a)')"UnduXCenter = " // c32x
+
+      write(c32x,*)iforce
+      write(lunrad,'(a)')'iUnduForce = ' // c32x
+      write(lunrad,'(a)')
+
+      write(c32x,*)xcentershift
+      write(lunrad,'(a)')"UnduXCenterShift = " // c32x
+      write(c32x,*)utorqcenx
+      write(lunrad,'(a)')"UnduTorqCenX = " // c32x
+      write(c32x,*)utorqceny
+      write(lunrad,'(a)')"UnduTorqCenY = " // c32x
+      write(c32x,*)utorqcenz
+      write(lunrad,'(a)')"UnduTorqCenZ = " // c32x
+
+      write(lunrad,'(a)')
+      write(c32x,*)xmapmin
+      write(lunrad,'(a)')"UnduXMapMin = " // c32x
+      write(c32x,*)xmapmax
+      write(lunrad,'(a)')"UnduXMapMax = " // c32x
+      write(c32x,*) nxmap
+      write(lunrad,'(a)')"nUnduXMap = " // c32x
+
+      write(lunrad,'(a)')
+      write(c32x,*) ymapmin
+      write(lunrad,'(a)')"UnduYMapMin = " // c32x
+      write(c32x,*) ymapmax
+      write(lunrad,'(a)')"UnduYMapMax = " // c32x
+      write(c32x,*) nymap
+      write(lunrad,'(a)')"nUnduYMap = " // c32x
+
+      write(lunrad,'(a)')
+      write(c32x,*)zmapmin
+      write(lunrad,'(a)')"UnduZMapMin = " // c32x
+      write(c32x,*)zmapmax
+      write(lunrad,'(a)')"UnduZMapMax = " // c32x
+      write(c32x,*) nzmap
+      write(lunrad,'(a)')"nUnduZMap = " // c32x
+
+      write(lunrad,'(a)')
+      write(c32x,*)
+     &  knopolmap
+      write(lunrad,'(a)')"nUnduNoPolMap = " // c32x
+      write(c32x,*)
+     &  knomagmap
+      write(lunrad,'(a)')"nUnduNoMagMap = " // c32x
+      write(lunrad,'(a)')
+
+c+self,if=uvarrad.
+
+      write(lunrad,'(a)')
+      write(lunrad,'(a)')'# --- Variables of undumag.clc ---'
+      write(lunrad,'(a)')
+
+      do i=1,nvar_t
+        write(clunrad,*) trim(t_variables(i)%cname),' = ',t_variables(i)%val
+        write(lunrad,'(a)') trim(adjustl(clunrad))
+      enddo !nvar_t
+c+self.,if=uvarrad.
+
+      write(lunrad,'(a)')
+      write(lunrad,'(a)')'# --- Materials of undumag.clc ---'
+      write(lunrad,'(a)')
+
+      write(lunrad,'(a)')'UmatREC = []'
+      do i=1,nbr
+        imat=imatrec(i)
+        if (imat.eq.0) cycle
+        if (matmaps(1,imat).eq.1) then
+          if (matmaps(2,imat).eq.1) then
+            write(c32x,'(f6.4)')bcmat(2,1,imat) !-1.0d0
+            write(c32y,'(f6.4)')bcmat(3,1,imat) !-1.0d0
+            write(c32z,'(g12.5)')brrec(i)
+            write(clunrad,'(a)')
+     &        "UmatREC.append(rad.MatLin([" //
+     &        trim(adjustl(c32x)) // "," //
+     &        trim(adjustl(c32y)) //
+     &        "]," // trim(adjustl(c32z)) // "))"
+            write(lunrad,'(a)') trim(clunrad)
+          else
+            print*,"*** Error in clcmag_to_radia_python: mode",
+     &        matmaps(2,imat), " not yet implemented for REC material ",imat
+            print*,""
+            !stop "--- UNDUMAG aborted ---"
+          endif
+        else
+          print*,"*** Error in clcmag_to_radia_python: Unknown material or mode", imat,
+     &      matmaps(:,imat)
+          print*,""
+          !stop "--- UNDUMAG aborted ---"
+        endif
+      enddo
+
+      write(lunrad,'(a)')'UmatIron = []'
+      do i=1,nmatfe
+        imat=imatiron(i)
+        if (imat.eq.0) cycle
+        if (matmaps(1,imat).eq.2) then
+          write(lunrad,'(a)')
+     &      "UmatIron.append(rad.MatSatIsoTab([ \"
+          do k=2,nclcmat
+            read(clcmat(k),*)iron,lmat,ironmode,cbuff(1)
+            if (iron.eq.imat) then
+              open(newunit=lunfe,file=trim(cbuff(1)),status='old')
+              ieof=0
+              do while (ieof.eq.0)
+                call util_skip_comment_end(lunfe,ieof)
+                if (ieof.ne.0) exit
+                read(lunfe,*) hfe,bfe
+                write(clunrad,*)"[",hfe,",",bfe,"],"
+                write(lunrad,'(a)') trim(clunrad)
+              enddo
+              backspace(lunrad)
+              write(clunrad,*)"[",hfe,",",bfe,"]]))"
+              write(lunrad,'(a)') trim(clunrad)
+              close(lunfe)
+            endif
+          enddo
+        else
+          print*,"*** Error in clcmag_to_radia_python: Unknown material or mode", imat,
+     &      matmaps(:,imat)
+          print*,""
+          !stop "--- UNDUMAG aborted ---"
+        endif
+      enddo
+
+      write(lunrad,'(a)')
+      write(lunrad,'(a)')'# --- Poles and magnets of undumag.clc ---'
+      write(lunrad,'(a)')
+
+      do imp=1,nmagtot_t
+
+        kproto=t_magcopy(imp)%kproto
+
+        ! radObjPolyhdr[
+        ! [
+        !   [x1,y1,z1], ..., [xn,yn,zn] Corners
+        ! ],
+        ! [
+        !   [f1n1,f1n2,...], ...., [f2n1,f2n2,...] Faces
+        ! ],
+        ! [mx,my,mz]:[0,0,0]]
+
+        if(t_magnets(kproto)%ctype.ne.'Cylinder') then
+
+          nface=t_magnets(kproto)%nface
+          ncolor=t_magnets(kproto)%icol
+
+          write(lunrad,'(a)')trim(t_magcopy(imp)%cnam)//" = rad.ObjPolyhdr([ \"
+
+          gcen=t_magcopy(imp)%gcen
+
+          do kpoi=1,t_magnets(kproto)%nhull
+
+            write(c32x,*)sngl(t_magnets(kproto)%xhull(kpoi)+gcen(1))
+            write(c32y,*)sngl(t_magnets(kproto)%yhull(kpoi)+gcen(2))
+            write(c32z,*)sngl(t_magnets(kproto)%zhull(kpoi)+gcen(3))
+
+            if (kpoi.lt.t_magnets(kproto)%nhull) then
+              write(clunrad,*)
+     &          "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"],"
+              write(lunrad,'(a)') trim(clunrad)
+            else
+              write(clunrad,*)
+     &          "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"]],[ \"
+              write(lunrad,'(a)') trim(clunrad)
+            endif
+          enddo !kpoi
+
+          kpoi=1
+
+          do iface=1,nface
+
+            npoi=t_magnets(kproto)%kface(kpoi)
+            cline="         ["
+
+            do ipoi=kpoi+1,kpoi+npoi
+              call util_string_append_num(cline,t_magnets(kproto)%kface(ipoi),
+     &          nfirst,nlast)
+              if (ipoi.lt.kpoi+npoi) then
+                call util_string_append(cline,',',nfirst,nlast)
+              else
+                call util_string_append(cline,'],',nfirst,nlast)
+              endif
+            enddo !ipoi
+
+            if (iface.lt.nface) then
+              write(lunrad,'(a)')cline(1:nlast)
+              call util_string_append(cline,'],',nfirst,nlast)
+            else
+              write(lunrad,'(a)')cline(1:nlast-1) // '], \'
+            endif
+            kpoi=kpoi+npoi+1
+          enddo !nface
+
+          if (t_magnets(kproto)%IsPole.eq.0) then
+            write(c32x,*)t_magcopy(imp)%br(1)
+            write(c32y,*)t_magcopy(imp)%br(2)
+            write(c32z,*)t_magcopy(imp)%br(3)
+            write(clunrad,*)"         [",trim(c32z),",",trim(c32x),",",trim(c32y),"])"
+            write(lunrad,'(a)') trim(clunrad)
+            mater = imatmagpol(imp)
+            write(chmat,*)mater-1
+            call util_string_trim(chmat,nfirst,nlast)
+            chmat="UmatREC["//chmat(nfirst:nlast)//"]"
+          else
+            write(lunrad,'(a)')"[0,0,0])"
+            mater = imatmagpol(imp)
+            write(chmat,*)mater-1
+            call util_string_trim(chmat,nfirst,nlast)
+            chmat="UmatIron["//chmat(nfirst:nlast)//"]"
+          endif !Pole/Mag
+
+          if (t_magnets(kproto)%nzdiv*t_magnets(kproto)%nydiv*t_magnets(kproto)%nxdiv.gt.1) then
+            write(lunrad,'(a)')
+            write(cline,*)
+     &        "rad.ObjDivMag("//trim(adjustl(t_magcopy(imp)%cnam))//", [[",
+     &        t_magnets(kproto)%nzdiv,",",
+     &        sngl(t_magnets(kproto)%zfracdiv),"],",t_magnets(kproto)%nxdiv,
+     &        ",[",t_magnets(kproto)%nydiv,",",
+     &        sngl(t_magnets(kproto)%yfracdiv),"]],'kxkykz->Numb')"
+            call util_remove_double_blanks(cline,cout,lenout)
+            write(lunrad,'(a)') cout(2:lenout)
+            write(lunrad,'(a)')
+          endif
+
+          write(lunrad,'(a)')
+          write(lunrad,'(a)')"rad.MatApl("//trim(adjustl(t_magcopy(imp)%cnam))//","//
+     &      trim(chmat)//")"
+
+          if (ncolor.eq.2) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[1,0,0],0.0001)"
+          else if (ncolor.eq.3) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[0,1,0],0.0001)"
+          else if (ncolor.eq.4) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[0,0,1],0.0001)"
+            write(lunrad,'(a)') trim(clunrad)
+          else if (ncolor.eq.5) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[1,1,],0.0001)"
+          else if (ncolor.eq.6) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[1,0,1],0.0001)"
+          else if (ncolor.eq.7) then
+            write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(adjustl(t_magcopy(imp)%cnam))//
+     &        ",[0,1,1],0.0001)"
+          endif
+
+          write(lunrad,'(a)')
+
+        else !cylinder:
+
+          do ivox=1,nvoxcopy_t
+
+            kproto=t_voxcopy(ivox)%kproto
+            if (t_magnets(kproto)%ctype.ne.'Cylinder') cycle
+
+            kmagnet=t_voxcopy(ivox)%kmagnet
+            kvoxel=t_voxcopy(ivox)%kvoxel
+
+            cline=adjustl(t_magcopy(imp)%cnam)
+            call util_string_append(cline,'_',nfirst,nlast)
+            ixdiv=t_magnets(kproto)%t_voxels(kvoxel)%ixdiv
+            call util_string_append_num(cline,ixdiv,nfirst,nlast)
+            call util_string_append(cline,'_',nfirst,nlast)
+            iydiv=t_magnets(kproto)%t_voxels(kvoxel)%iydiv
+            call util_string_append_num(cline,iydiv,nfirst,nlast)
+            call util_string_append(cline,'_',nfirst,nlast)
+            izdiv=t_magnets(kproto)%t_voxels(kvoxel)%izdiv
+            call util_string_append_num(cline,izdiv,nfirst,nlast)
+            cnam=trim(cline)
+            call util_string_append(cline," = rad.ObjPolyhdr([ \",nfirst,nlast)
+
+            write(lunrad,'(a)') trim(cline)
+
+            gcen=t_voxcopy(ivox)%gcen
+
+            npoi=t_magnets(kproto)%t_voxels(kvoxel)%nhull
+            do ipoi=1,npoi
+
+              write(c32x,*)sngl(t_magnets(kproto)%t_voxels(kvoxel)%xhull(ipoi)+
+     &          gcen(1))
+              write(c32y,*)sngl(t_magnets(kproto)%t_voxels(kvoxel)%yhull(ipoi)+
+     &          gcen(2))
+              write(c32z,*)sngl(t_magnets(kproto)%t_voxels(kvoxel)%zhull(ipoi)+
+     &          gcen(3))
+
+              if (ipoi.lt.npoi) then
+                write(clunrad,*)
+     &            "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"],"
+                write(lunrad,'(a)') trim(clunrad)
+              else
+                write(clunrad,*)
+     &            "           [",trim(c32z),",",trim(c32x),",",trim(c32y),"]],[ \"
+                write(lunrad,'(a)') trim(clunrad)
+              endif
+
+            enddo !ipoi
+
+            nface=t_magnets(kproto)%t_voxels(kvoxel)%nface
+            do iface=1,t_magnets(kproto)%t_voxels(kvoxel)%nface
+
+              k=t_magnets(kproto)%t_voxels(kvoxel)%lface(iface)
+              npoi=t_magnets(kproto)%t_voxels(kvoxel)%kface(k)
+
+              cline="         ["
+
+              do ipoi=1,npoi
+                call util_string_append_num(cline,
+     &            t_magnets(kproto)%t_voxels(kvoxel)%kface(k+ipoi),nfirst,nlast)
+                if (ipoi.lt.npoi) then
+                  call util_string_append(cline,',',nfirst,nlast)
+                else
+                  call util_string_append(cline,'],',nfirst,nlast)
+                endif
+              enddo !ipoi
+
+              if (iface.lt.nface) then
+                write(lunrad,'(a)')cline(1:nlast)
+c                call util_string_append(cline,'],',nfirst,nlast)
+              else
+                write(lunrad,'(a)')cline(1:nlast-1) // '], \'
+              endif
+
+            enddo !nface
+
+            if (t_magnets(kproto)%IsPole.eq.0) then
+              write(c32x,*)t_voxcopy(kvoxel)%br(1)
+              write(c32y,*)t_voxcopy(kvoxel)%br(2)
+              write(c32z,*)t_voxcopy(kvoxel)%br(3)
+              write(clunrad,*)"         [",trim(c32z),",",trim(c32x),",",trim(c32y),"])"
+              write(lunrad,'(a)') trim(clunrad)
+              mater = imatmagpol(imp)
+              write(chmat,*)mater-1
+              call util_string_trim(chmat,nfirst,nlast)
+              chmat="UmatREC["//chmat(nfirst:nlast)//"]"
+            else
+              write(lunrad,'(a)')"[0,0,0])"
+              mater = imatmagpol(imp)
+              write(chmat,*)mater-1
+              call util_string_trim(chmat,nfirst,nlast)
+              chmat="UmatIron["//chmat(nfirst:nlast)//"]"
+            endif !Pole/Mag
+
+            write(lunrad,'(a)')
+            write(lunrad,'(a)')"rad.MatApl("//trim(cnam)//","//
+     &        trim(chmat)//")"
+
+            if (ncolor.eq.2) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[1,0,0],0.0001)"
+            else if (ncolor.eq.3) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[0,1,0],0.0001)"
+            else if (ncolor.eq.4) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[0,0,1],0.0001)"
+              write(lunrad,'(a)') trim(clunrad)
+            else if (ncolor.eq.5) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[1,1,],0.0001)"
+            else if (ncolor.eq.6) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[1,0,1],0.0001)"
+            else if (ncolor.eq.7) then
+              write(lunrad,'(a)')"rad.ObjDrwAtr("//trim(cnam)//
+     &          ",[0,1,1],0.0001)"
+            endif
+
+            write(lunrad,'(a)')
+
+          enddo !nvoxcopy_t
+
+        endif !(t_magnets(kproto)%ctype.ne.'Cylinder') then
+
+      enddo !imp=1,nmagtot_t
+
+      write(lunrad,'(a)')"UnduMag = []"
+      write(lunrad,'(a)')"AllMagPols = []"
+      write(lunrad,'(a)')"UnduPol = []"
+
+      nUnduMag = 0
+      nUnduPol = 0
+      nMagPolTot = 0
+
+      write(lunrad,'(a)')"nUnduMag = 0"
+      write(lunrad,'(a)')"nUnduPol = 0"
+      write(lunrad,'(a)')"nMagPolTot = 0"
+
+      do imp=1,nmagtot_t
+
+        if(t_magnets(kproto)%ctype.ne.'Cylinder') then
+
+          kproto=t_magcopy(imp)%kproto
+
+          if (t_magnets(kproto)%IsPole.eq.0) then
+
+            nUnduMag=nUnduMag+1
+
+            write(lunrad,'(a)')"UnduMag.append(" //
+     &        trim(adjustl(t_magcopy(imp)%cnam)) // ")"
+
+            nMagPolTot=nMagPolTot+1
+
+            write(lunrad,'(a)')"AllMagPols.append(" //
+     &        trim(adjustl(t_magcopy(imp)%cnam)) // ')'
+            write(lunrad,'(a)')
+
+            if (t_magcopy(imp)%cnam.eq.chforcemag) then
+              write(lunrad,'(a)')
+              write(lunrad,'(a)')"iForceTyp = 1"
+              write(lunrad,'(a)') trim(clunrad)
+              write(c32,*)nUnduMag
+              write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
+              write(lunrad,'(a)')
+            endif
+
+          else
+
+            nUnduPol=nUnduPol+1
+
+            write(c32,*)nUnduPol
+            write(lunrad,'(a)')"nUnduPol = " // trim(adjustl(c32))
+            write(lunrad,'(a)')"UnduPol.append(" //
+     &        trim(adjustl(t_magcopy(imp)%cnam)) // ")"
+
+            nMagPolTot=nMagPolTot+1
+
+            write(lunrad,'(a)')"AllMagPols.append(" //
+     &        trim(adjustl(t_magcopy(imp)%cnam)) // ')'
+            write(lunrad,'(a)')
+
+            if (t_magcopy(imp)%cnam.eq.chforcemag) then
+              write(lunrad,'(a)')
+              write(lunrad,'(a)')"iForceTyp = 1"
+              write(lunrad,'(a)') trim(clunrad)
+              write(c32,*)nUnduMag
+              write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
+              write(lunrad,'(a)')
+            endif
+
+          endif !Pole/Mag
+
+        else !Cylinder
+
+          do ivox=1,nvoxcopy_t
+
+            kproto=t_voxcopy(ivox)%kproto
+            if (t_magnets(kproto)%ctype.ne.'Cylinder') cycle
+
+            if (t_magnets(kproto)%IsPole.eq.0) then
+              nUnduMag=nUnduMag+1
+            else
+              nUnduPol=nUnduPol+1
+            endif
+
+            kmagnet=t_voxcopy(ivox)%kmagnet
+            kvoxel=t_voxcopy(ivox)%kvoxel
+
+            cline=adjustl(t_magcopy(imp)%cnam)
+            call util_string_append(cline,'_',nfirst,nlast)
+            ixdiv=t_magnets(kproto)%t_voxels(kvoxel)%ixdiv
+            call util_string_append_num(cline,ixdiv,nfirst,nlast)
+            call util_string_append(cline,'_',nfirst,nlast)
+            iydiv=t_magnets(kproto)%t_voxels(kvoxel)%iydiv
+            call util_string_append_num(cline,iydiv,nfirst,nlast)
+            call util_string_append(cline,'_',nfirst,nlast)
+            izdiv=t_magnets(kproto)%t_voxels(kvoxel)%izdiv
+            call util_string_append_num(cline,izdiv,nfirst,nlast)
+            cnam=trim(cline)
+
+            if (t_magnets(kproto)%IsPole.eq.0) then
+              write(lunrad,'(a)')"UnduMag.append(" //trim(cnam)// ')'
+            else
+              write(lunrad,'(a)')"UnduPol.append(" //trim(cnam)// ')'
+            endif
+
+            nMagPolTot=nMagPolTot+1
+
+            write(lunrad,'(a)')"AllMagPols.append(" //trim(cnam)// ')'
+            write(lunrad,'(a)')
+
+            if (t_magcopy(imp)%cnam.eq.chforcemag) then
+              write(lunrad,'(a)')' '
+              write(lunrad,'(a)')"iForceTyp = 1"
+              write(c32,*)nUnduPol
+              write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
+              write(lunrad,'(a)')
+              print*,"*** Warning in clcmag_to_radia_python: Force calculations for cylinders not yet tested..."
+            endif
+
+          enddo !nvox
+
+        endif !(t_magnets(kproto)%ctype.ne.'Cylinder') then
+
+      enddo !imp=1,nmagtot_t
+
+      write(c32,*)nUnduMag
+      write(lunrad,'(a)')"nUnduMag = " // trim(adjustl(c32))
+      write(c32,*)nUnduPol
+      write(lunrad,'(a)')"nUnduPol = " // trim(adjustl(c32))
+      write(c32,*)nMagPolTot
+      write(lunrad,'(a)')"nMagPolTot = " // trim(adjustl(c32))
+
+      deallocate(brrec)
+
+      write(c32,*) ncwires
+      write(lunrad,'(a)')'nUnduFilaments = ' // trim(adjustl(c32))
+
+      if (iunduplot.lt.0.or.iundugeo.lt.0.or.ivrml.lt.0) then
+        write(lunrad,'(a)')'iSolve = 0'
+      else
+        write(lunrad,'(a)')'iSolve = 1'
+      endif
+
+      write(lunrad,'(a)')
+      write(lunrad,'(a)')'#-- End of lines generated by UNDUMAG --'
+      write(lunrad,'(a)')
+
+      write(lunrad,'(a)')
+      write(lunrad,'(a)')'#-- Reading undumag_proc.py and appending to undumag_radia.py --'
+      write(lunrad,'(a)')
+
+      open(newunit=lunproc,file='undumag_proc.py',status='old', iostat=istat)
+
+      if (istat.ne.0) then
+
+        write(lun6,*)"*** Error in clcmag_to_radia_python: File undumag_proc.py not found ***"
+
+      else
+
+        ieof=0
+        cline=''
+
+        do while (ieof.eq.0)
+          read(lunproc,'(a)',iostat=ieof) cline
+          if (ieof.eq.0) write(lunrad,'(a)') trim(cline)
+        enddo
+        close(lunproc)
+
+      endif
+
+      flush(lunrad)
+      close(lunrad)
+
+      return
+      end
++PATCH,SHELL,T=SHELL.
+*CMZ :  0.00/00 20/04/2016  13.01.23  by  Michael Scheer
++DECK,compile_undumag_incl_debug,T=SHELL.
+*CMZ :          06/11/2023  16.26.56  by  Michael Scheer
+*CMZ :  2.04/06 22/03/2023  16.28.45  by  Michael Scheer
+*CMZ :  2.04/05 15/03/2023  13.08.56  by  Michael Scheer
+*CMZ :  2.04/04 06/03/2023  16.04.34  by  Michael Scheer
+*-- Author :    Michael Scheer   31/03/2016
+# +PATCH,//UNDUMAG/SHELL
+# +DECK,compile_undumag_incl_debug,T=SHELL.
+
+echo " "
+echo " "
+echo " "
+
+cd $UNDUMAG_INCL
+
+cd main
+
+#rm -f ../bin/undumag_debug.exe
+rm -f *.mod
+
+cp ../for/bpolyederf90m.mod .
+cp ../for/undumagf90m.mod .
+cp ../for/commandlinef90m.mod .
+
+gfortran -g -cpp \
+-fd-lines-as-comments \
+-Wno-align-commons \
+-fopenmp \
+-fcheck=bounds \
+-ffixed-line-length-none -finit-local-zero  \
+-funroll-loops \
+-o ../bin/undumag_debug.exe \
+undumag_main.f \
+../lib/libundu_debug.a \
+../lib/libundu_modules_debug.a \
+../lib/liburad_debug.a \
+../lib/libutil_debug.a \
+../lib/libmshcern_debug.a \
+../lib/libmshplt_debug.a \
+
+cd $UNDUMAG_INCL
+
++DECK,compile_undumag_incl,T=SHELL.
+*CMZ :          06/11/2023  16.26.45  by  Michael Scheer
+*CMZ :  2.04/06 21/03/2023  19.16.19  by  Michael Scheer
+*CMZ :  2.04/05 15/03/2023  13.08.56  by  Michael Scheer
+*CMZ :  2.04/04 06/03/2023  16.04.34  by  Michael Scheer
+*-- Author :    Michael Scheer   31/03/2016
+# +PATCH,//UNDUMAG/SHELL
+# +DECK,compile_undumag_incl,T=SHELL.
+
+echo " "
+echo " "
+echo " "
+
+cd $UNDUMAG_INCL
+
+cd main
+
+#rm -f ../bin/undumag.exe
+rm -f *.mod
+
+cp ../for/bpolyederf90m.mod .
+cp ../for/undumagf90m.mod .
+cp ../for/commandlinef90m.mod .
+
+gfortran -O2 -cpp \
+-fd-lines-as-comments \
+-Wno-align-commons \
+-fopenmp \
+-fcheck=bounds \
+-ffixed-line-length-none -finit-local-zero  \
+-funroll-loops \
+-o ../bin/undumag.exe \
+undumag_main.f \
+../lib/libundu.a \
+../lib/libundu_modules.a \
+../lib/liburad.a \
+../lib/libutil.a \
+../lib/libmshcern.a \
+../lib/libmshplt.a \
+
+cd $UNDUMAG_INCL
+
++DECK,compile_undumag_fresh,T=SHELL.
+*CMZ :  2.05/03 06/11/2023  11.29.57  by  Michael Scheer
+*CMZ :  2.04/06 21/03/2023  19.16.19  by  Michael Scheer
+*CMZ :  2.04/05 15/03/2023  13.08.56  by  Michael Scheer
+*CMZ :  2.04/04 06/03/2023  16.04.34  by  Michael Scheer
+*-- Author :    Michael Scheer   31/03/2016
+# +PATCH,//UNDUMAG/SHELL
+# +DECK,compile_undumag_fresh,T=SHELL.
+
+echo " "
+echo " "
+echo " "
+
+cd $UNDUMAG_FRESH
+
+cd main
+
+rm -f ../bin/undumag.exe
+
+gfortran -O2 -cpp \
+-fd-lines-as-comments \
+-Wno-align-commons \
+-fopenmp \
+-fcheck=all \
+-ffixed-line-length-none -finit-local-zero  \
+-funroll-loops \
+-o ../bin/undumag.exe \
+undumag_main.f \
+../lib/libundu.a \
+../lib/libundu_modules.a \
+../lib/liburad.a \
+../lib/libutil.a \
+../lib/libmshcern.a \
+../lib/libmshplt.a \
+
+cd $UNDUMAG_FRESH
+
++PATCH,KUMAC,T=KUMAC.
+*CMZ :  0.00/00 20/04/2016  13.01.38  by  Michael Scheer
++DECK,uvers,T=KUMAC.
+*CMZ :          06/11/2023  14.33.10  by  Michael Scheer
+*CMZ :  2.04/07 07/08/2023  10.49.37  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  10.49.19  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  12.52.51  by  Michael Scheer
+*CMZ :  1.12/07 02/08/2006  13.32.02  by  Michael Scheer
+*CMZ :  1.12/06 02/08/2006  13.30.30  by  Michael Scheer
+*CMZ :  1.00/01 27/02/2004  09.10.52  by  Michael Scheer
+*CMZ :  0.99/05 12/02/2004  14.05.26  by  Michael Scheer
+*CMZ :  0.99/04 12/02/2004  14.04.54  by  Michael Scheer
+*-- Author :    Michael Scheer   12/02/2004
+macro uvers v=+
+mess
+mess 'current version:'
+vers
+set uvers.txt -e
+edit /seqver/$unduver /seq/$inputver /tex/$udocvers
+seq .
+seq /seqver
+set f77 -lan
+seq -f $UNDUMAG_INCL/for/*.cmn
+vers [v]
+exec dundu
+exec dfor
+seq .
+seq /inclcmn
+cx UNDUMAG_INI_OLD UNDUMAG_GREETER
++DECK,uout_omp,T=KUMAC.
+*CMZ :  2.05/03 06/11/2023  13.15.13  by  Michael Scheer
+*CMZ :  2.04/06 29/03/2023  13.16.35  by  Michael Scheer
+*CMZ :  2.02/00 16/09/2020  07.38.58  by  Michael Scheer
+*CMZ :  2.01/08 14/08/2020  10.11.54  by  Michael Scheer
+*CMZ :  1.09/01 05/10/2016  11.26.00  by  Michael Scheer
+*CMZ :  1.02/01 08/09/2016  09.43.15  by  Michael Scheer
+*CMZ :  0.00/13 25/07/2016  08.55.35  by  Michael Scheer
+*CMZ :  0.00/01 26/04/2016  12.55.38  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  12.37.19  by  Michael Scheer
+*CMZ :  1.17/06 31/03/2016  15.45.38  by  Michael Scheer
+*CMZ :  1.17/02 08/03/2016  14.57.46  by  Michael Scheer
+*CMZ :  1.17/01 03/10/2014  10.49.36  by  Michael Scheer
+*CMZ :  1.17/00 25/08/2014  15.26.02  by  Michael Scheer
+*CMZ :  1.16/04 17/04/2014  12.22.05  by  Michael Scheer
+*CMZ :  1.16/01 14/03/2014  10.19.54  by  Michael Scheer
+*CMZ :  1.15/02 30/04/2008  13.28.31  by  Michael Scheer
+*CMZ :  1.15/01 24/04/2008  11.30.03  by  Michael Scheer
+*CMZ :  1.12/16 04/06/2007  06.18.51  by  Michael Scheer
+*CMZ :  1.12/15 21/05/2007  15.22.52  by  Michael Scheer
+*CMZ :  1.12/05 02/07/2006  12.51.11  by  Michael Scheer
+*-- Author :    Michael Scheer   02/07/2006
+macro uout_omp
+
+* +PATCH,//UNDUMAG/KUMAC
+* +DECK,uout_omp,T=KUMAC.
+
+she rm -f $UNDUMAG/bin/undumag_omp.exe 2>/dev/null
+
+exec dutil
+set ~/undu/util/*.f -f
+cx /util
+
+exec dfor
+set ~/undu/for/*.f -f
+
+sel omp
+seq .
+
+set $UNDUMAG/for/uradfield.f -f
+cx //undumag/urad/undumag_uradfield
+set $UNDUMAG/for/uradbmap.f -f
+cx //undumag/urad/undumag_uradbmap
+set $UNDUMAG/for/uradrndm.f -f
+cx //undumag/urad/undumag_uradrndm
+
+seq .
+
+set $UNDUMAG/for/undumag_main.f -f
+
+buff .
+buff //undumag/for
+* buff -//undumag/for/undumag_field_single
+buff -//undumag/for/undumag_bpolyeder1
+buff -//undumag/for/undumag_bpolyeder1_sym
+buff -//undumag/for/undumag_bcoils
+buff -//undumag/for/undumag_bcoils_omp
+
+cx //undumag/modules/displacement _
+//undumag/main/undumag_main _
+//undumag/for/undumag_bcoils _
+//undumag/for/undumag_bcoils_omp _
+//undumag/for/undumag_bpolyeder1 _
+//undumag/for/undumag_bpolyeder1_sym _
+//wave/urad/urad //wave/urad/uradstep _
+//wave/urad/uradestep //wave/urad/uradphoton _
+-b
+
+*//undumag/for/undumag_field_single _
+
+exec dfor
+exitm
++DECK,uout_fresh,T=KUMAC.
+*CMZ :  2.05/03 06/11/2023  12.36.00  by  Michael Scheer
+*CMZ :  2.04/06 22/03/2023  10.46.06  by  Michael Scheer
+*CMZ :  2.04/05 15/03/2023  12.38.01  by  Michael Scheer
+*CMZ :  2.02/00 16/09/2020  07.38.58  by  Michael Scheer
+*-- Author :    Michael Scheer   02/07/2006
+macro uout_fresh
+
+* +PATCH,//UNDUMAG/KUMAC
+* +DECK,uout_fresh,T=KUMAC.
+
+exec dfor
+
+**********************
+
+seq .
+
+set $UNDUMAG_FRESH/util/*.f -f
+cx /util
+
+seq -f $UNDUMAG_FRESH/util/*.cmn
+seq .
+seq /inclcmn
+cx /util
+
+**********************
+
+sel omp
+seq .
+
+set $UNDUMAG_FRESH/urad/uradfield.f -f
+cx //undumag/urad/undumag_uradfield
+set $UNDUMAG_FRESH/urad/uradmap.f -f
+cx //undumag/urad/undumag_uradbmap
+set $UNDUMAG_FRESH/urad/uradrndm.f -f
+cx //undumag/urad/undumag_uradrndm
+set $UNDUMAG_FRESH/urad/urad -f
+cx //wave/urad/urad
+set $UNDUMAG_FRESH/urad/ustep -f
+cx //wave/urad/uradstep
+set $UNDUMAG_FRESH/urad/uestep -f
+cx //wave/urad/uradestep
+set $UNDUMAG_FRESH/urad/uradphoton -f
+cx //wave/urad/uradphoton
+
+seq -f $UNDUMAG_FRESH/urad/*.cmn
+
+seq .
+seq /inclcmn
+
+set $UNDUMAG_FRESH/urad/uradfield.f -f
+cx //undumag/urad/undumag_uradfield
+set $UNDUMAG_FRESH/urad/uradmap.f -f
+cx //undumag/urad/undumag_uradbmap
+set $UNDUMAG_FRESH/urad/uradrndm.f -f
+cx //undumag/urad/undumag_uradrndm
+set $UNDUMAG_FRESH/urad/urad -f
+cx //wave/urad/urad
+set $UNDUMAG_FRESH/urad/ustep -f
+cx //wave/urad/uradstep
+set $UNDUMAG_FRESH/urad/uestep -f
+cx //wave/urad/uradestep
+set $UNDUMAG_FRESH/urad/uradphoton -f
+cx //wave/urad/uradphoton
+
+**********************
+seq .
+
+*set $UNDUMAG_FRESH/main/mod/*.f -f
+*cx /modules
+
+she 'ln -s $UNDUMAG_FRESH/for/bpolyederf90m.mod $UNDUMAG_FRESH/main 2>/dev/null'
+she 'ln -s $UNDUMAG_FRESH/for/commandlinef90m.mod $UNDUMAG_FRESH/main 2>/dev/null'
+she 'ln -s $UNDUMAG_FRESH/for/undumagf90m.mod $UNDUMAG_FRESH/main 2>/dev/null'
+
+set $UNDUMAG_FRESH/main/undumag_main.f -f
+
+sel uout_incl
+  cx //undumag/main/undumag_main
+  seq -f $UNDUMAG_FRESH/main/*.cmn
+sel -uout_incl
+
+seq .
+seq /inclcmn
+
+sel uout_incl
+  cx //undumag/main/undumag_main
+sel -uout_incl
+
+**********************
+
+seq .
+
+set $UNDUMAG_FRESH/for/mod/*.f -f
+cx /modules
+
+set $UNDUMAG_FRESH/for/*.f -f
+cx //undumag/for
+
+seq -f $UNDUMAG_FRESH/for/*.cmn
+
+seq .
+seq /inclcmn
+cx //undumag/for
+
+*********
+
+file ~/mshcern/cmz/mshcern
+seq .
+set $UNDUMAG_FRESH/mshcern/*.f -f
+cx //mshcern/for/aaa_license //mshcern/for
+release mshcern
+
+*********
+
+file ~/mshplt/cmz/mshplt
+
+seq .
+set $UNDUMAG_FRESH/mshplt/*.f -f
+cx //mshplt/for/aaa_license //mshplt/for //mshplt/mplot
+seq -f $UNDUMAG_FRESH/mshplt/*.cmn
+
+she 'rm $UNDUMAG_FRESH/mshplt/mshpltversion.cmn'
+she 'rm $UNDUMAG_FRESH/mshplt/mshpltincl.cmn'
+she 'rm $UNDUMAG_FRESH/mshplt/mplotincl.cmn'
+release //mshplt
+
+*********
+
+cd //undumag
+
+seq .
+exec dpython
+
+set $UNDUMAG_FRESH/python/*.py -f
+
+cx undugui
+cx undumag_plot
+cx make_undumag
+cx make_undumag_debug
+
+*********
+
+seq .
+exec dshell
+set $UNDUMAG_FRESH/shell/*.sh -f
+
+cx compile_undumag_incl
+she 'chmod ug+x $UNDUMAG_FRESH/shell/*.sh'
+
+*********
+cd //undumag
+exec dkumac
+exitm
++PATCH,SYSTEM,T=KUMAC.
+*CMZ :  0.00/00 20/04/2016  13.01.46  by  Michael Scheer
++DECK,dforincl,T=KUMAC.
+*CMZ :          06/11/2023  14.15.14  by  Michael Scheer
+*CMZ :  2.05/01 05/10/2023  14.59.23  by  Michael Scheer
+*CMZ :  2.04/22 22/09/2023  12.30.51  by  Michael Scheer
+*CMZ :  2.04/06 07/07/2023  14.34.30  by  Michael Scheer
+*CMZ :  2.02/01 15/01/2022  13.21.49  by  Michael Scheer
+*CMZ :  2.02/00 20/10/2020  09.34.53  by  Michael Scheer
+*CMZ :  2.01/08 29/07/2020  07.35.28  by  Michael Scheer
+*CMZ :  1.09/01 05/10/2016  11.57.38  by  Michael Scheer
+*CMZ :  1.02/01 06/09/2016  09.49.12  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  11.51.11  by  Michael Scheer
+*CMZ :  1.17/06 31/03/2016  15.38.11  by  Michael Scheer
+*CMZ :  1.17/00 26/05/2014  10.24.16  by  Michael Scheer
+*CMZ :  1.16/04 16/04/2014  13.48.35  by  Michael Scheer
+*-- Author :    Michael Scheer   16/04/2014
+macro dforincl
+
+exec cmzsymbols
+
+seq .
+seq /inclcmn
+
+CD //undumag/for
+tabs -off
+
+sel gfortran
+
+      she cp -f ~/cmz/cmzlan.f77 .cmzlan
+
+      SET F77 -lan
+
+      SET cmzedit.f -E
+
+      SET $UNDUMAG_INCL/for/*.f -F
+      SET ~/undu/lib/libundumag.a -L
+
+      ali/cre ef 'exec fedit' c
+      ali/cre efb 'exec feditb' c
+      ali/cre efbt 'exec feditbt' c
+      ali/cre emain 'e /main/undumag_main' c
+
+set '~/undu/shell/gford.sh $compfile' -C F77
+
+ali/cre r 'cd ~/undu/stage && source ../shell/undumag_run.sh' c
+
+lmod * last
+exec lastdir gfor
+EXITM
++DECK,dforgh,T=KUMAC.
+*CMZ :          06/11/2023  15.55.20  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.12.25  by  Michael Scheer
+*CMZ :  2.04/06 07/07/2023  14.34.30  by  Michael Scheer
+*CMZ :  2.02/01 15/01/2022  13.21.49  by  Michael Scheer
+*CMZ :  2.02/00 20/10/2020  09.34.53  by  Michael Scheer
+*CMZ :  2.01/08 29/07/2020  07.35.28  by  Michael Scheer
+*CMZ :  1.09/01 05/10/2016  11.57.38  by  Michael Scheer
+*CMZ :  1.02/01 06/09/2016  09.49.12  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  11.51.11  by  Michael Scheer
+*CMZ :  1.17/06 31/03/2016  15.38.11  by  Michael Scheer
+*CMZ :  1.17/00 26/05/2014  10.24.16  by  Michael Scheer
+*CMZ :  1.16/04 16/04/2014  13.48.35  by  Michael Scheer
+*-- Author :    Michael Scheer   16/04/2014
+macro dforincl
+
+exec cmzsymbols
+
+CD for
+
+seq .
+seq /inclcmn
+
+tabs -off
+
+sel gfortran
+
+      she cp -f ~/cmz/cmzlan.f77 .cmzlan
+
+      SET F77 -lan
+
+      SET cmzedit.f -E
+
+      SET ~/undu/github/for/*.f -F
+      SET ~/undu/lib/libundumag.a -L
+
+      ali/cre ef 'exec fedit' c
+      ali/cre efb 'exec feditb' c
+      ali/cre efbt 'exec feditbt' c
+      ali/cre emain 'e /main/undumag_main' c
+
+set '~/undu/shell/gfor.sh $compfile' -C F77
+
+ali/cre r 'cd ~/undu/stage && source ../shell/undumag_run.sh' c
+
+lmod * last
+exec lastdir gfor
+she echo && echo UNDUMAG_GITHUB: $UNDUMAG_GITHUB
+EXITM
++DECK,dutilgh,T=KUMAC.
+*CMZ :          06/11/2023  16.00.01  by  Michael Scheer
+*CMZ :  2.04/10 18/08/2023  19.25.33  by  Michael Scheer
+*CMZ :  2.04/09 15/08/2023  12.09.09  by  Michael Scheer
+*CMZ :  1.11/05 15/02/2017  08.54.57  by  Michael Scheer
+*CMZ :  1.10/03 05/12/2016  10.24.32  by  Michael Scheer
+*CMZ :  1.09/01 05/10/2016  09.35.38  by  Michael Scheer
+*CMZ :  1.17/00 25/08/2014  14.26.53  by  Michael Scheer
+*CMZ :  1.15/02 30/04/2008  13.25.06  by  Michael Scheer
+*-- Author :    Michael Scheer   30/04/2008
+macro dutil
+
+* +PATCH,//POLYMAG/SYSTEM
+* +DECK,dutilgh,T=KUMAC.
+
+exec dgford
+
+seq .
+seq /inclcmn
+
+cd /util
+
+set $UNDUMAG_GITHUB/util/*.f -f
+
+exec lastdir util
+
+lmodl
+
+she echo && echo UNDUMAG_GITHUB: $UNDUMAG_GITHUB
+
+exitm
++DECK,dmaingh,T=KUMAC.
+*CMZ :          06/11/2023  16.03.31  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.12.25  by  Michael Scheer
+*CMZ :  2.04/06 07/07/2023  14.34.30  by  Michael Scheer
+*CMZ :  2.02/01 15/01/2022  13.21.49  by  Michael Scheer
+*CMZ :  2.02/00 20/10/2020  09.34.53  by  Michael Scheer
+*CMZ :  2.01/08 29/07/2020  07.35.28  by  Michael Scheer
+*CMZ :  1.09/01 05/10/2016  11.57.38  by  Michael Scheer
+*CMZ :  1.02/01 06/09/2016  09.49.12  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  11.51.11  by  Michael Scheer
+*CMZ :  1.17/06 31/03/2016  15.38.11  by  Michael Scheer
+*CMZ :  1.17/00 26/05/2014  10.24.16  by  Michael Scheer
+*CMZ :  1.16/04 16/04/2014  13.48.35  by  Michael Scheer
+*-- Author :    Michael Scheer   16/04/2014
+macro dmaingh
+
+exec cmzsymbols
+
+exec dforgh
+
+CD main
+
+set $UNDUMAG_GITHUB/undumag_main.f -f
+cx undumag_main
+
+lmod * last
+exec lastdir for
+she echo && echo UNDUMAG_GITHUB: $UNDUMAG_GITHUB
+EXITM
++PATCH,INPUT,T=TEXT.
+*CMZ :  0.00/00 20/04/2016  13.01.52  by  Michael Scheer
++DECK,concave,T=TEXT.
+*CMZ :          06/11/2023  14.10.46  by  Michael Scheer
+*-- Author :    Michael Scheer   06/11/2023
+$PerLen = 100.
+
+& User_Comment
+Concave
+
+& Special_Magnet
+File umag uMag 2           !key, name, mother, color
+-50.0 0.0 0.0                  !position
+1. 0. 1. 0. 1       !length bc and components of mag. vector, material index
+1 1 1 1. 1. !segmentation
+tetra.dat
+
+& Copy
+umag cop1 Cop1 !comment
+
+& Translate
+umag
+-20. -10. 0.
+
+& Special_Concave_Magnet
+STL_Ascii umagC uMagC 3           !key, name, mother, color
+0.0 20.0 -30.0                  !position
+1. 0. 1. 0. 1       !length bc and components of mag. vector, material index
+1 1 1 1. 1. !segmentation
+cube.stl 1
+
+& Copy
+umagC cop1C Cop1C !comment
+
+& Translate
+umagC
+50. 10. 0.
+
+************
+& Module
+ 0. 0. 0. 1 1 !offset of module, number and number of associated module
+****
+1 !number of arrays within module
+$PerLen 1. 0. 0. 0. !spacing and direction of arrangement, rotation angle
+1. 1. 1. !scaling and symmetry of magnetization vector
+************
+
+& Materials
+2 ! number of materials
+1 1 1 undumag_mu_77K.dat
+2 2 3 Vanadium_Permendur_Radia.dat
+2 2 0 iron_muinf_sat-2.34.dat
+1 1 1 undumag_mu_unity.dat
++PATCH,SEQ.
+*CMZ :  0.00/00 20/04/2016  13.03.34  by  Michael Scheer
++KEEP,unduver.
+*CMZ :  2.05/03 06/11/2023  14.09.16  by  Michael Scheer
+*CMZ :  2.05/02 05/11/2023  15.30.48  by  Michael Scheer
+*CMZ :  2.05/01 23/10/2023  14.26.31  by  Michael Scheer
+*CMZ :  2.05/00 30/09/2023  10.59.27  by  Michael Scheer
+*CMZ :  2.04/28 30/09/2023  10.58.07  by  Michael Scheer
+*CMZ :  2.04/27 28/09/2023  14.24.47  by  Michael Scheer
+*CMZ :  2.04/26 28/09/2023  13.25.52  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.31.19  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.46.53  by  Michael Scheer
+*CMZ :  2.04/23 27/09/2023  09.40.54  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.34.56  by  Michael Scheer
+*CMZ :  2.04/21 22/09/2023  09.06.23  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.28.15  by  Michael Scheer
+*CMZ :  2.04/19 18/09/2023  11.33.14  by  Michael Scheer
+*CMZ :  2.04/18 14/09/2023  07.39.08  by  Michael Scheer
+*CMZ :  2.04/17 13/09/2023  16.15.26  by  Michael Scheer
+*CMZ :  2.04/16 11/09/2023  11.57.47  by  Michael Scheer
+*CMZ :  2.04/15 06/09/2023  08.20.46  by  Michael Scheer
+*CMZ :  2.04/13 04/09/2023  12.06.16  by  Michael Scheer
+*CMZ :  2.04/12 31/08/2023  06.57.59  by  Michael Scheer
+*CMZ :  2.04/11 29/08/2023  15.03.24  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  16.14.31  by  Michael Scheer
+*CMZ :  2.04/09 18/08/2023  19.16.48  by  Michael Scheer
+*CMZ :  2.04/08 11/08/2023  14.57.08  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.14.02  by  Michael Scheer
+*CMZ :  2.04/06 07/08/2023  10.05.29  by  Michael Scheer
+*CMZ :  2.04/05 15/03/2023  13.22.48  by  Michael Scheer
+*CMZ :  2.04/04 14/03/2023  11.22.26  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  16.38.01  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  20.57.20  by  Michael Scheer
+*CMZ :  2.04/01 17/01/2023  13.16.06  by  Michael Scheer
+*CMZ :  2.04/00 02/09/2022  07.23.21  by  Michael Scheer
+*CMZ :  2.03/00 26/07/2022  07.27.06  by  Michael Scheer
+*CMZ :  2.02/02 11/02/2022  10.16.30  by  Michael Scheer
+*CMZ :  2.02/00 06/04/2021  15.55.28  by  Michael Scheer
+*CMZ :  2.01/08 15/08/2020  08.40.43  by  Michael Scheer
+*CMZ :  2.01/07 28/07/2020  10.27.15  by  Michael Scheer
+*CMZ :  2.01/06 27/07/2020  12.07.59  by  Michael Scheer
+*CMZ :  2.01/05 27/07/2020  10.28.00  by  Michael Scheer
+*CMZ :  2.01/03 16/07/2019  09.36.59  by  Michael Scheer
+*CMZ :  2.01/02 02/05/2018  14.22.15  by  Michael Scheer
+*CMZ :  2.01/01 24/04/2018  17.18.04  by  Michael Scheer
+*CMZ :  2.01/00 24/04/2018  15.17.18  by  Michael Scheer
+*CMZ :  2.00/03 24/04/2018  13.33.50  by  Michael Scheer
+*CMZ :  2.00/02 17/04/2018  13.44.53  by  Michael Scheer
+*CMZ :  2.00/01 16/04/2018  15.48.23  by  Michael Scheer
+*CMZ :  2.00/00 12/04/2018  08.51.26  by  Michael Scheer
+*CMZ :  1.25/05 05/04/2018  19.30.01  by  Michael Scheer
+*CMZ :  1.25/04 05/04/2018  16.14.01  by  Michael Scheer
+*CMZ :  1.25/03 03/04/2018  08.32.34  by  Michael Scheer
+*CMZ :  1.25/02 22/03/2018  15.10.45  by  Michael Scheer
+*CMZ :  1.25/01 20/03/2018  16.23.14  by  Michael Scheer
+*CMZ :  1.25/00 16/03/2018  15.06.30  by  Michael Scheer
+*CMZ :  1.24/01 17/10/2017  10.11.38  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  15.01.01  by  Michael Scheer
+*CMZ :  1.23/07 12/10/2017  08.31.17  by  Michael Scheer
+*CMZ :  1.23/06 06/10/2017  14.22.02  by  Michael Scheer
+*CMZ :  1.23/05 06/10/2017  12.51.05  by  Michael Scheer
+*CMZ :  1.23/04 05/10/2017  12.36.30  by  Michael Scheer
+*CMZ :  1.23/03 27/09/2017  09.39.17  by  Michael Scheer
+*CMZ :  1.23/02 18/09/2017  15.33.46  by  Michael Scheer
+*CMZ :  1.23/01 09/08/2017  08.38.14  by  Michael Scheer
+*CMZ :  1.23/00 04/08/2017  09.35.04  by  Michael Scheer
+*CMZ :  1.22/01 21/07/2017  15.02.00  by  Michael Scheer
+*CMZ :  1.22/00 05/07/2017  10.36.01  by  Michael Scheer
+*CMZ :  1.21/00 29/06/2017  16.12.16  by  Michael Scheer
+*CMZ :  1.20/03 29/06/2017  16.11.17  by  Michael Scheer
+*CMZ :  1.20/02 23/06/2017  14.23.56  by  Michael Scheer
+*CMZ :  1.20/01 22/06/2017  14.46.47  by  Michael Scheer
+*CMZ :  1.20/00 22/06/2017  11.27.31  by  Michael Scheer
+*CMZ :  1.19/00 20/06/2017  12.34.58  by  Michael Scheer
+*CMZ :  1.18/03 14/06/2017  11.29.53  by  Michael Scheer
+*CMZ :  1.18/02 13/06/2017  15.11.00  by  Michael Scheer
+*CMZ :  1.18/01 09/06/2017  08.54.59  by  Michael Scheer
+*CMZ :  1.18/00 06/06/2017  14.48.14  by  Michael Scheer
+*CMZ :  1.17/08 30/05/2017  16.29.12  by  Michael Scheer
+*CMZ :  1.17/07 24/05/2017  13.12.04  by  Michael Scheer
+*CMZ :  1.17/06 21/05/2017  14.25.54  by  Michael Scheer
+*CMZ :  1.17/05 18/05/2017  12.07.07  by  Michael Scheer
+*CMZ :  1.17/04 12/05/2017  13.52.43  by  Michael Scheer
+*CMZ :  1.17/03 09/05/2017  13.37.52  by  Michael Scheer
+*CMZ :  1.17/02 09/05/2017  13.11.36  by  Michael Scheer
+*CMZ :  1.17/01 08/05/2017  20.51.09  by  Michael Scheer
+*CMZ :  1.17/00 08/05/2017  16.57.03  by  Michael Scheer
+*CMZ :  1.16/00 07/05/2017  14.11.11  by  Michael Scheer
+*CMZ :  1.15/13 05/05/2017  10.21.44  by  Michael Scheer
+*CMZ :  1.15/11 03/05/2017  09.26.17  by  Michael Scheer
+*CMZ :  1.15/10 19/04/2017  12.48.35  by  Michael Scheer
+*CMZ :  1.15/09 07/04/2017  15.00.04  by  Michael Scheer
+*CMZ :  1.15/08 06/04/2017  15.01.20  by  Michael Scheer
+*CMZ :  1.15/07 05/04/2017  16.02.20  by  Michael Scheer
+*CMZ :  1.15/06 04/04/2017  13.33.09  by  Michael Scheer
+*CMZ :  1.15/05 04/04/2017  12.48.22  by  Michael Scheer
+*CMZ :  1.15/04 03/04/2017  13.12.53  by  Michael Scheer
+*CMZ :  1.15/03 03/04/2017  11.00.07  by  Michael Scheer
+*CMZ :  1.15/02 02/04/2017  09.46.32  by  Michael Scheer
+*CMZ :  1.15/01 30/03/2017  11.37.22  by  Michael Scheer
+*CMZ :  1.15/00 28/03/2017  12.03.00  by  Michael Scheer
+*CMZ :  1.14/00 22/03/2017  12.54.38  by  Michael Scheer
+*CMZ :  1.13/03 16/03/2017  17.18.19  by  Michael Scheer
+*CMZ :  1.13/02 09/03/2017  17.35.51  by  Michael Scheer
+*CMZ :  1.13/01 08/03/2017  17.07.42  by  Michael Scheer
+*CMZ :  1.13/00 02/03/2017  17.04.56  by  Michael Scheer
+*CMZ :  1.12/00 27/02/2017  15.49.37  by  Michael Scheer
+*CMZ :  1.11/07 23/02/2017  17.25.07  by  Michael Scheer
+*CMZ :  1.11/06 23/02/2017  13.48.56  by  Michael Scheer
+*CMZ :  1.11/05 22/02/2017  16.08.44  by  Michael Scheer
+*CMZ :  1.11/04 25/01/2017  16.58.21  by  Michael Scheer
+*CMZ :  1.11/03 18/01/2017  09.43.51  by  Michael Scheer
+*CMZ :  1.11/02 10/01/2017  10.20.14  by  Michael Scheer
+*CMZ :  1.11/01 09/01/2017  13.56.32  by  Michael Scheer
+*CMZ :  1.11/00 05/01/2017  09.37.44  by  Michael Scheer
+*CMZ :  1.10/03 05/12/2016  16.30.30  by  Michael Scheer
+*CMZ :  1.10/02 01/12/2016  13.35.11  by  Michael Scheer
+*CMZ :  1.10/01 21/11/2016  13.02.21  by  Michael Scheer
+*CMZ :  1.10/00 18/11/2016  09.20.28  by  Michael Scheer
+*CMZ :  1.09/01 10/10/2016  10.18.30  by  Michael Scheer
+*CMZ :  1.09/00 04/10/2016  12.55.22  by  Michael Scheer
+*CMZ :  1.08/00 30/09/2016  13.55.02  by  Michael Scheer
+*CMZ :  1.07/03 27/09/2016  19.17.35  by  Michael Scheer
+*CMZ :  1.07/02 25/09/2016  13.41.46  by  Michael Scheer
+*CMZ :  1.07/01 25/09/2016  11.51.16  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  15.02.55  by  Michael Scheer
+*CMZ :  1.06/01 21/09/2016  15.52.28  by  Michael Scheer
+*CMZ :  1.06/00 21/09/2016  13.02.46  by  Michael Scheer
+*CMZ :  1.04/03 15/09/2016  17.38.28  by  Michael Scheer
+*CMZ :  1.04/02 15/09/2016  16.33.46  by  Michael Scheer
+*CMZ :  1.04/01 14/09/2016  15.26.25  by  Michael Scheer
+*CMZ :  1.04/00 14/09/2016  13.37.05  by  Michael Scheer
+*CMZ :  1.03/00 13/09/2016  14.36.16  by  Michael Scheer
+*CMZ :  1.02/03 12/09/2016  11.55.27  by  Michael Scheer
+*CMZ :  1.02/01 11/09/2016  12.34.04  by  Michael Scheer
+*CMZ :  1.02/00 30/08/2016  13.27.12  by  Michael Scheer
+*CMZ :  1.01/00 21/08/2016  12.52.29  by  Michael Scheer
+*CMZ :  1.00/00 19/08/2016  18.47.41  by  Michael Scheer
+*CMZ :  0.00/14 19/08/2016  14.37.09  by  Michael Scheer
+*CMZ :  0.00/13 19/08/2016  14.12.39  by  Michael Scheer
+*CMZ :  0.00/12 21/07/2016  09.27.38  by  Michael Scheer
+*CMZ :  0.00/11 20/07/2016  16.30.10  by  Michael Scheer
+*CMZ :  0.00/10 14/07/2016  14.01.01  by  Michael Scheer
+*CMZ :  0.00/09 06/07/2016  08.51.18  by  Michael Scheer
+*CMZ :  0.00/08 23/06/2016  15.45.45  by  Michael Scheer
+*CMZ :  0.00/06 22/06/2016  14.00.43  by  Michael Scheer
+*CMZ :  0.00/05 14/06/2016  13.56.01  by  Michael Scheer
+*CMZ :  0.00/04 13/05/2016  14.51.39  by  Michael Scheer
+*CMZ :  0.00/03 04/05/2016  11.43.21  by  Michael Scheer
+*CMZ :  0.00/02 02/05/2016  10.24.12  by  Michael Scheer
+*CMZ :  0.00/01 26/04/2016  16.04.05  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  12.51.37  by  Michael Scheer
+*-- Author :    Michael Scheer   12/02/2004
+      print *
+      print *
+      print *
+      write(lun6,*)'     **********************************************************'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                       UNDUMAG                          *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                    Version 2.05/03                     *'
+      write(lun6,*)'     *                        6.11.2023                       *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                     Michael Scheer                     *'
+      write(lun6,*)'     *                       HZB/BESSY                        *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     **********************************************************'
+
+      print *
+      print *
+      print *
+
+      call util_zeit_kommentar(lun6,"")
+
+      open(unit=999,file="undumag.ver")
+      chuvers="2.05/03"
+      write(999,*)chuvers
+      close(999)
+
++KEEP,inputver.
+*CMZ :  2.05/03 06/11/2023  14.09.16  by  Michael Scheer
+*CMZ :  2.05/02 05/11/2023  15.30.48  by  Michael Scheer
+*CMZ :  2.05/01 23/10/2023  14.26.31  by  Michael Scheer
+*CMZ :  2.04/28 30/09/2023  10.58.07  by  Michael Scheer
+*CMZ :  2.04/27 28/09/2023  14.24.47  by  Michael Scheer
+*CMZ :  2.04/26 28/09/2023  13.25.52  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.31.19  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.46.53  by  Michael Scheer
+*CMZ :  2.04/23 27/09/2023  09.40.54  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.34.56  by  Michael Scheer
+*CMZ :  2.04/21 22/09/2023  09.06.23  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.28.15  by  Michael Scheer
+*CMZ :  2.04/19 18/09/2023  11.33.14  by  Michael Scheer
+*CMZ :  2.04/18 14/09/2023  07.39.08  by  Michael Scheer
+*CMZ :  2.04/17 13/09/2023  16.15.26  by  Michael Scheer
+*CMZ :  2.04/16 11/09/2023  11.57.47  by  Michael Scheer
+*CMZ :  2.04/15 06/09/2023  08.20.46  by  Michael Scheer
+*CMZ :  2.04/13 04/09/2023  12.06.16  by  Michael Scheer
+*CMZ :  2.04/12 31/08/2023  06.57.59  by  Michael Scheer
+*CMZ :  2.04/11 29/08/2023  15.03.24  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  16.14.31  by  Michael Scheer
+*CMZ :  2.04/09 18/08/2023  19.16.48  by  Michael Scheer
+*CMZ :  2.04/08 11/08/2023  14.57.08  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.14.02  by  Michael Scheer
+*CMZ :  2.04/06 07/08/2023  10.05.29  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  16.38.01  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  20.57.20  by  Michael Scheer
+*CMZ :  2.04/01 13/02/2023  14.22.34  by  Michael Scheer
+*CMZ :  2.04/00 02/09/2022  07.23.44  by  Michael Scheer
+*CMZ :  2.01/08 15/08/2020  08.40.43  by  Michael Scheer
+*CMZ :  2.01/07 28/07/2020  10.27.15  by  Michael Scheer
+*CMZ :  2.01/02 02/05/2018  14.22.15  by  Michael Scheer
+*CMZ :  2.01/01 24/04/2018  17.18.04  by  Michael Scheer
+*CMZ :  2.01/00 24/04/2018  15.17.18  by  Michael Scheer
+*CMZ :  2.00/03 24/04/2018  13.33.50  by  Michael Scheer
+*CMZ :  2.00/00 12/04/2018  08.51.26  by  Michael Scheer
+*CMZ :  1.25/05 05/04/2018  19.30.01  by  Michael Scheer
+*CMZ :  1.25/04 05/04/2018  16.14.01  by  Michael Scheer
+*CMZ :  1.25/02 22/03/2018  15.10.45  by  Michael Scheer
+*CMZ :  1.25/01 16/03/2018  15.07.26  by  Michael Scheer
+*CMZ :  1.24/01 17/10/2017  10.11.38  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  15.01.01  by  Michael Scheer
+*CMZ :  1.23/07 12/10/2017  08.31.17  by  Michael Scheer
+*CMZ :  1.23/06 06/10/2017  14.22.02  by  Michael Scheer
+*CMZ :  1.23/05 06/10/2017  12.51.05  by  Michael Scheer
+*CMZ :  1.23/04 05/10/2017  12.36.30  by  Michael Scheer
+*CMZ :  1.23/03 27/09/2017  09.39.17  by  Michael Scheer
+*CMZ :  1.23/02 18/09/2017  15.33.46  by  Michael Scheer
+*CMZ :  1.23/01 09/08/2017  08.38.14  by  Michael Scheer
+*CMZ :  1.23/00 04/08/2017  09.35.04  by  Michael Scheer
+*CMZ :  1.22/01 21/07/2017  15.02.00  by  Michael Scheer
+*CMZ :  1.22/00 05/07/2017  10.36.01  by  Michael Scheer
+*CMZ :  1.21/00 29/06/2017  16.12.16  by  Michael Scheer
+*CMZ :  1.20/03 29/06/2017  16.11.17  by  Michael Scheer
+*CMZ :  1.20/02 23/06/2017  14.23.56  by  Michael Scheer
+*CMZ :  1.20/01 22/06/2017  14.46.47  by  Michael Scheer
+*CMZ :  1.20/00 22/06/2017  11.27.31  by  Michael Scheer
+*CMZ :  1.19/00 20/06/2017  12.34.58  by  Michael Scheer
+*CMZ :  1.18/03 14/06/2017  11.29.53  by  Michael Scheer
+*CMZ :  1.18/02 13/06/2017  15.11.00  by  Michael Scheer
+*CMZ :  1.17/08 30/05/2017  16.29.12  by  Michael Scheer
+*CMZ :  1.17/07 24/05/2017  13.12.04  by  Michael Scheer
+*CMZ :  1.17/06 21/05/2017  14.25.54  by  Michael Scheer
+*CMZ :  1.17/05 18/05/2017  12.07.07  by  Michael Scheer
+*CMZ :  1.17/04 12/05/2017  13.52.43  by  Michael Scheer
+*CMZ :  1.17/03 09/05/2017  13.37.52  by  Michael Scheer
+*CMZ :  1.17/02 09/05/2017  13.11.36  by  Michael Scheer
+*CMZ :  1.17/01 08/05/2017  20.51.09  by  Michael Scheer
+*CMZ :  1.17/00 08/05/2017  16.57.03  by  Michael Scheer
+*CMZ :  1.16/00 07/05/2017  14.11.11  by  Michael Scheer
+*CMZ :  1.15/13 05/05/2017  10.21.44  by  Michael Scheer
+*CMZ :  1.15/11 03/05/2017  09.26.17  by  Michael Scheer
+*CMZ :  1.15/10 19/04/2017  12.48.35  by  Michael Scheer
+*CMZ :  1.15/09 07/04/2017  15.00.04  by  Michael Scheer
+*CMZ :  1.15/08 06/04/2017  15.01.20  by  Michael Scheer
+*CMZ :  1.15/07 05/04/2017  16.02.20  by  Michael Scheer
+*CMZ :  1.15/06 04/04/2017  13.33.09  by  Michael Scheer
+*CMZ :  1.15/05 04/04/2017  12.48.22  by  Michael Scheer
+*CMZ :  1.15/04 03/04/2017  13.12.53  by  Michael Scheer
+*CMZ :  1.15/03 03/04/2017  11.00.07  by  Michael Scheer
+*CMZ :  1.15/02 02/04/2017  09.46.32  by  Michael Scheer
+*CMZ :  1.15/01 30/03/2017  11.37.22  by  Michael Scheer
+*CMZ :  1.14/00 22/03/2017  12.54.38  by  Michael Scheer
+*CMZ :  1.13/03 16/03/2017  17.18.19  by  Michael Scheer
+*CMZ :  1.13/02 09/03/2017  17.35.51  by  Michael Scheer
+*CMZ :  1.13/01 08/03/2017  17.07.42  by  Michael Scheer
+*CMZ :  1.13/00 02/03/2017  17.04.56  by  Michael Scheer
+*CMZ :  1.12/00 27/02/2017  15.49.37  by  Michael Scheer
+*CMZ :  1.11/07 23/02/2017  17.25.07  by  Michael Scheer
+*CMZ :  1.11/06 23/02/2017  13.48.56  by  Michael Scheer
+*CMZ :  1.11/05 22/02/2017  16.08.44  by  Michael Scheer
+*CMZ :  1.10/01 21/11/2016  13.02.21  by  Michael Scheer
+*CMZ :  1.10/00 18/11/2016  09.20.28  by  Michael Scheer
+*CMZ :  1.09/01 10/10/2016  10.18.30  by  Michael Scheer
+*CMZ :  1.09/00 04/10/2016  12.55.22  by  Michael Scheer
+*CMZ :  1.08/00 30/09/2016  13.55.02  by  Michael Scheer
+*CMZ :  1.07/03 27/09/2016  19.17.35  by  Michael Scheer
+*CMZ :  1.07/02 25/09/2016  13.41.46  by  Michael Scheer
+*CMZ :  1.07/01 25/09/2016  11.51.16  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  15.02.55  by  Michael Scheer
+*CMZ :  1.06/01 21/09/2016  15.52.28  by  Michael Scheer
+*CMZ :  1.06/00 21/09/2016  13.02.46  by  Michael Scheer
+*CMZ :  1.05/00 17/09/2016  10.39.52  by  Michael Scheer
+*CMZ :  1.04/03 15/09/2016  17.38.28  by  Michael Scheer
+*CMZ :  1.04/02 15/09/2016  16.33.46  by  Michael Scheer
+*CMZ :  1.04/01 14/09/2016  15.26.25  by  Michael Scheer
+*CMZ :  1.04/00 14/09/2016  13.37.05  by  Michael Scheer
+*CMZ :  1.03/00 13/09/2016  14.36.16  by  Michael Scheer
+*CMZ :  1.02/03 12/09/2016  11.55.27  by  Michael Scheer
+*CMZ :  1.02/01 11/09/2016  12.34.04  by  Michael Scheer
+*CMZ :  1.02/00 30/08/2016  13.27.12  by  Michael Scheer
+*CMZ :  1.01/00 21/08/2016  12.52.29  by  Michael Scheer
+*CMZ :  1.00/00 19/08/2016  18.47.41  by  Michael Scheer
+*CMZ :  0.00/14 19/08/2016  14.37.09  by  Michael Scheer
+*CMZ :  0.00/13 19/08/2016  14.12.39  by  Michael Scheer
+*CMZ :  0.00/12 21/07/2016  09.27.38  by  Michael Scheer
+*CMZ :  0.00/11 20/07/2016  16.30.10  by  Michael Scheer
+*CMZ :  0.00/10 14/07/2016  14.01.01  by  Michael Scheer
+*CMZ :  0.00/09 06/07/2016  08.51.18  by  Michael Scheer
+*CMZ :  0.00/08 23/06/2016  15.45.45  by  Michael Scheer
+*CMZ :  0.00/07 23/06/2016  15.45.22  by  Michael Scheer
+*CMZ :  0.00/06 22/06/2016  14.00.43  by  Michael Scheer
+*CMZ :  0.00/05 14/06/2016  13.56.01  by  Michael Scheer
+*CMZ :  0.00/04 13/05/2016  14.51.39  by  Michael Scheer
+*CMZ :  0.00/03 04/05/2016  11.43.21  by  Michael Scheer
+*CMZ :  0.00/02 02/05/2016  10.24.12  by  Michael Scheer
+*CMZ :  0.00/01 26/04/2016  16.04.05  by  Michael Scheer
+*-- Author :    Michael Scheer   27/02/2004
+* Version 2.05/03
++PATCH,$VERSION.
+*CMZ :  0.00/00 20/04/2016  13.04.28  by  Michael Scheer
++DECK,V2_05.
+*CMZ :  2.05/03 06/11/2023  14.09.16  by  Michael Scheer
+*CMZ :  2.05/02 05/11/2023  15.30.48  by  Michael Scheer
+*CMZ :  2.05/01 23/10/2023  14.26.31  by  Michael Scheer
+*CMZ :  2.05/00 30/09/2023  10.59.27  by  Michael Scheer
+*-- Author :    Michael Scheer   30/09/2023
+*________________________________________________________________________
+*
+*::>          VERSION  2.05/03   06/11/2023 14.09.16
+*
+* Bug for allocation of wires removed
+*________________________________________________________________________
+*
+*::>          VERSION  2.05/02   05/11/2023 15.30.48
+*
+* Concave volumes und STL-Files introduced
+*________________________________________________________________________
+*
+*::>          VERSION  2.05/01   23/10/2023 14.26.31
+*
+* Plotting improved
+*________________________________________________________________________
+*
+*::>          VERSION  2.05/00   30/09/2023 10.59.27
+*
+* Python-Radia improved
+*
++PATCH,UTIL,T=F77.
+*CMZ :  1.25/00 31/01/2018  16.03.22  by  Michael Scheer
++DECK,util_module,T=F77.
+*CMZ :  2.05/03 06/11/2023  12.18.13  by  Michael Scheer
+*CMZ :  2.04/22 25/09/2023  12.10.25  by  Michael Scheer
+*-- Author :    Michael Scheer   25/09/2023
+      module utilmod
+
+      integer modsimp
+
+      endmodule utilmod
++DECK,util_hull_check_convex.
+*CMZ :  2.05/03 06/11/2023  14.07.42  by  Michael Scheer
+*CMZ :  2.05/02 04/11/2023  13.09.13  by  Michael Scheer
+*CMZ :  2.05/01 11/10/2023  17.11.14  by  Michael Scheer
+*-- Author :    Michael Scheer   02/10/2023
+      subroutine util_hull_check_convex(nverts,verts,
+     &  khull,kedge,kface,nhull,nedge,nface,kfacelast,
+     &  nconcave,lconcave,hulltiny,kfail)
+
+      implicit none
+
++seq,hulldim.
+
+      double precision, dimension (:), allocatable :: xp,yp,zp
+
+      double precision :: verts(3,nverts),hulltiny,p1(3),p2(3),p3(3),q(3),dist,
+     &  vnor(3),hit(3)
+
+      integer :: i,nconcave,nverts,nface,nedge,nhull,lconcave(nverts),kfail,
+     &  kfacelast,khull(nverts),kedge(4,lenedge),kface(lenface),l,iover,
+     &  idebug=0,ical=0,ked1,ked2,ied,nbuff
+
+      integer, dimension(:), allocatable :: ibuff
+
+      integer :: kloc(3),iface,k,ipoi,npoi
+
+      nconcave=0
+
+      allocate(xp(lenhull),yp(lenhull),zp(lenhull),ibuff(lenhull))
+
+      xp(1:nverts)=verts(1,1:nverts)
+      yp(1:nverts)=verts(2,1:nverts)
+      zp(1:nverts)=verts(3,1:nverts)
+
+      if (idebug.ne.0) then
+        ical=ical+1
+        do i=1,nverts
+          write(44,*) xp(i),yp(i),zp(i),i,ical,' 1 '
+        enddo
+        flush(44)
+      endif
+
+      call util_convex_hull_3d(
+     &  nverts,xp,yp,zp,khull,kedge,kface,
+     &  nhull,nedge,nface,kfacelast,hulltiny,kfail)
+
+      if (idebug.ne.0) then
+        do i=1,nhull
+          write(44,*) xp(khull(i)),yp(khull(i)),zp(khull(i)),khull(i),ical,' 2 '
+        enddo
+        flush(44)
+      endif
+
+      if (nhull.eq.nverts) return
+
+      do i=1,nverts
+        kloc=findloc(khull,i,1)
+        if (kloc(1).eq.0) then
+          nconcave=nconcave+1
+          lconcave(nconcave)=i
+        endif
+      enddo
+
+      if (idebug.ne.0) call util_break
+
+      do l=1,nconcave
+
+        nbuff=0
+        k=0
+        do iface=1,nface
+
+          k=k+1
+          if (k.gt.kfacelast) exit
+
+          npoi=kface(k)
+          do i=1,npoi
+            k=k+1
+            ipoi=kface(k)
+            if (i.eq.1) p1=[xp(ipoi),yp(ipoi),zp(ipoi)]
+            if (i.eq.2) p2=[xp(ipoi),yp(ipoi),zp(ipoi)]
+            if (i.eq.3) p3=[xp(ipoi),yp(ipoi),zp(ipoi)]
+          enddo
+
+          ipoi=lconcave(l)
+          if (ipoi.lt.0) cycle
+
+          q=[xp(ipoi),yp(ipoi),zp(ipoi)]
+
+          call util_plane_tiny(p1,p2,p3,q,vnor,dist,hulltiny,iover,kfail)
+
+          if(abs(dist).le.hulltiny) then
+
+            nbuff=nbuff+1
+            ibuff(nbuff)=iface
+
+            do ied=1,nedge
+              ked1=kedge(1,ied)
+              ked2=kedge(2,ied)
+              if (kedge(3,ied).ne.iface.and.kedge(4,ied).ne.iface) cycle
+              call util_dist_to_line(
+     &          [xp(ked1),yp(ked1),zp(ked1)],
+     &          [xp(ked2),yp(ked2),zp(ked2)],
+     &          q,hit,dist,kfail)
+              if (dist.lt.hulltiny) then
+                ibuff(nbuff)=-ibuff(nbuff)
+                exit
+              endif
+            enddo !nedge
+
+          endif
+
+        enddo !nface
+
+        if (maxval(ibuff(1:nbuff)).lt.0) then
+          lconcave(l)=-lconcave(l)
+        endif
+
+      enddo !nconcave
+
+      deallocate(xp,yp,zp,ibuff)
+
+      return
+      end
++PATCH,TEX,T=LATEX.
+*CMZ :  1.02/01 05/09/2016  08.18.58  by  Michael Scheer
++KEEP,udocvers,T=LATEX.
+*CMZ :  2.05/03 06/11/2023  14.09.16  by  Michael Scheer
+*CMZ :  2.05/02 05/11/2023  15.30.48  by  Michael Scheer
+*CMZ :  2.05/01 23/10/2023  14.26.31  by  Michael Scheer
+*CMZ :  2.04/28 30/09/2023  10.58.07  by  Michael Scheer
+*CMZ :  2.04/27 28/09/2023  14.24.47  by  Michael Scheer
+*CMZ :  2.04/26 28/09/2023  13.25.52  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.31.19  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.46.53  by  Michael Scheer
+*CMZ :  2.04/23 27/09/2023  09.40.54  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.34.56  by  Michael Scheer
+*CMZ :  2.04/21 22/09/2023  09.06.23  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.28.15  by  Michael Scheer
+*CMZ :  2.04/19 18/09/2023  11.33.14  by  Michael Scheer
+*CMZ :  2.04/18 14/09/2023  07.39.08  by  Michael Scheer
+*CMZ :  2.04/17 13/09/2023  16.15.26  by  Michael Scheer
+*CMZ :  2.04/16 11/09/2023  11.57.47  by  Michael Scheer
+*CMZ :  2.04/15 06/09/2023  08.20.46  by  Michael Scheer
+*CMZ :  2.04/12 31/08/2023  06.57.59  by  Michael Scheer
+*CMZ :  2.04/11 29/08/2023  15.03.24  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  16.14.31  by  Michael Scheer
+*CMZ :  2.04/09 18/08/2023  19.16.48  by  Michael Scheer
+*CMZ :  2.04/08 11/08/2023  14.57.08  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.14.02  by  Michael Scheer
+*CMZ :  2.04/06 07/08/2023  10.05.29  by  Michael Scheer
+*CMZ :  2.04/04 14/03/2023  11.22.26  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  16.38.01  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  20.57.20  by  Michael Scheer
+*CMZ :  2.04/00 17/01/2023  13.14.13  by  Michael Scheer
+*CMZ :  2.03/00 02/09/2022  07.21.32  by  Michael Scheer
+*CMZ :  2.02/02 07/07/2022  18.13.06  by  Michael Scheer
+*CMZ :  2.01/08 15/08/2020  08.40.43  by  Michael Scheer
+*CMZ :  2.01/07 28/07/2020  10.27.15  by  Michael Scheer
+*CMZ :  2.01/06 27/07/2020  12.07.59  by  Michael Scheer
+*CMZ :  2.01/05 27/07/2020  10.28.00  by  Michael Scheer
+*CMZ :  2.01/04 29/07/2019  12.06.40  by  Michael Scheer
+*CMZ :  2.01/00 24/04/2018  15.17.18  by  Michael Scheer
+*CMZ :  2.00/00 12/04/2018  08.51.26  by  Michael Scheer
+*CMZ :  1.25/00 16/03/2018  15.06.30  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  15.01.01  by  Michael Scheer
+*CMZ :  1.23/00 04/08/2017  09.35.04  by  Michael Scheer
+*CMZ :  1.22/00 05/07/2017  10.36.01  by  Michael Scheer
+*CMZ :  1.21/00 29/06/2017  16.12.16  by  Michael Scheer
+*CMZ :  1.20/00 22/06/2017  11.27.31  by  Michael Scheer
+*CMZ :  1.19/00 20/06/2017  12.34.58  by  Michael Scheer
+*CMZ :  1.18/00 06/06/2017  14.48.14  by  Michael Scheer
+*CMZ :  1.17/00 08/05/2017  16.57.03  by  Michael Scheer
+*CMZ :  1.16/00 07/05/2017  14.11.11  by  Michael Scheer
+*CMZ :  1.15/00 28/03/2017  12.03.00  by  Michael Scheer
+*CMZ :  1.14/00 22/03/2017  12.54.38  by  Michael Scheer
+*CMZ :  1.13/00 02/03/2017  17.04.56  by  Michael Scheer
+*CMZ :  1.12/00 27/02/2017  15.49.37  by  Michael Scheer
+*CMZ :  1.11/00 05/01/2017  09.37.44  by  Michael Scheer
+*CMZ :  1.10/00 18/11/2016  09.20.28  by  Michael Scheer
+*CMZ :  1.09/00 04/10/2016  12.55.22  by  Michael Scheer
+*CMZ :  1.08/00 30/09/2016  13.55.02  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  15.02.55  by  Michael Scheer
+*CMZ :  1.06/00 20/09/2016  18.55.37  by  Michael Scheer
+*CMZ :  1.02/01 05/09/2016  08.41.09  by  Michael Scheer
+*-- Author :    Michael Scheer   05/09/2016
+Version 2.05/03
++PATCH,PYTHON,T=PYTHON.
+*CMZ :  2.01/05 26/02/2020  09.19.37  by  Michael Scheer
++DECK,make_undumag_debug,T=PYTHON.
+*CMZ :  2.05/03 06/11/2023  13.37.01  by  Michael Scheer
+*CMZ :  2.04/13 31/08/2023  12.27.22  by  Michael Scheer
+*CMZ :  2.04/06 06/07/2023  15.11.29  by  Michael Scheer
+*-- Author :    Michael Scheer   17/03/2023
+
+# +PATCH,//UNDUMAG/PYTHON
+# +DECK,undumag_make_debug,T=PYTHON.
+
+import os
+import sys
+import platform
+import glob
+
+def Quit(*args, delay=0):
+  #reakpoint()
+  nargs =  len(args)
+
+  text = ''
+  for i in range(nargs):
+    text += str(args[i]) + " "
+  #endif
+
+  if delay > 0:
+
+    if len(text):
+      print("\n",text, "\nWaiting",delay," seconds before kill")
+      #time.sleep(delay)
+    else:
+      print("\nWaiting",delay," seconds before kill")
+      #time.sleep(delay)
+    #endif len(text):
+
+    if platform.system() == 'Windows':
+      os.system("sleep " + str(delay) + " && taskkill /F /PID " + str(os.getpid()) + " &")
+    else:
+      os.system("sleep " + str(delay) + " && kill " + str(os.getpid()) + " &")
+    #endif platform.system() == 'Windows'
+
+  elif delay < 0:
+    return
+  else:
+    print("\n",text)
+    if platform.system() == 'Windows':
+      os.system("taskkill /F /PID " + str(os.getpid()))
+    else:
+      os.system("kill " + str(os.getpid()))
+    #endif platform.system() == 'Windows'
+
+#enddef Quit(text = '', delay=0)
+
+global Iverbose,Idry,Idebug,UI
+
+args=sys.argv; nargs = len(args)
+
+try:
+  UI = os.environ['UNDUMAG_INCL'] + "/"
+except:
+  UI = ''
+  path = args[0].split("/")
+  l = len(path)
+  if l == 1:
+    path = os.getcwd().split("/")
+    path.append(args[0])
+  elif l == 2:
+    path = os.getcwd().split("/")
+    pp = args[0].split("/")
+    path.append(pp[0])
+    path.append(pp[1])
+  #endif
+  for i in range(len(path)-2):
+    UI += path[i] + "/"
+  #endfor
+  print("\n*** Warning: Shell variable UNDUMAG_INCL not defined ***")
+  print("*** Assuming: ",UI," ***")
+  os.system('sleep 3')
+#endtry
+
+Iverbose = 0
+Idebug = 0
+Idry = 0
+
+if nargs > 1:
+  try:
+    Iverbose = int(args[1])
+  except:
+    n = '\n'
+    print(n)
+    print("Usage: python3 " + UI + args[0] + " [verbose level]",n)
+    print("To force total recompilation delete ",n,UI + "bin/undumag_debug.exe",n)
+    Quit()
+  #end try
+#endif
+
+if nargs > 2: Idebug = int(args[2])
+
+global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Scomp_nowarn
+
+Scomp = "gfortran -std=legacy -c -g -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_nowarn = "gfortran -w -std=legacy -c -g -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_all = "gfortran -std=legacy -c -g -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_omp = "gfortran -std=legacy -c -g -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
+
+def get_undu_tree():
+
+  global UI,Undu_tree,Iverbose,Idry,Idebug,Texe,Tlib
+
+  try:
+    Texe = os.stat(UI + '/bin/undumag_debug.exe').st_mtime_ns
+  except:
+    Texe = 0
+  #endtry
+
+  top = glob.glob(UI+"/*")
+
+  Undu_tree = []
+  #reakpoint()
+
+  for topd in top:
+
+    dd = topd.split("/")[-1]
+
+    if dd == 'cmz' or dd == 'doc' or dd == 'check_system' or dd == 'bin' \
+    or dd == 'python' or dd == 'main' or dd == 'lib' or dd == 'shell' \
+    or dd == 'clc': continue
+
+    t = os.stat(topd).st_mtime_ns
+
+    modf = glob.glob(topd+"/mod/*.f")
+
+    modfor = []
+    for ff in modf:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      modfor.append([f,tf])
+    #endfor
+
+    modm = glob.glob(topd+"/*.mod")
+    modmod = []
+    for ff in modm:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      modmod.append([f,tf])
+    #endfor
+
+    cm = glob.glob(topd+"/*.cmn")
+    cmn = []
+    for ff in cm:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      cmn.append([f,tf])
+    #endfor
+
+    ff = glob.glob(topd+"/*.f")
+    fort = []
+    for fff in ff:
+      f = fff.split("/")[-1]
+      tf = os.stat(fff).st_mtime_ns
+      fort.append([f,tf])
+    #endfor
+
+    Undu_tree.append([topd,t,modfor,modmod,cmn,fort])
+
+  #endfor get_undu_tree
+
+#enddef get_undu_tree
+
+def undu_update():
+
+  global UI,Undu_tree,Texe,Scomp_all,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
+
+  kmain = 0
+
+  get_undu_tree()
+
+  Tmain = os.stat(UI + '/main/undumag_main.f').st_mtime_ns
+  if Tmain > Texe: kmain = 1
+
+  for td in Undu_tree:
+
+    dd = td[0]
+    ds = dd + "/"
+    dsm = dd + "/mod/"
+    t = td[1]
+    modfor = td[2]
+    cmn = td[4]
+    fort = td[5]
+
+    scomp = Scomp
+
+    lib = ''
+    libm = ''
+    ranl = 0
+    ranlm = 0
+    slibm = ''
+    slib = ''
+
+    ddd = dd.split("/")[-1]
+
+    if Iverbose >= 0: print("\nProcessing",dd)
+    #breakpoint()
+
+    if ddd == 'mshcern':
+      lib = UI + 'lib/libmshcern_debug.a'
+      libm = UI + 'lib/libmshcern_module_debug.a'
+      scomp = Scomp_nowarn
+    elif ddd == 'mshplt':
+      lib = UI + 'lib/libmshplt_debug.a'
+      libm = UI + 'lib/libmshplt_modules.a'
+    elif ddd == 'for':
+      lib = UI + 'lib/libundu_debug.a'
+      libm = UI + 'lib/libundu_modules_debug.a'
+      scomp = Scomp_omp
+    elif ddd == 'urad':
+      lib = UI + 'lib/liburad_debug.a'
+      libm = UI + 'lib/liburad_module_debug.a'
+      scomp = Scomp_all  # uradcfft does boundary tricks
+    elif ddd == 'util':
+      lib = UI + 'lib/libutil_debug.a'
+      libm = UI + 'lib/libutil_module_debug.a'
+      scomp = Scomp_all
+    #endif
+
+    try:
+      Tlib = os.stat(lib).st_mtime_ns
+      if Tlib > Texe: kmain = 1
+    except:
+      kmain = 1
+    #endtry
+    try:
+      Tlib = os.stat(libm).st_mtime_ns
+      if Tlib > Texe: kmain = 1
+    except:
+      kmain = 1
+    #endtry
+
+    scompmod = "cd " + dd + "/mod && " + scomp
+    scomp = "cd " + dd + " && " + scomp
+
+    #if ddd == 'for': Iverbose=1
+
+    for f in modfor: # Compile modules
+
+      ff = f[0]
+      t = f[1]
+
+      if t < Texe: continue
+
+      if Iverbose > 0: print(ff)
+
+      fo = ff[:-1] + "o"
+      fm = ff[:-1] + "mod"
+
+      Flines = open(ds+"mod/"+ff,'r')
+
+      while True:
+        l = Flines.readline()
+        if not l: break
+        sl = l.split()
+        if len(sl) == 0: continue
+        key = sl[0].lower()
+        if key== 'module':
+          m = sl[1].lower()
+          break
+        #endif
+      #end while
+      Flines.close()
+
+      if Iverbose > 0: print("\nModule:",m)
+
+      scom = scompmod + "-o " + fo + " " + ff
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      #istat = os.system("ls -la " + UI + "undumag_greeter.f")
+      #if not istat:
+      #  print(ff)
+      #  breakpoint()
+      #endif
+
+      scom = 'mv ' + dsm + m + ".mod " + dd
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      slibm += " " + dsm + fo
+      ranlm = 1
+
+      # Search use of module in *.cmn
+
+      for ft in cmn:
+
+        f = ft[0]
+        t = ft[1]
+
+        if t < Texe: continue
+
+        Flines = open(ds+f,'r')
+        while True:
+          l = Flines.readline()
+          if Idebug > 1: print(l)
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) > 1:
+            key = sl[0].lower()
+            if key== 'use':
+              if sl[1].lower() == m:
+                scom = 'touch ' + ds+f
+                if Iverbose > 0: print("\n",scom,"\n")
+                if Idry == 0: os.system(scom)
+                break
+              #endif
+            #endif
+          #endif
+        #end while
+        Flines.close()
+
+      #endfor
+
+      # Search use of module in *.f
+      for ft in fort:
+
+        f = ft[0]
+        t = ft[1]
+
+        if Idebug > 1: print(f)
+
+        Flines = open(ds+f,'r')
+        while True:
+          l = Flines.readline()
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) > 1:
+            key = sl[0].lower()
+            if key== 'implicit':
+              if sl[1].lower() == 'none': break
+            elif key== 'use':
+              if sl[1].lower() == m:
+                scom = 'touch ' + ds+f
+                if Iverbose > 0: print("\n",scom,"\n")
+                if Idry == 0: os.system(scom)
+                break
+              #endif
+            #endif
+          #endif
+        #end while
+        Flines.close()
+
+      #endfor
+
+    #endfor modfor
+
+    if ranlm:
+      scom = 'ar rc ' + libm + " " + slibm
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      scom = 'ranlib ' + libm
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      ranlm = 0
+      slibm = ''
+      kmain = 1
+    #endif
+
+    # Check *.cmn
+
+    for ft in cmn:
+
+      f = ft[0]
+      t = os.stat(ds+f).st_mtime_ns
+
+      if t < Texe: continue
+
+      fcmn = f.split("/")[-1]
+
+      for fft in fort:
+
+        Flines = open(ds+fft[0],'r')
+        while True:
+          l = Flines.readline()
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) < 2: continue
+          if sl[0][0] == '*' or sl[0][0] == '!' or len(sl[0]) < 7: continue
+          key = sl[0].lower()
+          if key== 'include':
+            if sl[1].lower() == "'" + fcmn + "'" or sl[1].lower() == '"' + fcmn + '"':
+              scom = 'touch ' + ds+fft[0]
+              if Iverbose > 0: print("\n",scom,"\n")
+              if Idry == 0: os.system(scom)
+              break
+            #endif
+          #endif
+        #end while
+        Flines.close()
+      #endfor fort
+
+    #endfor cmn
+
+    # Compile *.f if neccessary
+
+    for ft in fort:
+
+      f = ft[0]
+      t = os.stat(ds+f).st_mtime_ns
+
+      #if Iverbose > 0:
+      #  print(f,t,t-Texe)
+      #  if f == 'undumag_iron_residuals.f': breakpoint()
+      #endif
+
+      if t < Texe: continue
+
+      fo = f[:-1] + "o"
+
+      scom = scomp + "-o " + fo + " " + f
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      slib += " " + ds + fo
+      ranl = 1
+
+    #endfor
+
+    if ranl:
+      scom = 'ar rc ' + lib + " " + slib
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      scom = 'ranlib ' + lib
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      kmain = 1
+      ranl = 0
+      slib = ''
+    #endif
+
+  #endfor dir
+
+  if kmain:
+    scom = UI + "shell/compile_undumag_incl_debug.sh"
+    if Iverbose > 0: print("\n",scom,"\n")
+    if Idry == 0: os.system(scom)
+    if Iverbose >=0: print("\n--- " + UI  + "bin/undumag_debug.exe updated ---\n")
+  else:
+    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin/undumag_debug.exe ---\n")
+  #endif
+
+#enddef undu_update
+
+undu_update()
++DECK,make_undumag,T=PYTHON.
+*CMZ :  2.05/03 06/11/2023  13.52.33  by  Michael Scheer
+*CMZ :  2.04/13 31/08/2023  12.24.06  by  Michael Scheer
+*CMZ :  2.04/06 06/07/2023  15.11.29  by  Michael Scheer
+*-- Author :    Michael Scheer   17/03/2023
+
+# +PATCH,//UNDUMAG/PYTHON
+# +DECK,undumag_make,T=PYTHON.
+
+import os
+import sys
+import platform
+import glob
+
+def Quit(*args, delay=0):
+  #reakpoint()
+  nargs =  len(args)
+
+  text = ''
+  for i in range(nargs):
+    text += str(args[i]) + " "
+  #endif
+
+  if delay > 0:
+
+    if len(text):
+      print("\n",text, "\nWaiting",delay," seconds before kill")
+      #time.sleep(delay)
+    else:
+      print("\nWaiting",delay," seconds before kill")
+      #time.sleep(delay)
+    #endif len(text):
+
+    if platform.system() == 'Windows':
+      os.system("sleep " + str(delay) + " && taskkill /F /PID " + str(os.getpid()) + " &")
+    else:
+      os.system("sleep " + str(delay) + " && kill " + str(os.getpid()) + " &")
+    #endif platform.system() == 'Windows'
+
+  elif delay < 0:
+    return
+  else:
+    print("\n",text)
+    if platform.system() == 'Windows':
+      os.system("taskkill /F /PID " + str(os.getpid()))
+    else:
+      os.system("kill " + str(os.getpid()))
+    #endif platform.system() == 'Windows'
+
+#enddef Quit(text = '', delay=0)
+
+global Iverbose,Idry,Idebug,UI
+
+args=sys.argv; nargs = len(args)
+
+try:
+  UI = os.environ['UNDUMAG_INCL'] + "/"
+except:
+  UI = ''
+  path = args[0].split("/")
+  l = len(path)
+  if l == 1:
+    path = os.getcwd().split("/")
+    path.append(args[0])
+  elif l == 2:
+    path = os.getcwd().split("/")
+    pp = args[0].split("/")
+    path.append(pp[0])
+    path.append(pp[1])
+  #endif
+  for i in range(len(path)-2):
+    UI += path[i] + "/"
+  #endfor
+  print("\n*** Warning: Shell variable UNDUMAG_INCL not defined ***")
+  print("*** Assuming: ",UI," ***")
+  os.system('sleep 3')
+#endtry
+
+Iverbose = 0
+Idebug = 0
+Idry = 0
+
+if nargs > 1:
+  try:
+    Iverbose = int(args[1])
+  except:
+    n = '\n'
+    print(n)
+    print("Usage: python3 " + UI + args[0] + " [verbose level]",n)
+    print("To force total recompilation delete ",n,UI + "bin/undumag.exe",n)
+    Quit()
+  #end try
+#endif
+
+if nargs > 2: Idebug = int(args[2])
+
+global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Scomp_nowarn
+
+Scomp = "gfortran -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_nowarn = "gfortran -w -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_all = "gfortran -std=legacy -c -O2 -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_omp = "gfortran -std=legacy -c -O2 -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
+
+def get_undu_tree():
+
+  global UI,Undu_tree,Iverbose,Idry,Idebug,Texe,Tlib
+
+  try:
+    Texe = os.stat(UI + '/bin/undumag.exe').st_mtime_ns
+  except:
+    Texe = 0
+  #endtry
+
+  top = glob.glob(UI+"/*")
+
+  Undu_tree = []
+  #reakpoint()
+
+  for topd in top:
+
+    dd = topd.split("/")[-1]
+
+    if dd == 'cmz' or dd == 'doc' or dd == 'check_system' or dd == 'bin' \
+    or dd == 'python' or dd == 'main' or dd == 'lib' or dd == 'shell' \
+    or dd == 'clc' or dd == 'nam': continue
+
+    t = os.stat(topd).st_mtime_ns
+
+    modf = glob.glob(topd+"/mod/*.f")
+
+    modfor = []
+    for ff in modf:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      modfor.append([f,tf])
+    #endfor
+
+    modm = glob.glob(topd+"/*.mod")
+    modmod = []
+    for ff in modm:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      modmod.append([f,tf])
+    #endfor
+
+    cm = glob.glob(topd+"/*.cmn")
+    cmn = []
+    for ff in cm:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      cmn.append([f,tf])
+    #endfor
+
+    ff = glob.glob(topd+"/*.f")
+    fort = []
+    for fff in ff:
+      f = fff.split("/")[-1]
+      tf = os.stat(fff).st_mtime_ns
+      fort.append([f,tf])
+    #endfor
+
+    Undu_tree.append([topd,t,modfor,modmod,cmn,fort])
+
+  #endfor get_undu_tree
+
+#enddef get_undu_tree
+
+def undu_update():
+
+  global UI,Undu_tree,Texe,Scomp_all,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
+
+  kmain = 0
+
+  get_undu_tree()
+
+  Tmain = os.stat(UI + '/main/undumag_main.f').st_mtime_ns
+  if Tmain > Texe: kmain = 1
+
+  for td in Undu_tree:
+
+    dd = td[0]
+    ds = dd + "/"
+    dsm = dd + "/mod/"
+    t = td[1]
+    modfor = td[2]
+    cmn = td[4]
+    fort = td[5]
+
+    scomp = Scomp
+
+    lib = ''
+    libm = ''
+    ranl = 0
+    ranlm = 0
+    slibm = ''
+    slib = ''
+
+    ddd = dd.split("/")[-1]
+
+    if Iverbose >= 0: print("\nProcessing",dd)
+    #reakpoint()
+
+    if ddd == 'mshcern':
+      lib = UI + 'lib/libmshcern.a'
+      libm = UI + 'lib/libmshcern_module.a'
+      scomp = Scomp_nowarn
+    elif ddd == 'mshplt':
+      lib = UI + 'lib/libmshplt.a'
+      libm = UI + 'lib/libmshplt_modules.a'
+    elif ddd == 'for':
+      lib = UI + 'lib/libundu.a'
+      libm = UI + 'lib/libundu_modules.a'
+      scomp = Scomp_omp
+    elif ddd == 'urad':
+      lib = UI + 'lib/liburad.a'
+      libm = UI + 'lib/liburad_module.a'
+      scomp = Scomp_all  # uradcfft does boundary tricks
+    elif ddd == 'util':
+      lib = UI + 'lib/libutil.a'
+      libm = UI + 'lib/libutil_module.a'
+      scomp = Scomp_all
+    #endif
+
+    try:
+      Tlib = os.stat(lib).st_mtime_ns
+      if Tlib > Texe: kmain = 1
+    except:
+      pass
+    #endtry
+    try:
+      Tlib = os.stat(libm).st_mtime_ns
+      if Tlib > Texe: kmain = 1
+    except:
+      pass
+    #endtry
+
+    scompmod = "cd " + dd + "/mod && " + scomp
+    scomp = "cd " + dd + " && " + scomp
+
+    #if ddd == 'for': Iverbose=1
+
+    for f in modfor: # Compile modules
+
+      ff = f[0]
+      t = f[1]
+
+      if t < Texe: continue
+
+      if Iverbose > 0: print(ff)
+
+      fo = ff[:-1] + "o"
+      fm = ff[:-1] + "mod"
+
+      Flines = open(ds+"mod/"+ff,'r')
+
+      while True:
+        l = Flines.readline()
+        if not l: break
+        sl = l.split()
+        if len(sl) == 0: continue
+        key = sl[0].lower()
+        if key== 'module':
+          m = sl[1].lower()
+          break
+        #endif
+      #end while
+      Flines.close()
+
+      if Iverbose > 0: print("\nModule:",m)
+
+      #if m == 'displacement': #reakpoint()
+
+      scom = scompmod + "-o " + fo + " " + ff
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      #if Iverbose > 0:
+      #print(ff)
+      #istat = os.system("ls -la " + UI + "undumag_greeter.f")
+      #breakpoint()
+      #endif
+
+      scom = 'mv ' + dsm + m + ".mod " + dd
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      slibm += " " + dsm + fo
+      ranlm = 1
+
+      # Search use of module in *.cmn
+
+      for ft in cmn:
+
+        f = ft[0]
+        t = ft[1]
+
+        if t < Texe: continue
+
+        Flines = open(ds+f,'r')
+        while True:
+          l = Flines.readline()
+          if Idebug > 1: print(l)
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) > 1:
+            key = sl[0].lower()
+            if key== 'use':
+              if sl[1].lower() == m:
+                scom = 'touch ' + ds+f
+                if Iverbose > 0: print("\n",scom,"\n")
+                if Idry == 0: os.system(scom)
+                break
+              #endif
+            #endif
+          #endif
+        #end while
+        Flines.close()
+
+      #endfor
+
+      # Search use of module in *.f
+      for ft in fort:
+
+        f = ft[0]
+        t = ft[1]
+
+        if Idebug > 1: print(f)
+
+        Flines = open(ds+f,'r')
+        while True:
+          l = Flines.readline()
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) > 1:
+            key = sl[0].lower()
+            if key== 'implicit':
+              if sl[1].lower() == 'none': break
+            elif key== 'use':
+              if sl[1].lower() == m:
+                scom = 'touch ' + ds+f
+                if Iverbose > 0: print("\n",scom,"\n")
+                if Idry == 0: os.system(scom)
+                break
+              #endif
+            #endif
+          #endif
+        #end while
+        Flines.close()
+
+      #endfor
+
+    #endfor modfor
+
+    if ranlm:
+      scom = 'ar rc ' + libm + " " + slibm
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      scom = 'ranlib ' + libm
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      ranlm = 0
+      slibm = ''
+      kmain = 1
+    #endif
+
+    # Check *.cmn
+
+    for ft in cmn:
+
+      f = ft[0]
+      t = os.stat(ds+f).st_mtime_ns
+
+      if t < Texe: continue
+
+      fcmn = f.split("/")[-1]
+
+      for fft in fort:
+
+        Flines = open(ds+fft[0],'r')
+        while True:
+          l = Flines.readline()
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) < 2: continue
+          if sl[0][0] == '*' or sl[0][0] == '!' or len(sl[0]) < 7: continue
+          key = sl[0].lower()
+          if key== 'include':
+            #reakpoint()
+            if sl[1].lower() == "'" + fcmn + "'" or sl[1].lower() == '"' + fcmn + '"':
+              scom = 'touch ' + ds+fft[0]
+              if Iverbose > 0: print("\n",scom,"\n")
+              if Idry == 0: os.system(scom)
+              break
+            #endif
+          #endif
+        #end while
+        Flines.close()
+      #endfor fort
+
+    #endfor cmn
+
+    # Compile *.f if neccessary
+
+    for ft in fort:
+
+      f = ft[0]
+      t = os.stat(ds+f).st_mtime_ns
+
+      #if Iverbose > 0:
+      #  print(f,t,t-Texe)
+      #  if f == 'undumag_iron_residuals.f': breakpoint()
+      #endif
+
+      istat = os.system("ls -la " + UI + "undumag_greeter.f 2>/dev/null")
+      if not istat:
+        print(ff)
+        breakpoint()
+      #endif
+
+      if t < Texe: continue
+
+      fo = f[:-1] + "o"
+
+      scom = scomp + "-o " + fo + " " + f
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      slib += " " + ds + fo
+      ranl = 1
+
+    #endfor
+
+    if ranl:
+      scom = 'ar rc ' + lib + " " + slib
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      scom = 'ranlib ' + lib
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      kmain = 1
+      ranl = 0
+      slib = ''
+    #endif
+
+  #endfor dir
+
+  if kmain:
+    scom = UI + "shell/compile_undumag_incl.sh"
+    if Iverbose > 0: print("\n",scom,"\n")
+    if Idry == 0: os.system(scom)
+    if Iverbose >=0: print("\n--- " + UI  + "bin/undumag.exe updated ---\n")
+  else:
+    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin/undumag.exe ---\n")
+  #endif
+
+#enddef undu_update
+
+undu_update()
++DECK,make_undumag_win,T=PYTHON.
+*CMZ :  2.05/03 06/11/2023  13.52.33  by  Michael Scheer
+*CMZ :  2.04/13 31/08/2023  12.28.58  by  Michael Scheer
+*CMZ :  2.04/06 06/07/2023  15.11.29  by  Michael Scheer
+*-- Author :    Michael Scheer   17/03/2023
+
+# +PATCH,//UNDUMAG/PYTHON
+# +DECK,undumag_make_win,T=PYTHON.
+
+import os
+import sys
+import platform
+import glob
+
+def Quit(*args, delay=0):
+  #reakpoint()
+  nargs =  len(args)
+
+  text = ''
+  for i in range(nargs):
+    text += str(args[i]) + " "
+  #endif
+
+  if delay > 0:
+
+    if len(text):
+      print("\n",text, "\nWaiting",delay," seconds before kill")
+      #time.sleep(delay)
+    else:
+      print("\nWaiting",delay," seconds before kill")
+      #time.sleep(delay)
+    #endif len(text):
+
+    if platform.system() == 'Windows':
+      os.system("sleep " + str(delay) + " && taskkill /F /PID " + str(os.getpid()) + " &")
+    else:
+      os.system("sleep " + str(delay) + " && kill " + str(os.getpid()) + " &")
+    #endif platform.system() == 'Windows'
+
+  elif delay < 0:
+    return
+  else:
+    print("\n",text)
+    if platform.system() == 'Windows':
+      os.system("taskkill /F /PID " + str(os.getpid()))
+    else:
+      os.system("kill " + str(os.getpid()))
+    #endif platform.system() == 'Windows'
+
+#enddef Quit(text = '', delay=0)
+
+global Iverbose,Idry,Idebug,UI
+
+args=sys.argv; nargs = len(args)
+
+try:
+  UI = os.environ['UNDUMAG_INCL_WIN'] + "/"
+except:
+  UI = ''
+  path = args[0].split("/")
+  l = len(path)
+  if l == 1:
+    path = os.getcwd().split("/")
+    path.append(args[0])
+  elif l == 2:
+    path = os.getcwd().split("/")
+    pp = args[0].split("/")
+    path.append(pp[0])
+    path.append(pp[1])
+  #endif
+  for i in range(len(path)-2):
+    UI += path[i] + "/"
+  #endfor
+  print("\n*** Warning: Shell variable UNDUMAG_INCL_WIN not defined ***")
+  print("*** Assuming: ",UI," ***")
+  os.system('sleep 3')
+#endtry
+
+Iverbose = 0
+Idebug = 0
+Idry = 0
+
+if nargs > 1:
+  try:
+    Iverbose = int(args[1])
+  except:
+    n = '\n'
+    print(n)
+    print("Usage: python3 " + UI + args[0] + " [verbose level]",n)
+    print("To force total recompilation delete ",n,UI + "bin/undumag_win32.exe",n)
+    Quit()
+  #end try
+#endif
+
+if nargs > 2: Idebug = int(args[2])
+
+global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Scomp_nowarn
+
+ff = 'x86_64-w64-mingw32-gfortran-win32'
+Scomp = ff + " -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_nowarn = ff + " -w -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_all = ff + " -std=legacy -c -O2 -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_omp = ff + " -std=legacy -c -O2 -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
+
+def get_undu_tree():
+
+  global UI,Undu_tree,Iverbose,Idry,Idebug,Texe,Tlib
+
+  try:
+    Texe = os.stat(UI + '/bin/undumag_win32.exe').st_mtime_ns
+  except:
+    Texe = 0
+  #endtry
+
+  top = glob.glob(UI+"/*")
+
+  Undu_tree = []
+  #reakpoint()
+
+  for topd in top:
+
+    dd = topd.split("/")[-1]
+
+    if dd == 'cmz' or dd == 'doc' or dd == 'check_system' or dd == 'bin' \
+    or dd == 'python' or dd == 'main' or dd == 'lib' or dd == 'shell' \
+    or dd == 'clc' or dd == 'nam': continue
+
+    t = os.stat(topd).st_mtime_ns
+
+    modf = glob.glob(topd+"/mod/*.f")
+
+    modfor = []
+    for ff in modf:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      modfor.append([f,tf])
+    #endfor
+
+    modm = glob.glob(topd+"/*.mod")
+    modmod = []
+    for ff in modm:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      modmod.append([f,tf])
+    #endfor
+
+    cm = glob.glob(topd+"/*.cmn")
+    cmn = []
+    for ff in cm:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      cmn.append([f,tf])
+    #endfor
+
+    ff = glob.glob(topd+"/*.f")
+    fort = []
+    for fff in ff:
+      f = fff.split("/")[-1]
+      tf = os.stat(fff).st_mtime_ns
+      fort.append([f,tf])
+    #endfor
+
+    Undu_tree.append([topd,t,modfor,modmod,cmn,fort])
+
+  #endfor get_undu_tree
+
+#enddef get_undu_tree
+
+def undu_update():
+
+  global UI,Undu_tree,Texe,Scomp_all,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
+
+  kmain = 0
+
+  get_undu_tree()
+
+  Tmain = os.stat(UI + '/main/undumag_main.f').st_mtime_ns
+  if Tmain > Texe: kmain = 1
+
+  for td in Undu_tree:
+
+    dd = td[0]
+    ds = dd + "/"
+    dsm = dd + "/mod/"
+    t = td[1]
+    modfor = td[2]
+    cmn = td[4]
+    fort = td[5]
+
+    scomp = Scomp
+
+    lib = ''
+    libm = ''
+    ranl = 0
+    ranlm = 0
+    slibm = ''
+    slib = ''
+
+    ddd = dd.split("/")[-1]
+
+    if Iverbose >= 0: print("\nProcessing",dd)
+    #reakpoint()
+
+    if ddd == 'mshcern':
+      lib = UI + 'lib/libmshcern.a'
+      libm = UI + 'lib/libmshcern_module.a'
+      scomp = Scomp_nowarn
+    elif ddd == 'mshplt':
+      lib = UI + 'lib/libmshplt.a'
+      libm = UI + 'lib/libmshplt_modules.a'
+    elif ddd == 'for':
+      lib = UI + 'lib/libundu.a'
+      libm = UI + 'lib/libundu_modules.a'
+      scomp = Scomp_omp
+    elif ddd == 'urad':
+      lib = UI + 'lib/liburad.a'
+      libm = UI + 'lib/liburad_module.a'
+      scomp = Scomp_all  # uradcfft does boundary tricks
+    elif ddd == 'util':
+      lib = UI + 'lib/libutil.a'
+      libm = UI + 'lib/libutil_module.a'
+      scomp = Scomp_all
+    #endif
+
+    try:
+      Tlib = os.stat(lib).st_mtime_ns
+      if Tlib > Texe: kmain = 1
+    except:
+      pass
+    #endtry
+    try:
+      Tlib = os.stat(libm).st_mtime_ns
+      if Tlib > Texe: kmain = 1
+    except:
+      pass
+    #endtry
+
+    scompmod = "cd " + dd + "/mod && " + scomp
+    scomp = "cd " + dd + " && " + scomp
+
+    #if ddd == 'for': Iverbose=1
+
+    for f in modfor: # Compile modules
+
+      ff = f[0]
+      t = f[1]
+
+      if t < Texe: continue
+
+      if Iverbose > 0: print(ff)
+
+      fo = ff[:-1] + "o"
+      fm = ff[:-1] + "mod"
+
+      Flines = open(ds+"mod/"+ff,'r')
+
+      while True:
+        l = Flines.readline()
+        if not l: break
+        sl = l.split()
+        if len(sl) == 0: continue
+        key = sl[0].lower()
+        if key== 'module':
+          m = sl[1].lower()
+          break
+        #endif
+      #end while
+      Flines.close()
+
+      if Iverbose > 0: print("\nModule:",m)
+
+      #if m == 'displacement': #reakpoint()
+
+      scom = scompmod + "-o " + fo + " " + ff
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      #if Iverbose > 0:
+      #print(ff)
+      #istat = os.system("ls -la " + UI + "undumag_greeter.f")
+      #breakpoint()
+      #endif
+
+      scom = 'mv ' + dsm + m + ".mod " + dd
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      slibm += " " + dsm + fo
+      ranlm = 1
+
+      # Search use of module in *.cmn
+
+      for ft in cmn:
+
+        f = ft[0]
+        t = ft[1]
+
+        if t < Texe: continue
+
+        Flines = open(ds+f,'r')
+        while True:
+          l = Flines.readline()
+          if Idebug > 1: print(l)
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) > 1:
+            key = sl[0].lower()
+            if key== 'use':
+              if sl[1].lower() == m:
+                scom = 'touch ' + ds+f
+                if Iverbose > 0: print("\n",scom,"\n")
+                if Idry == 0: os.system(scom)
+                break
+              #endif
+            #endif
+          #endif
+        #end while
+        Flines.close()
+
+      #endfor
+
+      # Search use of module in *.f
+      for ft in fort:
+
+        f = ft[0]
+        t = ft[1]
+
+        if Idebug > 1: print(f)
+
+        Flines = open(ds+f,'r')
+        while True:
+          l = Flines.readline()
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) > 1:
+            key = sl[0].lower()
+            if key== 'implicit':
+              if sl[1].lower() == 'none': break
+            elif key== 'use':
+              if sl[1].lower() == m:
+                scom = 'touch ' + ds+f
+                if Iverbose > 0: print("\n",scom,"\n")
+                if Idry == 0: os.system(scom)
+                break
+              #endif
+            #endif
+          #endif
+        #end while
+        Flines.close()
+
+      #endfor
+
+    #endfor modfor
+
+    if ranlm:
+      scom = 'x86_64-w64-mingw32-ar rc ' + libm + " " + slibm
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      scom = 'x86_64-w64-mingw32-ranlib ' + libm
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      ranlm = 0
+      slibm = ''
+      kmain = 1
+    #endif
+
+    # Check *.cmn
+
+    for ft in cmn:
+
+      f = ft[0]
+      t = os.stat(ds+f).st_mtime_ns
+
+      if t < Texe: continue
+
+      fcmn = f.split("/")[-1]
+
+      for fft in fort:
+
+        Flines = open(ds+fft[0],'r')
+        while True:
+          l = Flines.readline()
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) < 2: continue
+          if sl[0][0] == '*' or sl[0][0] == '!' or len(sl[0]) < 7: continue
+          key = sl[0].lower()
+          if key== 'include':
+            #reakpoint()
+            if sl[1].lower() == "'" + fcmn + "'" or sl[1].lower() == '"' + fcmn + '"':
+              scom = 'touch ' + ds+fft[0]
+              if Iverbose > 0: print("\n",scom,"\n")
+              if Idry == 0: os.system(scom)
+              break
+            #endif
+          #endif
+        #end while
+        Flines.close()
+      #endfor fort
+
+    #endfor cmn
+
+    # Compile *.f if neccessary
+
+    for ft in fort:
+
+      f = ft[0]
+      t = os.stat(ds+f).st_mtime_ns
+
+      #if Iverbose > 0:
+      #  print(f,t,t-Texe)
+      #  if f == 'undumag_iron_residuals.f': breakpoint()
+      #endif
+
+      istat = os.system("ls -la " + UI + "undumag_greeter.f 2>/dev/null")
+      if not istat:
+        print(ff)
+        breakpoint()
+      #endif
+
+      if t < Texe: continue
+
+      fo = f[:-1] + "o"
+
+      scom = scomp + "-o " + fo + " " + f
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      slib += " " + ds + fo
+      ranl = 1
+
+    #endfor
+
+    if ranl:
+      scom = 'x86_64-w64-mingw32-ar rc ' + lib + " " + slib
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      scom = 'x86_64-w64-mingw32-ranlib ' + lib
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      kmain = 1
+      ranl = 0
+      slib = ''
+    #endif
+
+  #endfor dir
+
+  if kmain:
+    scom = UI + "shell/compile_undumag_incl_cross_win32.sh"
+    if Iverbose > 0: print("\n",scom,"\n")
+    if Idry == 0: os.system(scom)
+    if Iverbose >=0: print("\n--- " + UI  + "bin/undumag_win32.exe updated ---\n")
+  else:
+    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin/undumag_win32.exe ---\n")
+  #endif
+
+#enddef undu_update
+
+undu_update()
++DECK,make_undumag_static,T=PYTHON.
+*CMZ :  2.05/03 06/11/2023  13.52.33  by  Michael Scheer
+*CMZ :  2.04/06 06/07/2023  15.11.29  by  Michael Scheer
+*-- Author :    Michael Scheer   17/03/2023
+
+# +PATCH,//UNDUMAG/PYTHON
+# +DECK,undumag_make_static,T=PYTHON.
+
+import os
+import sys
+import platform
+import glob
+
+def Quit(*args, delay=0):
+  #reakpoint()
+  nargs =  len(args)
+
+  text = ''
+  for i in range(nargs):
+    text += str(args[i]) + " "
+  #endif
+
+  if delay > 0:
+
+    if len(text):
+      print("\n",text, "\nWaiting",delay," seconds before kill")
+      #time.sleep(delay)
+    else:
+      print("\nWaiting",delay," seconds before kill")
+      #time.sleep(delay)
+    #endif len(text):
+
+    if platform.system() == 'Windows':
+      os.system("sleep " + str(delay) + " && taskkill /F /PID " + str(os.getpid()) + " &")
+    else:
+      os.system("sleep " + str(delay) + " && kill " + str(os.getpid()) + " &")
+    #endif platform.system() == 'Windows'
+
+  elif delay < 0:
+    return
+  else:
+    print("\n",text)
+    if platform.system() == 'Windows':
+      os.system("taskkill /F /PID " + str(os.getpid()))
+    else:
+      os.system("kill " + str(os.getpid()))
+    #endif platform.system() == 'Windows'
+
+#enddef Quit(text = '', delay=0)
+
+global Iverbose,Idry,Idebug,UI
+
+args=sys.argv; nargs = len(args)
+
+try:
+  UI = os.environ['UNDUMAG_INCL'] + "/"
+except:
+  UI = ''
+  path = args[0].split("/")
+  l = len(path)
+  if l == 1:
+    path = os.getcwd().split("/")
+    path.append(args[0])
+  elif l == 2:
+    path = os.getcwd().split("/")
+    pp = args[0].split("/")
+    path.append(pp[0])
+    path.append(pp[1])
+  #endif
+  for i in range(len(path)-2):
+    UI += path[i] + "/"
+  #endfor
+  print("\n*** Warning: Shell variable UNDUMAG_INCL not defined ***")
+  print("*** Assuming: ",UI," ***")
+  os.system('sleep 3')
+#endtry
+
+Iverbose = 0
+Idebug = 0
+Idry = 0
+
+if nargs > 1:
+  try:
+    Iverbose = int(args[1])
+  except:
+    n = '\n'
+    print(n)
+    print("Usage: python3 " + UI + args[0] + " [verbose level]",n)
+    print("To force total recompilation delete ",n,UI + "bin/undumag.exe",n)
+    Quit()
+  #end try
+#endif
+
+if nargs > 2: Idebug = int(args[2])
+
+global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Scomp_nowarn
+
+Scomp = "gfortran -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_nowarn = "gfortran -w -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_all = "gfortran -std=legacy -c -O2 -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_omp = "gfortran -std=legacy -c -O2 -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
+
+def get_undu_tree():
+
+  global UI,Undu_tree,Iverbose,Idry,Idebug,Texe,Tlib
+
+  try:
+    Texe = os.stat(UI + '/bin/undumag.exe').st_mtime_ns
+  except:
+    Texe = 0
+  #endtry
+
+  top = glob.glob(UI+"/*")
+
+  Undu_tree = []
+  #reakpoint()
+
+  for topd in top:
+
+    dd = topd.split("/")[-1]
+
+    if dd == 'cmz' or dd == 'doc' or dd == 'check_system' or dd == 'bin' \
+    or dd == 'python' or dd == 'main' or dd == 'lib' or dd == 'shell' \
+    or dd == 'clc' or dd == 'nam': continue
+
+    t = os.stat(topd).st_mtime_ns
+
+    modf = glob.glob(topd+"/mod/*.f")
+
+    modfor = []
+    for ff in modf:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      modfor.append([f,tf])
+    #endfor
+
+    modm = glob.glob(topd+"/*.mod")
+    modmod = []
+    for ff in modm:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      modmod.append([f,tf])
+    #endfor
+
+    cm = glob.glob(topd+"/*.cmn")
+    cmn = []
+    for ff in cm:
+      f = ff.split("/")[-1]
+      tf = os.stat(ff).st_mtime_ns
+      cmn.append([f,tf])
+    #endfor
+
+    ff = glob.glob(topd+"/*.f")
+    fort = []
+    for fff in ff:
+      f = fff.split("/")[-1]
+      tf = os.stat(fff).st_mtime_ns
+      fort.append([f,tf])
+    #endfor
+
+    Undu_tree.append([topd,t,modfor,modmod,cmn,fort])
+
+  #endfor get_undu_tree
+
+#enddef get_undu_tree
+
+def undu_update():
+
+  global UI,Undu_tree,Texe,Scomp_all,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
+
+  kmain = 0
+
+  get_undu_tree()
+
+  for td in Undu_tree:
+
+    dd = td[0]
+    ds = dd + "/"
+    dsm = dd + "/mod/"
+    t = td[1]
+    modfor = td[2]
+    cmn = td[4]
+    fort = td[5]
+
+    scomp = Scomp
+
+    lib = ''
+    libm = ''
+    ranl = 0
+    ranlm = 0
+    slibm = ''
+    slib = ''
+
+    ddd = dd.split("/")[-1]
+
+    if Iverbose >= 0: print("\nProcessing",dd)
+    #reakpoint()
+
+    if ddd == 'mshcern':
+      lib = UI + 'lib/libmshcern.a'
+      libm = UI + 'lib/libmshcern_module.a'
+      scomp = Scomp_nowarn
+    elif ddd == 'mshplt':
+      lib = UI + 'lib/libmshplt.a'
+      libm = UI + 'lib/libmshplt_modules.a'
+    elif ddd == 'for':
+      lib = UI + 'lib/libundu.a'
+      libm = UI + 'lib/libundu_modules.a'
+      scomp = Scomp_omp
+    elif ddd == 'urad':
+      lib = UI + 'lib/liburad.a'
+      libm = UI + 'lib/liburad_module.a'
+      scomp = Scomp_all  # uradcfft does boundary tricks
+    elif ddd == 'util':
+      lib = UI + 'lib/libutil.a'
+      libm = UI + 'lib/libutil_module.a'
+      scomp = Scomp_all
+    #endif
+
+    try:
+      Tlib = os.stat(lib).st_mtime_ns
+      if Tlib > Texe: kmain = 1
+    except:
+      pass
+    #endtry
+    try:
+      Tlib = os.stat(libm).st_mtime_ns
+      if Tlib > Texe: kmain = 1
+    except:
+      pass
+    #endtry
+
+    scompmod = "cd " + dd + "/mod && " + scomp
+    scomp = "cd " + dd + " && " + scomp
+
+    #if ddd == 'for': Iverbose=1
+
+    for f in modfor: # Compile modules
+
+      ff = f[0]
+      t = f[1]
+
+      if t < Texe: continue
+
+      if Iverbose > 0: print(ff)
+
+      fo = ff[:-1] + "o"
+      fm = ff[:-1] + "mod"
+
+      Flines = open(ds+"mod/"+ff,'r')
+
+      while True:
+        l = Flines.readline()
+        if not l: break
+        sl = l.split()
+        if len(sl) == 0: continue
+        key = sl[0].lower()
+        if key== 'module':
+          m = sl[1].lower()
+          break
+        #endif
+      #end while
+      Flines.close()
+
+      if Iverbose > 0: print("\nModule:",m)
+
+      #if m == 'displacement': #reakpoint()
+
+      scom = scompmod + "-o " + fo + " " + ff
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      #if Iverbose > 0:
+      #print(ff)
+      #istat = os.system("ls -la " + UI + "undumag_greeter.f")
+      #breakpoint()
+      #endif
+
+      scom = 'mv ' + dsm + m + ".mod " + dd
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      slibm += " " + dsm + fo
+      ranlm = 1
+
+      # Search use of module in *.cmn
+
+      for ft in cmn:
+
+        f = ft[0]
+        t = ft[1]
+
+        if t < Texe: continue
+
+        Flines = open(ds+f,'r')
+        while True:
+          l = Flines.readline()
+          if Idebug > 1: print(l)
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) > 1:
+            key = sl[0].lower()
+            if key== 'use':
+              if sl[1].lower() == m:
+                scom = 'touch ' + ds+f
+                if Iverbose > 0: print("\n",scom,"\n")
+                if Idry == 0: os.system(scom)
+                break
+              #endif
+            #endif
+          #endif
+        #end while
+        Flines.close()
+
+      #endfor
+
+      # Search use of module in *.f
+      for ft in fort:
+
+        f = ft[0]
+        t = ft[1]
+
+        if Idebug > 1: print(f)
+
+        Flines = open(ds+f,'r')
+        while True:
+          l = Flines.readline()
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) > 1:
+            key = sl[0].lower()
+            if key== 'implicit':
+              if sl[1].lower() == 'none': break
+            elif key== 'use':
+              if sl[1].lower() == m:
+                scom = 'touch ' + ds+f
+                if Iverbose > 0: print("\n",scom,"\n")
+                if Idry == 0: os.system(scom)
+                break
+              #endif
+            #endif
+          #endif
+        #end while
+        Flines.close()
+
+      #endfor
+
+    #endfor modfor
+
+    if ranlm:
+      scom = 'ar rc ' + libm + " " + slibm
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      scom = 'ranlib ' + libm
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      ranlm = 0
+      slibm = ''
+      kmain = 1
+    #endif
+
+    # Check *.cmn
+
+    for ft in cmn:
+
+      f = ft[0]
+      t = os.stat(ds+f).st_mtime_ns
+
+      if t < Texe: continue
+
+      fcmn = f.split("/")[-1]
+
+      for fft in fort:
+
+        Flines = open(ds+fft[0],'r')
+        while True:
+          l = Flines.readline()
+          if not l: break
+          #if len(l) < 10: break
+          sl = l.split()
+          if len(sl) < 2: continue
+          if sl[0][0] == '*' or sl[0][0] == '!' or len(sl[0]) < 7: continue
+          key = sl[0].lower()
+          if key== 'include':
+            #reakpoint()
+            if sl[1].lower() == "'" + fcmn + "'" or sl[1].lower() == '"' + fcmn + '"':
+              scom = 'touch ' + ds+fft[0]
+              if Iverbose > 0: print("\n",scom,"\n")
+              if Idry == 0: os.system(scom)
+              break
+            #endif
+          #endif
+        #end while
+        Flines.close()
+      #endfor fort
+
+    #endfor cmn
+
+    # Compile *.f if neccessary
+
+    for ft in fort:
+
+      f = ft[0]
+      t = os.stat(ds+f).st_mtime_ns
+
+      #if Iverbose > 0:
+      #  print(f,t,t-Texe)
+      #  if f == 'undumag_iron_residuals.f': breakpoint()
+      #endif
+
+      istat = os.system("ls -la " + UI + "undumag_greeter.f 2>/dev/null")
+      if not istat:
+        print(ff)
+        breakpoint()
+      #endif
+
+      if t < Texe: continue
+
+      fo = f[:-1] + "o"
+
+      scom = scomp + "-o " + fo + " " + f
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+
+      slib += " " + ds + fo
+      ranl = 1
+
+    #endfor
+
+    if ranl:
+      scom = 'ar rc ' + lib + " " + slib
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      scom = 'ranlib ' + lib
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0: os.system(scom)
+      kmain = 1
+      ranl = 0
+      slib = ''
+    #endif
+
+  #endfor dir
+
+  if kmain:
+    scom = UI + "shell/compile_undumag_incl_static.sh"
+    if Iverbose > 0: print("\n",scom,"\n")
+    if Idry == 0: os.system(scom)
+    if Iverbose >=0: print("\n--- " + UI  + "bin/undumag.exe updated ---\n")
+  else:
+    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin/undumag.exe ---\n")
+  #endif
+
+#enddef undu_update
+
+undu_update()
++PATCH,INCLCMN,T=F77.'
+*CMZ :  2.04/05 14/03/2023  12.16.15  by  Michael Scheer
++KEEP,hulldim.
+*CMZ :          06/11/2023  15.52.58  by  Michael Scheer
+*-- Author :    Michael Scheer   06/11/2023
+      include 'hulldim.cmn'
++PATCH,MODULES.
+*CMZ :  2.04/05 14/03/2023  12.19.23  by  Michael Scheer
++DECK,util_module,T=F77.
+*CMZ :  2.05/03 06/11/2023  12.17.55  by  Michael Scheer
+*CMZ :  2.04/22 25/09/2023  12.10.25  by  Michael Scheer
+*-- Author :    Michael Scheer   25/09/2023
+      module utilmod
+
+      integer modsimp
+
+      endmodule utilmod
++PATCH,SEQVER.
+*CMZ :          06/11/2023  14.18.30  by  Michael Scheer
++KEEP,unduver.
+*CMZ :  2.05/03 06/11/2023  14.09.16  by  Michael Scheer
+*CMZ :  2.05/02 05/11/2023  15.30.48  by  Michael Scheer
+*CMZ :  2.05/01 23/10/2023  14.26.31  by  Michael Scheer
+*CMZ :  2.05/00 30/09/2023  10.59.27  by  Michael Scheer
+*CMZ :  2.04/28 30/09/2023  10.58.07  by  Michael Scheer
+*CMZ :  2.04/27 28/09/2023  14.24.47  by  Michael Scheer
+*CMZ :  2.04/26 28/09/2023  13.25.52  by  Michael Scheer
+*CMZ :  2.04/25 28/09/2023  08.31.19  by  Michael Scheer
+*CMZ :  2.04/24 27/09/2023  16.46.53  by  Michael Scheer
+*CMZ :  2.04/23 27/09/2023  09.40.54  by  Michael Scheer
+*CMZ :  2.04/22 26/09/2023  21.34.56  by  Michael Scheer
+*CMZ :  2.04/21 22/09/2023  09.06.23  by  Michael Scheer
+*CMZ :  2.04/20 21/09/2023  10.28.15  by  Michael Scheer
+*CMZ :  2.04/19 18/09/2023  11.33.14  by  Michael Scheer
+*CMZ :  2.04/18 14/09/2023  07.39.08  by  Michael Scheer
+*CMZ :  2.04/17 13/09/2023  16.15.26  by  Michael Scheer
+*CMZ :  2.04/16 11/09/2023  11.57.47  by  Michael Scheer
+*CMZ :  2.04/15 06/09/2023  08.20.46  by  Michael Scheer
+*CMZ :  2.04/13 04/09/2023  12.06.16  by  Michael Scheer
+*CMZ :  2.04/12 31/08/2023  06.57.59  by  Michael Scheer
+*CMZ :  2.04/11 29/08/2023  15.03.24  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  16.14.31  by  Michael Scheer
+*CMZ :  2.04/09 18/08/2023  19.16.48  by  Michael Scheer
+*CMZ :  2.04/08 11/08/2023  14.57.08  by  Michael Scheer
+*CMZ :  2.04/07 10/08/2023  09.14.02  by  Michael Scheer
+*CMZ :  2.04/06 07/08/2023  10.05.29  by  Michael Scheer
+*CMZ :  2.04/05 15/03/2023  13.22.48  by  Michael Scheer
+*CMZ :  2.04/04 14/03/2023  11.22.26  by  Michael Scheer
+*CMZ :  2.04/03 05/03/2023  16.38.01  by  Michael Scheer
+*CMZ :  2.04/02 27/02/2023  20.57.20  by  Michael Scheer
+*CMZ :  2.04/01 17/01/2023  13.16.06  by  Michael Scheer
+*CMZ :  2.04/00 02/09/2022  07.23.21  by  Michael Scheer
+*CMZ :  2.03/00 26/07/2022  07.27.06  by  Michael Scheer
+*CMZ :  2.02/02 11/02/2022  10.16.30  by  Michael Scheer
+*CMZ :  2.02/00 06/04/2021  15.55.28  by  Michael Scheer
+*CMZ :  2.01/08 15/08/2020  08.40.43  by  Michael Scheer
+*CMZ :  2.01/07 28/07/2020  10.27.15  by  Michael Scheer
+*CMZ :  2.01/06 27/07/2020  12.07.59  by  Michael Scheer
+*CMZ :  2.01/05 27/07/2020  10.28.00  by  Michael Scheer
+*CMZ :  2.01/03 16/07/2019  09.36.59  by  Michael Scheer
+*CMZ :  2.01/02 02/05/2018  14.22.15  by  Michael Scheer
+*CMZ :  2.01/01 24/04/2018  17.18.04  by  Michael Scheer
+*CMZ :  2.01/00 24/04/2018  15.17.18  by  Michael Scheer
+*CMZ :  2.00/03 24/04/2018  13.33.50  by  Michael Scheer
+*CMZ :  2.00/02 17/04/2018  13.44.53  by  Michael Scheer
+*CMZ :  2.00/01 16/04/2018  15.48.23  by  Michael Scheer
+*CMZ :  2.00/00 12/04/2018  08.51.26  by  Michael Scheer
+*CMZ :  1.25/05 05/04/2018  19.30.01  by  Michael Scheer
+*CMZ :  1.25/04 05/04/2018  16.14.01  by  Michael Scheer
+*CMZ :  1.25/03 03/04/2018  08.32.34  by  Michael Scheer
+*CMZ :  1.25/02 22/03/2018  15.10.45  by  Michael Scheer
+*CMZ :  1.25/01 20/03/2018  16.23.14  by  Michael Scheer
+*CMZ :  1.25/00 16/03/2018  15.06.30  by  Michael Scheer
+*CMZ :  1.24/01 17/10/2017  10.11.38  by  Michael Scheer
+*CMZ :  1.24/00 12/10/2017  15.01.01  by  Michael Scheer
+*CMZ :  1.23/07 12/10/2017  08.31.17  by  Michael Scheer
+*CMZ :  1.23/06 06/10/2017  14.22.02  by  Michael Scheer
+*CMZ :  1.23/05 06/10/2017  12.51.05  by  Michael Scheer
+*CMZ :  1.23/04 05/10/2017  12.36.30  by  Michael Scheer
+*CMZ :  1.23/03 27/09/2017  09.39.17  by  Michael Scheer
+*CMZ :  1.23/02 18/09/2017  15.33.46  by  Michael Scheer
+*CMZ :  1.23/01 09/08/2017  08.38.14  by  Michael Scheer
+*CMZ :  1.23/00 04/08/2017  09.35.04  by  Michael Scheer
+*CMZ :  1.22/01 21/07/2017  15.02.00  by  Michael Scheer
+*CMZ :  1.22/00 05/07/2017  10.36.01  by  Michael Scheer
+*CMZ :  1.21/00 29/06/2017  16.12.16  by  Michael Scheer
+*CMZ :  1.20/03 29/06/2017  16.11.17  by  Michael Scheer
+*CMZ :  1.20/02 23/06/2017  14.23.56  by  Michael Scheer
+*CMZ :  1.20/01 22/06/2017  14.46.47  by  Michael Scheer
+*CMZ :  1.20/00 22/06/2017  11.27.31  by  Michael Scheer
+*CMZ :  1.19/00 20/06/2017  12.34.58  by  Michael Scheer
+*CMZ :  1.18/03 14/06/2017  11.29.53  by  Michael Scheer
+*CMZ :  1.18/02 13/06/2017  15.11.00  by  Michael Scheer
+*CMZ :  1.18/01 09/06/2017  08.54.59  by  Michael Scheer
+*CMZ :  1.18/00 06/06/2017  14.48.14  by  Michael Scheer
+*CMZ :  1.17/08 30/05/2017  16.29.12  by  Michael Scheer
+*CMZ :  1.17/07 24/05/2017  13.12.04  by  Michael Scheer
+*CMZ :  1.17/06 21/05/2017  14.25.54  by  Michael Scheer
+*CMZ :  1.17/05 18/05/2017  12.07.07  by  Michael Scheer
+*CMZ :  1.17/04 12/05/2017  13.52.43  by  Michael Scheer
+*CMZ :  1.17/03 09/05/2017  13.37.52  by  Michael Scheer
+*CMZ :  1.17/02 09/05/2017  13.11.36  by  Michael Scheer
+*CMZ :  1.17/01 08/05/2017  20.51.09  by  Michael Scheer
+*CMZ :  1.17/00 08/05/2017  16.57.03  by  Michael Scheer
+*CMZ :  1.16/00 07/05/2017  14.11.11  by  Michael Scheer
+*CMZ :  1.15/13 05/05/2017  10.21.44  by  Michael Scheer
+*CMZ :  1.15/11 03/05/2017  09.26.17  by  Michael Scheer
+*CMZ :  1.15/10 19/04/2017  12.48.35  by  Michael Scheer
+*CMZ :  1.15/09 07/04/2017  15.00.04  by  Michael Scheer
+*CMZ :  1.15/08 06/04/2017  15.01.20  by  Michael Scheer
+*CMZ :  1.15/07 05/04/2017  16.02.20  by  Michael Scheer
+*CMZ :  1.15/06 04/04/2017  13.33.09  by  Michael Scheer
+*CMZ :  1.15/05 04/04/2017  12.48.22  by  Michael Scheer
+*CMZ :  1.15/04 03/04/2017  13.12.53  by  Michael Scheer
+*CMZ :  1.15/03 03/04/2017  11.00.07  by  Michael Scheer
+*CMZ :  1.15/02 02/04/2017  09.46.32  by  Michael Scheer
+*CMZ :  1.15/01 30/03/2017  11.37.22  by  Michael Scheer
+*CMZ :  1.15/00 28/03/2017  12.03.00  by  Michael Scheer
+*CMZ :  1.14/00 22/03/2017  12.54.38  by  Michael Scheer
+*CMZ :  1.13/03 16/03/2017  17.18.19  by  Michael Scheer
+*CMZ :  1.13/02 09/03/2017  17.35.51  by  Michael Scheer
+*CMZ :  1.13/01 08/03/2017  17.07.42  by  Michael Scheer
+*CMZ :  1.13/00 02/03/2017  17.04.56  by  Michael Scheer
+*CMZ :  1.12/00 27/02/2017  15.49.37  by  Michael Scheer
+*CMZ :  1.11/07 23/02/2017  17.25.07  by  Michael Scheer
+*CMZ :  1.11/06 23/02/2017  13.48.56  by  Michael Scheer
+*CMZ :  1.11/05 22/02/2017  16.08.44  by  Michael Scheer
+*CMZ :  1.11/04 25/01/2017  16.58.21  by  Michael Scheer
+*CMZ :  1.11/03 18/01/2017  09.43.51  by  Michael Scheer
+*CMZ :  1.11/02 10/01/2017  10.20.14  by  Michael Scheer
+*CMZ :  1.11/01 09/01/2017  13.56.32  by  Michael Scheer
+*CMZ :  1.11/00 05/01/2017  09.37.44  by  Michael Scheer
+*CMZ :  1.10/03 05/12/2016  16.30.30  by  Michael Scheer
+*CMZ :  1.10/02 01/12/2016  13.35.11  by  Michael Scheer
+*CMZ :  1.10/01 21/11/2016  13.02.21  by  Michael Scheer
+*CMZ :  1.10/00 18/11/2016  09.20.28  by  Michael Scheer
+*CMZ :  1.09/01 10/10/2016  10.18.30  by  Michael Scheer
+*CMZ :  1.09/00 04/10/2016  12.55.22  by  Michael Scheer
+*CMZ :  1.08/00 30/09/2016  13.55.02  by  Michael Scheer
+*CMZ :  1.07/03 27/09/2016  19.17.35  by  Michael Scheer
+*CMZ :  1.07/02 25/09/2016  13.41.46  by  Michael Scheer
+*CMZ :  1.07/01 25/09/2016  11.51.16  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  15.02.55  by  Michael Scheer
+*CMZ :  1.06/01 21/09/2016  15.52.28  by  Michael Scheer
+*CMZ :  1.06/00 21/09/2016  13.02.46  by  Michael Scheer
+*CMZ :  1.04/03 15/09/2016  17.38.28  by  Michael Scheer
+*CMZ :  1.04/02 15/09/2016  16.33.46  by  Michael Scheer
+*CMZ :  1.04/01 14/09/2016  15.26.25  by  Michael Scheer
+*CMZ :  1.04/00 14/09/2016  13.37.05  by  Michael Scheer
+*CMZ :  1.03/00 13/09/2016  14.36.16  by  Michael Scheer
+*CMZ :  1.02/03 12/09/2016  11.55.27  by  Michael Scheer
+*CMZ :  1.02/01 11/09/2016  12.34.04  by  Michael Scheer
+*CMZ :  1.02/00 30/08/2016  13.27.12  by  Michael Scheer
+*CMZ :  1.01/00 21/08/2016  12.52.29  by  Michael Scheer
+*CMZ :  1.00/00 19/08/2016  18.47.41  by  Michael Scheer
+*CMZ :  0.00/14 19/08/2016  14.37.09  by  Michael Scheer
+*CMZ :  0.00/13 19/08/2016  14.12.39  by  Michael Scheer
+*CMZ :  0.00/12 21/07/2016  09.27.38  by  Michael Scheer
+*CMZ :  0.00/11 20/07/2016  16.30.10  by  Michael Scheer
+*CMZ :  0.00/10 14/07/2016  14.01.01  by  Michael Scheer
+*CMZ :  0.00/09 06/07/2016  08.51.18  by  Michael Scheer
+*CMZ :  0.00/08 23/06/2016  15.45.45  by  Michael Scheer
+*CMZ :  0.00/06 22/06/2016  14.00.43  by  Michael Scheer
+*CMZ :  0.00/05 14/06/2016  13.56.01  by  Michael Scheer
+*CMZ :  0.00/04 13/05/2016  14.51.39  by  Michael Scheer
+*CMZ :  0.00/03 04/05/2016  11.43.21  by  Michael Scheer
+*CMZ :  0.00/02 02/05/2016  10.24.12  by  Michael Scheer
+*CMZ :  0.00/01 26/04/2016  16.04.05  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  12.51.37  by  Michael Scheer
+*-- Author :    Michael Scheer   12/02/2004
+      print *
+      print *
+      print *
+      write(lun6,*)'     **********************************************************'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                       UNDUMAG                          *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                    Version 2.05/03                     *'
+      write(lun6,*)'     *                        6.11.2023                       *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                     Michael Scheer                     *'
+      write(lun6,*)'     *                       HZB/BESSY                        *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     **********************************************************'
+
+      print *
+      print *
+      print *
+
+      call util_zeit_kommentar(lun6,"")
+
+      open(unit=999,file="undumag.ver")
+      chuvers="2.05/03"
+      write(999,*)chuvers
+      close(999)
+
