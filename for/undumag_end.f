@@ -1,3 +1,4 @@
+*CMZ :          06/02/2024  15.02.28  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.05.20  by  Michael Scheer
 *CMZ :  2.05/01 22/10/2023  14.47.55  by  Michael Scheer
 *CMZ :  2.04/12 30/08/2023  11.37.07  by  Michael Scheer
@@ -151,7 +152,7 @@
      &  lunpost,idis,mat,mtyp,imat,
      &  iplan,nplan,i,ibmax,ixon,ixonnor,
      &  itry,ixbeff,ixbeffnor,nfirst,nlast,lunkill,irecover,
-     &  lunw,icorn,ncorn,nper,ibrn,kbrn,kx
+     &  lunw,icorn,ncorn,nper,ibrn,kbrn,kx,kproto
 
       integer :: jcharge=-1,nthstep=1
 
@@ -182,7 +183,7 @@
 *KEND.
 
       character(64) ctitle,chtime,chrun
-      character(32) cmag,cmoth
+      character(32) cmag,cmoth,cmodule,cmagnet,ccopy
       character(24) cbint
 
       save
@@ -1030,8 +1031,16 @@ c              write(lun6,*)"field:",ix,iy,iz
                 write(cmoth,'(a)') chmoths(:,imoth)
               else
                 lmag=t_voxcopy(kmag)%kmagnet
-                cmag=t_magnets(lmag)%cnam
-                cmoth=t_magnets(lmag)%cmoth
+                kproto=t_magcopy(lmag)%kproto
+                write(cmagnet,*)t_voxcopy(kmag)%kmagnet
+                write(cmodule,*)t_voxcopy(kmag)%kmodule
+                write(ccopy,*)t_voxcopy(kmag)%kcopy
+                cmag=t_magnets(kproto)%cnam
+                cmag=trim(adjustl(cmag)) // '_'
+     &            // trim(adjustl(cmodule)) // '_'
+     &            // trim(adjustl(cmagnet)) // '_'
+     &            // trim(adjustl(ccopy))
+                cmoth=t_magcopy(lmag)%cmoth
               endif
             endif
             write(lun,*)
@@ -1215,8 +1224,16 @@ c              write(lun6,*)"field:",ix,iy,iz
                 write(cmoth,'(a)') chmoths(:,imoth)
               else
                 lmag=t_voxcopy(kmag)%kmagnet
-                cmag=t_magnets(lmag)%cnam
-                cmoth=t_magnets(lmag)%cmoth
+                kproto=t_magcopy(lmag)%kproto
+                write(cmagnet,*)t_voxcopy(kmag)%kmagnet
+                write(cmodule,*)t_voxcopy(kmag)%kmodule
+                write(ccopy,*)t_voxcopy(kmag)%kcopy
+                cmag=t_magnets(kproto)%cnam
+                cmag=trim(adjustl(cmag)) // '_'
+     &            // trim(adjustl(cmodule)) // '_'
+     &            // trim(adjustl(cmagnet)) // '_'
+     &            // trim(adjustl(ccopy))
+                cmoth=t_magcopy(lmag)%cmoth
               endif
             endif
 

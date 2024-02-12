@@ -1,3 +1,5 @@
+*CMZ :          16/12/2023  12.06.33  by  Michael Scheer
+*CMZ :  2.04/19 16/09/2023  16.33.50  by  Michael Scheer
 *CMZ :  2.03/00 26/07/2022  07.55.50  by  Michael Scheer
 *CMZ :  2.02/02 01/07/2022  17.30.28  by  Michael Scheer
 *CMZ :  2.02/00 29/03/2021  09.26.44  by  Michael Scheer
@@ -56,7 +58,7 @@ c to determine date and time and write it to logical unit lun
       if (ilast.lt.64) then
         write(lun,'(a)') cblank(1:64-ilast) // cline(1:ilast)
       else
-        write(lun,*) trim(cline)
+        write(lun,'(a)') trim(cline)
       endif
 
       if (ical.gt.0) then
@@ -102,7 +104,7 @@ c to determine date and time and write it to logical unit lun
         endif
       endif
 
-      write(lun,*)
+      write(lun,*)''
 
       iyearo=iyear
       imontho=imonth
