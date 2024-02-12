@@ -1,4 +1,4 @@
-* Version 2.04/24
+      include 'inputver.cmn'
  ! Name list file, to control UNDUMAG
 
  $undumagn
@@ -113,7 +113,7 @@
  irandmag=0   ! randomize calculation point inside voxel as well
               ! <0: Real deposition of the voxel center
 	
- kshuffle=0   ! shuffle the iron voxel for each main iteration cycle
+ kshuffle=0   ! shuffle the iron voxels for each main iteration cycle
 
  corrtiny=0.123e-3 ! x,y,z-shift for corrections of boundary errors [mm]
 
