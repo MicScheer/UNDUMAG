@@ -1,4 +1,4 @@
-*CMZ :          02/05/2017  15.15.21  by  Michael Scheer
+*CMZ :          10/04/2019  11.55.13  by  Michael Scheer
 *-- Author :    Michael Scheer   02/05/2017
 cmsh # 1 "ranf.F"
 # 1 "<built-in>"
@@ -22,7 +22,8 @@ cmsh # 1 "ranf.F"
 
 cmsh # 10 "ranf.F" 2
           REAL FUNCTION RANF()
-          DOUBLE PRECISION    DRANF,    G900GT,   G900ST
+cmsh          DOUBLE PRECISION    DRANF,    G900GT,   G900ST
+          DOUBLE PRECISION    G900GT,   G900ST
           DOUBLE PRECISION    DS(2),    DM(2),    DSEED
           DOUBLE PRECISION    DX24,     DX48
           DOUBLE PRECISION    DL,       DC,       DU,       DR
@@ -33,7 +34,7 @@ cmsh # 10 "ranf.F" 2
           DATA      DX48   /  281 4749 7671 0656.D0  /
           SINGLE  =  .TRUE.
           GOTO 10
-          ENTRY DRANF()
+cmsh          ENTRY DRANF()
           SINGLE  =  .FALSE.
   10      DL  =  DS(1) * DM(1)
           DC  =  DINT(DL/DX24)
@@ -44,8 +45,9 @@ cmsh # 10 "ranf.F" 2
           DR     =  (DS(2)*DX24 + DS(1)) / DX48
           IF(SINGLE)  THEN
              RANF  =  SNGL(DR)
-          ELSE
-             DRANF  =  DR
+           ELSE
+             print*,"*** Error in RANF: Call to DRANF ***"
+cmsh             DRANF  =  DR
           ENDIF
           RETURN
           ENTRY G900GT()

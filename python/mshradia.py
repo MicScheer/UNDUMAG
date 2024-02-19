@@ -32,6 +32,9 @@ mshCnt = {}
 mshCntMembers = {}
 mshCntMaster = []
 
+MagVoxelField = []
+PolVoxelField = []
+
 def mshObjAddToCnt(cnt,obj):
   global mshCntMaster,mshCntMembers
 
@@ -98,7 +101,6 @@ def mshObjDrw(obj=0,facecolor='b',edgecolor='black',alpha=0.2,scale='xyz',
 
   global  mshObs,mshTrf,mshNames,mshColors,mshCnt,mshCntMembers
   global Fig,Ax,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax,Xcen,Ycen,Zcen
-
 
   Xmin = 1.e30
   Xmax = -1.e30
@@ -173,6 +175,8 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.1,scale='xyz',tit='',
   global  mshObs,mshTrf,mshNames,mshColors,mshCnt
   global Fig,Ax,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax,Xcen,Ycen,Zcen
   global MagVoxelField, PolVoxelField
+
+  #breakpoint()
 
   if obj in mshCnt:
     print(rad.ObjCntStuf(obj))

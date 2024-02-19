@@ -70,8 +70,7 @@
       implicit none
 
 *KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+      include 'seqdebug.cmn'
 *KEND.
 
       double precision  y,z,byis,bzis

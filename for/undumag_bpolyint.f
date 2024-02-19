@@ -34,9 +34,7 @@ c xint,yint,zint given in meter
 c bxint,byint,bzint given in Tm
 
 *KEEP,bpolyederf90u.
-
-      use bpolyederf90m
-
+      include 'bpolyederf90u.cmn'
 *KEND.
       use undumagf90m
 

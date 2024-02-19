@@ -1,0 +1,3 @@
+*KEEP,hulldim.
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax

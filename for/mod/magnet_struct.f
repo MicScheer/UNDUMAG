@@ -1,3 +1,4 @@
+*CMZ :  2.05/02 31/10/2023  12.23.36  by  Michael Scheer
 *CMZ :  2.05/01 06/10/2023  08.25.51  by  Michael Scheer
 *CMZ :  2.04/27 02/10/2023  13.45.41  by  Michael Scheer
 *CMZ :  2.04/17 12/09/2023  09.42.21  by  Michael Scheer
@@ -15,50 +16,8 @@
 *-- Author :    Michael Scheer   25/04/2021
       module magnets_structure
 
-      integer nconcave_t
+      integer nclccave_t,nconcave_t,nallotmag_t
       character(512), dimension (:), allocatable :: clcconcave
-
-      type T_concave
-
-c          double precision, dimension (:,:,:), allocatable :: faces
-
-      double precision, dimension (:,:), allocatable :: verts,
-     &  fcen,fnorm
-
-      double precision, dimension (:), allocatable ::
-     &  xhull0,yhull0,zhull0,
-     &  xhull,yhull,zhull,xdivs,ydivs,zdivs
-
-      integer, dimension (:,:,:), allocatable :: kvoxels
-      integer, dimension (:,:), allocatable :: kedge,ifaces
-      integer, dimension (:), allocatable :: lifaces,npois,
-     &  kface,khull,kcopy,lface,kconcave
-
-      character(512), dimension (:), allocatable :: cinhom
-
-      double precision
-     &  xyz(3),size(3),trans(3),rot(3,3),Br(3),
-     &  yfracdiv,xmin,ymin,zmin,xmax,ymax,zmax,
-     &  volume,gcen(3),dxdiv,dydiv,dzdiv,yfrac,
-     &  zfracdiv,zfrac,uschamf,dschamf,cylphi,BrN,xyzinh(4),xvolume,yvolume,
-     &  zvolume
-
-      integer :: kmag,nhull,icol,imat,nverts,nface,
-     &  nxdiv,nydiv,nzdiv,matindex,mattype,IsConvex,
-     &  kfacelast,nedge,nvoxels,IsPole,IsSpecial,
-     &  IsBlock,nhull0,IsPart,ncopy=0,kmodule=0,
-     &  IsInhom=0,mxdiv,mydiv,mzdiv,IsRotated,nconcave,npoimax
-
-      character(32) ctype,cnam,cmoth
-      character(1024) cfile
-
-      type(T_Voxel), dimension(:), allocatable ::  t_voxels, t_xcuts
-      type(T_Voxel), dimension(:,:), allocatable :: t_xycuts
-      type(T_Voxel), dimension(:,:,:), allocatable :: t_xyzcuts
-
-      end type T_concave
-
-      type(T_Concave), dimension(:), allocatable :: t_concaves
 
       double precision ::
      &  xcwmin=1.0d30,xcwmax=-1.0d30,
@@ -147,7 +106,7 @@ c          double precision, dimension (:,:,:), allocatable :: faces
 
         integer :: kmag,nface,nhull,icol,imat,nxdiv,nydiv,nzdiv,matindex,mattype,
      &    kfacelast,nedge,nvoxels,IsPole,IsSpecial,IsBlock,nhull0,IsPart,
-     &    ncopy=0,kmodule=0,IsInhom=0,mxdiv,mydiv,mzdiv,IsRotated
+     &    ncopy=0,kmodule=0,IsInhom=0,mxdiv,mydiv,mzdiv,IsRotated,IwasConcave
 
         character(32) ctype,cnam,cmoth
         character(1024) cfile
@@ -157,6 +116,21 @@ c          double precision, dimension (:,:,:), allocatable :: faces
         type(T_Voxel), dimension(:,:,:), allocatable :: t_xyzcuts
 
       end type T_Magnet
+
+      type T_concave
+
+        type(T_Magnet) tmag
+
+        double precision, dimension (:,:), allocatable :: verts
+
+        integer, dimension (:,:), allocatable :: ifaces
+        integer, dimension (:), allocatable :: lifaces,npois,kconcave
+
+        integer :: nverts,IsConvex,nconcave,npoimax
+
+      end type T_concave
+
+      type(T_Concave), dimension(:), allocatable :: t_concaves
 
       type T_Mother
 
@@ -195,7 +169,7 @@ c          double precision, dimension (:,:,:), allocatable :: faces
 
       character(32), dimension(:), allocatable :: chmutts
 
-      integer, dimension (:), allocatable :: magmodule
+      integer, dimension (:), allocatable :: magmodule,magmodulecav
       integer, parameter :: ntransrotcop_p=1000, nmat_p=1000
 
       integer :: ntransrotcop=0, nmat_t=0, t_matrec(3,nmat_p), nowarnugv=0

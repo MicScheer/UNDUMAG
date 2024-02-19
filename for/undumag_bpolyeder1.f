@@ -39,17 +39,14 @@ c                          determinant is -1, which yields to errors??.
 
 
 *KEEP,bpolyederf90u.
-
-      use bpolyederf90m
-
+      include 'bpolyederf90u.cmn'
 *KEND.
       use undumagf90m
       use commandlinef90m
 
       implicit none
 *KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+      include 'seqdebug.cmn'
 *KEND.
       double precision xin,yin,zin
      &  ,bxout,byout,bzout
