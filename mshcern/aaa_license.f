@@ -1,4 +1,4 @@
-*CMZ :          14/12/2017  16.53.38  by  Michael Scheer
+*CMZ :          10/04/2019  09.43.55  by  aaa_license
 *-- Author :    Michael Scheer   14/12/2017
 
 ! This software is under the GNU General Public License:
@@ -42,4 +42,7 @@
 !    zusammen mit diesem Programm erhalten haben. Wenn nicht,
 !    siehe <http://www.gnu.org/licenses/>.
 !
+!******************************************************************************
+!    The this software contains parts of the CERN PROGRAM LIBRARY.
+!    See http://www.cern.ch
 !******************************************************************************

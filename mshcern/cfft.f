@@ -1,4 +1,4 @@
-*CMZ :          18/03/2023  13.58.43  by  Michael Scheer
+*CMZ :          28/08/2014  14.44.34  by  Michael Scheer
 *-- Author :    Michael Scheer   28/08/2014
 
 cmsh Generated with: cpp -E -DCERNLIB_DOUBLE -DCERNLIB_UNIX cfft.F
@@ -20,8 +20,7 @@ cmsh Generated with: cpp -E -DCERNLIB_DOUBLE -DCERNLIB_UNIX cfft.F
 # 1 "/usr/include/kernnum/pilot.h" 1 3 4
 # 10 "cfft.F" 2
       SUBROUTINE CFFT(A,MSIGN)
-cmsh      COMPLEX A(1),U,W,T
-      COMPLEX A(2),U,W,T
+      COMPLEX A(1),U,W,T
       IF(MSIGN.EQ.0) RETURN
       M=IABS(MSIGN)
       N=2**M

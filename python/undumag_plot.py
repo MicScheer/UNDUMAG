@@ -3610,6 +3610,9 @@ def yesno_01(sin):
 
 ####################################################################
 
+def v123(nx=10): return np.arange(1,nx+1)
+def v0123(nx=10): return np.arange(0,nx+1)
+
 def vcre(nx=10,xmin=1,xmax=10):
 
   if type(nx) == int:
@@ -18633,14 +18636,36 @@ def vplxy(x='!',y='!',plopt='',label='',color='!',fillcolor='none'):
   showplot()
 #enddef vplxy(x,y,plopt='line',label=''):
 
-def vpll(x='!',y='!',plopt='line',label=''):
-  vplxy(x,y,plopt,label,tit,xtit,ytit)
-def vplm(x='!',y='!',plopt='marker',label=''):
-  vplxy(x,y,plopt,label,tit,xtit,ytit)
-def vplls(x='!',y='!',plopt='sameline',label=''):
-  vplxy(x,y,plopt,label,tit,xtit,ytit)
-def vplms(x='!',y='!',plopt='samemarker',label=''):
-  vplxy(x,y,plopt,label,tit,xtit,ytit)
+def vpll(x='!',y='!',plopt='line',label='',color='!',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vplm(x='!',y='!',plopt='marker',label='',color='!',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vplls(x='!',y='!',plopt='sameline',label='',color='!',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vplms(x='!',y='!',plopt='samemarker',label='',color='!',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+
+def vplmrs(x='!',y='!',plopt='samemarker',label='',color='r',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vplmgs(x='!',y='!',plopt='samemarker',label='',color='g',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vplmbs(x='!',y='!',plopt='samemarker',label='',color='b',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vplmls(x='!',y='!',plopt='samemarker',label='',color='l',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vplmcs(x='!',y='!',plopt='samemarker',label='',color='c',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+
+def vpllgs(x='!',y='!',plopt='sameline',label='',color='g',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vpllrs(x='!',y='!',plopt='sameline',label='',color='r',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vpllbs(x='!',y='!',plopt='sameline',label='',color='b',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vpllls(x='!',y='!',plopt='sameline',label='',color='l',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
+def vpllcs(x='!',y='!',plopt='sameline',label='',color='c',fillcolor='none'):
+  vplxy(x,y,plopt,label,color,fillcolor)
 
 def pmark(x,y,z='!',plopt='isame'):
   if type(z) != str:
@@ -19308,12 +19333,12 @@ def vspline(x,y,xspl='!', periodic=False, ypp1=0.0, yppn=0.0):
     Istatus = -1
     return y
   #endif
-
+  #reakpoint()
   if type(xspl) == list:
     xspl = np.array(xspl)
   elif type(xspl) == int:
     nspl = xspl
-    if nspl < 10: nspl = 10
+#    if nspl < 10: nspl = 10
     xspl=np.linspace(x.min(),x.max(),nspl)
   elif type(xspl) == str and xspl == '!':
     xspl=np.linspace(x.min(),x.max(),n*10)
@@ -24530,6 +24555,7 @@ nhull3d = nqhull3d
 hull3d = qhull3d
 plotncyl = plotncylinder
 read_facets = read_faces
+nex = nextzone
 #end of aliases in m_hbook
 
 #end of m_hbook

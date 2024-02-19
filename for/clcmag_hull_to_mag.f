@@ -16,14 +16,8 @@
 
       implicit none
 
-*KEEP,grarad,T=F77.
-c-----------------------------------------------------------------------
-c     grarad.cmn
-c-----------------------------------------------------------------------
-      double precision, parameter ::
-     &  PI1=3.141592653589793D0,
-     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
-     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
+*KEEP,grarad.
+      include 'grarad.cmn'
 *KEND.
 
       double precision, dimension (:), allocatable :: xp,yp,zp,xpc,ypc,zpc

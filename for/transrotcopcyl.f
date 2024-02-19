@@ -1,4 +1,4 @@
-*CMZ :          26/08/2023  09.55.25  by  Michael Scheer
+*CMZ :  2.04/11 26/08/2023  09.55.25  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  08.07.21  by  Michael Scheer
 *CMZ :  2.04/08 11/08/2023  14.49.50  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  09.15.04  by  Michael Scheer
@@ -17,14 +17,8 @@
       use displacement
 
       implicit none
-*KEEP,grarad,T=F77.
-c-----------------------------------------------------------------------
-c     grarad.cmn
-c-----------------------------------------------------------------------
-      double precision, parameter ::
-     &  PI1=3.141592653589793D0,
-     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
-     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
+*KEEP,grarad.
+      include 'grarad.cmn'
 *KEND.
 
       type(T_magnet) tmag

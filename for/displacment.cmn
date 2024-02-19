@@ -1,7 +1,0 @@
-*KEEP,displacment.
-      module displacement
-
-      double precision, dimension (:,:), allocatable :: displace
-      character(32), dimension (:), allocatable :: chdisp
-
-      end module displacement

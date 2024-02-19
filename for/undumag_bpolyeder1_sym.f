@@ -3,9 +3,7 @@
       subroutine undumag_bpolyeder1_sym(imag,x,y,z,bxout,byout,bzout,ifail)
 
 *KEEP,bpolyederf90u.
-
-      use bpolyederf90m
-
+      include 'bpolyederf90u.cmn'
 *KEND.
       use undumagf90m
 

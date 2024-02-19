@@ -104,41 +104,88 @@ if iSolve !=0 :
 
   BzMaxTot = -9999.
 
-  x=(UnduZMapMin+UnduZMapMax)/2. #+tiny
-  z=(UnduYMapMin+UnduYMapMax)/2. #+tiny
+  if nUnduZMap <= 1:
+    UnduZMapMax = (UnduZMapMax+UnduZMapMin)/2.
+    UnduZMapMin = UnduZMapMax
+  #endif
+
+  if nUnduYMap <= 1:
+    UnduYMapMax = (UnduYMapMax+UnduYMapMin)/2.
+    UnduYMapMin = UnduYMapMax
+  #endif
+
+  dx = (UnduZMapMax-UnduZMapMin)/max(1,nUnduZMap-1) #+tiny
+  dz = (UnduYMapMax-UnduYMapMin)/max(1,nUnduYMap-1) #+tiny
+
+  xmin = UnduZMapMin
+  xmax = UnduZMapMax
+  zmin = UnduYMapMin
+  zmax = UnduYMapMax
+
+  z = zmin - dz
+  for iz in range(nUnduYMap):
+    z += dz
+    x = xmin - dx
+    for ix in range(nUnduZMap):
+      x += dx
+
+      ya = UnduXMapMin
+      ye = UnduXMapMax
+
+      Field = rad.FldLst(UnduSetUp,"bxbybzhxhyhzmxmymz",[x,ya,z], [x,ye,z], nUnduXMap, "arg", ya)
+
+      for iy in range(nUnduXMap):
+
+        y = Field[iy][0]
+
+        Bx = Field[iy][1]
+        By = Field[iy][2]
+        Bz = Field[iy][3]
+        B = np.sqrt(Bx*Bx+By*By+Bz*Bz)
+
+        Hx = Field[iy][4]
+        Hy = Field[iy][5]
+        Hz = Field[iy][6]
+        H = np.sqrt(Hx*Hx+Hy*Hy+Hz*Hz)
+
+        Mx = Field[iy][7]
+        My = Field[iy][8]
+        Mz = Field[iy][9]
+        M = np.sqrt(Mx*Mx+My*My+Mz*Mz)
+
+        FILEMAP.write(str(x)+ " " + str(y)+ " " + str(z)+ " " + str( \
+        Bx)+ " " + str(By)+ " " + str(Bz)+ " " + str(B)+ " " + str( \
+        Hx)+ " " + str(Hy)+ " " + str(Hz)+ " " + str(H)+ " " + str( \
+        Mx)+ " " + str(My)+ " " + str(Mz)+ " " + str(M) + NL)
+
+      #endfor
+    #endfor ix in range(nUnduZMap):
+  #endfor iz in range(nUnduYMap):
+
+  FILEMAP.close()
+
+  FILEMAPINTINF = open("unduradia_int_inf.map",'w')
 
   ya = UnduXMapMin
   ye = UnduXMapMax
 
-  Field = rad.FldLst(UnduSetUp,"bxbybzhxhyhzmxmymz",[x,ya,z], [x,ye,z], nUnduXMap, "arg", ya)
+  z = zmin - dz
+  for iz in range(nUnduYMap):
+    z += dz
+    x = xmin - dx
+    for ix in range(nUnduZMap):
+      x += dx
 
-  for iy in range(nUnduXMap):
+      BzIntInf = rad.FldInt(UnduSetUp, "inf", "bz",[x,ya,z], [x,ye,z])
+      BxIntInf = rad.FldInt(UnduSetUp, "inf", "bx",[x,ya,z], [x,ye,z])
 
-    y = Field[iy][0]
+      FILEMAPINTINF.write(str(x) + " " + str(z) + " " + " " + str(BxIntInf) + " " \
+      + str(BzIntInf) + '\n')
 
-    Bx = Field[iy][1]
-    By = Field[iy][2]
-    Bz = Field[iy][3]
-    B = np.sqrt(Bx*Bx+By*By+Bz*Bz)
-
-    Hx = Field[iy][4]
-    Hy = Field[iy][5]
-    Hz = Field[iy][6]
-    H = np.sqrt(Hx*Hx+Hy*Hy+Hz*Hz)
-
-    Mx = Field[iy][7]
-    My = Field[iy][8]
-    Mz = Field[iy][9]
-    M = np.sqrt(Mx*Mx+My*My+Mz*Mz)
-
-    FILEMAP.write(str(x)+ " " + str(y)+ " " + str(z)+ " " \
-    + str(Bx)+ " " + str(By)+ " " + str(Bz)+ " " + str(B)+ " " \
-    + str(Hx)+ " " + str(Hy)+ " " + str(Hz)+ " " + str(H)+ " " \
-    + str(Mx)+ " " + str(My)+ " " + str(Mz)+ " " + str(M) + NL)
-
+    #endfor
   #endfor
 
-  FILEMAP.close()
+  FILEMAPINTINF.close()
 
   if nUnduNoPolMap == 0:
 
