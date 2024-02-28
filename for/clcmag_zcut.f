@@ -1,3 +1,4 @@
+*CMZ :          27/02/2024  16.53.50  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.31.14  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/16 12/09/2023  13.51.44  by  Michael Scheer
@@ -161,7 +162,7 @@
 
             zmin=1.0d30
             zmax=-1.0d30
-            do iplan=1,nplanmax
+            do iplan=1,tvox%nface
               do icorn=1,ncorn1(iplan)
                 z=corn1(3,icorn,iplan)+z02(1)
                 if (z.lt.zmin) zmin=z
@@ -278,7 +279,7 @@
 
               zmin=1.0d30
               zmax=-1.0d30
-              do iplan=1,nplanmax
+              do iplan=1,tvox%nface
                 do icorn=1,ncorn1(iplan)
                   z=corn1(3,icorn,iplan)+z02(1)
                   if (z.lt.zmin) zmin=z
@@ -293,6 +294,8 @@
               zdiv=zdiv-gcenv(3) ! relative to gcenv, i.e. GCEN of voxel
 
               klast=0
+
+              if (zdiv.le.zmin) cycle
 
               if (zdiv-zmin.le.cuttiny.or.zmax-zdiv.le.cuttiny) then
 
@@ -334,7 +337,7 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
                 else !if (ncorn2(1).eq.0) then
 
                   npoi=0
-                  do iplan=1,nplanmax
+                  do iplan=1,tvox%nface
                     do icorn=1,ncorn1(iplan)
                       npoi=npoi+1
                       xh(npoi)=corn1(1,icorn,iplan)
@@ -416,7 +419,7 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
                   kz=klast+1
                 endif
                 npoi=0
-                do iplan=1,nplanmax
+                do iplan=1,tvox%nface
                   do icorn=1,ncorn1(iplan)
                     npoi=npoi+1
                     xh(npoi)=corn1(1,icorn,iplan)

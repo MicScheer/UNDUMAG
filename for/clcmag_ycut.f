@@ -1,3 +1,4 @@
+*CMZ :          27/02/2024  21.58.56  by  Michael Scheer
 *CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.32.07  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
@@ -115,7 +116,7 @@
         do iy=1,nydiv-1
           ydiv=t_magnets(imag)%ydivs(iy)+gcen(2) !Labor
           ydiv=ydiv-gcenv(2) ! relative to gcenv
-          if (ydiv-tvox%ymin.le.cuttiny.or.tvox%ymax-ydiv.le.cuttiny) cycle
+          if (ydiv.le.tvox%ymin.or.ydiv-tvox%ymin.le.cuttiny.or.tvox%ymax-ydiv.le.cuttiny) cycle
           kcut=1
           exit
         enddo
