@@ -1,3 +1,4 @@
+*CMZ :          27/02/2024  14.40.04  by  Michael Scheer
 *CMZ :  2.05/02 03/11/2023  16.01.07  by  Michael Scheer
 *CMZ :  2.04/11 26/08/2023  09.53.27  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  08.05.44  by  Michael Scheer
@@ -25,7 +26,7 @@
       type(T_magnet) tmag
       double precision rm(3,3),t8(8),r(3)
       integer mag,itr,ipoi,istat,ifound,iold,i,key,ipos(2,100),nwords
-      integer :: ndim=100,j,nvar,iwc
+      integer :: ndim=100,j,nvar,iwc,ismoth
       character(2048) cline
       character(128) ctrans,cvar
       character(32) cconc
@@ -94,6 +95,11 @@
      &        iwc.gt.0.and.cconc.eq.ctransrotcop(itr)
      &        ) then
             ifound=itr
+            if(tmag%cmoth.eq.ctransrotcop(itr)) then
+              ismoth=1
+            else
+              ismoth=0
+            endif
             if (t8(8).eq.0.0d0) then
               t_magnets(mag)%xmin=t_magnets(mag)%xmin+t8(1)
               t_magnets(mag)%xmax=t_magnets(mag)%xmax+t8(1)
@@ -146,7 +152,7 @@
               ifound=0
             endif
           endif
-          if (iwc.eq.0.and.ifound.ne.0) exit
+          if (iwc.eq.0.and.ifound.ne.0.and.ismoth.eq.0) exit
           mag=mag+1
         enddo !mag
 c        if (ifound.eq.0.and.itr.ne.iold.and.ctrans.ne.ctransrotcop(itr)) then
