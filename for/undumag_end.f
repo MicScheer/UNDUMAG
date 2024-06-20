@@ -1,4 +1,5 @@
-*CMZ :          06/02/2024  15.02.28  by  Michael Scheer
+*CMZ :          14/06/2024  09.20.40  by  Michael Scheer
+*CMZ :  2.05/04 06/02/2024  15.02.28  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.05.20  by  Michael Scheer
 *CMZ :  2.05/01 22/10/2023  14.47.55  by  Michael Scheer
 *CMZ :  2.04/12 30/08/2023  11.37.07  by  Michael Scheer
@@ -107,7 +108,7 @@
 
       common/c_debug/x_debug,y_debug,z_debug,a_debug,i_debug,k_debug,
      &  c64_debug
-*KEEP,RANDOM.
+*KEEP,random.
       integer*8 irancalls
       integer, parameter :: irnsize=64
       integer irnseed(irnsize),irnmode,irnseedi(irnsize)
@@ -350,7 +351,7 @@
      &  ,yoffexp_ps !yoffset of power term
      &  ,xpcorn_ps,ypcorn_ps
      &  ,ifbox_ps,xfb_ps,yfb_ps
-*KEEP,PHYCONPARAM.
+*KEEP,PHYCONparam,T=F77.
 c-----------------------------------------------------------------------
 c     phyconparam.cmn
 c-----------------------------------------------------------------------
@@ -683,6 +684,7 @@ c-----------------------------------------------------------------------
       call util_zeit_kommentar(lun6,"Calculating on-axis field")
 
       do ix=1,nxmap
+        i_debug=ix
         idis=0
 11      x=xmapmin+(ix-1)*dx
         ! to avoid boundary effects:
@@ -1153,16 +1155,16 @@ c              write(lun6,*)"field:",ix,iy,iz
                 irecover=irecover+1
               endif
 
-              if (kinside.gt.nmagtot_t) then
-                write(lun6,*)"*** Error in undumag_end: kInside .gt. nMagTot_t ***"
-                write(lun6,*)"kInside, nMagTot:t",kinside,nmagtot_t
+              if (kinside.gt.nmag) then
+                write(lun6,*)"*** Error in undumag_end: kInside .gt. nMag ***"
+                write(lun6,*)"kInside, nMag:t",kinside,nmag
                 write(lun6,*)"x:y:z",xx,yy,zz
                 print*,itry,ix,iy,iz
                 write(lun6,*)"*** Probably colliding magnets ***"
                 stop
               endif
 
-              if (kinside.gt.0.and.kinside.le.nmagtot_t) then
+              if (kinside.gt.0.and.kinside.le.nmag) then
                 kmag=kinside
                 mat=nint(bpebc(9,kmag))
                 imoth=nint(bpebc(15,kmag))
@@ -1204,8 +1206,8 @@ c              write(lun6,*)"field:",ix,iy,iz
                     write(cmag,'(a)') chmags(:,kmag)
                     write(cmoth,'(a)') chmoths(:,imoth)
                   else
-                    cmag=t_magnets(kmag)%cnam
-                    cmoth=t_magnets(kmag)%cmoth
+                    cmag=t_magnets(t_voxcopy(kmag)%kmagnet)%cnam
+                    cmoth=t_magnets(t_voxcopy(kmag)%kmagnet)%cmoth
                   endif
                 endif
                 write(lun,*)

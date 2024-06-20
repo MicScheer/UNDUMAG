@@ -1,3 +1,4 @@
+*CMZ :          29/02/2024  16.00.13  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/08 10/08/2023  09.28.20  by  Michael Scheer
 *CMZ :  2.04/06 22/05/2023  15.36.58  by  Michael Scheer
@@ -781,7 +782,7 @@ c              write(lun6,*)"mag,ifail:",mag,ifail
 
         nmagnmag=nmag*nmag
         write(lun6,*)
-        write(lun6,*)"Matrix size:",nmag," x ",nmag," = ",nmagnmag
+        write(lun6,*)"Matrix size 3 x 3 x:",nmag," x ",nmag," = ",nmagnmag*9
         write(lun6,*)
 
         iumatrix=0

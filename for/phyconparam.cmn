@@ -50,7 +50,7 @@ c      vstokes(4,3)=(-sqrt(1./2.),        0.0d0)
      &  ,rmu04pi1=1.0D-7
      &  ,dnull1=0.0d0
      &  ,done1=1.0d0
-     & ,HPLANCK1=6.626176D-34
+     & ,HPLANCK1=6.62606876D-34
 
       double precision, parameter ::
      & GRARAD1=PI1/180.0d0

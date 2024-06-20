@@ -1,3 +1,4 @@
+*CMZ :          29/02/2024  16.00.13  by  Michael Scheer
 *CMZ :  2.04/20 19/09/2023  15.56.38  by  Michael Scheer
 *CMZ :  2.04/08 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/07 09/08/2023  15.35.36  by  Michael Scheer
@@ -27,8 +28,14 @@
 
       character(32) cmod,ccop
 
-*KEEP,grarad.
-      include 'grarad.cmn'
+*KEEP,GRARAD.
+c-----------------------------------------------------------------------
+c     grarad.cmn
+c-----------------------------------------------------------------------
+      double precision, parameter ::
+     &  PI1=3.141592653589793D0,
+     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
+     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
 *KEND.
 
       type (T_Module) tmod
@@ -265,7 +272,7 @@
       if (matrix.ne.0) then
         allocate(wwmatrix4(3,3,nesti,nesti),stat=istat)
         if (istat.ne.0) then
-          write(lun6,*)'*** Warning in clcmag_copy_magnets: Not enough memory for interaction matrix of size 3 x 3 x',nesti,' x ',nesti
+          write(lun6,*)'*** Warning in clcmag_copy_magnets: Not enough memory for interaction matrix of size 3 x 3 x',nesti,' x ',nesti,nesti*nesti*9
           write(lun6,*) '** UNDUMAG will fail in undumag_proc ***'
         else
           deallocate(wwmatrix4)

@@ -176,7 +176,7 @@ def set_console_title(console='Python'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -223,13 +223,13 @@ c--   workingspace: aa(n),bb(n),cc(n),c(n),cn(n)
   """
   n = len(x)
 
-  ypp =  zeros_like(x)
+  ypp =  np.zeros_like(x)
 
-  aa = zeros_like(x)
-  bb = zeros_like(x)
-  cc = zeros_like(x)
-  c  = zeros_like(x)
-  cn = zeros_like(x)
+  aa = np.zeros_like(x)
+  bb = np.zeros_like(x)
+  cc = np.zeros_like(x)
+  c  = np.zeros_like(x)
+  cn = np.zeros_like(x)
 
   if n < 5:
     ifail=-1
@@ -579,7 +579,7 @@ def util_spline_coef(x,y,yp1=9999.,ypn=9999.):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -612,12 +612,12 @@ C--   workingspace: aa(n),bb(n),cc(n),c(n)
   """
   n = len(x)
 
-  y2 = zeros_like(x)
+  y2 = np.zeros_like(x)
 
-  aa = zeros_like(x)
-  bb = zeros_like(x)
-  cc = zeros_like(x)
-  c  = zeros_like(x)
+  aa = np.zeros_like(x)
+  bb = np.zeros_like(x)
+  cc = np.zeros_like(x)
+  c  = np.zeros_like(x)
 
   ifail = 0
 
@@ -1203,7 +1203,7 @@ StatFontSize, AxisLabelDist, AxisLabelDist3d, AxisTitleDist, AxisTitleDist3d,\
 AtitFontSize3d, Atitfontsize3d, NXtick,NXtick3d, Nxtick,Nxtick3d, Ktitles, Dummy,\
 ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax, ZoomZmin,ZoomZmax,Tdate, TdateOv, Trun, TrunOv, \
 LogX, LogY, LogZ, NxbBinMax, Khdeleted,WisLinux, Waveplot, \
-Mrun, Mcomment, Mdate, ROFx, ROFy, Hull2D,Hull3D, Kgrid,KyAxis,KxAxis,KzAxis,Kbox, \
+Mrun, Mcomment, Mdate, ROFx, ROFy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid,KyAxis,KxAxis,KzAxis,Kbox, \
 FillColor,Ishow
 
 
@@ -1517,6 +1517,8 @@ CanButId = 0
 
 Hull2D = []
 Hull3D = []
+Hull3DList = []
+THull3D = type(Hull3D)
 Ishow = 1
 
 #+PATCH,//WAVES/PYTHON
@@ -1802,9 +1804,13 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits import mplot3d
 from matplotlib import cm #color maps
 
-#import pyhull
+try:
+  import pyhull
+except:
+  pass
+#endtry
 #from pyhull.convex_hull import ConvexHull
-from pyhull import qconvex, qdelaunay, qvoronoi
+#from pyhull import qconvex, qdelaunay, qvoronoi
 
 
 global \
@@ -1825,7 +1831,7 @@ eps01=8.854187817e-12
 pi1=3.141592653589793e0
 grarad1=pi1/180.e0
 radgra1=180.e0/pi1
-hplanck1=6.626176e-34
+hplanck1=6.62606876e-34
 hbar1=hbarev1*echarge1
 wtoe1=clight1*hplanck1/echarge1*1.e9
 cq1=55.e0/32.e0/(3.0e0)**0.5*hbar1/emasskg1/clight1
@@ -1998,7 +2004,7 @@ def read_faces(fname,cs='xyz'):
 
   l=0
   nface=-1
-  #breakpoint()
+  #reakpoint()
   nmag = int(fread[l].strip())
   l += 1
   for imag in range(nmag):
@@ -2008,7 +2014,7 @@ def read_faces(fname,cs='xyz'):
     l += 1
     fac = []
     for ipoi in range(npoi):
-      p = np.fromstring(fread[l].strip(),dtype=np.float,sep=' ')
+      p = np.fromstring(fread[l].strip(),dtype=float,sep=' ')
       if cs.lower() == 'xzy':
         fac.append([p[0],p[2],p[1]])
       else:
@@ -2024,13 +2030,13 @@ def read_faces(fname,cs='xyz'):
 
 def plotqhull3d(vertices,ifaces,faces, isame=0,
                 facecolor='b',edgecolor='black',alpha=0.5,
-                linewidth=-1,markercolor='!',modus='faces',ishow=1):
+                linewidth=-1,markercolor='!',modus='facets',ishow=1):
 
   global Isame,Iso,Ax
 
   Iso = Isame
 
-  if not isame or modus != 'faces': xyz = vertices.T
+  if not isame or modus != 'facets': xyz = vertices.T
 
   if not isame:
 
@@ -2091,9 +2097,9 @@ def plotqhull3d(vertices,ifaces,faces, isame=0,
 
 #enddef plotqhull3d
 
-def qhull3d(x,y=None,z=None):
+def qhull3d(x,y=None,z=None,modus='merge'):
 
-  global Hull3D,Tnpa,Tnone
+  global Hull3D,Tnpa,Tnone,THull3D, Hull3DList
 
   if type(y) == Tnone:
     xyz = np.array(x).T
@@ -2103,46 +2109,243 @@ def qhull3d(x,y=None,z=None):
   #endif
 
   points = np.array([x,y,z]).T
-  lhull = qconvex('i p',points)
+  #reakpoint()
 
-  nface = int(lhull[0])
-  ivert = nface + 2
-  nvert = int(lhull[ivert])
+  Hull3D = ConvexHull(points,qhull_options="")
+
+  nface = Hull3D.nsimplex
+  ifaces = Hull3D.simplices
+  iverts = Hull3D.vertices
+
+  gcen = [0.0,0.0,0.0]
+  for i in range(len(iverts)):
+    gcen += points[iverts[i]]
+  #endfor
+  gcen /= len(iverts)
+
+  vn = np.zeros([nface,6])
+
+  mface = 0
+
+  for i in range(nface):
+    if vn[i][0] != 0: continue
+    mface += 1
+    pois = points[ifaces[i]]
+    dp1 = pois[1]-pois[0]
+    dp2 = pois[2]-pois[1]
+    vnx = dp1[1]*dp2[2] - dp1[2]*dp2[1]
+    vny = dp1[2]*dp2[0] - dp1[0]*dp2[2]
+    vnz = dp1[0]*dp2[1] - dp1[1]*dp2[0]
+    vnn = (vnx*vnx+vny*vny+vnz*vnz)**0.5
+    vnx /= vnn
+    vny /= vnn
+    vnz /= vnn
+    u = pois[0] - gcen
+    if u[0]*vnx+u[1]*vny+u[2]*vnz < 0:
+      ifis = ifaces[i]
+      if1 = ifaces[i][1]
+      ifis[1] = ifis[2]
+      ifis[2] = if1
+      ifaces[i] = ifis
+      vnx = -vnx
+      vny = -vny
+      vnz = -vnz
+    #endif
+    vn[i][0] = i + 1
+    vn[i][1] = vnx
+    vn[i][2] = vny
+    vn[i][3] = vnz
+    vn[i][5] = mface
+    ax = abs(vnx)
+    ay = abs(vny)
+    az = abs(vnz)
+    if ax >= ay and ax >= az:
+      vn[i][4] = 1
+    elif ay >= ax and ay >= az:
+      vn[i][4] = 2
+    else:
+      vn[i][4] = 3
+    #endif
+
+    if modus == 'merge':
+
+      for j in range(i+1,nface):
+        if vn[j][0] != 0.0: continue
+        pois = points[ifaces[j]]
+        dp1 = pois[1]-pois[0]
+        dp2 = pois[2]-pois[1]
+        wnx = dp1[1]*dp2[2] - dp1[2]*dp2[1]
+        wny = dp1[2]*dp2[0] - dp1[0]*dp2[2]
+        wnz = dp1[0]*dp2[1] - dp1[1]*dp2[0]
+        wnn = (wnx*wnx+wny*wny+wnz*wnz)**0.5
+        wnx /= wnn
+        wny /= wnn
+        wnz /= wnn
+        u = pois[0] - gcen
+        if u[0]*wnx+u[1]*wny+u[2]*wnz < 0:
+          ifis = ifaces[j]
+          if1 = ifaces[j][1]
+          ifis[1] = ifis[2]
+          ifis[2] = if1
+          ifaces[j] = ifis
+          wnx = -wnx
+          wny = -wny
+          wnz = -wnz
+        #endif
+        if wnx*vnx+wny*vny+wnz*vnz > 0.999:
+          vn[j] = vn[i]
+        #endif
+      #endfor j
+    #endif if modus == 'merge'
+
+  #endfor i
+
+  facets = []
+
+  for m in range(mface):
+
+    if modus == 'merge':
+
+      x = []
+      y = []
+      lface = []
+
+      for i in range(nface):
+        if vn[i][5] == m+1:
+          lface.append(ifaces[i][0])
+          lface.append(ifaces[i][1])
+          lface.append(ifaces[i][2])
+          if vn[i][4] == 1:
+            x.append(points[ifaces[i][0]][1])
+            y.append(points[ifaces[i][0]][2])
+            x.append(points[ifaces[i][1]][1])
+            y.append(points[ifaces[i][1]][2])
+            x.append(points[ifaces[i][2]][1])
+            y.append(points[ifaces[i][2]][2])
+          elif vn[i][4] == 2:
+            x.append(points[ifaces[i][0]][0])
+            y.append(points[ifaces[i][0]][2])
+            x.append(points[ifaces[i][1]][0])
+            y.append(points[ifaces[i][1]][2])
+            x.append(points[ifaces[i][2]][0])
+            y.append(points[ifaces[i][2]][2])
+          else:
+            x.append(points[ifaces[i][0]][0])
+            y.append(points[ifaces[i][0]][1])
+            x.append(points[ifaces[i][1]][0])
+            y.append(points[ifaces[i][1]][1])
+            x.append(points[ifaces[i][2]][0])
+            y.append(points[ifaces[i][2]][1])
+          #endif
+        #endif
+      #endfor nface
+
+      nfaces2,ifaces2,iverts2 = qhull2d(x,y)
+
+      p1 = points[lface[iverts2[0]]]
+      p2 = points[lface[iverts2[1]]]
+      p3 = points[lface[iverts2[2]]]
+
+      dp1 = p2 - p1
+      dp2 = p3 - p2
+
+      vnx = dp1[1]*dp2[2] - dp1[2]*dp2[1]
+      vny = dp1[2]*dp2[0] - dp1[0]*dp2[2]
+      vnz = dp1[0]*dp2[1] - dp1[1]*dp2[0]
+
+      vnn = (vnx*vnx+vny*vny+vnz*vnz)**0.5
+
+      vnx /= vnn
+      vny /= vnn
+      vnz /= vnn
+
+      u = p1 - gcen
+
+      lv = len(iverts2)
+      kface = []
+      if u[0]*vnx+u[1]*vny+u[2]*vnz < 0:
+        for i in range(lv):
+          kface.append(lface[iverts2[lv-1-i]])
+        #endfor
+      else:
+        for i in range(lv):
+          kface.append(lface[iverts2[i]])
+        #endfor
+      #endif
+    else:
+      kface = ifaces[m]
+      lv = len(kface)
+    #endif modus == 'merge'
+
+    fac = []
+    for i in range(lv):
+      ipoi = kface[i]
+      fac.append([points[ipoi][0],points[ipoi][1],points[ipoi][2]])
+    #endfor
+    facets.append(fac)
+
+  #endfor mface
+
+  x = np.array(x)
+  y = np.array(y)
+  z = np.array(z)
+
+  xmin = x.min()
+  xmax = x.max()
+  ymin = y.min()
+  ymax = y.max()
+  zmin = z.min()
+  zmax = z.max()
+
+  bounds = [xmin,xmax,ymin,ymax,zmin,zmax]
+
+  verts =[]
+  for pois in points[iverts]: verts.append(list(pois))
 
   ifaces = []
-  faces = []
-  for i in range(1,nface+1):
-    iface = np.fromstring(lhull[i],dtype=np.int,sep=' ')
-    ifaces.append(iface)
-    faces.append(points[iface])
+  Hull3DList = []
+  for f in facets:
+    Hull3DList.append(f)
+    ifac = []
+    for p in f: ifac.append(verts.index(p))
+    ifaces.append(ifac)
   #endfor
 
-  verts = []
-  xmin = 1.0e30
-  xmax = -1.0e30
-  ymin = 1.0e30
-  ymax = -1.0e30
-  zmin = 1.0e30
-  zmax = -1.0e30
-  for i in range(ivert+1,ivert+1+nvert):
-    dv = np.fromstring(lhull[i],sep=' ')
-    if dv[0] < xmin: xmin = dv[0]
-    if dv[0] > xmax: xmax = dv[0]
-    if dv[1] < ymin: ymin = dv[1]
-    if dv[1] > ymax: ymax = dv[1]
-    if dv[2] < zmin: zmin = dv[2]
-    if dv[2] > zmax: zmax = dv[2]
-    verts.append(dv)
-  #endfor
-  verts = np.array(verts)
-
-  Hull3D = faces
-
-  return verts,ifaces,faces,[xmin,xmax,ymin,ymax,zmin,zmax]
+  return verts,ifaces,facets,bounds
 
 #enddef qhull3d(x,y,z)
 
 def qhull2d(x,y=None):
+
+  global Hull2D,Tnpa,Tnone
+
+  if type(y) == Tnone:
+    xy = np.array(x).T
+    x = xy[0]
+    y = xy[1]
+  #endif
+
+  points = np.array([x,y]).T
+  #Quit(points)
+
+  if type(y) == Tnone:
+    xyz = np.array(x).T
+    x = xyz[0]
+    y = xyz[1]
+  #endif
+
+  points = np.array([x,y]).T
+
+  Hull2D = ConvexHull(points)
+  nfaces = Hull2D.nsimplex
+  ifaces = Hull2D.simplices
+  iverts = Hull2D.vertices
+
+  return nfaces,ifaces,iverts
+
+#enddef qhull2d(x,y)
+
+def qhull2d_old(x,y=None):
 
   global Hull2D,Tnpa,Tnone
 
@@ -2162,7 +2365,7 @@ def qhull2d(x,y=None):
   ifaces = []
   faces = []
   for i in range(1,nface+1):
-    iface = np.fromstring(lhull[i],dtype=np.int,sep=' ')
+    iface = np.fromstring(lhull[i],dtype=int,sep=' ')
     ifaces.append(iface)
     faces.append(points[iface])
   #endfor
@@ -2187,12 +2390,12 @@ def qhull2d(x,y=None):
 
   return verts,ifaces,faces,[xmin,xmax,ymin,ymax]
 
-#enddef qhull2d(x,y)
+#enddef qhull2d_old(x,y)
 
-def nqhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,
-             facecolor='b',mcolor='!',edgecolor='!',alpha=0.0,ishow=1):
+def nqhull3d(nt='?',varlis='x:y:z',select='', plopt='',iplot=1, iretval=0,linewidth=1,
+             facecolor='blue',mcolor='',edgecolor='black',alpha=0.3,ishow=1,modus='merge'):
 
-  global Isame
+  global Isame,Hull3D,THull3D,Hull3DList
 
   if type(nt) == str and nt == '?':
     print("\nUsage: hull = nqhull3d(nt,varlis,select,iplot=1)")
@@ -2225,8 +2428,8 @@ def nqhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,
     return -1
   #endif
 
-  if mcolor != '!':
-    setlinecolor(mcolor)
+  if mcolor != '!' and mcolor != '':
+    setmarkercolor(mcolor)
   #endif
 
   varl = nlistcolon(varlis)
@@ -2245,32 +2448,254 @@ def nqhull3d(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,
 
   points = np.array([ntd.x,ntd.y,ntd.z]).T
 
-  vert,ifaces,faces,bounds = qhull3d(ntd.x,ntd.y,ntd.z)
-  nface = len(faces)
+  Hull3D = ConvexHull(points,qhull_options="")
+
+  nface = Hull3D.nsimplex
+  ifaces = Hull3D.simplices
+  iverts = Hull3D.vertices
+
+  gcen = [0.0,0.0,0.0]
+  for i in range(len(iverts)):
+    gcen += points[iverts[i]]
+  #endfor
+  gcen /= len(iverts)
+
+
+  vn = np.zeros([nface,6])
+
+  mface = 0
+
+  for i in range(nface):
+    if vn[i][0] != 0: continue
+    mface += 1
+    pois = points[ifaces[i]]
+    dp1 = pois[1]-pois[0]
+    dp2 = pois[2]-pois[1]
+    vnx = dp1[1]*dp2[2] - dp1[2]*dp2[1]
+    vny = dp1[2]*dp2[0] - dp1[0]*dp2[2]
+    vnz = dp1[0]*dp2[1] - dp1[1]*dp2[0]
+    vnn = (vnx*vnx+vny*vny+vnz*vnz)**0.5
+    vnx /= vnn
+    vny /= vnn
+    vnz /= vnn
+    u = pois[0] - gcen
+    if u[0]*vnx+u[1]*vny+u[2]*vnz < 0:
+      ifis = ifaces[i]
+      if1 = ifaces[i][1]
+      ifis[1] = ifis[2]
+      ifis[2] = if1
+      ifaces[i] = ifis
+      vnx = -vnx
+      vny = -vny
+      vnz = -vnz
+    #endif
+    vn[i][0] = i + 1
+    vn[i][1] = vnx
+    vn[i][2] = vny
+    vn[i][3] = vnz
+    vn[i][5] = mface
+    ax = abs(vnx)
+    ay = abs(vny)
+    az = abs(vnz)
+    if ax >= ay and ax >= az:
+      vn[i][4] = 1
+    elif ay >= ax and ay >= az:
+      vn[i][4] = 2
+    else:
+      vn[i][4] = 3
+    #endif
+
+    if modus == 'merge':
+
+      for j in range(i+1,nface):
+        if vn[j][0] != 0.0: continue
+        pois = points[ifaces[j]]
+        dp1 = pois[1]-pois[0]
+        dp2 = pois[2]-pois[1]
+        wnx = dp1[1]*dp2[2] - dp1[2]*dp2[1]
+        wny = dp1[2]*dp2[0] - dp1[0]*dp2[2]
+        wnz = dp1[0]*dp2[1] - dp1[1]*dp2[0]
+        wnn = (wnx*wnx+wny*wny+wnz*wnz)**0.5
+        wnx /= wnn
+        wny /= wnn
+        wnz /= wnn
+        u = pois[0] - gcen
+        if u[0]*wnx+u[1]*wny+u[2]*wnz < 0:
+          ifis = ifaces[j]
+          if1 = ifaces[j][1]
+          ifis[1] = ifis[2]
+          ifis[2] = if1
+          ifaces[j] = ifis
+          wnx = -wnx
+          wny = -wny
+          wnz = -wnz
+        #endif
+        if wnx*vnx+wny*vny+wnz*vnz > 0.999:
+          vn[j] = vn[i]
+        #endif
+      #endfor j
+    #endif if modus == 'merge'
+
+  #endfor i
 
   data = []
-  for i in range(nface):
-    for ipoi in ifaces[i]:
-      data.append([ipoi+1,i+1,points[ipoi][0],points[ipoi][1],points[ipoi][2]])
-    #endfor
-    iclo = ifaces[i][0]
-    data.append([iclo+1,i+1,points[iclo][0],points[iclo][1],points[iclo][2]])
-  #endfor
+  facets = []
 
-  npd = pd.DataFrame(data,columns=['ipoi','iplan','x','y','z'])
-  nhull = ncre("Nhull3d","Nqhull3d","ipoi:iplan:x:y:z",ioverwrite=1)
+  for m in range(mface):
+
+    if modus == 'merge':
+
+      x = []
+      y = []
+      lface = []
+
+      for i in range(nface):
+        if vn[i][5] == m+1:
+          lface.append(ifaces[i][0])
+          lface.append(ifaces[i][1])
+          lface.append(ifaces[i][2])
+          if vn[i][4] == 1:
+            x.append(points[ifaces[i][0]][1])
+            y.append(points[ifaces[i][0]][2])
+            x.append(points[ifaces[i][1]][1])
+            y.append(points[ifaces[i][1]][2])
+            x.append(points[ifaces[i][2]][1])
+            y.append(points[ifaces[i][2]][2])
+          elif vn[i][4] == 2:
+            x.append(points[ifaces[i][0]][0])
+            y.append(points[ifaces[i][0]][2])
+            x.append(points[ifaces[i][1]][0])
+            y.append(points[ifaces[i][1]][2])
+            x.append(points[ifaces[i][2]][0])
+            y.append(points[ifaces[i][2]][2])
+          else:
+            x.append(points[ifaces[i][0]][0])
+            y.append(points[ifaces[i][0]][1])
+            x.append(points[ifaces[i][1]][0])
+            y.append(points[ifaces[i][1]][1])
+            x.append(points[ifaces[i][2]][0])
+            y.append(points[ifaces[i][2]][1])
+          #endif
+        #endif
+      #endfor nface
+
+      nfaces2,ifaces2,iverts2 = qhull2d(x,y)
+
+      p1 = points[lface[iverts2[0]]]
+      p2 = points[lface[iverts2[1]]]
+      p3 = points[lface[iverts2[2]]]
+
+      dp1 = p2 - p1
+      dp2 = p3 - p2
+
+      vnx = dp1[1]*dp2[2] - dp1[2]*dp2[1]
+      vny = dp1[2]*dp2[0] - dp1[0]*dp2[2]
+      vnz = dp1[0]*dp2[1] - dp1[1]*dp2[0]
+
+      vnn = (vnx*vnx+vny*vny+vnz*vnz)**0.5
+
+      vnx /= vnn
+      vny /= vnn
+      vnz /= vnn
+
+      u = p1 - gcen
+
+      lv = len(iverts2)
+      kface = []
+      if u[0]*vnx+u[1]*vny+u[2]*vnz < 0:
+        for i in range(lv):
+          kface.append(lface[iverts2[lv-1-i]])
+        #endfor
+      else:
+        for i in range(lv):
+          kface.append(lface[iverts2[i]])
+        #endfor
+      #endif
+    else:
+      kface = ifaces[m]
+      lv = len(kface)
+    #endif modus == 'merge'
+
+    fac = []
+    for i in range(lv):
+      ipoi = kface[i]
+      data.append([ipoi+1,m+1,points[ipoi][0],points[ipoi][1],points[ipoi][2],vnx,vny,vnz])
+      fac.append([points[ipoi][0],points[ipoi][1],points[ipoi][2]])
+    #endfor
+    facets.append(fac)
+    ipoi = kface[0]
+    data.append([ipoi+1,m+1,points[ipoi][0],points[ipoi][1],points[ipoi][2],vnx,vny,vnz])
+
+  #endfor mface
+
+  npd = pd.DataFrame(data,columns=['ipoi','iplan','x','y','z','nx','ny','nz'])
+  nhull = ncre("Nhull3d","Nhull3d","ipoi:iplan:x:y:z:nx:ny:nz",ioverwrite=1)
   nhull = nfill("Nhull3d",npd)
 
-  if iplot:
-    plotoptions(plopt)
-    #if edgecolor == '!': edgecolor = facecolor
-    plotqhull3d(vert,ifaces,faces,Isame,
-                facecolor=facecolor,edgecolor=edgecolor,alpha=alpha,
-                linewidth=-1,markercolor='!',
-                modus='faces',ishow=ishow)
-  #endif
+  xmin = ntd.x.min()
+  xmax = ntd.x.max()
+  ymin = ntd.y.min()
+  ymax = ntd.y.max()
+  zmin = ntd.z.min()
+  zmax = ntd.z.max()
 
-  if iretval: return vert,ifaces,faces,bounds
+  if iplot:
+
+    plotoptions(plopt)
+
+    if not Isame:
+
+      dx = (xmax-xmin)*0.1
+      dy = (ymax-ymin)*0.1
+      dz = (zmax-zmin)*0.1
+
+      xmin -= dx
+      xmax += dx
+      ymin -= dy
+      ymax += dy
+      zmin -= dz
+      zmax += dz
+
+      null3d(xmin,xmax,ymin,ymax,zmin,zmax)
+
+    #endif isame
+
+    ax = Ax
+    faces = mplot3d.art3d.Poly3DCollection(facets)
+    faces.set_color(facecolor)
+    faces.set_edgecolor(edgecolor)
+    faces.set_alpha(alpha)
+    ax.add_collection3d(faces)
+
+    if mcolor:
+      if mcolor != '!':
+        setmarkercolor(mcolor)
+      #endif
+      npl("Nhull3d","x:y:z",plopt="same")
+    #endif
+
+    if ishow: showplot()
+
+  #endif iplot
+
+  #if iretval: return vert,ifaces,faces,bounds
+  #if iretval: return points,iverts,ifaces,xmin,xmax,ymin,ymax,zmin,zmax
+
+  bounds = [xmin,xmax,ymin,ymax,zmin,zmax]
+
+  verts =[]
+  for pois in points[iverts]: verts.append(list(pois))
+
+  ifaces = []
+  Hull3DList = []
+  for f in facets:
+    Hull3DList.append(f)
+    ifac = []
+    for p in f: ifac.append(verts.index(p))
+    ifaces.append(ifac)
+  #endfor
+
+  if iretval: return verts,ifaces,facets,bounds
 
 #enddef nqhull3d(nt='?')
 
@@ -2324,13 +2749,14 @@ def set_y_fit(y='!'):
 #enddef
 
 def set_x_stat(x='!'):
-  global XStat, Xstat, Nxzone, Nyzone
+  global XStat, Xstat, Nxzone, Nyzone,Gdebug
+  #reakpoint()
   if x == '!':
     x = XStat
+    #if Nxzone > 1: x = (Nxzone-1)*0.15
   elif x == '+':
     x = XStat + 0.2
   #endif
-  if Nxzone > 1: x = (Nxzone-1)*0.15
   Xstat = x
   XStat = x
 #enddef
@@ -2342,8 +2768,12 @@ def get_x_stat():
 
 def set_y_stat(y='!'):
   global YStat, Ystat, Nxzone, Nyzone
-  if y == '!': y = YStat
-  if Nyzone > 1:y = 0.8 - (Nyzone-1)*0.15
+  if y == '!':
+      y = YStat
+      if Nyzone > 1:y = 0.8 - (Nyzone-1)*0.15
+  elif y == '+':
+    y = YStat + 0.2
+  #endif
   Ystat = y
   YStat = y
 #enddef
@@ -3639,12 +4069,13 @@ def getplotsize():
 from itertools import chain
 
 def vplothull3d(x,y,z,isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
-                ishow=1, mode='simplices'):
+                ishow=1, modus='simplices'):
 
-  global Ax, Isame
+  global Ax, Isame, Hull3D
 
   vs = np.array([x,y,z]).T
-  hull = ConvexHull(vs)
+  Hull3D = ConvexHull(vs)
+  hull = Hull3D
 
   if not isame:
 
@@ -3674,7 +4105,7 @@ def vplothull3d(x,y,z,isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
 
   ax = Ax
 
-  if mode == 'simplices':
+  if modus == 'simplices' or modus == 'facets':
 
     faces = mplot3d.art3d.Poly3DCollection(vs[hull.simplices])
 
@@ -3684,7 +4115,7 @@ def vplothull3d(x,y,z,isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
 
     ax.add_collection3d(faces)
 
-  elif mode == 'volume':
+  elif modus == 'volume':
 
     vsims = vs[hull.simplices]
 
@@ -3702,9 +4133,9 @@ def vplothull3d(x,y,z,isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
 #enddef vplothull3d()
 
 def plothull3d(isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
-               ishow=1, mode='face'):
+               ishow=1, modus='face'):
 
-  global Hull3D, Ax, Isame
+  global THull3D,Hull3D, Ax, Isame,Hull3DList
 
   Isame = isame
   getzone('3d')
@@ -3718,6 +4149,7 @@ def plothull3d(isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
           ht.append(p)
         #endfor
       #endfor
+#    elif type(Hull3D) == list:
     #endif
 
     try:
@@ -3749,7 +4181,7 @@ def plothull3d(isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
     #endfor p  in Hull3D
   #endif not isame:
 
-  if not mode == 'face': alpha = 0
+  if not modus == 'face': alpha = 0
 
   faces = mplot3d.art3d.Poly3DCollection(Hull3D)
   faces.set_color(facecolor)
@@ -3761,7 +4193,7 @@ def plothull3d(isame=0,facecolor='blue',alpha=0.5,edgecolor='black',
   if ishow: showplot()
 #enddef plothull3()
 
-def nmerge(n1,n2,n12,vars1='',vars2='',vars12=''):
+def nmerge(n1,n2,n12,vars1='',vars2='',vars12='',ioverwrite=1):
 
   idx1 = GetIndexN(n1)
 
@@ -3804,7 +4236,7 @@ def nmerge(n1,n2,n12,vars1='',vars2='',vars12=''):
 
   if vars12 == '': vars12 = vars1 + ":" + vars2
 
-  n12 = ncre(n12,n12,vars12)
+  n12 = ncre(n12,n12,vars12,ioverwrite)
 
   varl1 = nlistcolon(vars1)
   varl2 = nlistcolon(vars2)
@@ -3961,7 +4393,7 @@ def hdump(hist='?',filh='hdump.dat'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -4049,7 +4481,7 @@ def hprint(hist='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -4126,7 +4558,7 @@ def hfun(hist='?',fun='x', nx=101, xmin=-0.5, xmax=100.5):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -4237,7 +4669,7 @@ def h1header_update(hist='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -4407,7 +4839,7 @@ def h1reset(h):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -4486,7 +4918,7 @@ def hdelete(h='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -4571,7 +5003,7 @@ def hmin(h='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -4654,7 +5086,7 @@ def hmax(h='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -4724,7 +5156,7 @@ def printplopt():
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -4799,7 +5231,7 @@ def plotoptions(plopt=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -4994,7 +5426,7 @@ def mhb_mkdir(chdir='!'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -5099,7 +5531,7 @@ def mhb_ldir():
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -5174,7 +5606,7 @@ def mhb_pwd(isilent=0,iretval=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -5244,7 +5676,7 @@ def mhb_cd(cdir='!'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -5363,7 +5795,7 @@ def zoom(xmin,xmax,ymin=-1.2345e30,ymax=1.2345e30,zmin=1.2345e30,zmax=1.2345e30)
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -5383,6 +5815,29 @@ def zoom(xmin,xmax,ymin=-1.2345e30,ymax=1.2345e30,zmin=1.2345e30,zmax=1.2345e30)
 
   showplot()
 #enddef zoom
+
+def get_xy_limits():
+
+  Ax = plt.gca()
+
+  xn, xx = Ax.get_xlim()
+  yn, yx = Ax.get_ylim()
+
+  return xn,xx,yn,yx
+
+#enddef
+
+def get_xyz_limits():
+
+  Ax = plt.gca()
+
+  xn, xx = Ax.get_xlim()
+  yn, yx = Ax.get_ylim()
+  zn, zx = Ax.get_zlim()
+
+  return xn,xx,yn,yx,zn,zx
+
+#enddef
 
 def zoom3d(xmin,xmax,ymin=-1.2345e30,ymax=1.2345e30,zmin=1.2345e30,zmax=1.2345e30):
 #+KEEP,plotglobind,T=PYTHON.
@@ -5418,7 +5873,7 @@ def zoom3d(xmin,xmax,ymin=-1.2345e30,ymax=1.2345e30,zmin=1.2345e30,zmax=1.2345e3
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -5507,7 +5962,7 @@ def pplot(pname="WavePlot.pdf",w=0,h=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -5576,7 +6031,7 @@ def h1pack(idh='?', data=None):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -5658,7 +6113,7 @@ def hcopn(idh='?', nt='', varlis='x:y:ey', ntit='!',kweedzero=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -5748,7 +6203,7 @@ def hcopn(idh='?', nt='', varlis='x:y:ey', ntit='!',kweedzero=1):
 
 #enddef hcopn(idh='?', nt='', varlis='')
 
-def nrandom(nt='?',varlis='', n=100, mode='u', iplot=0):
+def nrandom(nt='?',varlis='', n=100, modu='u', iplot=0, modus='new'):
 #+seq,mshimportsind.
 # +PATCH,//WAVES/PYTHON
 # +KEEP,statusglobind,T=PYTHON.
@@ -5795,7 +6250,7 @@ def nrandom(nt='?',varlis='', n=100, mode='u', iplot=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -5811,19 +6266,36 @@ def nrandom(nt='?',varlis='', n=100, mode='u', iplot=0):
 
 
   if type(nt) == str and nt == '?':
-    print("\nUsage: nt = nrandom(nt,varlis, n=100, mode='u', iplot=0)")
+    print("\nUsage: nt = nrandom(nt,varlis, n=100, modu='u', iplot=0)")
     return
 
   varl = nlistcolon(varlis)
   dim = Ncolon + 1
 
-  if mode == 'u':
-    points = np.random.rand(n,dim)
-    name = nt + "_" + str(n) + "_uniform_" + str(dim)
+  #reakpoint()
+  if modus != 'new':
+    if modu == 'u':
+      points = np.random.rand(n,dim)
+      name = nt + "_" + str(n) + "_uniform_" + str(dim)
+    else:
+      points = np.random.randn(n,dim)
+      name = nt + "_" + str(n) + "_normal_" + str(dim)
+    #endif modu == 'u'
   else:
-    points = np.random.randn(n,dim)
-    name = nt + "_" + str(n) + "_normal_" + str(dim)
-  #endif modu == 'u'
+    rng = np.random.default_rng()
+    points = []
+    for i in range(dim):
+      if modu == 'u':
+        p = rng.random(n)
+        name = nt + "_" + str(n) + "_uniform_" + str(dim)
+#        print(p)
+      else:
+        p = rng.standard_normal(n)
+        name = nt + "_" + str(n) + "_normal_" + str(dim)
+      #endif modu == 'u'
+      points.append(p)
+      #endfor
+  #endif
 
   nt = ncre(nt,name,varlis)
   nt = nfill(nt,points)
@@ -5882,7 +6354,7 @@ def nhull2d(nt='?',varlis='',select='', iplot=1, iretval=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -6092,7 +6564,7 @@ def vhull2d(vx,vy,varlis='',iplot=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -6296,6 +6768,7 @@ def hull3dold(points):
 
   corns = []
   Hull3D = []
+  THull3D = type(Hull3D)
 
   for ipl in range(nplan):
     plan = planes[ipl]
@@ -6320,7 +6793,7 @@ def hull3dold(points):
 def mhull3d(nt='?',varlis='',select='',isame=0,
             facecolor='blue',edgecolor='black', alpha=0.5, iplot=1):
 
-  global Hull3D
+  global THull3D,Hull3D,Hull3DList
 
   if type(nt) == str and nt == '?':
     print("\nUsage: vertices = mhull3d(nt='?',varlis='',select='', isame=0, facecolor='blue',edgecolor='black', alpha=0.5, iplot=1)")
@@ -6339,7 +6812,7 @@ def mhull3d(nt='?',varlis='',select='',isame=0,
   vx, vy, vz = ncopv(nt,varlis,select)
   points = np.array([vx,vy,vz]).T
 
-  vertices,ifaces,faces,bounds =  hull3d(points)
+  vertices,ifaces,faces,bounds =  qhull3d(points)
 
   if iplot:
     plothull3d(isame,facecolor=facecolor,edgecolor=edgecolor,alpha=alpha)
@@ -6396,7 +6869,7 @@ def nhull3dbad(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,color='!'
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -6701,6 +7174,7 @@ def nhull3dbad(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,color='!'
   fill = []
 
   Hull3D = []
+  THull3D = type(Hull3D)
   for ipl in range(nplan):
     plan = planes[ipl]
     Hull3D.append(plan)
@@ -6812,7 +7286,7 @@ def nappend(nt='?', nt2=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -6900,7 +7374,7 @@ def nfill(nt='?', data=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -7027,7 +7501,7 @@ def npeaksabs(nt='?', varlis='', select='', pkmin=0.5,nsmooth=0,isilent=0,iretva
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -7155,7 +7629,7 @@ def hpeaks(h='?', select='', pkmin=0.5,nsmooth=0,isilent=0,iretval=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -7234,7 +7708,7 @@ def npeaks(nt='?', varlis='', select='', pkmin=0.5,nsmooth=0,isilent=0,iretval=0
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -7357,7 +7831,7 @@ def nstat(nt='?',var='',select='', iretval=1, isilent=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -7474,6 +7948,21 @@ def nstat(nt='?',var='',select='', iretval=1, isilent=0):
 
 #enddef nstat(nt='?',var='',select='',iretval,isilent)
 
+def nrms(nt='?',var='',select='', iretval=1, isilent=0):
+    #reakpoint()
+    res = nstat(nt,var,select,iretval,1)
+    if isilent==0: print(res[3])
+    if iretval: return res[3]
+    else: return
+#enddef nrms
+
+def nmean(nt='?',var='',select='', iretval=1, isilent=0):
+    res = nstat(nt,var,select,iretval,1)
+    if isilent==0: print(res[2])
+    if iretval: return res[2]
+    else: return
+#enddef nmean
+
 def nmax(nt='?',var='',select='',iretval=1):
 #+seq,mshimportsind.
 # +PATCH,//WAVES/PYTHON
@@ -7521,7 +8010,7 @@ def nmax(nt='?',var='',select='',iretval=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -7632,7 +8121,7 @@ def nmin(nt='?',var='',select='', iretval=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -7743,7 +8232,7 @@ def nminmax(nt='?',var='',select='',iretval=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -8072,7 +8561,7 @@ def nrenvars(nt,varlis):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -8161,7 +8650,7 @@ def nparse(nt,varlis):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -8351,7 +8840,7 @@ def set_linecolor(lcol='r'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -8419,7 +8908,7 @@ def h2fill(idh='?', x=1.e30, y=1.e30, w=1.):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -8637,7 +9126,7 @@ def h1fill(idh=-1, x=1.e30, wei=1.):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -8797,7 +9286,7 @@ def hbook2(idh=-1, tit='Histogram2D',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -8962,7 +9451,7 @@ def h2reset(idh):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -9101,7 +9590,7 @@ def hbook1(idh=-1, tit='Histogram1D', nx=10, xmin=0., xmax=1., overwrite=False):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -9186,7 +9675,7 @@ def hbook1(idh=-1, tit='Histogram1D', nx=10, xmin=0., xmax=1., overwrite=False):
 
 #enddef hbook1
 
-def nscan(nt='?',varlis='',select='',isilent=0):
+def nscan(nt='?',varlis='',select='',isilent=0,ifirst=0,ilast=0):
 #+seq,mshimportsind.
 # +PATCH,//WAVES/PYTHON
 # +KEEP,statusglobind,T=PYTHON.
@@ -9233,7 +9722,7 @@ def nscan(nt='?',varlis='',select='',isilent=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -9304,10 +9793,12 @@ def nscan(nt='?',varlis='',select='',isilent=0):
     #endtry
   #endfor k in range(len(cols))
 
-  N.columns = svar
-  if not isilent: print(N.to_string())
-
   Nlines = len(N)
+  N.columns = svar
+
+  if ilast ==  0: ilast = Nlines-1
+  if not isilent: print(N[ifirst:ilast+1].to_string())
+
   return Nlines
 
 #enddef nscan
@@ -9362,7 +9853,7 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -9658,7 +10149,7 @@ def nintern(nt='?',varlis='',select='',xint='!'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -9776,7 +10267,7 @@ def ninter(nt='?',varlis='',select='',xint='!'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -9948,7 +10439,7 @@ def nspline(nt='?',varlis='',select='',xspl='!',periodic=False):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -10082,7 +10573,7 @@ def nsolve(nt='?',varlis='',select='',val=0.0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -10206,7 +10697,7 @@ def ndump(nt='',varlis='',select='',fout='ndump.dat', sep=' ',floatform='%.5e',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -10365,7 +10856,7 @@ def nreset(nt='?', varlis=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -10475,7 +10966,7 @@ def ndelete(nt='?',isilent=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -10572,7 +11063,7 @@ def ncre(ntname='', nttit='', varlis='', ioverwrite=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -10723,7 +11214,7 @@ def GetIndexH2(idh='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -10738,6 +11229,7 @@ def GetIndexH2(idh='?'):
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
 
+  #reakpoint()
   if type(idh) == str and idh == '?':
     print("\nUsage: index = GetIndexH2(idh), H2h, H2I and Ind are also set, \nreturns -1 if histogram has not been found")
     return
@@ -10824,7 +11316,7 @@ def GetIndexN(nt='?', isilent=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -10944,7 +11436,7 @@ def GetIndexNct(idh='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11028,7 +11520,7 @@ def GetIndexH1(idh='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11133,7 +11625,7 @@ def GetIndex(idh='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11235,7 +11727,7 @@ def h1opt(idh):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11363,7 +11855,7 @@ def voptpar(vx,vy):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11479,7 +11971,7 @@ def h1print(idh='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11559,7 +12051,7 @@ def H1Info(idh='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11661,7 +12153,7 @@ def H2Info(idh='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11737,6 +12229,80 @@ def H2Info(idh='?'):
 
 #enddef H2Info(idh='?')
 
+def hstat2d(idh='?'):
+#+seq,mshimportsind.
+# +PATCH,//WAVES/PYTHON
+# +KEEP,statusglobind,T=PYTHON.
+  global Istatus, WarningText, ErrorText, Gdebug
+
+  # Histograms and Ntuples
+  global H1h, H1hh, H2h, H2hh, H1, H2, H1head, H2head, H1HLast, Nhead, Ntup, \
+  Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
+  H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
+  Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, \
+  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
+  FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman
+#+KEEP,plotglobind,T=PYTHON.
+#*CMZ :          28/09/2019  14.39.13  by  Michael Scheer
+  global MPLmain, MPLmaster, Nfigs,Figgeom, Figgeom2, FiggeomR, FiggeomL, XtermGeo, Figs,Fig,Ax,\
+  Fig1,Ax1,Fig6,Ax6,Fig2,Ax2,Fig7,Ax7,Fig3,Ax3,Fig8,Ax8, Figgeoms, \
+  Fig4,Ax4,Fig9,Ax9,Fig5,Ax5,Fig10,Ax10,\
+  Screewidth, Screenheight, ScaleSizeX, ScaleSizeY, \
+  FirstConsole, Console, Igetconsole,Klegend, Fwidth, Fheight, Fxoff, Fyoff, \
+  Kfig, Kax, Ihist,Iprof, Imarker, Ierr, Isurf, Iinter, Isame, Itight, IsameGlobal, Iline, CMap, Cmap, Tcmap, Surfcolor, Cmaps, \
+  Iplotopt, Ispline, Kecho, Kdump,Kpdf, Ndump,Npdf, Legend, \
+  Kplots,Nwins, Zones, Kzone, Nxzone, Nyzone, Zone, Axes, Icmap, \
+  Mode3d,Mode3D, Mode2d,Mode2D, CanButId, CanButIds, \
+  MarkerSize, MarkerType, MarkerColor, \
+  Markersize, Markertype, Markercolor, \
+  Fillstyle, FillStyle, \
+  Textcolor, WaveFilePrefix,WaveDump, \
+  LineStyle, LineWidth, LineColor, \
+  Linestyle, Linewidth, Linecolor, \
+  Author, \
+  Tightpad, Xtightpad,Ytightpad, ColorbarPad,\
+  LeftMargin,RightMargin,TopMargin,BottomMargin, Xspace, Yspace, \
+  Histcolor, Histedgecolor, Histbarwidth, Kdate, Kfit, Kstat, YTitle, \
+  Icont3d, Iboxes, Inoempty, Iclosed,Itrisurf, Iscatter, Iscat3d, Ifill1d, TitPad, Xtitle, Ytitle, \
+  Gtit,Xtit,Ytit,Ztit,Ttit,Ptit,Colors, Surfcolors,Linestyles, Markertypes, \
+  LexpX,LexpY,LexpRot,LexpPow,\
+  GtitFontSize,Titfontsize,Atitfontsize,Axislabelsize,Textfontsize,Datefontsize,\
+  Statfontsize, Axislabeldist, Axislabeldist3d, Axisdist, Axisdist3d, \
+  XFit, YFit, Xfit, Yfit,Ystat, YStat, \
+  GtitFontSize,TitFontSize,AtitFontSize,AxisLabelSize,TextFontSize,DateFontSize,\
+  StatFontSize, AxisLabelDist, AxisLabelDist3d, AxisTitleDist, AxisTitleDist3d, \
+  AtitFontSize3d, Atitfontsize3d, NXtick,NXtick3d, Nxtick,Nxtick3d, Ktitles,  Dummy,\
+  ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
+  Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
+  LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  FillColor,WisLinux,Ishow
+
+#+PATCH,//WAVES/PYTHON
+#+KEEP,vecglobind,T=PYTHON.
+
+  global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
+  VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
+
+#+KEEP,nxyzglobind,T=PYTHON.
+#*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
+  global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
+
+  #reakpoint()
+  if type(idh) == int:
+    idx = idh
+  else:
+    idx = GetIndexH2(idh)
+  #endif
+
+  if idx == -1: return idx
+  h2h = H2head[idx]
+  return h2h[14:18]
+
+#enddef hstat2d(idh='?')
+
 def H1List():
 #+seq,mshimportsind.
 # +PATCH,//WAVES/PYTHON
@@ -11784,7 +12350,7 @@ def H1List():
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11845,6 +12411,64 @@ def hinfo(idh):
 
 #enddef hinfo(idh)
 
+def hstat(idh):
+  #reakpoint()
+  idx = GetIndexH1(idh)
+
+  if idx != -1:
+      return hstat1d(idh)
+  #endif
+
+  idx = GetIndexH2(idh)
+  if idx != -1:
+      return hstat2d(idh)
+  #endif
+
+  print("*** Non-exixsting histogram ***")
+  return
+
+#enddef hstat(idh)
+
+def hrms(idh):
+  #reakpoint()
+  idx = GetIndexH1(idh)
+
+  if idx != -1:
+      res = hstat1d(idh)
+      print(res[3])
+      return res[3]
+  #endif
+
+  idx = GetIndexH2(idh)
+  if idx != -1:
+      print('Not yet!! Use hstat() instead.')
+  #endif
+
+  print("*** Non-exixsting histogram ***")
+  return
+
+#enddef hstat(idh)
+
+def hmean(idh):
+  #reakpoint()
+  idx = GetIndexH1(idh)
+
+  if idx != -1:
+      res = hstat1d(idh)
+      print(res[2])
+      return res[2]
+  #endif
+
+  idx = GetIndexH2(idh)
+  if idx != -1:
+      print('Not yet!! Use hstat() instead.')
+  #endif
+
+  print("*** Non-exixsting histogram ***")
+  return
+
+#enddef hstat(idh)
+
 def nentry(nt='?'):
 #+seq,mshimportsind.
 # +PATCH,//WAVES/PYTHON
@@ -11892,7 +12516,7 @@ def nentry(nt='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -11974,7 +12598,7 @@ def ninfo(nt='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -12076,7 +12700,7 @@ def nlist():
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -12146,7 +12770,7 @@ def NctList():
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -12215,7 +12839,7 @@ def ncolumns(fname='ntuple.dat', skiphead=-1, sep=' '):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -12321,7 +12945,7 @@ def ncolumnsguess(fname='ntuple.dat'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -12438,7 +13062,7 @@ silent=0, comment='*', sep=' ',iguessncols=1, iplot=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -12525,7 +13149,7 @@ silent=0, comment='*', sep=' ', iguessncols=1, iplot=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -12609,7 +13233,7 @@ comment='*', sep=' '):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -12769,7 +13393,7 @@ comment='*', sep=' ',iguessncols=1, ioverwrite=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -12882,7 +13506,7 @@ def hindex(idh):
 #enddef hindex():
 
 def nproj2(nt='?', xy='', weight=1., select='',
-           scalex=1., scaley=1., scalez=1.0, nx=51, ny=51, idh=-1,
+           scalex=1., scaley=1., scalez=1.0, nx=-1, ny=-1, idh=-1,
            ioverwrite=1):
 
   import numpy as np
@@ -12934,7 +13558,7 @@ def nproj2(nt='?', xy='', weight=1., select='',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -13017,6 +13641,366 @@ def nproj2(nt='?', xy='', weight=1., select='',
   x = "(" + nparse(nt,xy[0]) + ") * " + str(scalex)
   y = "(" + nparse(nt,xy[1]) + ") * " + str(scaley)
 
+  #reakpoint()
+  if weight == 1. or weight == '' or weight == '!':
+    w = "(" + nparse(nt,xy[0]) + ") * 0.0 + 1.0"
+    wt = ''
+  else:
+    w = nparse(nt,weight)
+    wt = weight
+  #endif weight == 1. or weight == '' or weight == '!'
+
+  scom = "global N; N = pd.DataFrame([" + x + "," + y + "," + w + "]).T"
+  exec(scom)
+
+  N.columns = ['x','y','w']
+  Nlines = len(N)
+  N.index = range(Nlines)
+
+  x = N.x
+  y = N.y
+  w = N.w
+
+  #reakpoint()
+  if nx<0:
+    xweed = x.drop_duplicates()
+    nx = len(xweed)
+  #endif
+
+  if ny<0:
+    yweed = y.drop_duplicates()
+    ny = len(yweed)
+  #endif
+
+  z2 = x * 0.0
+  ent = x * 0.0
+  zave = x * 0.0
+  ez = x * 0.0
+
+  if type(idh) != int:
+    idx = GetIndexH2(idh)
+  else:
+    idx = idh
+  #endif type(idh) != int
+
+  if idx > -1 and ioverwrite and nx > 0 and ny > 0:
+    hname = H2head[idx][0]
+    hdelete(hname)
+  #endif idx > -1:
+
+  if idx == -1 or Khdeleted:
+
+    xmin=x.min(); xmax=x.max()
+
+    if xmin == xmax:
+      dx = 1.
+      nx = 1
+    else:
+      if nx == 1:
+        dx = (xmax-xmin)
+      else:
+        dx = (xmax-xmin)/(nx-1)
+    #endif xmin == xmax
+
+    xmin -= dx/2.; xmax += dx/2.
+
+    ymin=y.min(); ymax=y.max()
+
+    if ymin == ymax:
+      dy = 1.
+      ny = 1
+    else:
+      if ny == 1:
+        dy = (ymax-ymin)
+      else:
+        dy = (ymax-ymin)/(ny-1)
+    #endif ymin == ymax
+
+    ymin -= dy/2.; ymax += dy/2.
+
+    if type(idh) == str: hname = idh
+    else: hname = 'HnPlot2'
+
+    htit = hname + " :: " + xy[0] + ":" + xy[1] + ":" + wt
+
+    if type(weight) == str and len(weight):
+      htit += ":" + weight
+    elif weight == 1.0:
+      pass
+    else:
+      htit += ":" + str(weight)
+    #endif type(weight) == str and if len(weight):
+
+    if len(select): htit += " [" + select + "]"
+
+    hret = hbook2(hname,htit,nx,xmin,xmax,ny,ymin,ymax,ioverwrite)
+
+    idx = GetIndexH2(hname)
+
+    if hname != 'HnPlot2' and Kecho:
+      print("--- Have created histogram: ", idx, " ",hname," ",Nhead[idn][2])
+
+  #endif idx == -1
+
+  nx = H2hh[2]
+  xmin = H2hh[3]
+  xmax = H2hh[4]
+  dx = H2hh[5]
+
+  ny = H2hh[6]
+  ymin = H2hh[7]
+  ymax = H2hh[8]
+  dy = H2hh[9]
+
+  hn, xedg, yedg  = np.histogram2d(x, y, bins=[nx,ny], range=[[xmin,xmax],[ymin,ymax]])
+  hz, xedg, yedg  = np.histogram2d(x, y, bins=[nx,ny], range=[[xmin,xmax],[ymin,ymax]], weights=w)
+  hz2, xedg, yedg  = np.histogram2d(x, y, bins=[nx,ny], range=[[xmin,xmax],[ymin,ymax]], weights=w*w)
+
+  xl = np.linspace(xmin+dx/2.,xmax-dx/2.,nx)
+  yl = np.linspace(ymin+dy/2.,ymax-dy/2.,ny)
+
+  hz = hz * scalez
+  hz2 = hz2 * scalez * scalez
+
+  x,y = np.meshgrid(xl,yl)
+  x = x.T.flatten()
+  y = y.T.flatten()
+  hn = hn.flatten()
+  hz = hz.flatten()
+  hz2 = hz2.flatten()
+
+  h = pd.DataFrame([x,y,hz,hz2,hn]).T
+  h.columns=['x','y','z','z2','n']
+
+  h.z[np.isnan(h.z)] = 0.0
+  h.z2[np.isnan(h.z2)] = 0.0
+  h.n[np.isnan(h.n)] = 0.0
+
+  h['ave'] = h.z/h.n
+  h.ave[np.isnan(h.ave)] = 0.0
+
+  h['ez'] = (h.z2/h.n-h.ave**2)**0.5
+  h.ez[np.isnan(h.ez)] = 0.0
+
+  head2 = H2head[idx]
+
+  sumz = h.z.sum()
+
+  head2[10] = h.n.sum()
+  head2[11] = h.z.min()
+  head2[12] = h.z.max()
+  head2[13] = sumz
+
+  if sumz != 0:
+    xmean = (h.x*h.z).sum()/sumz
+    head2[14] = xmean
+    head2[15] = max(0.0,(h.x**2*h.z).sum()/sumz-xmean**2)**0.5
+    ymean = (h.y*h.z).sum()/sumz
+    head2[16] = ymean
+    head2[17] = max(0.0,(h.y**2*h.z).sum()/sumz-ymean**2)**0.5
+  else:
+    head2[14] = 0
+    head2[15] = 0
+    head2[16] = 0
+    head2[17] = 0
+  #endif
+
+  xmin = head2[3]
+  xmax = head2[4]
+  ymin = head2[7]
+  ymax = head2[8]
+
+  Nux = N.query('x<' + str(xmin))
+  nux = len(Nux)
+  ux = Nux.w.sum()
+
+  Nuxoy = Nux.query('y>' + str(ymax))
+  nuxoy = len(Nux)
+  uxoy = Nux.w.sum()
+
+  Nuxuy = Nux.query('y<' + str(ymin))
+  nuxuy = len(Nuxuy)
+  uxuy = Nuxuy.w.sum()
+
+  Noy = N.query('y>' + str(ymax))
+  noy = len(Noy)
+  oy = Noy.w.sum()
+
+  Nox = N.query('x>' + str(xmax))
+  nox = len(Nox)
+  ox = Nox.w.sum()
+
+  Noxov = Nox.query('y>' + str(ymax))
+  noxoy = len(Nox)
+  oxoy = Nox.w.sum()
+
+  Noxuy = Nox.query('y<' + str(ymin))
+  noxuy = len(Noxuy)
+  oxuy = Noxuy.w.sum()
+
+  Nuy = N.query('y<' + str(ymin))
+  nuy = len(Nuy)
+  uy = Nuy.w.sum()
+
+  head2[18] = nux
+  head2[19] = nox
+  head2[20] = ux
+  head2[21] = ox
+  head2[22] = nuy
+  head2[23] = noy
+  head2[24] = uy
+  head2[25] = oy
+  head2[26] = nuxuy
+  head2[27] = noxuy
+  head2[28] = uxuy
+  head2[29] = oxuy
+  head2[30] = nuxoy
+  head2[31] = noxoy
+  head2[32] = oxuy
+  head2[33] = oxoy
+
+  H2h=h
+  H2[idx]=h
+
+  return 0
+#enddef nproj2()
+
+def nproj2n(nt='?', xy='', weight=1., select='',
+           scalex=1., scaley=1., scalez=1.0, nx=51, ny=51, idh=-1,
+           ioverwrite=1):
+
+  import numpy as np
+  import pandas as pd
+
+#+seq,mshimportsind.
+# +PATCH,//WAVES/PYTHON
+# +KEEP,statusglobind,T=PYTHON.
+  global Istatus, WarningText, ErrorText, Gdebug
+
+  # Histograms and Ntuples
+  global H1h, H1hh, H2h, H2hh, H1, H2, H1head, H2head, H1HLast, Nhead, Ntup, \
+  Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
+  H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
+  Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, \
+  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
+  FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman
+#+KEEP,plotglobind,T=PYTHON.
+#*CMZ :          28/09/2019  14.39.13  by  Michael Scheer
+  global MPLmain, MPLmaster, Nfigs,Figgeom, Figgeom2, FiggeomR, FiggeomL, XtermGeo, Figs,Fig,Ax,\
+  Fig1,Ax1,Fig6,Ax6,Fig2,Ax2,Fig7,Ax7,Fig3,Ax3,Fig8,Ax8, Figgeoms, \
+  Fig4,Ax4,Fig9,Ax9,Fig5,Ax5,Fig10,Ax10,\
+  Screewidth, Screenheight, ScaleSizeX, ScaleSizeY, \
+  FirstConsole, Console, Igetconsole,Klegend, Fwidth, Fheight, Fxoff, Fyoff, \
+  Kfig, Kax, Ihist,Iprof, Imarker, Ierr, Isurf, Iinter, Isame, Itight, IsameGlobal, Iline, CMap, Cmap, Tcmap, Surfcolor, Cmaps, \
+  Iplotopt, Ispline, Kecho, Kdump,Kpdf, Ndump,Npdf, Legend, \
+  Kplots,Nwins, Zones, Kzone, Nxzone, Nyzone, Zone, Axes, Icmap, \
+  Mode3d,Mode3D, Mode2d,Mode2D, CanButId, CanButIds, \
+  MarkerSize, MarkerType, MarkerColor, \
+  Markersize, Markertype, Markercolor, \
+  Fillstyle, FillStyle, \
+  Textcolor, WaveFilePrefix,WaveDump, \
+  LineStyle, LineWidth, LineColor, \
+  Linestyle, Linewidth, Linecolor, \
+  Author, \
+  Tightpad, Xtightpad,Ytightpad, ColorbarPad,\
+  LeftMargin,RightMargin,TopMargin,BottomMargin, Xspace, Yspace, \
+  Histcolor, Histedgecolor, Histbarwidth, Kdate, Kfit, Kstat, YTitle, \
+  Icont3d, Iboxes, Inoempty, Iclosed,Itrisurf, Iscatter, Iscat3d, Ifill1d, TitPad, Xtitle, Ytitle, \
+  Gtit,Xtit,Ytit,Ztit,Ttit,Ptit,Colors, Surfcolors,Linestyles, Markertypes, \
+  LexpX,LexpY,LexpRot,LexpPow,\
+  GtitFontSize,Titfontsize,Atitfontsize,Axislabelsize,Textfontsize,Datefontsize,\
+  Statfontsize, Axislabeldist, Axislabeldist3d, Axisdist, Axisdist3d, \
+  XFit, YFit, Xfit, Yfit,Ystat, YStat, \
+  GtitFontSize,TitFontSize,AtitFontSize,AxisLabelSize,TextFontSize,DateFontSize,\
+  StatFontSize, AxisLabelDist, AxisLabelDist3d, AxisTitleDist, AxisTitleDist3d, \
+  AtitFontSize3d, Atitfontsize3d, NXtick,NXtick3d, Nxtick,Nxtick3d, Ktitles,  Dummy,\
+  ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
+  Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
+  LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  FillColor,WisLinux,Ishow
+
+#+PATCH,//WAVES/PYTHON
+#+KEEP,vecglobind,T=PYTHON.
+
+  global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
+  VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
+
+#+KEEP,nxyzglobind,T=PYTHON.
+#*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
+  global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
+
+
+  if type(nt) == str:
+    if nt == "" or nt == "?":
+      print("\nUsage: nproj2n(nt='', xy='', weigth=1. select='', scalex=1., scaley=1., scalez=1., nx=51, ny=51, idh=-1)")
+      print("if histogram does not exist, it is created with nx,ny channels")
+      return 0
+  #endif
+
+  try:
+    typ = type(nt)
+  except:
+    print("*** Non-existing Ntuple in nproj2n ***")
+    return -1
+  #endtry
+
+  idn = -1
+
+  if typ != Tdf:
+    idn = GetIndexN(nt)
+    if idn == -1:
+      print("*** Non-existing Ntuple in nproj2n: " + str(nt) + " ***")
+      return -1
+    #endif idn == -1
+    nt = N
+  #endif typ != Tdf
+
+  if len(nt) == 0:
+    idn = GetIndexN(nt)
+    print("*** Empty Ntuple in nproj2n: " + str(Nind[idn]) + " ***")
+    return -1
+  #endif len(nt) == 0
+
+  if Kecho:
+    if type(idh) == str: sidh = "'" + idh + "'"
+    elif type(idh) == int: sidh = str(idh)
+    else: sidh = "'" + H2head[idx][1] + "'"
+
+    if type(nt) == str: snt = "'" + nt + "'"
+    elif type(nt) == int: snt = str(nt)
+    elif idn != -1: snt = "'" + Nhead[idn][1] + "'"
+    if idn != -1: sj2 = "nproj2n(nt='" + snt + "', xy='"
+    else: sj2 = "nproj2n(nt,"
+
+    print(sj2 + xy + "', weight='" + str(weight)\
+    + "', select='" + select + "', scalex=" + str(scalex) + ", scaley="\
+    + str(scaley) + ", scalez=" + str(scalez)\
+    + ", nx=" + str(nx) + ", ny=" + str(ny) + ", idh=" + sidh + ")" )
+  #endif Kecho
+
+  if select:
+    nt = nt.query(select)
+    Nsel = nt
+    select=''
+    if len(nt) == 0:
+      print("*** No data survived selection in nproj2n  ***")
+      return -1
+    #endif len(nt) == 0
+  #endif select:
+
+  if type(xy) == str: xy = nlistcolon(xy)
+
+  if type(xy) != list or len(xy) == 0:
+    print("*** Error in nproj2n: No list given for variables ***")
+    return -2
+  #endif type(xy) != list or len(xy) == 0
+
+  x = "(" + nparse(nt,xy[0]) + ") * " + str(scalex)
+  y = "(" + nparse(nt,xy[1]) + ") * " + str(scaley)
+
   if weight == 1. or weight == '' or weight == '!':
     w = "(" + nparse(nt,xy[0]) + ") * 0.0 + 1.0"
     wt = ''
@@ -13083,7 +14067,7 @@ def nproj2(nt='?', xy='', weight=1., select='',
     ymin -= dy/2.; ymax += dy/2.
 
     if type(idh) == str: hname = idh
-    else: hname = 'HnPlot'
+    else: hname = 'HnPlot2'
 
     htit = hname + " :: " + xy[0] + ":" + xy[1] + ":" + wt
 
@@ -13101,7 +14085,7 @@ def nproj2(nt='?', xy='', weight=1., select='',
 
     idx = GetIndexH2(hname)
 
-    if hname != 'HnPlot' and Kecho:
+    if hname != 'HnPlot2' and Kecho:
       print("--- Have created histogram: ", idx, " ",hname," ",Nhead[idn][2])
 
   #endif idx == -1
@@ -13119,6 +14103,9 @@ def nproj2(nt='?', xy='', weight=1., select='',
   hn, xedg, yedg  = np.histogram2d(x, y, bins=[nx,ny], range=[[xmin,xmax],[ymin,ymax]])
   hz, xedg, yedg  = np.histogram2d(x, y, bins=[nx,ny], range=[[xmin,xmax],[ymin,ymax]], weights=w)
   hz2, xedg, yedg  = np.histogram2d(x, y, bins=[nx,ny], range=[[xmin,xmax],[ymin,ymax]], weights=w*w)
+
+  hz = hz / hn
+  hz2 = hz * hz
 
   xl = np.linspace(xmin+dx/2.,xmax-dx/2.,nx)
   yl = np.linspace(ymin+dy/2.,ymax-dy/2.,ny)
@@ -13219,7 +14206,7 @@ def nproj2(nt='?', xy='', weight=1., select='',
   H2[idx]=h
 
   return 0
-#enddef nproj2()
+#enddef nproj2n()
 
 def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
            nx=101, idh=-1, ioverwrite=1):
@@ -13273,7 +14260,7 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -13424,6 +14411,7 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
         dx = (xmax-xmin)
       else:
         dx = (xmax-xmin)/(nx-1)
+        xmin -= dx/2.; xmax += dx/2.; #20.6.2024
       #endif nx == 1
     #endif xmin == xmax
 
@@ -13440,7 +14428,8 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
 
     if len(select): htit += " [" + select + "]"
 
-    hret = hbook1(hname,htit,int(nx+0.5),xmin,xmax,ioverwrite)
+#20.6.2024    hret = hbook1(hname,htit,int(nx+0.5),xmin,xmax,ioverwrite)
+    hret = hbook1(hname,htit,nx,xmin,xmax,ioverwrite)
 
     if hname != 'HnPlot' and Kecho:
       print("--- Have created histogram: ", idx, " ",hname," ",htit)
@@ -13529,6 +14518,317 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
 
 #enddef nproj1()
 
+def nproj1n(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
+           nx=101, idh=-1, ioverwrite=1):
+
+  import numpy as np
+  import pandas as pd
+
+#+seq,mshimportsind.
+# +PATCH,//WAVES/PYTHON
+# +KEEP,statusglobind,T=PYTHON.
+  global Istatus, WarningText, ErrorText, Gdebug
+
+  # Histograms and Ntuples
+  global H1h, H1hh, H2h, H2hh, H1, H2, H1head, H2head, H1HLast, Nhead, Ntup, \
+  Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
+  H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
+  Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, \
+  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
+  FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman
+#+KEEP,plotglobind,T=PYTHON.
+#*CMZ :          28/09/2019  14.39.13  by  Michael Scheer
+  global MPLmain, MPLmaster, Nfigs,Figgeom, Figgeom2, FiggeomR, FiggeomL, XtermGeo, Figs,Fig,Ax,\
+  Fig1,Ax1,Fig6,Ax6,Fig2,Ax2,Fig7,Ax7,Fig3,Ax3,Fig8,Ax8, Figgeoms, \
+  Fig4,Ax4,Fig9,Ax9,Fig5,Ax5,Fig10,Ax10,\
+  Screewidth, Screenheight, ScaleSizeX, ScaleSizeY, \
+  FirstConsole, Console, Igetconsole,Klegend, Fwidth, Fheight, Fxoff, Fyoff, \
+  Kfig, Kax, Ihist,Iprof, Imarker, Ierr, Isurf, Iinter, Isame, Itight, IsameGlobal, Iline, CMap, Cmap, Tcmap, Surfcolor, Cmaps, \
+  Iplotopt, Ispline, Kecho, Kdump,Kpdf, Ndump,Npdf, Legend, \
+  Kplots,Nwins, Zones, Kzone, Nxzone, Nyzone, Zone, Axes, Icmap, \
+  Mode3d,Mode3D, Mode2d,Mode2D, CanButId, CanButIds, \
+  MarkerSize, MarkerType, MarkerColor, \
+  Markersize, Markertype, Markercolor, \
+  Fillstyle, FillStyle, \
+  Textcolor, WaveFilePrefix,WaveDump, \
+  LineStyle, LineWidth, LineColor, \
+  Linestyle, Linewidth, Linecolor, \
+  Author, \
+  Tightpad, Xtightpad,Ytightpad, ColorbarPad,\
+  LeftMargin,RightMargin,TopMargin,BottomMargin, Xspace, Yspace, \
+  Histcolor, Histedgecolor, Histbarwidth, Kdate, Kfit, Kstat, YTitle, \
+  Icont3d, Iboxes, Inoempty, Iclosed,Itrisurf, Iscatter, Iscat3d, Ifill1d, TitPad, Xtitle, Ytitle, \
+  Gtit,Xtit,Ytit,Ztit,Ttit,Ptit,Colors, Surfcolors,Linestyles, Markertypes, \
+  LexpX,LexpY,LexpRot,LexpPow,\
+  GtitFontSize,Titfontsize,Atitfontsize,Axislabelsize,Textfontsize,Datefontsize,\
+  Statfontsize, Axislabeldist, Axislabeldist3d, Axisdist, Axisdist3d, \
+  XFit, YFit, Xfit, Yfit,Ystat, YStat, \
+  GtitFontSize,TitFontSize,AtitFontSize,AxisLabelSize,TextFontSize,DateFontSize,\
+  StatFontSize, AxisLabelDist, AxisLabelDist3d, AxisTitleDist, AxisTitleDist3d, \
+  AtitFontSize3d, Atitfontsize3d, NXtick,NXtick3d, Nxtick,Nxtick3d, Ktitles,  Dummy,\
+  ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
+  Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
+  LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  FillColor,WisLinux,Ishow
+
+#+PATCH,//WAVES/PYTHON
+#+KEEP,vecglobind,T=PYTHON.
+
+  global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
+  VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone
+
+#+KEEP,nxyzglobind,T=PYTHON.
+#*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
+  global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
+
+
+  #reakpoint()
+  idn = -1
+
+  varl = nlistcolon(var)
+
+  if len(varl) > 1:
+    if weight != 1.:
+      print("*** Error in nproj1n: Weight not 1. and var contains more then one item ***")
+      return -1
+    #endif
+    weight = varl[1]
+    var = varl[0]
+  #endif
+
+  try:
+    typ = type(nt)
+  except:
+    print("*** Non-existing Ntuple in nproj1n ***")
+    return -1
+  #endtry
+
+  if typ == str:
+    if nt == '' or nt == '?':
+      print("nproj1n(nt='', var='', weigth=1. select='', scalex=1., scaley=1. nx=100, idh=-1)")
+      print("if histogram does not exist, it is created with nx channels")
+      print("if nx <= 0: nx = min(100,len(nt))")
+      return 0
+  #endif type(nt) != Tdf and len(nt) == 0
+
+  if typ != Tdf:
+    idn = GetIndexN(nt)
+    if idn == -1:
+      print("*** Non-existing Ntuple in nproj1n: " + str(nt) + "  ***")
+      return -1
+    #endif idn == -1
+    nt = N
+  #endif typ != Tdf
+
+  if len(nt) == 0:
+    idn = GetIndexN(nt)
+    print("*** Empty Ntuple in nproj1n: " + str(Nind[idn]) + " ***")
+    return -1
+  #if len(nt) == 0
+
+  idx = GetIndexH1(idh)
+
+  if idx > -1:
+    hname = H1head[idx][0]
+    if ioverwrite and nx > 0: h1reset(hname)
+  #endif idx > -1:
+
+  if Kecho:
+
+    if type(idh) == str: sidh = "'" + idh + "'"
+    elif type(idh) == int: sidh = str(idh)
+    else: sidh = "'" + H1head[idx][1] + "'"
+
+    if type(nt) == str: snt = "'" + nt
+    elif type(nt) == int: snt = str(nt)
+    elif idn != -1: snt = "'" + Nhead[idn][1] + "'"
+    if idn != -1: sj1 = "nproj1n(nt=" + snt + ", var='"
+    else: sj1 = "nproj1n(nt, '"
+
+    print(sj1 + var + "', weight='" + str(weight)\
+    + "', select='" + select + "', scalex=" + str(scalex) + ", scaley="\
+    + str(scaley) + ", nx=" + str(nx) + ", idh=" + sidh + ", ioverwrite=" + str(ioverwrite) + ")" )
+  #endif Kecho
+
+  if type(var) == list:
+    if len(var) != 1:
+      print("*** Error in nproj1n: Length of variable list not one ***")
+      return -1
+    else:
+      var = var[0] * scalex
+  #endif len(var) != 1
+
+  if len(var) == 0:
+      print("*** Error in nproj1n: No variable specified ***")
+      return -1
+  #endif len(var) == 0
+
+  Nsel = nt
+  if select:
+    nt = nt.query(select)
+    Nsel = nt
+    if len(nt) == 0:
+      print("*** No data survived selection in nproj1n  ***")
+      return -1
+    #endif len(nt) == 0
+    select=''
+  #endif select:
+
+  nt = Nsel
+  x = "(" + nparse(nt,var) + ") * " + str(scalex)
+
+  try: w = str(float(weight))
+  except: w = weight
+
+  if w == "1.0" or w == '' or w == '!':
+    w = "(" + nparse(nt,var) + ") * 0.0 + 1.0"
+  else:
+    w = nparse(nt,weight)
+  #endif weight == 1. or weight == '' or weight == '!'
+
+  scom = "global N; N = pd.DataFrame([" + x + "," + w + "]).T"
+
+  exec(scom)
+
+  N.columns = ['x','w']
+  Nlines = len(N)
+  N.index = range(Nlines)
+
+  x = N.x
+  w = N.w
+
+  if nx <= 0: nx = min(101,len(N.x.drop_duplicates()))
+
+  #reakpoint()
+  if idx == -1 or Khdeleted:
+
+    xmin=x.min(); xmax=x.max()
+
+    if xmin == xmax:
+      if xmin == 0.0:
+        dx = 1.
+        nx = 1
+        xmin -= dx/2.; xmax += dx/2.;
+      else:
+        dx = abs(xmax)*0.05
+        nx = 1
+        xmin -= dx/2.; xmax += dx/2.;
+    else:
+      if nx == 1:
+        dx = (xmax-xmin)
+      else:
+        dx = (xmax-xmin)/(nx-1)
+      #endif nx == 1
+    #endif xmin == xmax
+
+    if type(idh) == str: hname = idh
+    else: hname = 'HnPlot'
+
+    htit = hname + " :: " + var
+
+    if type(weight) == str:
+      if len(weight) > 0: htit += ":" + weight
+    elif weight != 1.0:
+      htit += ":" + str(weight)
+    #endif
+
+    if len(select): htit += " [" + select + "]"
+
+    hret = hbook1(hname,htit,int(nx+0.5),xmin,xmax,ioverwrite)
+
+    if hname != 'HnPlot' and Kecho:
+      print("--- Have created histogram: ", idx, " ",hname," ",htit)
+
+  #endif idx == -1
+
+  idx = GetIndexH1(hname)
+
+  nx = H1hh[2]
+  xmin = H1hh[3]
+  xmax = H1hh[4]
+  dx = H1hh[5]
+
+  hn, xedg = np.histogram(x, bins=nx, range=[xmin,xmax])
+  hy, xedg = np.histogram(x, bins=nx, range=[xmin,xmax], weights=w)
+  hy2, xedg = np.histogram(x, bins=nx, range=[xmin,xmax], weights=w*w)
+
+  hy = hy / hn
+  hy2 = hy * hy
+
+  hy = hy * scaley
+  hy2 = hy2 * scaley*scaley
+
+  x = np.linspace(xmin+dx/2.,xmax-dx/2.,nx)
+  h = pd.DataFrame([x,hy,hy2,hn]).T
+
+  h.columns=['x','y','y2','n']
+
+  h.y[np.isnan(h.y)] = 0.0
+  h.y2[np.isnan(h.y2)] = 0.0
+  h.n[np.isnan(h.n)] = 0.0
+
+  h['ave'] = h.y/h.n
+  h.ave[np.isnan(h.ave)] = 0.0
+
+  if w.min() == w.max() and w.min() == 1.:
+    h['ey'] = h.n**0.5
+  else:
+    h['ey'] = (h.y2/h.n-h.ave**2)**0.5
+  #endif
+
+  h.ey[np.isnan(h.ey)] = 0.0
+
+  H1h = h
+  H1[idx] = h
+
+  head1 = H1head[idx]
+  head1[7] = min(h.y)
+  head1[8] = max(h.y)
+  head1[9] = h.n.sum()
+
+  sumy = h.y.sum()
+  ya = abs(h.y)
+  sumya = ya.sum()
+
+  xmean = 0.
+  xrms = 0.
+  xsqsum = 0.
+
+  if sumya:
+    xsqsum = ((h.x)**2*ya).sum()
+    xmean = (h.x*ya).sum()/sumya
+    xrms = np.sqrt(max(0.0,xsqsum/sumya-xmean**2))
+  #endif
+
+  head1[10] = sumy
+
+  head1[11] = xsqsum
+  head1[12] = xmean
+  head1[13] = xrms
+
+  quer = 'x < ' + str(xmin)
+  hund = h.query(quer)
+  nunder = hund.n.sum()
+  under = hund.y.sum()
+
+  quer = 'x >= ' + str(xmax)
+  hov = h.query(quer)
+  nover = hov.n.sum()
+  over = hov.y.sum()
+
+  head1[14] = nunder
+  head1[16] = under
+  head1[15] = nover
+  head1[17] = over
+
+  head1[18] = h.x.sum()
+  head1[19] = ((h.x)**2).sum()
+
+#enddef nproj1n()
+
 def setnoempty(no=1):
   global Inoempty
   Inoempty = no
@@ -13588,7 +14888,7 @@ def hstat1d(idh='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -13635,7 +14935,7 @@ def hstat1d(idh='?'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -13652,8 +14952,8 @@ def hstat1d(idh='?'):
   if idx == -1:
     print('*** Error in hstat1d: Non-existing histogram ',idh)
     return -1
-  elif H1hh[20]:
-    print('*** Warning in hplot1d: Histogram has been marked as deleted ',idh)
+#  elif H1hh[20]:
+#    print('*** Warning in hplot1d: Histogram has been marked as deleted ',idh)
   #endif idx == -1:
 
   if Kecho:
@@ -13748,7 +15048,7 @@ def vstat(x='?',y=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -13795,7 +15095,7 @@ def vstat(x='?',y=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -13899,7 +15199,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -13946,7 +15246,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -13964,8 +15264,8 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
   if idx == -1:
     print('*** Error in hplot1d: Non-existing histogram ',idh)
     return -1
-  elif H1hh[20]:
-    print('*** Warning in hplot1d: Histogram has been marked as deleted ',idh)
+#  elif H1hh[20]:
+#    print('*** Warning in hplot1d: Histogram has been marked as deleted ',idh)
   #endif idx == -1:
 
   if Kecho:
@@ -14133,7 +15433,11 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
       ypl.append(yave[i])
       epl.append(stdyprof[i])
     #endfor
-    plt.errorbar(xpl,ypl,epl, ls='',marker=Markertype,fillstyle=Fillstyle, mfc=Markercolor, mec=Markercolor, ms=Markersize, mew=1, c=lincol)
+
+    if not Iline:
+        plt.errorbar(xpl,ypl,epl, ls='',marker=Markertype,fillstyle=Fillstyle, mfc=Markercolor, mec=Markercolor, ms=Markersize, mew=1, c=lincol)
+    else:
+        vplxy(xpl,ypl,'L')
 
     if Kdump:
       Ndump += 1
@@ -14326,7 +15630,7 @@ def hplot(idh, plopt='!', Tit='!', xTit='', yTit='', zTit = '', legend='', block
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -14404,7 +15708,7 @@ def hplave(idh, plopt='!', Tit='!', xTit='', yTit='', zTit = '', legend='', bloc
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -14620,7 +15924,7 @@ def window(title='', geom="!", block=False, projection = '2d',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -14763,7 +16067,7 @@ def win2(title='Win_2', geom="!", block=False, projection = '2d', getconsole=Tru
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   if geom == '!': geom = Figgeom2
@@ -14805,7 +16109,7 @@ def winr(title='Win_r', geom="!", block=False, projection = '2d', getconsole=Tru
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   if Nwins < 1: read_window_geometry(fname='ntupplot.cfg')
@@ -14851,7 +16155,7 @@ def winl(title='Win_l', geom="!", block=False, projection = '2d', getconsole=Tru
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   if Nwins < 1: read_window_geometry(fname='ntupplot.cfg')
@@ -14907,7 +16211,7 @@ def showplot(visible=True):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -15033,7 +16337,7 @@ def showplot(visible=True):
 
 def optconsole(con=True): global Igetconsole; Igetconsole = con
 
-def hplot2d(idh, plopt='3d', block=False, scalex=1., scaley=1., scalez=1.,
+def hplot2d(idh, plopt='!', block=False, scalex=1., scaley=1., scalez=1.,
             cmap='', surfcolor='', tit='', xtit='', ytit='', ztit=''):
 
   import numpy as np
@@ -15084,7 +16388,7 @@ def hplot2d(idh, plopt='3d', block=False, scalex=1., scaley=1., scalez=1.,
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -15109,8 +16413,8 @@ def hplot2d(idh, plopt='3d', block=False, scalex=1., scaley=1., scalez=1.,
   if idx == -1:
     print('*** Error in hplot2d: Non-existing histogram ',idh)
     return -1
-  elif H2hh[38]:
-    print('*** Warning in hplot2d: Histogram has been marked as deleted ',idh)
+#  elif H2hh[38]:
+#    print('*** Warning in hplot2d: Histogram has been marked as deleted ',idh)
   #endif idx == -1:
 
   if Kecho:
@@ -15152,6 +16456,11 @@ def hplot2d(idh, plopt='3d', block=False, scalex=1., scaley=1., scalez=1.,
     dy = H2head[idx][9] * np.ones_like(y) * scaley
   else:
     dy = H2head[idx][9]  * np.ones_like(y) * scaley
+  #endif
+
+  if plopt == '!':
+      if ny >1 and nx > 1: plopt='3d'
+      else: plopt='H'
   #endif
 
   dz = z
@@ -15264,6 +16573,35 @@ def hplot2d(idh, plopt='3d', block=False, scalex=1., scaley=1., scalez=1.,
   elif Iprof:
 
     Quit("Ende in hplot2d")
+
+  elif Imarker:
+
+    getzone()
+
+    nhpl2d = ncre("nhpl2d","nhpl2d","x:y:z",ioverwrite=1)
+    nhpl2d.x = x
+    nhpl2d.y = y
+    nhpl2d.z = z
+    nupdh("nhpl2d")
+
+    s = np.ones_like(z) * Markersize**2
+
+    if cmap == '' or cmap == '!': cmap=Cmap
+
+    sopt = "s=s, c=z, marker='" + Markertype + "',cmap='" + cmap + "'"
+    scom = 'plt.scatter(x,y,' + sopt + ')'
+    img = eval(scom)
+
+    if Colorbarpad != '!':
+      fcm = Fig.colorbar(img, pad=Colorbarpad)
+    else:
+      fcm = Fig.colorbar(img)
+    #endif Colorbarpad != '!'
+
+    fcm.ax.tick_params(labelsize=Axislabelsize)
+
+    Axes.append(fcm)
+#    npl(nhpl2d,"x:y","","z",plopt)
 
   elif Iinter == 0 :
 
@@ -15477,7 +16815,7 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 # +PATCH,//WAVES/PYTHON
@@ -15486,7 +16824,6 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
 
 
   global Tax2d, Tax3d, Debug
-
   if Nwins <= 0:
 
     Nfigs = len(plt.get_fignums())
@@ -15659,7 +16996,7 @@ def window_close(win=-1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -15739,7 +17076,7 @@ def window_clear(win=-1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   global Tfig, Tdate, Figman
@@ -15827,7 +17164,7 @@ def set_title(title='Title',tfs=-9.,titx=-9.,tity=-9):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -15903,7 +17240,7 @@ def set_x_title(xtit='xTit',pos=0.5):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -15970,7 +17307,7 @@ def set_y_title(ytit='yTit', pos=0.5):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -16037,7 +17374,7 @@ def set_z_title(ztit='zTit',pos=0.5):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -16106,7 +17443,7 @@ def set_titles(gtit='',pltit='Title',xtit='xTit', ytit='yTit', ztit=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -16177,7 +17514,7 @@ def set_global_title(gtit='', fontsize='!'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -16257,7 +17594,7 @@ def txyz(pltit='Title',xtit='', ytit='', ztit='', tfs=-9., xyzfs=-9,
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -16371,7 +17708,7 @@ def txyz(pltit='Title',xtit='', ytit='', ztit='', tfs=-9., xyzfs=-9,
 
 #enddef set_txyz(pltit='Title',xtit='xTit', ytit='yTit', ztit='')
 
-def null3d(xmin=-10., xmax=10., ymin=-10., ymax=10., zmin=-10., zmax=10.):
+def null3d(xmin=-10., xmax=10., ymin=-10., ymax=10., zmin=-10., zmax=10.,elev=30,azim=-60,roll=0):
 #+KEEP,plotglobind,T=PYTHON.
 #*CMZ :          28/09/2019  14.39.13  by  Michael Scheer
   global MPLmain, MPLmaster, Nfigs,Figgeom, Figgeom2, FiggeomR, FiggeomL, XtermGeo, Figs,Fig,Ax,\
@@ -16405,13 +17742,13 @@ def null3d(xmin=-10., xmax=10., ymin=-10., ymax=10., zmin=-10., zmax=10.):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
   global Tfig, Tax3d
 
-  if Nwins <= 0: window()
+  if Nwins <= 0: window(projection='3d')
 
   getzone('3d')
 
@@ -16421,7 +17758,9 @@ def null3d(xmin=-10., xmax=10., ymin=-10., ymax=10., zmin=-10., zmax=10.):
 
   Tax3d = type(Ax)
 
-  showplot()
+  set_view_3d(elev,azim,roll)
+
+#  showplot()
 #enddef null3d(xmin=-10., xmax=10., ymin=-10., ymax=10., zmin=-10., zmax=10.)
 
 def null(xmin=-10., xmax=10., ymin=-10., ymax=10.):
@@ -16458,7 +17797,7 @@ def null(xmin=-10., xmax=10., ymin=-10., ymax=10.):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -16649,7 +17988,7 @@ def run_on_figure(x=0.03,y=0.95,fontsize='!',ishow=1, iforce=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   global Krun,Kruns
@@ -16773,7 +18112,7 @@ def date_on_figure(x=0.04,y=0.02,fontsize='!',ishow=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -16875,7 +18214,7 @@ def optnrun(krun=False):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   Krun = krun
@@ -16916,7 +18255,7 @@ def optrun(krun=True):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   Krun = krun
@@ -16957,7 +18296,7 @@ def optndate(kdate=False):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   Kdate = kdate
@@ -16998,7 +18337,7 @@ def optdate(kdate=True):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   Kdate = kdate
@@ -17049,7 +18388,7 @@ def set_author(author=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   if author != '': Author = author
@@ -17103,7 +18442,7 @@ def hcopy1d(idh,idnew,tit='',scalex=1.,scaley=1., reset=0, overwrite=True):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -17218,7 +18557,7 @@ def hcopy2d(idh,idnew,tit='',scalex=1.,scaley=1., scalez=1., reset=0, overwrite=
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -17719,7 +19058,7 @@ def nplmgs(nt='?',varlis='',select='',weights='',plopt='samemarker', legend='',
 
 def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
           scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='!',
-          color='default',isort=0,nx=101,ny=101):
+          color='default',isort=0,nx=-1,ny=-1):
 
 #+seq,mshimportsind.
 # +PATCH,//WAVES/PYTHON
@@ -17767,7 +19106,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -17781,8 +19120,6 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
-
-  #reakpoint()
 
   NxBinMax = 0
   nto = nt
@@ -17825,11 +19162,36 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
     lcol = color
   #endif color == 'default'
 
-  if hist == '!':
-    if hexist("HnPlot"):
-      hdelete("HnPlot")
+  varliso =varlis
+
+  if type(varlis) == str:
+    varlis = nlistcolon(varlis)
+    if varlis[0] == '':
+      varlis = nt.columns
+      vdum = []
+      vdum.append(varlis[0])
+      if len(varlis) > 1:
+        vdum.append(varlis[1])
+      varlis = vdum
+    #endif varlis[0] == ''
+  #endif type(varlis) == str
+
+  plotoptions(plopt)
+
+  if len(varlis) == 1 or len(varlis) == 2 and Iprof:
+    if hist == '!':
+      if hexist("HnPlot"):
+        hdelete("HnPlot")
+      #endif
+      hist = "HnPlot"
     #endif
-    hist = "HnPlot"
+  else:
+    if hist == '!':
+      if hexist("HnPlot2"):
+        hdelete("HnPlot2")
+      #endif
+      hist = "HnPlot2"
+    #endif
   #endif
 
   idx = GetIndexH1(hist)
@@ -17849,22 +19211,6 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
   if Nwins <= 0: window()
 
-  plotoptions(plopt)
-
-  varliso =varlis
-
-  if type(varlis) == str:
-    varlis = nlistcolon(varlis)
-    if varlis[0] == '':
-      varlis = nt.columns
-      vdum = []
-      vdum.append(varlis[0])
-      if len(varlis) > 1:
-        vdum.append(varlis[1])
-      varlis = vdum
-    #endif varlis[0] == ''
-  #endif type(varlis) == str
-
   if select == '!': select = ''
 
   if select:
@@ -17875,6 +19221,8 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
   if len(varlis) == 1:
 
     getzone()
+    if Gdebug: Quit(Kstat,Xstat)
+
     Ax.tick_params(labelsize=Axislabelsize, pad=Axislabeldist)
 
     sx = "(" +nparse(nt,varlis[0]) + ") * " + str(scalex)
@@ -17937,7 +19285,17 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
         imark = 0
         isplin = 0
 
-        if Ispline == 1:
+        if Iprof or Ierr:
+          idx = GetIndexH1(hist)
+          nproj1(nt,varlis[0],varlis[1],select,scalex=scalex,nx=nx,idh=hist)
+          if idx > -1: hist = H1[idx]
+          ocol=getmarkercolor()
+          setmarkercolor(mcol)
+          hplot1d(hist,plopt,legend=legend)
+          setmarkercolor(ocol)
+          return
+
+        elif Ispline == 1:
           nspline(nt,varliso,select,1001)
           imark = Imarker
           if Isame: vplxy(Nspline.x,Nspline.y,'sameline',color=lcol)
@@ -17990,15 +19348,6 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
           iplot = 1
           if Imarker: iplot = 0
 
-        elif Iprof or Ierr:
-          idx = GetIndexH1(hist)
-          nproj1(nt,varlis[0],varlis[1],select,scalex=scalex,nx=nx,idh=hist)
-          if idx > -1: hist = H1[idx]
-          ocol=getmarkercolor()
-          setmarkercolor(mcol)
-          hplot1d(hist,plopt,legend=legend)
-          setmarkercolor(ocol)
-          return
         elif Ihist or Isurf or Itrisurf or Iinter or Iboxes :
           nproj2(nto,varliso,weights,select,scalex=scalex,scaley=scaley,nx=nx,ny=ny,idh=hist)
           hplot2d(hist,plopt)
@@ -18055,47 +19404,20 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
     else:
 
-        w = nt[weights] * scalez
-
-        sx = "(" + nparse(nt,varlis[0]) + ") * " + str(scalex)
-        sy = "(" + nparse(nt,varlis[1]) + ") * " + str(scaley)
-        sw = "(" + nparse(nt,weights) + ") * " + str(scalez)
+        #w = nt[weights] * scalez
 
         if Ihist or Isurf or Itrisurf or Iinter or Iboxes:
 
-          nproj2(nto,varliso,select,weights,scalex=scalex,scaley=scaley,nx=nx,ny=ny,idh=hist)
-          hplot2d(hist,plopt)
+#20.5.2024          nproj2(nto,varliso,weights,select,scalex=scalex,scaley=scaley,nx=nx,ny=ny,idh=hist)
+          nproj2(nt,varlis,weights,'',scalex=scalex,scaley=scaley,nx=nx,ny=ny,idh=hist)
+#20.5.2024          hplot2d(hist,plopt)
+          hplave(hist,plopt)
           iplot = 1
 
         else:
-
-          s = np.ones_like(w) * Markersize**2
-
-          if cmap == '' or cmap == '!': cmap=Cmap
-
-          sopt = ",s=s, c=" + sw + ", marker='" + Markertype + "',cmap='" + cmap + "'"
-          scom = 'plt.scatter(' + sx + ',' + sy + sopt + ')'
-          img = eval(scom)
-
-          if Colorbarpad != '!':
-            fcm = Fig.colorbar(img, pad=Colorbarpad)
-          else:
-            fcm = Fig.colorbar(img)
-          #endif Colorbarpad != '!'
-
-          fcm.ax.tick_params(labelsize=Axislabelsize)
-
-          Axes.append(fcm)
-
-        #endif Ihist or Isurf or Itrisurf or Iinter or Iboxes
-
-        if Kdump:
-          Ndump += 1
-          fout = WaveFilePrefix + str(Ndump) + ".dat"
-          eval("vwritexyz(" + sx + "," + sy + "," + sw + ",'" + fout + "')")
-          print("\nData written to ",fout)
-          WaveDump = fout
-        #endif
+          nproj2(nt,varlis,weights,'',scalex=scalex,scaley=scaley,nx=nx,ny=ny,idh=hist)
+          hplave(hist,'M')
+          iplot = 1
 
     #endif len(weights) = 0
 
@@ -18227,17 +19549,23 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
 #enddef nplot(...) nt idn
 
-def nprof(nt='?',varlis='',select='',weights='',plopt='sprof', legend='',
-          scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='HnPlot',
-         color='default',isort=0):
-          nplot(nt,varlis,select,weights,plopt, legend,scalex, scaley, scalez, scalet,
-                cmap, hist,color,isort)
+def nprof(nt='?',varlis='',select='',weights='',plopt='prof', legend='',
+scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='HnPlot',
+color='default',isort=0):
+
+    plotoptions(plopt)
+    if not Isame and hexist(hist): hdelete(hist)
+    nplot(nt,varlis,select,weights,plopt, legend,scalex, scaley, scalez, scalet,
+    cmap, hist,color,isort)
 #enddef
-def nprofs(nt='?',varlis='',select='',weights='',plopt='samesprof', legend='',
-          scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='HnPlot',
-         color='default',isort=0):
-          nplot(nt,varlis,select,weights,plopt, legend,scalex, scaley, scalez, scalet,
-                cmap, hist,color,isort)
+
+def nprofs(nt='?',varlis='',select='',weights='',plopt='sameprof', legend='',
+scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='HnPlot',
+color='default',isort=0):
+    plotoptions(plopt)
+    if not Isame and hexist(hist): hdelete(hist)
+    nplot(nt,varlis,select,weights,plopt, legend,scalex, scaley, scalez, scalet,
+    cmap, hist,color,isort)
 #enddef
 
 def nnplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
@@ -18330,7 +19658,7 @@ def vprint(v):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -18397,7 +19725,7 @@ def vprintxy(x,y):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -18476,7 +19804,7 @@ def vplxy(x='!',y='!',plopt='',label='',color='!',fillcolor='none'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -18724,7 +20052,7 @@ def vplxyey(x,y,ey='',plopt='o',label='',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -18805,7 +20133,7 @@ def vplxyerr(x,y,ey='',ex='',plopt='o',label='',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -18888,7 +20216,7 @@ def vinter(x,y,xint='!'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -18996,7 +20324,7 @@ def vintern(x,y,xint='!'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -19170,7 +20498,7 @@ def vspline_index(x,y,nspl=1001, periodic=False, ypp1=0.0, yppn=0.0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -19290,7 +20618,7 @@ def vspline(x,y,xspl='!', periodic=False, ypp1=0.0, yppn=0.0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -19462,7 +20790,7 @@ def vspline_old(x,y,xspl='!', periodic=False):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -19679,7 +21007,7 @@ def nupdate_header(nt,reindex=1):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -19836,7 +21164,7 @@ def vsolve(x,y,val=0.0,xmin=-1.0e30,xmax=1.0e30):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -19962,7 +21290,7 @@ def vsolvelin(x,y,val=0.0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -20032,7 +21360,7 @@ def voptspl(x,y):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -20137,7 +21465,7 @@ def ncopn(nt,ncnam,varlis='',select='',ioverwrite=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -20244,7 +21572,7 @@ def ncopv(nt,varlis,select=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -20375,7 +21703,7 @@ def nclone(nt,ncnam,nctit='',ioverwrite=0):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -20662,7 +21990,7 @@ def vpeaks(x,y,pkmin=0.5,nsmooth=0,isilent=0):
   x = np.array(x)
   y = np.array(y)
 
-  #breakpoint()
+  ##reakpoint()
   fmxtot=-1.0e30
   ndim = len(x)
 
@@ -20728,7 +22056,7 @@ def vpeaks(x,y,pkmin=0.5,nsmooth=0,isilent=0):
     #print(sm,s0,sp)
     if s0 >= thresh and sm < 0.0 and sp <= 0.0:
 
-      #breakpoint()
+      ##reakpoint()
 
       npeaks=npeaks+1
 
@@ -21055,7 +22383,7 @@ def vfwhm(x='?',y='',nsmooth=0,isilent=0):
   npeaks = len(ixpeaks)
   npoi = len(x)
 
-  #breakpoint()
+  ##reakpoint()
 
   for i in range(npeaks):
 
@@ -21288,7 +22616,7 @@ def getzone(projection=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -21443,7 +22771,7 @@ def set_console_title(console='Python'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -21516,7 +22844,7 @@ def get_console(console=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -21595,7 +22923,7 @@ def getax(visible=True):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -21668,7 +22996,7 @@ def vplbxy(x,y,u,v,scale=-9999.0,plopt='',tit='',xtit='',ytit='',ztit='',label='
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -21768,7 +23096,7 @@ def vplbxyz(x,y,z,u,v,w,scale,plopt='',tit='',xtit='',ytit='',ztit='',label='',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -21849,7 +23177,7 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -21997,7 +23325,7 @@ def vplxyzt(x,y,z,t,plopt='',tit='',xtit='',ytit='',ztit='', label='',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -22071,7 +23399,7 @@ def textbox(text,x=0.05, y=0.95, tcolor=None, bgcolor='white', alpha=0.9,
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
   props = dict(facecolor=bgcolor, alpha=alpha)
@@ -22154,7 +23482,7 @@ def vfitpoly(nord,x,y, ey='', cov='default', isilent=0, ninter=101, iretval=1,
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -22481,7 +23809,7 @@ def hfit(idh, fitfun, select='',absolute_sigma='default', parstart=None,
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -22630,7 +23958,7 @@ def vfit(fitfun, x, y, ey = '', absolute_sigma='default', parstart=None,
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -22840,7 +24168,7 @@ def vfitexp(x,y, ey = '', absolute_sigma='default', parstart=None,
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -22914,7 +24242,7 @@ def vfitexp2(x,y, ey = '', absolute_sigma='default', parstart=None,
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -22994,7 +24322,7 @@ def vfitgauss(x,y, ey = '', absolute_sigma='default',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -23066,7 +24394,7 @@ def vfitcosh(x,y, ey = '', absolute_sigma='default',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -23138,7 +24466,7 @@ def vfitcos(x,y, ey = '', absolute_sigma='default',
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -23207,7 +24535,7 @@ def hget(idh=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -23285,7 +24613,7 @@ def nget(idn=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -24441,6 +25769,8 @@ ncolonlist = nlistcolon
 vpl = vplxy
 
 nupdh = nupdate_header
+nupdate = nupdate_header
+nup = nupdate_header
 rstat = reset_status
 
 medf = make_empty_dataframe
@@ -24556,6 +25886,7 @@ hull3d = qhull3d
 plotncyl = plotncylinder
 read_facets = read_faces
 nex = nextzone
+gtit = set_global_title
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -24593,7 +25924,7 @@ def plotoptions_unklar(plopt=''):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 
@@ -24879,6 +26210,49 @@ def ngetdump(nt='Ndmp',varlis='x:y:z'):
     print('*** Could not read WaveDump ***')
   #endif
 #enddef
+
+def linear_correlation(x,y):
+    return sum((x-x.mean())*(y-y.mean())) / (x.std()*y.std()) / len(x)
+#enddef
+
+def fold_gauss(x,y,sig,modus='full'):
+    nx = len(x)
+    xmin = x.min()
+    xmax = x.max()
+    dx = xmax - xmin
+    gx = np.linspace(-dx/2.,dx/2.,nx)
+    s22 = 1./(2.*sig*sig)
+    g = np.exp(-gx*gx*s22)/np.sqrt(2.0*np.pi)/sig
+    g = g/g.sum()
+    f = np.convolve(y,g,modus)
+    xg = np.linspace(xmin-dx/2.,xmax+dx/2.,len(f))
+    return xg,f
+#enddef fold_gauss(x,y,sig)
+
+def get_view_3d():
+  global Ax
+  return Ax.elev, Ax.azim, Ax.roll
+#enddef set_view_3d(elev=30,azim=45,roll=0)
+
+def set_view_3d(elev=30,azim=-60,roll=0,ishow=1):
+  global Ax
+  Ax.elev = elev
+  Ax.azim = azim
+  Ax.roll = roll
+  if ishow: showplot()
+#enddef set_view_3d(elev=30,azim=45,roll=0)
+
+def dipole(ebeam,b,curr,isilent=0,iretval=0):
+  ec = 0.665 * b * ebeam**2
+  flux = 2.457e13 * ebeam * curr * 0.9215
+  fluxden = 1.327e13 * ebeam**2 * curr * 1.474
+  if not isilent:
+    print("Ec/keV:                             ",g3(ec))
+    print("Maximum of flux-density per mrad**2:",g3(fluxden))
+    print("Maximum of flux per mrad:           ",g3(flux))
+  if iretval:
+    return flux,fluxden
+#enddef dipole(ebeam,b,curr,egamma,isilent=0,iretval=0)
 
 # End of sequence m_hbook
 ########################################################
@@ -27479,7 +28853,7 @@ def undu_b():
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -27956,7 +29330,7 @@ def undu_plot_mag_magnetization(cnams='',msize=-9.):
         #endif
       #endfor
 
-      #breakpoint()
+      ##reakpoint()
 
       fpl = mplot3d.art3d.Poly3DCollection(plf)
 
@@ -28139,7 +29513,7 @@ def undu_plot_mag_3d(cnams='',alpha=1.0):
         #endif
       #endfor
 
-      #breakpoint()
+      ##reakpoint()
 
       fpl = mplot3d.art3d.Poly3DCollection(plf)
 
@@ -29485,7 +30859,7 @@ def ureadclc(callkey=''):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-
+  #reakpoint()
   NL = "\n"
 
 
@@ -30456,7 +31830,7 @@ def undu_plot_coil(ntup='!', fcoil='!', mode='3d', isame=0):
 
 #enddef undu_plot_coil(...)
 
-def undu_geo(plopt='sameline'):
+def undu_geo(plopt='sameline',alpha=0.3):
 
   import sys
 
@@ -30509,7 +31883,7 @@ def undu_geo(plopt='sameline'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -30589,7 +31963,6 @@ def undu_geo(plopt='sameline'):
   if ugeomode < 0:
     return
   #endif ugeomode < 0
-
   ssel = "cmag != 'wire'"
   nmag = ngeo.query(ssel)
 
@@ -30612,13 +31985,14 @@ def undu_geo(plopt='sameline'):
 
         setmarkercolor(UnduColors[icmin])
         #setlinecolor(UnduColors[icmin])
-        nhull = nhull3d(nmag,"x:z:y",ssel,'sameline',
+        nhull = nqhull3d(nmag,"x:z:y",ssel,'sameline',
                         facecolor=UnduColors[icmin],edgecolor=UnduColors[icmin],
-                        alpha=0,ishow=0)
+                        alpha=alpha,iretval=1,ishow=0)
 
       #endfor mag in range(mmin,mmax)
 
       txyz("geo","x","z","y")
+      return
 
     else: # convex hull of mothers
 
@@ -30636,10 +32010,10 @@ def undu_geo(plopt='sameline'):
         setmarkercolor(UnduColors[icmin])
         #setlinecolor(UnduColors[icmin])
 
-        #nhull = nhull3d(ngeo,"x:z:y",ssel,'sameline')
-        nhull = nhull3d(ngeo,"x:z:y",ssel,'sameline', \
+        #nhull = nqhull3d(ngeo,"x:z:y",ssel,'sameline')
+        nhull = nqhull3d(ngeo,"x:z:y",ssel,'sameline', \
         facecolor=UnduColors[icmin],edgecolor=UnduColors[icmin], \
-        alpha=0,ishow=0)
+        alpha=alpha,iretval=1,ishow=0)
 
       #endfor mag in range(mmin,mmax)
 
@@ -30705,7 +32079,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -30784,7 +32158,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
 
   null3d(xmin-dx,xmax+dx,yzmin,yzmax,yzmin,yzmax)
 
-  nhull = nhull3d(nt,"x:z:y",'',plopt,edgecolor='black',ishow=0)
+  nhull = nqhull3d(nt,"x:z:y",'',plopt,edgecolor='black',iretval=1,ishow=0)
   plt.show(block=False)
 
   mmin = nt.mag.min()
@@ -30795,7 +32169,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
     nm = nt.query(selma)
     icol = nm.icol.max()
     if len(nm) > 0:
-      nhull = nhull3d(nm,"x:z:y",'',plopt,edgecolor=UnduColors[icol],ishow=0)
+      nhull = nqhull3d(nm,"x:z:y",'',plopt,edgecolor=UnduColors[icol],iretval=1,ishow=0)
   #endfor
 
   plt.show(block=False)
@@ -30860,7 +32234,7 @@ def undu_mags(plopt='sameline'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -30950,9 +32324,9 @@ def undu_mags(plopt='sameline'):
       setmarkercolor(UnduColors[icmin])
       setlinecolor(UnduColors[icmin])
       if mag > 1:
-        nhull = nhull3d(nmags,"x:z:y",ssel,'sameline',ishow=0)
+        nhull = nqhull3d(nmags,"x:z:y",ssel,'sameline',iretval=1,ishow=0)
       else:
-        nhull = nhull3d(nmags,"x:z:y",ssel,plopt,ishow=0)
+        nhull = nqhull3d(nmags,"x:z:y",ssel,plopt,iretval=1,ishow=0)
       #endif mag > 0
     #endfor mag in range(mmin,mmax)
 
@@ -30983,7 +32357,7 @@ def read_facets_bounding_box(fb='undumag_bounding_box.fct'):
     #endif
     print('\n--> Reading undumag_bounding_box.fct')
     fbox = open('undumag_bounding_box.fct','r')
-    FcBox = np.fromstring(fbox.readline().strip(),dtype=np.float,sep=' ')
+    FcBox = np.fromstring(fbox.readline().strip(),dtype=float,sep=' ')
     fbox.close()
     Xmin = FcBox[0]
     Xmax = FcBox[1]
@@ -31058,7 +32432,7 @@ def read_main_faces(fname='undumag_main_facets.fct',cs='xyz'):
 
   l=0
   nface=-1
-  #breakpoint()
+  #reakpoint()
   nmag = int(fread[l].strip())
   l += 1
   for imag in range(nmag):
@@ -31068,7 +32442,7 @@ def read_main_faces(fname='undumag_main_facets.fct',cs='xyz'):
     l += 1
     fac = []
     for ipoi in range(npoi):
-      p = np.fromstring(fread[l].strip(),dtype=np.float,sep=' ')
+      p = np.fromstring(fread[l].strip(),dtype=float,sep=' ')
       if cs.lower() == 'xzy':
         fac.append([p[0],p[2],p[1]])
       else:
@@ -31227,8 +32601,10 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 #enddef _ucoilplot(view='3d', modus='same')
 
 def _h3d(h3d,sx,sy,sz):
-  global Hull3D
+  global Hull3D,Hull3DList
+
   Hull3D = []
+
   for plan in h3d:
     pl = []
     for p in plan:
@@ -31236,7 +32612,10 @@ def _h3d(h3d,sx,sy,sz):
       pl.append(xzy)
     #endfor p in plan
     Hull3D.append(pl)
-  #endfor p in plan
+    #endfor p in plan
+
+    Hull3DList = Hull3D
+
 #enddef _h3d(h3d,sx,sy,sz)
 
 def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,modus='line'):
@@ -31323,7 +32702,7 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  h3d =deepcopy(Hull3D)
+  h3d =deepcopy(Hull3DList)
 
   if cIxSym == 'yes' and cIySym == 'yes' and cIzSym == 'yes':
     _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
@@ -31359,7 +32738,8 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
     _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
     _h3d(h3d,-1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   elif cIxSym == 'no' and cIySym == 'no' and cIzSym == 'no':
-    _h3d(h3d,1.,1.,1.); plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
+    _h3d(h3d,1.,1.,1.)
+    plothull3d(isame,facecolor,alpha,edgecolor,ishow,modus)
   #endif cIxSym == 'yes' and cIySym == 'yes' and if cIzSym == 'yes'
 
 #enddef plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1)
@@ -33855,7 +35235,7 @@ def ureadclc(callkey=''):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-
+  #reakpoint()
   NL = "\n"
 
 
@@ -34826,7 +36206,7 @@ def undu_plot_coil(ntup='!', fcoil='!', mode='3d', isame=0):
 
 #enddef undu_plot_coil(...)
 
-def undu_geo(plopt='sameline'):
+def undu_geo(plopt='sameline',alpha=0.3):
 
   import sys
 
@@ -34879,7 +36259,7 @@ def undu_geo(plopt='sameline'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -34959,7 +36339,6 @@ def undu_geo(plopt='sameline'):
   if ugeomode < 0:
     return
   #endif ugeomode < 0
-
   ssel = "cmag != 'wire'"
   nmag = ngeo.query(ssel)
 
@@ -34982,13 +36361,14 @@ def undu_geo(plopt='sameline'):
 
         setmarkercolor(UnduColors[icmin])
         #setlinecolor(UnduColors[icmin])
-        nhull = nhull3d(nmag,"x:z:y",ssel,'sameline',
+        nhull = nqhull3d(nmag,"x:z:y",ssel,'sameline',
                         facecolor=UnduColors[icmin],edgecolor=UnduColors[icmin],
-                        alpha=0,ishow=0)
+                        alpha=alpha,iretval=1,ishow=0)
 
       #endfor mag in range(mmin,mmax)
 
       txyz("geo","x","z","y")
+      return
 
     else: # convex hull of mothers
 
@@ -35006,10 +36386,10 @@ def undu_geo(plopt='sameline'):
         setmarkercolor(UnduColors[icmin])
         #setlinecolor(UnduColors[icmin])
 
-        #nhull = nhull3d(ngeo,"x:z:y",ssel,'sameline')
-        nhull = nhull3d(ngeo,"x:z:y",ssel,'sameline', \
+        #nhull = nqhull3d(ngeo,"x:z:y",ssel,'sameline')
+        nhull = nqhull3d(ngeo,"x:z:y",ssel,'sameline', \
         facecolor=UnduColors[icmin],edgecolor=UnduColors[icmin], \
-        alpha=0,ishow=0)
+        alpha=alpha,iretval=1,ishow=0)
 
       #endfor mag in range(mmin,mmax)
 
@@ -35075,7 +36455,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -35154,7 +36534,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
 
   null3d(xmin-dx,xmax+dx,yzmin,yzmax,yzmin,yzmax)
 
-  nhull = nhull3d(nt,"x:z:y",'',plopt,edgecolor='black',ishow=0)
+  nhull = nqhull3d(nt,"x:z:y",'',plopt,edgecolor='black',iretval=1,ishow=0)
   plt.show(block=False)
 
   mmin = nt.mag.min()
@@ -35165,7 +36545,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
     nm = nt.query(selma)
     icol = nm.icol.max()
     if len(nm) > 0:
-      nhull = nhull3d(nm,"x:z:y",'',plopt,edgecolor=UnduColors[icol],ishow=0)
+      nhull = nqhull3d(nm,"x:z:y",'',plopt,edgecolor=UnduColors[icol],iretval=1,ishow=0)
   #endfor
 
   plt.show(block=False)
@@ -35230,7 +36610,7 @@ def undu_mags(plopt='sameline'):
   ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
-  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
   FillColor,WisLinux,Ishow
 
 #+PATCH,//WAVES/PYTHON
@@ -35320,9 +36700,9 @@ def undu_mags(plopt='sameline'):
       setmarkercolor(UnduColors[icmin])
       setlinecolor(UnduColors[icmin])
       if mag > 1:
-        nhull = nhull3d(nmags,"x:z:y",ssel,'sameline',ishow=0)
+        nhull = nqhull3d(nmags,"x:z:y",ssel,'sameline',iretval=1,ishow=0)
       else:
-        nhull = nhull3d(nmags,"x:z:y",ssel,plopt,ishow=0)
+        nhull = nqhull3d(nmags,"x:z:y",ssel,plopt,iretval=1,ishow=0)
       #endif mag > 0
     #endfor mag in range(mmin,mmax)
 

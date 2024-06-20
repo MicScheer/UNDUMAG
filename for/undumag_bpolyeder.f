@@ -1,3 +1,4 @@
+*CMZ :          15/06/2024  11.29.26  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.14.41  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/00 26/10/2020  14.56.48  by  Michael Scheer
@@ -61,9 +62,15 @@ c oder Reduce olegqz.red, qxqyqz.red, rec_int.red etc.
 
       implicit none
 *KEEP,debugutil,T=F77.
-      include 'debugutil.cmn'
+      double precision x_debug,y_debug,z_debug,a_debug(100)
+      integer i_debug,k_debug
+      character(64) c64_debug
+
+      common/c_debug/x_debug,y_debug,z_debug,a_debug,i_debug,k_debug,
+     &  c64_debug
 *KEEP,seqdebug.
-      include 'seqdebug.cmn'
+      integer iseqdebug
+      common/seqdebugc/iseqdebug
 *KEND.
 
       double precision xin,yin,zin,bxout,byout,bzout
@@ -82,7 +89,7 @@ c      double precision xmin,xmax,ymin,ymax,zmin,zmax,bx,by,bz
 
       integer ical,ifound
       integer itiny,iwtiny,jtiny
-      integer imag,iplan,ncorn,icorn,i,j,k,ip2,kwarn,kwarni,ic
+      integer imag,iplan,ncorn,icorn,i,j,k,ip2,kwarn,kwarni,ic,moth
       integer ifailin,ifail,ifailm,ifailp,iout,linside,
      &  kfail(nthreadp),kinsidelocal(nthreadp)
 
@@ -101,6 +108,12 @@ c      double precision xmin,xmax,ymin,ymax,zmin,zmax,bx,by,bz
       tiny2=tiny*tiny
 
       ifailin=ifail
+c      if (ifailin.eq.-1) then
+c        print*,"undumag_bpolyeder: ifailin:",ifailin
+c      endif
+c      if (ifailin.ne.0) then
+c        print*,"undumag_bpolyeder: kinside:",kinside
+c      endif
       ifail=0
       ifailm=0
       ifailp=0
@@ -145,7 +158,7 @@ c        write(lun6,*)"Number of CPU cores used:",nmaxth
       iseqdebug=0
 
 !$OMP PARALLEL NUM_THREADS(nmaxth) DEFAULT(PRIVATE)
-!$OMP& SHARED(kfail,iseqdebug,kinsidelocal,ical,bpetm,window,bpebc,bpemag,ibpeplan,ibpecorn,bperot,bo,iwarnbound,nwarnbound)
+!$OMP& SHARED(i_debug,kfail,iseqdebug,kinsidelocal,ical,bpetm,window,bpebc,bpemag,ibpeplan,ibpecorn,bperot,bo,iwarnbound,nwarnbound)
 !$OMP& FIRSTPRIVATE(nmag,itiny,jtiny,iwtiny,tiny,xin,yin,zin,xx,yy,zz,kwarni,kwarn,lun6)
       ith=OMP_GET_THREAD_NUM()+1
       bo(1:3,ith)=0.0d0
@@ -155,6 +168,8 @@ c        write(lun6,*)"Number of CPU cores used:",nmaxth
         if (bpebc(17,imag).lt.0.0d0) then
           cycle
         endif
+
+        moth=nint(bpebc(15,imag))
 
         bcvn=0.0d0
 c        if(iseqdebug.eq.-8) print*,"1:",ith,imag,kinsidelocal(ith)
@@ -306,7 +321,12 @@ c                    stop
               enddo ! iplan=1,nplan
 
               if (iout.eq.-1) then
-                kinsidelocal(ith)=imag
+                if (kinside.gt.0) then
+                  write(lun6,*)"*** Error in subroutine undumag_bpolyeder: Colliding Magnets: ",imag,kinside
+                  print*,i_debug
+c                  stop
+                endif
+                kinsidelocal(ith)=moth
               endif !iout
 
             else !bpebc(8,imag) .eq. 1
@@ -334,7 +354,11 @@ c                    stop
                 enddo !iplan
 
                 if (iout.eq.-1) then
-                  kinsidelocal(ith)=imag
+                  if (kinside.gt.0) then
+                    write(lun6,*)"*** Error in subroutine undumag_bpolyeder: Colliding Magnets: ",imag,kinside
+c                    stop
+                  endif
+                  kinsidelocal(ith)=moth
                 endif !iout
 
 911             continue
@@ -497,9 +521,13 @@ c799     continue
         do ic=1,nmaxth
           kinside=kinside+kinsidelocal(ic)
           if (kinsidelocal(ic).gt.0) ifound=ifound+1
+          if (ifound.gt.0.and.i_debug.eq.0) then
+            print*,ical,kinsidelocal(1:nmaxth)
+            i_debug=1
+          endif
           if (ifound.gt.1) then
             write(lun6,*)"*** Error in subroutine undumag_bpolyeder: Colliding Magnet: ",kinsidelocal(ic)
-            stop
+c            stop
           endif
         enddo
       endif
