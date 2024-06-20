@@ -39,7 +39,8 @@
       integer, dimension (:,:), allocatable :: kedge
       integer, dimension (:), allocatable :: khull,kface
 *KEEP,hulldim.
-      include 'hulldim.cmn'
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
       character(128) ctype
 

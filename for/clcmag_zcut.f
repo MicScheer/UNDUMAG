@@ -39,8 +39,9 @@
 
       integer, dimension (:,:), allocatable :: kedge
       integer, dimension (:), allocatable :: khull,kface
-*KEEP,hulldim.
-      include 'hulldim.cmn'
+*KEEP,HULLDIM.
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
       type(T_Magnet) :: tmag
       type(T_Voxel) :: tvox

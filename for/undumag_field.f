@@ -1,3 +1,4 @@
+*CMZ :          13/06/2024  16.14.12  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  11.04.17  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/01 12/04/2021  14.05.35  by  Michael Scheer
@@ -31,7 +32,12 @@
       implicit none
 
 *KEEP,debugutil,T=F77.
-      include 'debugutil.cmn'
+      double precision x_debug,y_debug,z_debug,a_debug(100)
+      integer i_debug,k_debug
+      character(64) c64_debug
+
+      common/c_debug/x_debug,y_debug,z_debug,a_debug,i_debug,k_debug,
+     &  c64_debug
 *KEND.
 
       double precision x,y,z,hx,hy,hz,bxout,byout,bzout,xcut,bx,by,bz
@@ -41,7 +47,7 @@
       save ical
 
 c      kfail=iwarnbound
-      ifailin=ifail
+c      ifailin=ifail
       ifail=0
 c      kinside=0 ! use as flag, see undmag_end
 
@@ -75,7 +81,7 @@ c      endif
         kfail=ifailin
         call undumag_bpolyeder(x,y,z,bxout,byout,bzout,kfail)
 
-        if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+        if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
 
         if (kinside.gt.0) then
           linside=kinside
@@ -87,7 +93,7 @@ c      endif
           if (iysym.ne.0) then
             kfail=ifailin
             call undumag_bpolyeder(x,-y,z,hx,hy,hz,kfail)
-            if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+            if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
             if (kinside.gt.0) then
               linside=kinside
               kinside=0
@@ -100,7 +106,7 @@ c      endif
           if (izsym.ne.0) then
             kfail=ifailin
             call undumag_bpolyeder(x,y,-z,hx,hy,hz,kfail)
-            if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+            if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
             if (kinside.gt.0) then
               linside=kinside
               kinside=0
@@ -117,7 +123,7 @@ c      endif
               linside=kinside
               kinside=0
             endif
-            if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+            if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
             bxout=bxout-hx
             byout=byout+hy
             bzout=bzout+hz
@@ -130,7 +136,7 @@ c      endif
           !x2y1z1
           kfail=ifailin
           call undumag_bpolyeder(xcut,y,z,hx,hy,hz,kfail)
-          if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+          if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
           if (kinside.gt.0) then
             linside=kinside
             kinside=0
@@ -143,7 +149,7 @@ c      endif
             !x1y2z1
             kfail=ifailin
             call undumag_bpolyeder(x,-y,z,hx,hy,hz,kfail)
-            if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+            if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
             if (kinside.gt.0) then
               linside=kinside
               kinside=0
@@ -154,7 +160,7 @@ c      endif
             !x2y1z1
             kfail=ifailin
             call undumag_bpolyeder(xcut,-y,z,hx,hy,hz,kfail)
-            if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+            if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
             if (kinside.gt.0) then
               linside=kinside
               kinside=0
@@ -172,14 +178,14 @@ c      endif
               linside=kinside
               kinside=0
             endif
-            if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+            if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
             bxout=bxout+hx
             byout=byout+hy
             bzout=bzout-hz
             !x2y1z2
             kfail=ifailin
             call undumag_bpolyeder(xcut,y,-z,hx,hy,hz,kfail)
-            if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+            if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
             if (kinside.gt.0) then
               linside=kinside
               kinside=0
@@ -193,7 +199,7 @@ c      endif
             !x2y2z2
             kfail=ifailin
             call undumag_bpolyeder(xcut,-y,-z,hx,hy,hz,kfail)
-            if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+            if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
             if (kinside.gt.0) then
               linside=kinside
               kinside=0
@@ -204,7 +210,7 @@ c      endif
             !x1y2z2
             kfail=ifailin
             call undumag_bpolyeder(x,-y,-z,hx,hy,hz,kfail)
-            if (ifail.ne.-1.or.kfail.ne.-1) ifail=ifail+kfail
+            if (ifail.ne.-1.and.kfail.ne.-1) ifail=ifail+kfail
             if (kinside.gt.0) then
               linside=kinside
               kinside=0
@@ -240,7 +246,7 @@ c      if (iwarnbound.ne.kfail) kfail=100+ifail
       endif
 
       kinside=linside
-      if (kinside.gt.0) ifail=ifail-20000
+c13.6.2024      if (kinside.gt.0) ifail=ifail-20000
 
       return
       end
