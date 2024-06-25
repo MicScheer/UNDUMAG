@@ -1,3 +1,4 @@
+*CMZ :          25/06/2024  08.45.36  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.14.41  by  Michael Scheer
 *CMZ :  2.02/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.01/03 15/07/2019  11.55.46  by  Michael Scheer
@@ -47,9 +48,15 @@ c                          determinant is -1, which yields to errors??.
       implicit none
 
 *KEEP,seqdebug.
-      include 'seqdebug.cmn'
+      integer iseqdebug
+      common/seqdebugc/iseqdebug
 *KEEP,debugutil,T=F77.
-      include 'debugutil.cmn'
+      double precision x_debug,y_debug,z_debug,a_debug(100)
+      integer i_debug,k_debug
+      character(64) c64_debug
+
+      common/c_debug/x_debug,y_debug,z_debug,a_debug,i_debug,k_debug,
+     &  c64_debug
 *KEND.
 
       double precision xin,yin,zin,bxout,byout,bzout
@@ -482,7 +489,7 @@ c        write(lun6,'(3g15.5)'),xin,imag,imag,bo(2,ith)
           if(kinsidelocal(ic).gt.0) ifound=ifound+1
           if (ifound.gt.1) then
             write(lun6,*)"*** Error in undumag_bpolyeder_corr: Colliding Magnet: ",kinsidelocal(ic)
-            stop
+c            stop
           endif
           if (idebug.ne.0) then
             if (kinsidelocal(ic).ne.0) then

@@ -1,4 +1,4 @@
-*CMZ :          15/06/2024  11.29.26  by  Michael Scheer
+*CMZ :          25/06/2024  10.08.38  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.14.41  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/00 26/10/2020  14.56.48  by  Michael Scheer
@@ -321,9 +321,9 @@ c                    stop
               enddo ! iplan=1,nplan
 
               if (iout.eq.-1) then
-                if (kinside.gt.0) then
-                  write(lun6,*)"*** Error in subroutine undumag_bpolyeder: Colliding Magnets: ",imag,kinside
-                  print*,i_debug
+                if (kinsidelocal(ith).gt.0) then
+                  write(lun6,*)"*** Error 1 in subroutine undumag_bpolyeder: Colliding Magnets: ",imag,kinsidelocal(ith)
+c                  print*,i_debug
 c                  stop
                 endif
                 kinsidelocal(ith)=moth
@@ -354,8 +354,8 @@ c                  stop
                 enddo !iplan
 
                 if (iout.eq.-1) then
-                  if (kinside.gt.0) then
-                    write(lun6,*)"*** Error in subroutine undumag_bpolyeder: Colliding Magnets: ",imag,kinside
+                  if (kinsidelocal(ith).gt.0) then
+                    write(lun6,*)"*** Error 2 in subroutine undumag_bpolyeder: Colliding Magnets: ",imag,kinsidelocal(ith)
 c                    stop
                   endif
                   kinsidelocal(ith)=moth
@@ -526,7 +526,7 @@ c799     continue
             i_debug=1
           endif
           if (ifound.gt.1) then
-            write(lun6,*)"*** Error in subroutine undumag_bpolyeder: Colliding Magnet: ",kinsidelocal(ic)
+            write(lun6,*)"*** Error 3 in subroutine undumag_bpolyeder: Colliding Magnet: ",kinsidelocal(ic)
 c            stop
           endif
         enddo
