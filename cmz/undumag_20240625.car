@@ -1,0 +1,2404 @@
++PATCH,FOR.
+*CMZ :  0.00/00 20/04/2016  13.00.13  by  Michael Scheer
++DECK,undumag_bpolyeder.
+*CMZ :          25/06/2024  10.08.38  by  Michael Scheer
+*CMZ :  2.05/02 02/11/2023  14.14.41  by  Michael Scheer
+*CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
+*CMZ :  2.02/00 26/10/2020  14.56.48  by  Michael Scheer
+*CMZ :  2.01/08 13/08/2020  12.32.35  by  Michael Scheer
+*CMZ :  2.01/03 15/07/2019  15.03.51  by  Michael Scheer
+*CMZ :  2.01/02 27/04/2018  16.29.19  by  Michael Scheer
+*CMZ :  1.25/00 16/03/2018  14.11.34  by  Michael Scheer
+*CMZ :  1.23/03 19/09/2017  19.25.01  by  Michael Scheer
+*CMZ :  1.23/02 30/08/2017  13.27.12  by  Michael Scheer
+*CMZ :  1.22/02 31/07/2017  10.32.51  by  Michael Scheer
+*CMZ :  1.22/01 20/07/2017  14.46.06  by  Michael Scheer
+*CMZ :  1.22/00 05/07/2017  09.55.55  by  Michael Scheer
+*CMZ :  1.20/03 29/06/2017  09.17.17  by  Michael Scheer
+*CMZ :  1.20/01 22/06/2017  13.26.26  by  Michael Scheer
+*CMZ :  1.20/00 22/06/2017  11.26.04  by  Michael Scheer
+*CMZ :  1.15/11 24/04/2017  16.58.30  by  Michael Scheer
+*CMZ :  1.15/10 12/04/2017  14.53.10  by  Michael Scheer
+*CMZ :  1.15/04 03/04/2017  12.30.25  by  Michael Scheer
+*CMZ :  1.15/03 03/04/2017  10.59.22  by  Michael Scheer
+*CMZ :  1.15/02 02/04/2017  07.35.42  by  Michael Scheer
+*CMZ :  1.15/01 28/03/2017  13.53.21  by  Michael Scheer
+*CMZ :  1.13/01 08/03/2017  16.31.38  by  Michael Scheer
+*CMZ :  1.11/03 16/01/2017  12.22.22  by  Michael Scheer
+*CMZ :  1.10/02 24/11/2016  09.47.59  by  Michael Scheer
+*CMZ :  1.10/01 18/11/2016  15.02.58  by  Michael Scheer
+*CMZ :  1.07/00 23/09/2016  09.19.06  by  Michael Scheer
+*CMZ :  1.04/01 14/09/2016  15.10.51  by  Michael Scheer
+*CMZ :  1.00/00 19/08/2016  18.27.23  by  Michael Scheer
+*CMZ :  0.00/13 28/07/2016  16.09.29  by  Michael Scheer
+*CMZ :  0.00/09 06/07/2016  08.42.18  by  Michael Scheer
+*CMZ :  0.00/06 16/06/2016  14.14.37  by  Michael Scheer
+*CMZ :  0.00/04 13/05/2016  13.18.24  by  Michael Scheer
+*CMZ :  0.00/02 29/04/2016  09.17.13  by  Michael Scheer
+*CMZ :  0.00/01 25/04/2016  16.03.15  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  12.41.34  by  Michael Scheer
+*CMZ :  1.17/14 13/04/2016  09.46.51  by  Michael Scheer
+*CMZ :  1.17/11 05/04/2016  13.27.16  by  Michael Scheer
+*CMZ :  1.17/08 04/04/2016  08.57.43  by  Michael Scheer
+*CMZ :  1.17/07 04/04/2016  08.31.31  by  Michael Scheer
+*CMZ :  1.17/06 01/04/2016  13.53.25  by  Michael Scheer
+*CMZ :  1.17/05 27/03/2016  10.43.50  by  Michael Scheer
+*CMZ :  1.17/03 21/03/2016  18.38.48  by  Michael Scheer
+*-- Author :    Michael Scheer   02/12/2003
+      subroutine undumag_bpolyeder(xin,yin,zin,bxout,byout,bzout,ifail)
+c
+c      Calculation of magnetic field of polyhedron according to
+c      Oleb Chubar, Pascal Elleaume and Joel Chavanne
+c      J. Synchrotron Rad. (1998) 5, 481-484
+c
+c Paper contains an error: The rotation matrix is wrong, since for nz=-1 the
+c                          determinant is -1, which yields to errors??.
+c Private notice:
+c Einige Terme sind unklar, Notizen finden sich im Ordner RADIA/POLYMAG
+c Siehe auch Notebooks: rec_int.nb, qx_rect.nb etc.
+c oder Reduce olegqz.red, qxqyqz.red, rec_int.red etc.
+
++self,if=omp.
+      use omp_lib
++self.
+      use bpolyederf90m
+      use undumagf90m
+      use commandlinef90m
+
+      implicit none
++seq,debugutil.
++seq,seqdebug.
+
+      double precision xin,yin,zin,bxout,byout,bzout
+      double precision r1(3),r2(3),dlab(3),blab(3)
+      double precision ts(3,3),tsinv(3,3),bplan(3),bcvn,vnormlab(3)
+      double precision xx,yy,zz,xxrot,yyrot,zzrot
+      double precision a,b,z,qx,qy,qz,
+     &  pi4inv,reverse,tiny2,
+     &  bxm,bym,bzm,bxp,byp,bzp
+      double precision q(3,3),vmagrot(3),vmaglab(3),h(3),
+     &  xr(2),yr(2),zr(2),dum,dume,bo(3,nthreadp)
+
+c      double precision xmin,xmax,ymin,ymax,zmin,zmax,bx,by,bz
+
+      parameter (pi4inv=0.0795774715459477d0)
+
+      integer ical,ifound
+      integer itiny,iwtiny,jtiny
+      integer imag,iplan,ncorn,icorn,i,j,k,ip2,kwarn,kwarni,ic,moth
+      integer ifailin,ifail,ifailm,ifailp,iout,linside,
+     &  kfail(nthreadp),kinsidelocal(nthreadp)
+
+      integer nmaxth,ith
+
+      save bo,nmaxth,ith,ical,kinsidelocal
+
+      data ical/0/
+
+      kwarncom=0
+
+      bxout=0.0d0
+      byout=0.0d0
+      bzout=0.0d0
+
+      tiny2=tiny*tiny
+
+      ifailin=ifail
+c      if (ifailin.eq.-1) then
+c        print*,"undumag_bpolyeder: ifailin:",ifailin
+c      endif
+c      if (ifailin.ne.0) then
+c        print*,"undumag_bpolyeder: kinside:",kinside
+c      endif
+      ifail=0
+      ifailm=0
+      ifailp=0
+
+c calculate field at (xin,yin,zin)
+
+      if (magmag.lt.0) then
+        return
+      endif !magmag.le.0
+
+c      if (xin.eq.0.0d0) return
+      xx=xin*1000.0d0
+c      if (abs(xx+15.6).lt.0.05) then
+c        iseqdebug=1
+c      else
+c        iseqdebug=0
+c      endif
+      yy=yin*1000.0d0
+      zz=zin*1000.0d0
+
+      itiny=0
+      jtiny=0
+      iwtiny=0
+
+      if (ical.eq.0) then
+        nmaxth=1
+        ith=1
++self,if=omp.
+        nmaxth=nthreads
+        nmaxth=OMP_GET_MAX_THREADS()
+        if (nthreads.gt.0) nmaxth=min(nmaxth,nthreads,nthreadp)
+c        write(lun6,*)"Number of CPU cores used:",nmaxth
++self.
+        bo=0.0d0
+        ical=1
+      endif
+
+      bo=0.0d0
+      kinsidelocal=kinside
+      kwarni=0
+      kwarn=0
+      kfail=0
+
+      iseqdebug=0
+
++self,if=omp.
+!$OMP PARALLEL NUM_THREADS(nmaxth) DEFAULT(PRIVATE)
+!$OMP& SHARED(i_debug,kfail,iseqdebug,kinsidelocal,ical,bpetm,window,bpebc,bpemag,ibpeplan,ibpecorn,bperot,bo,iwarnbound,nwarnbound)
+!$OMP& FIRSTPRIVATE(nmag,itiny,jtiny,iwtiny,tiny,xin,yin,zin,xx,yy,zz,kwarni,kwarn,lun6)
+      ith=OMP_GET_THREAD_NUM()+1
+      bo(1:3,ith)=0.0d0
+!$OMP DO
++self.
+      do imag=1,nmag
+
+        if (bpebc(17,imag).lt.0.0d0) then
+          cycle
+        endif
+
+        moth=nint(bpebc(15,imag))
+
+        bcvn=0.0d0
+c        if(iseqdebug.eq.-8) print*,"1:",ith,imag,kinsidelocal(ith)
+
+        if (abs(xx-bpebc(1,imag)).le.window) then
+
+          !non-zero magnetization and no virgin shim
+          if (bpebc(7,imag).ne.0.0d0.and.bpebc(7,imag).ne.9999.) then
+
+            if(bpebc(8,imag).eq.1) then !not rectangular nor cylindrical magnet
+
+c check, if we are inside of magnet; we assume convex shape
+              if (kinsidelocal(ith).ne.-1) then
+
+                iout=-1
+
+                do iplan=1,ibpeplan(imag)
+
+                  dlab(1)=xx-bpemag(1,1,iplan,imag)
+                  dlab(2)=yy-bpemag(2,1,iplan,imag)
+                  dlab(3)=zz-bpemag(3,1,iplan,imag)
+
+                  vnormlab(1)=bpetm(1,8,iplan,imag)
+                  vnormlab(2)=bpetm(2,8,iplan,imag)
+                  vnormlab(3)=bpetm(3,8,iplan,imag)
+
+                  if( dlab(1)*vnormlab(1)+dlab(2)*vnormlab(2)+
+     &                dlab(3)*vnormlab(3).gt.0.0d0) then
+                    iout=1
+                    goto 97
+                  endif
+
+                enddo !iplan
+
+97              continue
+              endif !inside?
+
+              do iplan=1,ibpeplan(imag)
+
+                bcvn=-bpetm(1,7,iplan,imag)*pi4inv
+
+                bplan(1)=0.d0
+                bplan(2)=0.d0
+                bplan(3)=0.d0
+
+c transform everything to the nz=(0,0,1) system
+
+c                if (iseqdebug.ne.0) dum=bcvn
+                if (bcvn.eq.0.0d0) cycle
+
+                if (ibpecorn(iplan,imag).gt.0) then
+
+                  ts(1:3,1:3)=bpetm(1:3,1:3,iplan,imag)
+                  tsinv(1:3,1:3)=bpetm(1:3,4:6,iplan,imag)
+
+                  xxrot=ts(1,1)*xx+ts(1,2)*yy+ts(1,3)*zz
+                  yyrot=ts(2,1)*xx+ts(2,2)*yy+ts(2,3)*zz
+                  zzrot=ts(3,1)*xx+ts(3,2)*yy+ts(3,3)*zz
+
+                  ncorn=ibpecorn(iplan,imag)-1
+                  do icorn=1,ncorn
+
+                    ip2=icorn+1
+
+                    r1(1)=bperot(1,icorn,iplan,imag)-xxrot
+                    r1(2)=bperot(2,icorn,iplan,imag)-yyrot
+                    r1(3)=bperot(3,icorn,iplan,imag)-zzrot
+
+                    r2(1)=bperot(1,ip2,iplan,imag)-xxrot
+                    r2(2)=bperot(2,ip2,iplan,imag)-yyrot
+                    r2(3)=bperot(3,ip2,iplan,imag)-zzrot
+
+                    if (abs(r1(1)-r2(1)).gt.tiny) then
+
+                      a=(r2(2)-r1(2))/(r2(1)-r1(1))
+                      b=r1(2)-a*r1(1)
+
+                      if (abs(a).lt.tiny2) then
+                        a=0.0d0
+                        b=r1(2)
+                      endif
+
+                      z=r1(3)
+                      kwarn=0
+
+c                      if (iseqdebug.ne.0) iseqdebug=1
+                      call undumag_bpeq(r1(1),r2(1),a,b,z,qx,qy,qz,
+     &                  tiny,reverse,kwarn)
+c                      if (iseqdebug.eq.2) then
+c                        write(lun6,*)imag,iplan,icorn,kwarn
+c                      endif
+
+                      if (kwarn.ne.0) then
+                        bpebc(16,imag)=kwarn
+c                        write(lun6,*)"eder: kwarn,imag,xx,yy,zz",kwarn,imag,xx,yy,zz
+                      endif
+c                      if (kwarn.eq.1.or.kwarn.eq.6) kwarn=0
+                      if (kwarn.eq.1.or.kwarn.eq.6.and.iwarn2pi.eq.0) kwarn=0
+                      if (kwarn.eq.6) kwarni=6
+
+c                      if (bcvn.ne.0.0d0) then
+                      if (qx.ne.qx.or.qy.ne.qy.or.qz.ne.qz
+     &                    .or.
+     &                    (kwarn.ne.0)) then
+                        kfail(ith)=imag
+c                        if(iseqdebug.eq.-8) print*,"3:",ith,imag
+c                        goto 799
+                      endif !qx,qy,qz, kwarn
+
+                      bplan(1)=bplan(1)-qx*bcvn
+                      bplan(2)=bplan(2)-qy*bcvn
+                      bplan(3)=bplan(3)-qz*bcvn
+c                      endif !bcvn
+
+c                      if (iseqdebug.ne.0) write(lun6,*)xin,iplan,icorn,bplan,kwarn
+                    endif !r1(1)-r2(1)
+
+                  enddo !icorn=1,ncorn
+
+                  blab(1)=tsinv(1,1)*bplan(1)+tsinv(1,2)*bplan(2)+tsinv(1,3)*bplan(3)
+                  blab(2)=tsinv(2,1)*bplan(1)+tsinv(2,2)*bplan(2)+tsinv(2,3)*bplan(3)
+                  blab(3)=tsinv(3,1)*bplan(1)+tsinv(3,2)*bplan(2)+tsinv(3,3)*bplan(3)
+
+                  if (
+     &                blab(1).ne.blab(1)
+     &                .or.
+     &                blab(2).ne.blab(2)
+     &                .or.
+     &                blab(3).ne.blab(3)
+     &                ) then
+                    if (kudebug.eq.2) then
+                      write(lun6,*)"*** Error 3 in undumag_bpolyeder: blab is not a number (NaN) ***"
+                      write(lun6,*)
+     &                  "imag,iplan,xin,yin,zin:",imag,iplan,xin,yin,zin,iseqdebug
+c                    write(lun6,*)"blab",blab
+c                    write(lun6,*)"tsinv",tsinv
+                    endif
+                    kfail(ith)=imag
+c                    if(iseqdebug.eq.-8) print*,"4:",ith,imag
+c                    stop
+                  endif
+
+                  bo(1,ith)=bo(1,ith)+blab(1)
+                  bo(2,ith)=bo(2,ith)+blab(2)
+                  bo(3,ith)=bo(3,ith)+blab(3)
+
+                endif !ncorn
+
+              enddo ! iplan=1,nplan
+
+              if (iout.eq.-1) then
+                if (kinsidelocal(ith).gt.0) then
+                  write(lun6,*)"*** Error 1 in subroutine undumag_bpolyeder: Colliding Magnets: ",imag,kinsidelocal(ith)
+c                  print*,i_debug
+c                  stop
+                endif
+                kinsidelocal(ith)=moth
+              endif !iout
+
+            else !bpebc(8,imag) .eq. 1
+
+              if (kinsidelocal(ith).ne.-1) then
+
+                iout=-1
+
+                do iplan=1,ibpeplan(imag)
+
+                  dlab(1)=xx-bpemag(1,1,iplan,imag)
+                  dlab(2)=yy-bpemag(2,1,iplan,imag)
+                  dlab(3)=zz-bpemag(3,1,iplan,imag)
+
+                  vnormlab(1)=bpetm(1,8,iplan,imag)
+                  vnormlab(2)=bpetm(2,8,iplan,imag)
+                  vnormlab(3)=bpetm(3,8,iplan,imag)
+
+                  if( dlab(1)*vnormlab(1)+dlab(2)*vnormlab(2)+
+     &                dlab(3)*vnormlab(3).gt.0.d0) then
+                    iout=1
+                    goto 911
+                  endif
+
+                enddo !iplan
+
+                if (iout.eq.-1) then
+                  if (kinsidelocal(ith).gt.0) then
+                    write(lun6,*)"*** Error 2 in subroutine undumag_bpolyeder: Colliding Magnets: ",imag,kinsidelocal(ith)
+c                    stop
+                  endif
+                  kinsidelocal(ith)=moth
+                endif !iout
+
+911             continue
+              endif !inside?
+
+c rectangular or cylindrical magnet
+              vmaglab(1:3)=bpebc(4:6,imag)
+
+c transform everything to the nz=(0,0,1) system and rotate it parallel to x-axis
+
+              ts(1:3,1:3)=bpetm(1:3,1:3,1,imag)
+              tsinv(1:3,1:3)=bpetm(1:3,4:6,1,imag)
+
+              xxrot=ts(1,1)*xx+ts(1,2)*yy+ts(1,3)*zz
+              yyrot=ts(2,1)*xx+ts(2,2)*yy+ts(2,3)*zz
+              zzrot=ts(3,1)*xx+ts(3,2)*yy+ts(3,3)*zz
+
+              vmagrot(1)=
+     &          ts(1,1)*vmaglab(1)+ts(1,2)*vmaglab(2)+ts(1,3)*vmaglab(3)
+              vmagrot(2)=
+     &          ts(2,1)*vmaglab(1)+ts(2,2)*vmaglab(2)+ts(2,3)*vmaglab(3)
+              vmagrot(3)=
+     &          ts(3,1)*vmaglab(1)+ts(3,2)*vmaglab(2)+ts(3,3)*vmaglab(3)
+
+              xr(1)=bperot(1,1,1,imag)-xxrot
+              xr(2)=bperot(1,2,1,imag)-xxrot
+              yr(1)=bperot(2,1,1,imag)-yyrot
+              yr(2)=bperot(2,3,1,imag)-yyrot
+              zr(1)=bperot(3,1,1,imag)-zzrot
+              zr(2)=bperot(3,1,3,imag)-zzrot
+
+              if (xr(1).eq.0.0d0) xr(1)=1.0d-15
+              if (xr(2).eq.0.0d0) xr(2)=1.0d-15
+              if (yr(1).eq.0.0d0) yr(1)=1.0d-15
+              if (yr(2).eq.0.0d0) yr(2)=1.0d-15
+              if (zr(1).eq.0.0d0) zr(1)=1.0d-15
+              if (zr(2).eq.0.0d0) zr(2)=1.0d-15
+
+              q=0.0d0
+
+              q(1,2)=1.0d0
+              q(1,3)=1.0d0
+              q(2,3)=1.0d0
+
+              do i=1,2
+                do j=1,2
+                  do k=1,2
+                    q(1,1)=q(1,1)+
+     &                (-1)**(i+j+k+1)*
+     &                atan(
+     &                yr(j)/xr(i)*zr(k)/
+     &                sqrt(xr(i)**2+yr(j)**2+zr(k)**2)
+     &                )
+
+                    q(2,2)=q(2,2)+
+     &                (-1)**(i+j+k+1)*
+     &                atan(
+     &                xr(j)/yr(i)*zr(k)/
+     &                sqrt(yr(i)**2+xr(j)**2+zr(k)**2)
+     &                )
+
+                     dum=
+     &                (-1)**(i+j+k+1)*
+     &                atan(
+     &                yr(j)/zr(i)*xr(k)/
+     &                sqrt(zr(i)**2+yr(j)**2+xr(k)**2)
+     &                )
+                    q(3,3)=q(3,3)+dum
+c                    write(lun6,*)"--- imag,zzrot",imag,zzrot
+c                    write(lun6,*)"i,j,k",i,j,k,xr(k),yr(j),zr(i)
+c                    write(lun6,*)"xx,dum,q33",xx,dum,q(3,3)
+
+                    dum=zr(k)+sqrt(xr(i)**2+yr(j)**2+zr(k)**2)
+                    dume=(-1.0d0)**(i+j+k)
+
+                    if (dum.ne.0.0d0) then
+                      if (dume.gt.0.0d0) then
+                        q(1,2)=q(1,2)*dum
+                      else
+                        q(1,2)=q(1,2)/dum
+                      endif
+                    endif
+
+                    dum=yr(k)+sqrt(xr(i)**2+zr(j)**2+yr(k)**2)
+                    if (dum.ne.0.0d0) then
+                      if (dume.gt.0.0d0) then
+                        q(1,3)=q(1,3)*dum
+                      else
+                        q(1,3)=q(1,3)/dum
+                      endif
+                    endif
+
+                    dum=xr(k)+sqrt(zr(i)**2+yr(j)**2+xr(k)**2)
+                    if (dum.ne.0.0d0) then
+                      if (dume.gt.0.0d0) then
+                        q(2,3)=q(2,3)*dum
+                      else
+                        q(2,3)=q(2,3)/dum
+                      endif
+                    endif
+
+                  enddo !k
+                enddo !j
+              enddo !i
+
+              q(1,2)=log(q(1,2))
+              q(1,3)=log(q(1,3))
+              q(2,3)=log(q(2,3))
+
+              q(2,1)=q(1,2)
+              q(3,1)=q(1,3)
+              q(3,2)=q(2,3)
+
+              h(1)=
+     &          -(q(1,1)*vmagrot(1)+q(1,2)*vmagrot(2)+q(1,3)*vmagrot(3))*
+     &          pi4inv
+              h(2)=
+     &          -(q(2,1)*vmagrot(1)+q(2,2)*vmagrot(2)+q(2,3)*vmagrot(3))*
+     &          pi4inv
+              h(3)=
+     &          -(q(3,1)*vmagrot(1)+q(3,2)*vmagrot(2)+q(3,3)*vmagrot(3))*
+     &          pi4inv
+
+              bplan(1)=h(1)
+              bplan(2)=h(2)
+              bplan(3)=h(3)
+
+c              write(lun6,*)"h============================:",h
+
+              blab(1)=tsinv(1,1)*bplan(1)+tsinv(1,2)*bplan(2)+tsinv(1,3)*bplan(3)
+              blab(2)=tsinv(2,1)*bplan(1)+tsinv(2,2)*bplan(2)+tsinv(2,3)*bplan(3)
+              blab(3)=tsinv(3,1)*bplan(1)+tsinv(3,2)*bplan(2)+tsinv(3,3)*bplan(3)
+
+              bo(1,ith)=bo(1,ith)+blab(1)
+              bo(2,ith)=bo(2,ith)+blab(2)
+              bo(3,ith)=bo(3,ith)+blab(3)
+
+            endif !(bpebc(8,imag).eq.1)
+
+          endif !non-zero magnetization
+
+c        write(lun6,'(3g15.5)'),xin,imag,imag,bo(2,ith)
+
+        endif !window
+c799     continue
+      enddo !imag=1,nmag
++self,if=omp.
+!$OMP END DO
+!$OMP END PARALLEL
++self.
+
+      do ic=1,nmaxth
+        ifail=ifail+kfail(ic)
+        bxout=bxout+bo(1,ic)
+        byout=byout+bo(2,ic)
+        bzout=bzout+bo(3,ic)
+      enddo
+
+      if (kinside.ne.-1) then
+        kinside=0
+        ifound=0
+        do ic=1,nmaxth
+          kinside=kinside+kinsidelocal(ic)
+          if (kinsidelocal(ic).gt.0) ifound=ifound+1
+          if (ifound.gt.0.and.i_debug.eq.0) then
+            print*,ical,kinsidelocal(1:nmaxth)
+            i_debug=1
+          endif
+          if (ifound.gt.1) then
+            write(lun6,*)"*** Error 3 in subroutine undumag_bpolyeder: Colliding Magnet: ",kinsidelocal(ic)
+c            stop
+          endif
+        enddo
+      endif
+
+      if (bxout.ne.bxout.or.byout.ne.byout.or.bzout.ne.bzout
+     &  .or.bxout.gt.1.0d30
+     &  .or.byout.gt.1.0d30
+     &    .or.bzout.gt.1.0d30) then
+        bxout=0.0d0
+        byout=0.0d0
+        bzout=0.0d0
+        ifail=11
+      endif
+
+      if (abs(bxout).le.1.0d-15) bxout=0.0d0
+      if (abs(byout).le.1.0d-15) byout=0.0d0
+      if (abs(bzout).le.1.0d-15) bzout=0.0d0
+
+c      if (iseqdebug.ne.0) write(lun6,*)"ifail:",ifail
+      if (ifail.ne.0) goto 7799
+
+      goto 7979
+
+7799  continue
+
+      if (corrtiny.eq.0.0) then
+        ifail=-4
+        goto 7979
+      endif
+
+      if (kudebug.eq.2) then
+        write(lun6,*)"*** ifail,xin,yin,zin"
+      endif
+
+      kwarncom=1
+      ifail=-3
+
+C Not working for unknown reasons for OMP ?? still true 20.4.2017??
+
+      if (kinside.ne.-1) then
+        kinside=0
+      endif
+
+      call undumag_bpolyeder_corr(xin-corrtiny,yin-corrtiny,zin-corrtiny,
+     &  bxm,bym,bzm,ifailm)
+
+      if (kinside.ne.-1) then
+        linside=kinside
+        kinside=0
+      endif
+
+      call undumag_bpolyeder_corr(xin+corrtiny,yin+corrtiny,zin+corrtiny,
+     &  bxp,byp,bzp,ifailp)
+
+      if (kinside.ne.-1) then
+        kinside=max(linside,kinside)
+      endif
+
+      if (ifailm.eq.0.and.ifailp.eq.0) then
+        bxout=(bxm+bxp)/2.0d0
+        byout=(bym+byp)/2.0d0
+        bzout=(bzm+bzp)/2.0d0
+        ifail=-1
+        kwarncom=1
+      else if (ifailm.eq.0) then
+        bxout=bxm
+        byout=bym
+        bzout=bzm
+        kwarncom=2
+        ifail=2
+      else if (ifailp.eq.0) then
+        bxout=bxp
+        byout=byp
+        bzout=bzp
+        kwarncom=2
+        ifail=2
+      else
+        if (ifailin.ge.0) then
+          write(lun6,*) "*** Warning in undumag_bpolyeder: Could not recover for x,y,z:",
+     &      sngl(xin*1000.),sngl(yin*1000.0),sngl(zin*1000.)
+          write(lun6,*)"Differences in Bx,By,Bz, abs. and. rel.:",
+     &      sngl(abs(bxp-bxm)),sngl(abs(byp-bym)),sngl(abs(bzp-bzm))
+        endif
+        bxout=(bxm+bxp)/2.0d0
+        byout=(bym+byp)/2.0d0
+        bzout=(bzm+bzp)/2.0d0
+        if (ifailin.ge.0) then
+          print '(6e15.4)',
+     &      abs((bxp-bxm)/(bxout+1.0d-15)),abs((byp-bym)/(byout+1.0d-15)),
+     &      abs((bzp-bzm)/(bzout+1.0d-15))
+        endif
+        kwarncom=3
+        ifail=3
+      endif
+
+7979  continue
+
+c      if (ncwires+nrace.gt.0) then
+c        call undumag_bcoils(xin,yin,zin,bx,by,bz,istat)
+c        bxout=bxout+bx
+c        byout=byout+by
+c        bzout=bzout+bz
+c        if (istat.ne.0) ifail=ifail+1000
+c      endif
+
+      return
+      end
++DECK,undumag_bpolyeder_corr.
+*CMZ :          25/06/2024  08.45.36  by  Michael Scheer
+*CMZ :  2.05/02 02/11/2023  14.14.41  by  Michael Scheer
+*CMZ :  2.02/00 22/08/2023  09.03.52  by  Michael Scheer
+*CMZ :  2.01/03 15/07/2019  11.55.46  by  Michael Scheer
+*CMZ :  2.01/02 27/04/2018  13.35.13  by  Michael Scheer
+*CMZ :  1.22/01 20/07/2017  14.55.33  by  Michael Scheer
+*CMZ :  1.20/00 22/06/2017  08.44.13  by  Michael Scheer
+*CMZ :  1.15/11 20/04/2017  16.01.40  by  Michael Scheer
+*CMZ :  1.15/03 02/04/2017  15.55.59  by  Michael Scheer
+*CMZ :  1.15/02 01/04/2017  17.59.10  by  Michael Scheer
+*CMZ :  1.15/01 28/03/2017  13.53.21  by  Michael Scheer
+*CMZ :  1.13/01 08/03/2017  16.31.38  by  Michael Scheer
+*CMZ :  1.11/03 16/01/2017  12.22.22  by  Michael Scheer
+*CMZ :  1.10/02 24/11/2016  09.47.59  by  Michael Scheer
+*CMZ :  1.10/01 18/11/2016  15.02.58  by  Michael Scheer
+*CMZ :  1.07/00 23/09/2016  09.19.06  by  Michael Scheer
+*CMZ :  1.04/01 14/09/2016  15.10.51  by  Michael Scheer
+*CMZ :  1.00/00 19/08/2016  18.27.23  by  Michael Scheer
+*CMZ :  0.00/13 28/07/2016  16.09.29  by  Michael Scheer
+*CMZ :  0.00/09 06/07/2016  08.42.18  by  Michael Scheer
+*CMZ :  0.00/06 16/06/2016  14.14.37  by  Michael Scheer
+*CMZ :  0.00/04 13/05/2016  13.18.24  by  Michael Scheer
+*CMZ :  0.00/02 29/04/2016  09.17.13  by  Michael Scheer
+*CMZ :  0.00/01 25/04/2016  16.03.15  by  Michael Scheer
+*CMZ :  0.00/00 20/04/2016  12.41.34  by  Michael Scheer
+*CMZ :  1.17/14 13/04/2016  09.46.51  by  Michael Scheer
+*CMZ :  1.17/11 05/04/2016  13.27.16  by  Michael Scheer
+*CMZ :  1.17/08 04/04/2016  08.57.43  by  Michael Scheer
+*CMZ :  1.17/07 04/04/2016  08.31.31  by  Michael Scheer
+*CMZ :  1.17/06 01/04/2016  13.53.25  by  Michael Scheer
+*CMZ :  1.17/05 27/03/2016  10.43.50  by  Michael Scheer
+*CMZ :  1.17/03 21/03/2016  18.38.48  by  Michael Scheer
+*-- Author :    Michael Scheer   02/12/2003
+      subroutine undumag_bpolyeder_corr(xin,yin,zin,bxout,byout,bzout,ifail)
+c
+c      Calculation of magnetic field of polyhedron according to
+c      Oleb Chubar, Pascal Elleaume and Joel Chavanne
+c      J. Synchrotron Rad. (1998) 5, 481-484
+c
+c Paper contains an error: The rotation matrix is wrong, since for nz=-1 the
+c                          determinant is -1, which yields to errors??.
++self,if=omp.
+      use omp_lib
++self.
+      use bpolyederf90m
+      use undumagf90m
+
+      use commandlinef90m
+
+      implicit none
+
++seq,seqdebug.
++seq,debugutil.
+
+      double precision xin,yin,zin,bxout,byout,bzout
+      double precision r1(3),r2(3),dlab(3),blab(3)
+      double precision ts(3,3),tsinv(3,3),bplan(3),bcvn,vnormlab(3)
+      double precision xx,yy,zz,xxrot,yyrot,zzrot,xx00,xxsh
+      double precision a,b,z,qx,qy,qz,qxp,qyp,qzp,qxm,qym,qzm,
+     &  pi4inv,reverse,tiny2,
+     &  bxm,bym,bzm,bxp,byp,bzp,rr0,rrm
+      double precision q(3,3),vmagrot(3),vmaglab(3),h(3),
+     &  xr(2),yr(2),zr(2),dum,dume,bo(3,nthreadp)
+
+      double precision xmin,xmax,ymin,ymax,zmin,zmax,bx,by,bz
+
+      parameter (pi4inv=0.0795774715459477d0)
+
+      integer ical,kc
+      integer itiny,iwtiny,jtiny,ifound
+      integer imag,iplan,icorn,i,j,k,ip2,kwarn,ic
+      integer nx,ny,nz,ifail,ishim,ishima,iimag,nmag1,nmag2,iout,
+     &  kfail(nthreadp),kinsidelocal(nthreadp)
+
+      integer nmaxth,ith
+      integer :: idebug=0
+
+      save bo,nmaxth,ith,ical,kinsidelocal
+
+      data ical/0/
+
+      if (magmag.gt.0) then
+        write(lun6,*)"*** Error: Call to undumag_bpolyeder_corr in undumag_bpolyeder_corr!"
+        stop
+      endif
+
+      bxout=0.0d0
+      byout=0.0d0
+      bzout=0.0d0
+
+      tiny2=tiny*tiny
+
+      ifail=0
+
+c calculate field at (xin,yin,zin)
+
+      if (magmag.lt.0) then
+        return
+      endif !magmag.le.0
+
+c      if (xin.eq.0.0d0) return
+      xx=xin*1000.0d0
+      yy=yin*1000.0d0
+      zz=zin*1000.0d0
+
+      itiny=0
+      jtiny=0
+      iwtiny=0
+
+      if (ical.eq.0) then
+        nmaxth=1
+        ith=1
++self,if=omp.
+        nmaxth=nthreads
+        nmaxth=OMP_GET_MAX_THREADS()
+        if (nthreads.gt.0) nmaxth=min(nmaxth,nthreads,nthreadp)
+        write(lun6,*)"Number of CPU cores used:",nmaxth
++self.
+        bo=0.0d0
+        ical=1
+      endif
+
+c      ical=ical+1
+c      write(lun6,*)"eder",ical,nmaxth
+      bo=0.0d0
+      kinsidelocal=kinside
+      kfail=0
+
+      iseqdebug=0
+
++self,if=omp.
+!$OMP PARALLEL NUM_THREADS(nmaxth) DEFAULT(PRIVATE) SHARED(kfail,iseqdebug,kinsidelocal,ical,bpetm,window,bpebc,bpemag,ibpeplan,ibpecorn,bperot,bo,iwarnbound,nwarnbound) FIRSTPRIVATE(nmag,itiny,jtiny,iwtiny,tiny,xx,yy,zz)
+c      if (ical.eq.4) stop
+      ith=OMP_GET_THREAD_NUM()+1
+      bo(1:3,ith)=0.0d0
+!$OMP DO
++self.
+      do imag=1,nmag
+
+        if (iseqdebug.eq.-9.and.imag.eq.3) then
+c          c64_debug='in corrp'
+          call util_break
+        endif
+
+        if (bpebc(17,imag).lt.0.0d0) then
+          cycle
+        endif
+
+        if (abs(xx-bpebc(1,imag)).le.window) then
+
+          !non-zero magnetization and no virgin shim
+          if (bpebc(7,imag).ne.0.0d0.and.bpebc(7,imag).ne.9999.) then
+
+            if(bpebc(8,imag).eq.1) then !not rectangular nor cylindrical magnet
+
+c check, if we are inside of magnet; we assume convex shape
+              if (kinsidelocal(ith).ne.-1) then
+
+                iout=-1
+
+                do iplan=1,ibpeplan(imag)
+
+                  dlab(1)=xx-bpemag(1,1,iplan,imag)
+                  dlab(2)=yy-bpemag(2,1,iplan,imag)
+                  dlab(3)=zz-bpemag(3,1,iplan,imag)
+
+                  vnormlab(1)=bpetm(1,8,iplan,imag)
+                  vnormlab(2)=bpetm(2,8,iplan,imag)
+                  vnormlab(3)=bpetm(3,8,iplan,imag)
+
+                  if( dlab(1)*vnormlab(1)+dlab(2)*vnormlab(2)+
+     &                dlab(3)*vnormlab(3).gt.0.d0) then
+                    iout=1
+                    goto 97
+                  endif
+
+                enddo !iplan
+
+                if (iout.eq.-1) then
+                  kinsidelocal(ith)=imag
+                endif !iout
+
+97              continue
+              endif !inside?
+
+              do iplan=1,ibpeplan(imag)
+
+                bcvn=-bpetm(1,7,iplan,imag)*pi4inv
+c                write(lun6,*)"undumag_bpolyeder_corr:",imag,iplan,bpetm(1,7,iplan,imag)
+
+                bplan(1)=0.d0
+                bplan(2)=0.d0
+                bplan(3)=0.d0
+
+c transform everything to the nz=(0,0,1) system
+
+c                if (iseqdebug.ne.0) write(lun6,*)"bcvn:",bcvn
+                if (bcvn.eq.0.0d0) cycle
+
+                if (ibpecorn(iplan,imag).gt.0) then
+
+                  ts(1:3,1:3)=bpetm(1:3,1:3,iplan,imag)
+                  tsinv(1:3,1:3)=bpetm(1:3,4:6,iplan,imag)
+
+c                  do i=1,3
+c                    do j=1,3
+c                      ts(i,j)=bpetm(i,j,iplan,imag)
+c                      tsinv(i,j)=bpetm(i,j+3,iplan,imag)
+c                    enddo
+c                  enddo
+
+                  xxrot=ts(1,1)*xx+ts(1,2)*yy+ts(1,3)*zz
+                  yyrot=ts(2,1)*xx+ts(2,2)*yy+ts(2,3)*zz
+                  zzrot=ts(3,1)*xx+ts(3,2)*yy+ts(3,3)*zz
+
+                  do icorn=1,ibpecorn(iplan,imag)-1
+
+                    ip2=icorn+1
+
+                    r1(1)=bperot(1,icorn,iplan,imag)-xxrot
+                    r1(2)=bperot(2,icorn,iplan,imag)-yyrot
+                    r1(3)=bperot(3,icorn,iplan,imag)-zzrot
+
+                    r2(1)=bperot(1,ip2,iplan,imag)-xxrot
+                    r2(2)=bperot(2,ip2,iplan,imag)-yyrot
+                    r2(3)=bperot(3,ip2,iplan,imag)-zzrot
+
+                    if (abs(r1(1)-r2(1)).gt.tiny) then
+
+                      a=(r2(2)-r1(2))/(r2(1)-r1(1))
+                      b=r1(2)-a*r1(1)
+
+                      if (abs(a).lt.tiny2) then
+                        a=0.0d0
+                        b=r1(2)
+                      endif
+
+                      z=r1(3)
+                      kwarn=0
+
+                      call undumag_bpeq(r1(1),r2(1),a,b,z,qx,qy,qz,
+     &                  tiny,reverse,kwarn)
+
+c                      if (bcvn.ne.0.0d0) then
+                      if (qx.ne.qx.or.qy.ne.qy.or.qz.ne.qz
+     &                    .or.
+     &                    (kwarn.ne.0.and.kwarn.ne.6)) then
+                        kfail(ith)=imag
+                        goto 799
+                      endif !qx,qy,qz, kwarn
+
+                      bplan(1)=bplan(1)-qx*bcvn
+                      bplan(2)=bplan(2)-qy*bcvn
+                      bplan(3)=bplan(3)-qz*bcvn
+c                      endif !bcvn
+
+                    endif
+                  enddo !icorn=1,ncorn
+
+                  blab(1)=tsinv(1,1)*bplan(1)+tsinv(1,2)*bplan(2)+tsinv(1,3)*bplan(3)
+                  blab(2)=tsinv(2,1)*bplan(1)+tsinv(2,2)*bplan(2)+tsinv(2,3)*bplan(3)
+                  blab(3)=tsinv(3,1)*bplan(1)+tsinv(3,2)*bplan(2)+tsinv(3,3)*bplan(3)
+
+                  if (
+     &                blab(1).ne.blab(1)
+     &                .or.
+     &                blab(2).ne.blab(2)
+     &                .or.
+     &                blab(3).ne.blab(3)
+     &                ) then
+                    write(lun6,*)"*** Error 3 in undumag_bpolyeder_corr: blab is not a number (NaN) ***"
+                    write(lun6,*)
+     &                "imag,iplan,xin,yin,zin:",imag,iplan,xin,yin,zin
+                    write(lun6,*)"blab",blab
+                    write(lun6,*)"tsinv",tsinv
+                    stop
+                  endif
+                  bo(1,ith)=bo(1,ith)+blab(1)
+                  bo(2,ith)=bo(2,ith)+blab(2)
+                  bo(3,ith)=bo(3,ith)+blab(3)
+                endif !ncorn
+
+              enddo ! iplan=1,nplan
+
+            else !bpebc(8,imag) .eq. 1
+
+              if (kinsidelocal(ith).ne.-1) then
+
+                iout=-1
+
+                do iplan=1,ibpeplan(imag)
+
+                  dlab(1)=xx-bpemag(1,1,iplan,imag)
+                  dlab(2)=yy-bpemag(2,1,iplan,imag)
+                  dlab(3)=zz-bpemag(3,1,iplan,imag)
+
+                  vnormlab(1)=bpetm(1,8,iplan,imag)
+                  vnormlab(2)=bpetm(2,8,iplan,imag)
+                  vnormlab(3)=bpetm(3,8,iplan,imag)
+
+c                  write(lun6,*)"x,dlab:",xx,dlab
+c                  write(lun6,*)"vnormlablab:",vnormlab
+                  if( dlab(1)*vnormlab(1)+dlab(2)*vnormlab(2)+
+     &                dlab(3)*vnormlab(3).gt.0.d0) then
+                    iout=1
+                    goto 911
+                  endif
+
+                enddo !iplan
+
+                if (iout.eq.-1) then
+                  kinsidelocal(ith)=imag
+                endif !iout
+
+911             continue
+              endif !inside?
+
+c rectangular or cylindrical magnet
+              vmaglab(1:3)=bpebc(4:6,imag)
+
+c transform everything to the nz=(0,0,1) system and rotate it parallel to x-axis
+
+              ts(1:3,1:3)=bpetm(1:3,1:3,1,imag)
+              tsinv(1:3,1:3)=bpetm(1:3,4:6,1,imag)
+
+              xxrot=ts(1,1)*xx+ts(1,2)*yy+ts(1,3)*zz
+              yyrot=ts(2,1)*xx+ts(2,2)*yy+ts(2,3)*zz
+              zzrot=ts(3,1)*xx+ts(3,2)*yy+ts(3,3)*zz
+
+              vmagrot(1)=
+     &          ts(1,1)*vmaglab(1)+ts(1,2)*vmaglab(2)+ts(1,3)*vmaglab(3)
+              vmagrot(2)=
+     &          ts(2,1)*vmaglab(1)+ts(2,2)*vmaglab(2)+ts(2,3)*vmaglab(3)
+              vmagrot(3)=
+     &          ts(3,1)*vmaglab(1)+ts(3,2)*vmaglab(2)+ts(3,3)*vmaglab(3)
+
+              xr(1)=bperot(1,1,1,imag)-xxrot
+              xr(2)=bperot(1,2,1,imag)-xxrot
+              yr(1)=bperot(2,1,1,imag)-yyrot
+              yr(2)=bperot(2,3,1,imag)-yyrot
+              zr(1)=bperot(3,1,1,imag)-zzrot
+              zr(2)=bperot(3,1,3,imag)-zzrot
+
+              if (xr(1).eq.0.0d0) xr(1)=1.0d-15
+              if (xr(2).eq.0.0d0) xr(2)=1.0d-15
+              if (yr(1).eq.0.0d0) yr(1)=1.0d-15
+              if (yr(2).eq.0.0d0) yr(2)=1.0d-15
+              if (zr(1).eq.0.0d0) zr(1)=1.0d-15
+              if (zr(2).eq.0.0d0) zr(2)=1.0d-15
+
+              q=0.0d0
+
+              q(1,2)=1.0d0
+              q(1,3)=1.0d0
+              q(2,3)=1.0d0
+
+c              if (xr(1).eq.0.0d0.or.yr(1).eq.0.0d0.or.zr(1).eq.0.0d0
+c     &            .or.xr(2).eq.0.0d0.or.yr(2).eq.0.0d0.or.zr(2).eq.0.0d0
+c     &            ) then
+c                xx=xx+tiny2
+cc                yy=yy+tiny2
+c                zz=zz+tiny2
+c                goto 1
+c              endif
+
+              do i=1,2
+                do j=1,2
+                  do k=1,2
+                    q(1,1)=q(1,1)+
+     &                (-1)**(i+j+k+1)*
+     &                atan(
+     &                yr(j)/xr(i)*zr(k)/
+     &                sqrt(xr(i)**2+yr(j)**2+zr(k)**2)
+     &                )
+
+                    q(2,2)=q(2,2)+
+     &                (-1)**(i+j+k+1)*
+     &                atan(
+     &                xr(j)/yr(i)*zr(k)/
+     &                sqrt(yr(i)**2+xr(j)**2+zr(k)**2)
+     &                )
+
+                     dum=
+     &                (-1)**(i+j+k+1)*
+     &                atan(
+     &                yr(j)/zr(i)*xr(k)/
+     &                sqrt(zr(i)**2+yr(j)**2+xr(k)**2)
+     &                )
+                    q(3,3)=q(3,3)+dum
+c                    write(lun6,*)"--- imag,zzrot",imag,zzrot
+c                    write(lun6,*)"i,j,k",i,j,k,xr(k),yr(j),zr(i)
+c                    write(lun6,*)"xx,dum,q33",xx,dum,q(3,3)
+
+                    dum=zr(k)+sqrt(xr(i)**2+yr(j)**2+zr(k)**2)
+                    dume=(-1.0d0)**(i+j+k)
+
+                    if (dum.ne.0.0d0) then
+                      if (dume.gt.0.0d0) then
+                        q(1,2)=q(1,2)*dum
+                      else
+                        q(1,2)=q(1,2)/dum
+                      endif
+                    endif
+
+                    dum=yr(k)+sqrt(xr(i)**2+zr(j)**2+yr(k)**2)
+                    if (dum.ne.0.0d0) then
+                      if (dume.gt.0.0d0) then
+                        q(1,3)=q(1,3)*dum
+                      else
+                        q(1,3)=q(1,3)/dum
+                      endif
+                    endif
+
+                    dum=xr(k)+sqrt(zr(i)**2+yr(j)**2+xr(k)**2)
+                    if (dum.ne.0.0d0) then
+                      if (dume.gt.0.0d0) then
+                        q(2,3)=q(2,3)*dum
+                      else
+                        q(2,3)=q(2,3)/dum
+                      endif
+                    endif
+
+                  enddo !k
+                enddo !j
+              enddo !i
+
+              q(1,2)=log(q(1,2))
+              q(1,3)=log(q(1,3))
+              q(2,3)=log(q(2,3))
+
+              q(2,1)=q(1,2)
+              q(3,1)=q(1,3)
+              q(3,2)=q(2,3)
+
+              h(1)=
+     &          -(q(1,1)*vmagrot(1)+q(1,2)*vmagrot(2)+q(1,3)*vmagrot(3))*
+     &          pi4inv
+              h(2)=
+     &          -(q(2,1)*vmagrot(1)+q(2,2)*vmagrot(2)+q(2,3)*vmagrot(3))*
+     &          pi4inv
+              h(3)=
+     &          -(q(3,1)*vmagrot(1)+q(3,2)*vmagrot(2)+q(3,3)*vmagrot(3))*
+     &          pi4inv
+
+              bplan(1)=h(1)
+              bplan(2)=h(2)
+              bplan(3)=h(3)
+
+c              write(lun6,*)"h============================:",h
+
+              blab(1)=tsinv(1,1)*bplan(1)+tsinv(1,2)*bplan(2)+tsinv(1,3)*bplan(3)
+              blab(2)=tsinv(2,1)*bplan(1)+tsinv(2,2)*bplan(2)+tsinv(2,3)*bplan(3)
+              blab(3)=tsinv(3,1)*bplan(1)+tsinv(3,2)*bplan(2)+tsinv(3,3)*bplan(3)
+
+              bo(1,ith)=bo(1,ith)+blab(1)
+              bo(2,ith)=bo(2,ith)+blab(2)
+              bo(3,ith)=bo(3,ith)+blab(3)
+
+            endif !(bpebc(8,imag).eq.1)
+
+          endif !non-zero magnetization
+
+c        write(lun6,'(3g15.5)'),xin,imag,imag,bo(2,ith)
+
+        endif !window
+799     continue
+      enddo !imag=1,nmag
++self,if=omp.
+!$OMP END DO
+!$OMP END PARALLEL
++self.
+
+9999  continue
+
+
+      do ic=1,nmaxth
+        ifail=ifail+kfail(ic)
+        bxout=bxout+bo(1,ic)
+        byout=byout+bo(2,ic)
+        bzout=bzout+bo(3,ic)
+      enddo
+
+      if (kinside.ne.-1) then
+        kinside=0
+        ifound=0
+        do ic=1,nmaxth
+          kinside=kinside+kinsidelocal(ic)
+          if(kinsidelocal(ic).gt.0) ifound=ifound+1
+          if (ifound.gt.1) then
+            write(lun6,*)"*** Error in undumag_bpolyeder_corr: Colliding Magnet: ",kinsidelocal(ic)
+c            stop
+          endif
+          if (idebug.ne.0) then
+            if (kinsidelocal(ic).ne.0) then
+              do kc=1,nmaxth
+                if (kc.eq.ic) cycle
+                if (kinsidelocal(kc).ne.0) then
+                  write(lun6,*)"nThread, kinsidelocal(nThread)",
+     &              kc,kinsidelocal(kc)
+                endif
+              enddo
+            endif
+          endif !idebug
+        enddo
+      endif
+
+      if (bxout.ne.bxout.or.byout.ne.byout.or.bzout.ne.bzout
+     &  .or.bxout.gt.1.0d30
+     &  .or.byout.gt.1.0d30
+     &    .or.bzout.gt.1.0d30) then
+        bxout=0.0d0
+        byout=0.0d0
+        bzout=0.0d0
+        ifail=-1
+      endif
+
+      if (abs(bxout).le.1.0d-15) bxout=0.0d0
+      if (abs(byout).le.1.0d-15) byout=0.0d0
+      if (abs(bzout).le.1.0d-15) bzout=0.0d0
+
+c      if (ical.gt.2) stop
+
+      return
+      end
++DECK,clcmag_bpolyplot.
+*CMZ :          25/06/2024  10.28.04  by  Michael Scheer
+*CMZ :  2.04/11 28/08/2023  14.35.56  by  Michael Scheer
+*CMZ :  2.04/10 23/08/2023  16.06.46  by  Michael Scheer
+*CMZ :  2.04/09 16/08/2023  09.50.47  by  Michael Scheer
+*CMZ :  2.04/07 07/08/2023  12.29.11  by  Michael Scheer
+*CMZ :  2.04/03 04/03/2023  17.12.50  by  Michael Scheer
+*CMZ :  2.04/01 13/02/2023  14.10.28  by  Michael Scheer
+*CMZ :  2.03/00 23/07/2022  08.30.04  by  Michael Scheer
+*CMZ :  2.02/02 18/02/2022  10.24.23  by  Michael Scheer
+*CMZ :  2.02/01 30/01/2022  08.39.29  by  Michael Scheer
+*CMZ :  2.02/00 21/10/2020  09.46.44  by  Michael Scheer
+*CMZ :  2.01/03 15/02/2019  13.07.52  by  Michael Scheer
+*CMZ :  2.01/02 25/04/2018  11.48.35  by  Michael Scheer
+*CMZ :  1.25/01 19/03/2018  16.23.08  by  Michael Scheer
+*CMZ :  1.25/00 15/03/2018  21.02.34  by  Michael Scheer
+*CMZ :  1.19/00 20/06/2017  12.20.09  by  Michael Scheer
+*CMZ :  1.18/02 13/06/2017  12.45.15  by  Michael Scheer
+*CMZ :  1.17/08 27/05/2017  10.32.42  by  Michael Scheer
+*CMZ :  1.11/00 04/01/2017  14.33.44  by  Michael Scheer
+*CMZ :  1.10/00 18/11/2016  09.09.14  by  Michael Scheer
+*CMZ :  1.09/01 06/10/2016  14.12.50  by  Michael Scheer
+*CMZ :  1.07/02 25/09/2016  13.39.32  by  Michael Scheer
+*CMZ :  1.07/01 25/09/2016  11.47.10  by  Michael Scheer
+*CMZ :  1.07/00 24/09/2016  14.49.25  by  Michael Scheer
+*CMZ :  1.06/01 21/09/2016  15.46.16  by  Michael Scheer
+*CMZ :  1.06/00 21/09/2016  13.01.00  by  Michael Scheer
+*CMZ :  1.04/00 14/09/2016  13.31.06  by  Michael Scheer
+*CMZ :  1.02/01 08/09/2016  15.25.02  by  Michael Scheer
+*CMZ :  1.02/00 23/08/2016  12.01.08  by  Michael Scheer
+*CMZ :  0.00/13 31/07/2016  16.05.11  by  Michael Scheer
+*CMZ :  0.00/01 25/04/2016  15.07.20  by  Michael Scheer
+*CMZ :  1.17/06 01/04/2016  12.27.40  by  Michael Scheer
+*CMZ :  1.17/02 09/10/2014  14.52.20  by  Michael Scheer
+*CMZ :  1.17/01 03/10/2014  11.25.46  by  Michael Scheer
+*CMZ :  1.17/00 25/08/2014  15.14.09  by  Michael Scheer
+*CMZ :  1.16/04 16/04/2014  15.34.26  by  Michael Scheer
+*CMZ :  1.16/01 14/03/2014  12.26.15  by  Michael Scheer
+*CMZ :  1.12/16 01/06/2007  11.17.50  by  Michael Scheer
+*CMZ :  1.12/08 02/08/2006  17.03.41  by  Michael Scheer
+*CMZ :  1.11/03 21/06/2005  12.56.55  by  Michael Scheer
+*CMZ :  1.11/01 01/03/2005  09.45.36  by  Michael Scheer
+*CMZ :  1.10/04 25/02/2005  11.55.05  by  Michael Scheer
+*CMZ :  2.52/05 17/08/2004  08.54.30  by  Michael Scheer
+*CMZ :  1.01/01 11/08/2004  13.30.53  by  Michael Scheer
+*CMZ :  1.01/00 02/03/2004  17.00.13  by  Michael Scheer
+*CMZ :  1.00/01 27/02/2004  14.29.35  by  Michael Scheer
+*CMZ :  1.00/00 26/02/2004  17.21.29  by  Michael Scheer
+*CMZ :  0.99/13 26/02/2004  16.14.57  by  Michael Scheer
+*CMZ :  0.99/12 26/02/2004  12.02.34  by  Michael Scheer
+*CMZ :  0.99/11 25/02/2004  15.21.06  by  Michael Scheer
+*CMZ :  0.99/10 25/02/2004  13.42.35  by  Michael Scheer
+*CMZ :  0.99/09 20/02/2004  17.26.48  by  Michael Scheer
+*CMZ :  0.99/08 20/02/2004  16.32.55  by  Michael Scheer
+*CMZ :  0.99/07 16/02/2004  15.21.29  by  Michael Scheer
+*CMZ :  0.99/03 12/02/2004  13.55.05  by  Michael Scheer
+*CMZ :  0.99/00 26/01/2004  17.03.49  by  Michael Scheer
+*CMZ :  0.00/08 23/01/2004  12.52.23  by  Michael Scheer
+*CMZ :  0.00/07 16/01/2004  11.05.44  by  Michael Scheer
+*CMZ :  0.00/06 09/01/2004  15.55.17  by  Michael Scheer
+*CMZ :  0.00/05 23/12/2003  14.52.54  by  Michael Scheer
+*CMZ :  0.00/04 23/12/2003  10.15.07  by  Michael Scheer
+*CMZ :  0.00/02 15/12/2003  12.43.34  by  Michael Scheer
+*CMZ :  0.00/01 10/12/2003  17.56.52  by  Michael Scheer
+*-- Author :    Michael Scheer   02/12/2003
+      subroutine clcmag_bpolyplot(iplot,xmin,xmax,ymin,ymax,zmin,zmax,
+     &  theta,phi,nwitems,ncwires,wire)
+
++seq,bpolyederf90u.
+
+      use commandlinef90m
+      use magnets_structure
+
+      implicit none
+
++seq,mshplt.
++seq,bpolyeder,if=static.
+
+      integer npawp
+      parameter (npawp=10000)
+
+      integer nwitems,ncwires
+      double precision wire(nwitems,ncwires)
+
+      real, dimension (:), allocatable :: rmothb,rmagb,rcolb,rplanb,rcornb,
+     &  xb,yb,zb,bxb,byb,bzb,rmatb
+
+      real, dimension (:), allocatable :: xpl,ypl,zpl,zplm,xmpl,ympl,zmpl
+      integer, dimension (:), allocatable :: ispole
+
+      real
+     &  xplb(2),yplb(2),zplb(2),xt(1),yt(1),zt(1),
+     &  xplbo(2),yplbo(2),zplbo(2),rmtyp31,rmtyp24,rmtyp20,rlwidth,rlwidtho
+
+      real xyzmin,xyzmax,xmin,xmax,ymin,ymax,zmin,zmax,theta,phi,
+     &  x,y,z,bx,by,bz,dx,dy,dz,bxo,byo,bzo,bo,eps,
+     &  xmn,xmx,ymn,ymx,zmn,zmx,
+     &  xmmn,xmmx,ymmn,ymmx,zmmn,zmmx,
+     &  xplmin,xplmax,yplmin,yplmax,zplmin,zplmax,
+     &  rmoth,rmag,rcol,rplan,rcorn,rmat,
+     &  xc,yc,zc,xmc(1),ymc(1),zmc(1),dot0,circ0,pscal,vn,vnx,vnz
+
+      integer i,iplot,iplot1,iplot10,iplot100,idev,
+     &  imag,icol,iplan,icorn,kpole,
+     &  iplano,ncorno,iline,iw,nline,iallo,
+     &  ncorn,ncornmax,igird,imago,impl,izero,nfirst,nlast
+
+      integer luncnf,lunmag
+
+      character(64) ctitle,cline
+      character(32), dimension(:), allocatable ::  cnam,cmoth
+
+      data dot0/25./
+      data circ0/5./
+      data rmtyp20/20./
+      data rmtyp24/-9999./
+      data rmtyp31/31./
+
+      data eps/0.01/
+
+      iallo=0
+
+      write(lun6,*)
+      if (kunduplot_mode.eq.0) then
+        write(lun6,*) "Reading file undumag.mag and writing geometry to plotfile undumag.eps"
+      else
+        write(lun6,*) "Reading file undumag.mag and writing geometry to plotfile undumag_3d.eps"
+      endif
+      write(lun6,*)
+
+      open(newunit=luncnf,file='.mshplt.cnf')
+
+      write(luncnf,'(a)')"0 !idev, 0: viewer is not used"
+      write(luncnf,'(a)')"-20. -20. !plot size in cm, negative values indicate HIGZ compatible mode"
+      write(luncnf,'(a)')"1.0 !rescaling factor; if not one, plot files are copied and rescaled"
+      write(luncnf,'(a)')"0 0 800 800 !bounding box"
+      if (kunduplot_mode.ne.0) then
+        write(luncnf,'(a)')"undumag_3d.eps !base name of plotfiles"
+      else
+        write(luncnf,'(a)')"undumag.eps !base name of plotfiles"
+      endif
+      write(luncnf,'(a)')"$UNDUMAG/shell/undumag_viewer.sh"
+      write(luncnf,'(a)')"$UNDUMAG/shell/undumag_kill_viewer.sh"
+
+      close(luncnf)
+
+      iplano=0
+      nline=0
+
+      xmn=sngl(xmin_t)
+      xmx=sngl(xmax_t)
+      ymn=sngl(ymin_t)
+      ymx=sngl(ymax_t)
+      zmn=sngl(zmin_t)
+      zmx=sngl(zmax_t)
+
+      if (jrunnum.ne.0) then
+        write(ctitle,*)kundurun
+        call util_string_trim(ctitle,nfirst,nlast)
+        ctitle=trim(usercom)//", Run: "//ctitle(nfirst:nlast)
+      else
+        ctitle=trim(usercom)
+      endif
+
+      ncornmax=ncornmax_t
+      if (ncwires.gt.0) then
+        ncornmax=max(2,ncornmax_t)
+      endif
+
+      open(newunit=lunmag,file='undumag.mag',status='old')
+      read(lunmag,'(a)')cline
+1     read(lunmag,*,end=9) rmoth,rmag,rcol,rplan,rcorn,x,y,z,bx,by,bz,rmat
+      if (bx**2+by**2+bz**2.eq.0.0d0) goto 1
+      nline=nline+1
+      goto 1
+9     rewind(lunmag)
+
+      allocate(
+     &  rmothb(nline),rmagb(nline),rcolb(nline),rplanb(nline),rcornb(nline),
+     &  xb(nline),yb(nline),zb(nline),bxb(nline),byb(nline),bzb(nline),
+     &  rmatb(nline),cnam(nline),cmoth(nline),ispole(nline))
+
+      read(lunmag,'(a)')cline
+
+      do i=1,nline
+        read(lunmag,*)
+     &  rmothb(i),rmagb(i),rcolb(i),rplanb(i),rcornb(i),
+     &  xb(i),yb(i),zb(i),bxb(i),byb(i),bzb(i),
+     &    rmatb(i),cnam(i),cmoth(i),ispole(i)
+        if (rmatb(i).eq.0) then
+          bxb(i)=0.0
+          byb(i)=0.0
+          bzb(i)=0.0
+        endif
+        if (abs(bxb(i)).lt.1.0e-12) bxb(i)=0.0
+        if (abs(byb(i)).lt.1.0e-12) byb(i)=0.0
+        if (abs(bzb(i)).lt.1.0e-12) bzb(i)=0.0
+        imag=nint(rmagb(i))
+        ispole(imag)=ispole(i)
+      enddo
+
+      close(lunmag)
+
+      if (ncornmax.eq.0.and.ncwires.le.0) then
+        write(lun6,*)"*** Warning in clcmag_bpolyplot: Nothing to plot!?"
+        goto 9999
+      endif
+
+      allocate(xpl(ncornmax))
+      allocate(ypl(ncornmax))
+      allocate(zpl(ncornmax))
+      allocate(zplm(ncornmax))
+
+      allocate(xmpl(ncornmax*nplanmax_t))
+      allocate(ympl(ncornmax*nplanmax_t))
+      allocate(zmpl(ncornmax*nplanmax_t))
+
+      iallo=1
+
+      call mlimit(npawp)
+
+      if (jdate.ne.0) then
+        call mplopt('DATE',1)
+      else
+        call mplopt('NDAT',1)
+      endif
+
+      call mplint(idev)
+
+      if (jdate.ne.0) then
+        call mplopt('DATE',1)
+      else
+        call mplopt('NDAT',1)
+      endif
+
+      call mplset('YGTI',0.)
+      call mplset('GSIZ',0.3)
+      call mgset('TXCI',1.)
+
+      iplot100=abs(iplot)/100
+      iplot10=(abs(iplot)-iplot100*100)/10
+      iplot1=abs(iplot)-iplot100*100-iplot10*10
+
+      call mshplt_get_line_width(rlwidtho)
+      rlwidth=rlwidtho
+      call mshplt_set_line_width(rlwidtho/2.)
+
+c--- Open plotfiles {
+
+      if (iplot.gt.0) then
+
+        if (idev.ne.0) then
+          call mgmeta(98,-111)    !seite 22
+        else
+          call mgmeta(-98,-111)    !seite 22
+        endif
+
+      else if (iplot.lt.0) then
+
+        if (idev.ne.0) then
+          call mgmeta(98,-113)    !seite 22
+        else
+          call mgmeta(-98,-113)    !seite 22
+        endif
+
+      endif !iplot
+
+c--- Open plotfiles }
+
+      iplano=1
+
+      if (xmin.eq.9999.) then
+        xplmin=xmn
+      else
+        xplmin=xmin
+      endif
+
+      if (xmax.eq.9999.) then
+        xplmax=xmx
+      else
+        xplmax=xmax
+      endif
+
+      if (ymin.eq.9999.) then
+        yplmin=ymn
+      else
+        yplmin=ymin
+      endif
+
+      if (ymax.eq.9999.) then
+        yplmax=ymx
+      else
+        yplmax=ymax
+      endif
+
+      if (zmin.eq.9999.) then
+        zplmin=zmn
+      else
+        zplmin=zmin
+      endif
+
+      if (zmax.eq.9999.) then
+        zplmax=zmx
+      else
+        zplmax=zmax
+      endif
+
+      if (nbforcx*nbforcy*nbforcy.ne.0) then
+        dx=(sngl(outbox(2,1))-sngl(outbox(1,1)))*0.1
+        if (xplmin.ge.sngl(outbox(1,1))) xplmin=sngl(outbox(1,1))-dx
+        if (xplmax.le.sngl(outbox(2,1))) xplmax=sngl(outbox(2,1))+dx
+        dy=(sngl(outbox(2,2))-sngl(outbox(1,2)))*0.1
+        if (yplmin.ge.sngl(outbox(1,2))) yplmin=sngl(outbox(1,2))-dy
+        if (yplmax.le.sngl(outbox(2,2))) yplmax=sngl(outbox(2,2))+dy
+        dz=(sngl(outbox(2,3))-sngl(outbox(1,3)))*0.1
+        if (zplmin.ge.sngl(outbox(1,3))) zplmin=sngl(outbox(1,3))-dz
+        if (zplmax.le.sngl(outbox(2,3))) zplmax=sngl(outbox(2,3))+dz
+      endif
+
+      dx=(xplmax-xplmin)*0.05
+      if (xmin.eq.9999.) then
+        xplmin=xplmin-dx
+      endif
+
+      if (xmax.eq.9999.) then
+        xplmax=xplmax+dx
+      endif
+
+      dy=(yplmax-yplmin)*0.05
+      if (ymin.eq.9999.) then
+        yplmin=yplmin-dy
+      endif
+
+      if (ymax.eq.9999.) then
+        yplmax=yplmax+dy
+      endif
+
+      dz=(zplmax-zplmin)*0.05
+      if (zmin.eq.9999.) then
+        zplmin=zplmin-dz
+      endif
+
+      if (zmax.eq.9999.) then
+        zplmax=zplmax+dz
+      endif
+
+      if (dx.eq.0.0d0) then
+        dx=1.05
+        xplmin=xplmin-dx
+        xplmax=xplmax+dx
+      endif
+
+      if (dy.eq.0.0d0) then
+        dy=1.05
+        yplmin=yplmin-dy
+        yplmax=yplmax+dy
+      endif
+
+      if (dz.eq.0.0d0) then
+        dz=1.05
+        zplmin=zplmin-dz
+        zplmax=zplmax+dz
+      endif
+
+      if (xplmax.le.xplmin.or.zplmax.le.zplmin.or.zplmax.le.zplmin) then
+        write(lun6,*)'*** Warning in clcmag_bpolyplot: Bad coordinate system for plotting '
+        goto 9999
+      endif
+
+      pscal=min(3.,sqrt(10000./((xplmax-xplmin)*(zplmax-zplmin))))
+
+c--- 3D, top and side views {
+
+      if (jcomment.ne.0) call mtitle(trim(ctitle))
+
+      call mplzon(1,1,1,' ')
+      call mplfra(0.,10.,0.,10.,'AB')
+
+      if (kunduplot_mode.eq.0) then
+
+        call mplset('YMGL',0.5)
+
+        if (theta.ne.0.0.or.phi.ne.0.0) then
+
+          call mgset('CHHE',0.2)
+          call mplzon(2,2,1,'S')
+          call mplfr3(0.,1.,0.,1.,0.,1.,theta,phi,'W')
+
+          xpl(1)=-0.8
+          xpl(2)=-0.6
+          ypl(1)=-0.8
+          ypl(2)=-0.8
+          zpl(1)=0.0
+          zpl(2)=0.0
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'x')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+
+          xpl(1)=-0.8
+          xpl(2)=-0.8
+          ypl(1)=-0.8
+          ypl(2)=-0.6
+          zpl(1)=0.0
+          zpl(2)=0.0
+
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'y')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+
+          xpl(1)=-0.8
+          xpl(2)=-0.8
+          ypl(1)=-0.8
+          ypl(2)=-0.8
+          zpl(1)=0.
+          zpl(2)=0.2
+
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'z')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+          call muwk(0,0)
+
+          call mplzon(1,1,1,'S')
+          call mplfra(0.,10.,0.,10.,'AB')
+        endif
+
+        call mgset('CHHE',0.5)
+        call mtx(4.1,4.7,'upper magnets')
+        call mtx(4.1,1.8,'lower magnets')
+        call mgset('CHHE',0.4)
+        call mtx(4.6,-0.75,'x[mm]')
+        call mshplt_set_text_angle(90.)
+        call mtx(-1.,2.4,'z[mm]')
+        call mshplt_set_text_angle(0.)
+        call mplset('YMGL',2.)
+        call mplset('YMGL',0.5)
+        call mgset('CHHE',0.4)
+        call muwk(0,0)
+        call mplzon(2,2,1,'S')
+      else
+        call mplset('YMGL',0.5)
+        call mplzon(1,1,1,' ')
+        call mgset('CHHE',0.4)
+        if (theta.ne.0.0.or.phi.ne.0.0) then
+
+          call mplfr3(0.,1.,0.,1.,0.,1.,theta,phi,'W')
+          call mplfra(0.,1.,0.,1.,'AB')
+
+          xpl(1)=0.2
+          xpl(2)=0.3
+          ypl(1)=0.0
+          ypl(2)=0.0
+          zpl(1)=0.0
+          zpl(2)=0.0
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'x')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+
+          xpl(1)=0.2
+          xpl(2)=0.2
+          ypl(1)=0.0
+          ypl(2)=0.1
+          zpl(1)=0.0
+          zpl(2)=0.0
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'y')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+
+          xpl(1)=0.2
+          xpl(2)=0.2
+          ypl(1)=0.0
+          ypl(2)=0.0
+          zpl(1)=0.0
+          zpl(2)=0.1
+          xt(1)=xpl(1)+(xpl(2)-xpl(1))*1.3
+          yt(1)=ypl(1)+(ypl(2)-ypl(1))*1.3
+          zt(1)=zpl(1)+(zpl(2)-zpl(1))*1.3
+          call mshplt_3dto2d(1,xt,-zt,yt,xt,zt)
+          call mtx(xt(1),zt(1),'z')
+          call mshplt_3dto2d(2,xpl,-zpl,ypl,xpl,ypl)
+          call mpl(2,xpl,ypl)
+          call muwk(0,0)
+
+        endif
+        call mplzon(1,1,1,'S')
+      endif
+
+      iplano=1
+
+c y is vertical (WAVE-system)
+      if (theta.eq.0.0.and.phi.eq.0.0) then
+
+        !call mplfra(xplmin,xplmax,yplmin,yplmax,' ')
+        call mshplt_frame(xplmin,xplmax,yplmin,yplmax,'x[mm]','y[mm]',' ')
+        !call mplax('x (mm)', 'y (mm)')
+        !call muwk(0,0)
+
+        if (nbforcx*nbforcy*nbforcz.ne.0)
+     &    call undumag_bpolypl2(forxpl,forypl,forcol,12)
+
+        do iline=1,nline
+
+          x=xb(iline)
+          y=yb(iline)
+          z=zb(iline)
+          bx=bxb(iline)
+          by=byb(iline)
+          bz=bzb(iline)
+
+          if (bx**2+by**2+bz**2.eq.0.0d0) cycle
+
+          imag=nint(rmagb(iline))
+          icol=nint(rcolb(iline))
+          iplan=nint(rplanb(iline))
+          icorn=nint(rcornb(iline))
+
+          ncorn=abs(icorn)
+
+          if (iline.eq.nline) then
+
+            xpl(ncorn)=x
+            ypl(ncorn)=y
+            zpl(ncorn)=z
+
+            iplano=iplan
+            ncorno=ncorn
+            rcol=rcolb(iline)
+
+          endif !(iline.eq.nline
+
+          if(iplan.ne.iplano.or.iline.eq.nline) then
+
+            do i=1,ncorno
+              if (
+     &          xpl(i).lt.xplmin.or.
+     &          xpl(i).gt.xplmax.or.
+     &          ypl(i).lt.yplmin.or.
+     &          ypl(i).gt.yplmax.or.
+     &          zpl(i).lt.zplmin.or.
+     &          zpl(i).gt.zplmax
+     &          ) cycle
+            enddo
+
+            do i=1,ncorno
+              zplm(i)=-zpl(i)
+            enddo
+
+            call mshplt_set_line_width(rlwidth/5.)
+            call mgset('PLCI',1.)
+            call mpl(ncorno,xpl,ypl)
+
+            xc=0.
+            yc=0.
+            zc=0.
+
+            do i=1,ncorno-1
+              xc=xc+xpl(i)
+              yc=yc+ypl(i)
+              zc=zc+zpl(i)
+            enddo
+
+            xc=xc/(ncorno-1)
+            yc=yc/(ncorno-1)
+            zc=zc/(ncorno-1)
+
+            do i=1,ncorno
+              xpl(i)=xpl(i)+(xc-xpl(i))*5.0*rlwidth
+              ypl(i)=ypl(i)+(yc-ypl(i))*5.0*rlwidth
+              zpl(i)=zpl(i)+(zc-zpl(i))*5.0*rlwidth
+              zplm(i)=-zpl(i)
+            enddo
+
+            call mshplt_set_line_width(rlwidth/2.)
+            call mgset('PLCI',rcol)
+            call mpl(ncorno,xpl,ypl)
+
+          endif !iplano
+
+          xpl(ncorn)=x
+          ypl(ncorn)=y
+          zpl(ncorn)=z
+
+          iplano=iplan
+          ncorno=ncorn
+          rcol=rcolb(iline)
+
+        enddo !nline
+
+        call mshplt_set_line_width(rlwidth*2.)
+        do iw=1,ncwires
+          rcol=sngl(wire(9,iw))
+          call mgset('PLCI',rcol)
+          xpl(1)=sngl(wire(3,iw))
+          xpl(2)=sngl(wire(6,iw))
+          ypl(1)=sngl(wire(4,iw))
+          ypl(2)=sngl(wire(7,iw))
+          call mpl(2,xpl,ypl)
+        enddo
+        call mshplt_set_line_width(rlwidth/2.)
+
+      else !:if (theta.eq.0.0.and.phi.eq.0.0) then
+
+        xyzmin=min(xplmin,yplmin,zplmin)!*0.8
+        xyzmax=max(xplmax,yplmax,zplmax)!*0.8
+
+        !dx=(xyzmax-xyzmin)*0.1*0.0
+c        call mplfr3(xyzmin,xyzmax,
+c     &    -xyzmax,-xyzmin,
+c     &    xyzmin,xyzmax,theta,phi,'W')
+
+        !call mplfr3(xplmin,xplmax,zplmin,zplmax,yplmin,yplmax,theta,phi,'W')
+        call mplfr3(xyzmin,xyzmax,xyzmin,xyzmax,xyzmin,xyzmax,theta,phi,'W')
+        !goto 9999
+
+        do iline=1,nline
+
+          x=xb(iline)
+          y=yb(iline)
+          z=zb(iline)
+          bx=bxb(iline)
+          by=byb(iline)
+          bz=bzb(iline)
+
+          if (bx**2+by**2+bz**2.eq.0.0d0) cycle
+
+          imag=nint(rmagb(iline))
+          icol=nint(rcolb(iline))
+          iplan=nint(rplanb(iline))
+          icorn=nint(rcornb(iline))
+
+          ncorn=abs(icorn)
+
+          if (iline.eq.nline) then
+
+            xpl(ncorn)=x
+            ypl(ncorn)=y
+            zpl(ncorn)=z
+
+            iplano=iplan
+            ncorno=ncorn
+            rcol=rcolb(iline)
+
+          endif !(iline.eq.nline
+
+          if(iplan.ne.iplano.or.iline.eq.nline) then
+
+            do i=1,ncorno
+              if (
+     &          xpl(i).lt.xplmin.or.
+     &          xpl(i).gt.xplmax.or.
+     &          ypl(i).lt.yplmin.or.
+     &          ypl(i).gt.yplmax.or.
+     &          zpl(i).lt.zplmin.or.
+     &          zpl(i).gt.zplmax
+     &          ) cycle
+            enddo
+
+            do i=1,ncorno
+              zplm(i)=-zpl(i)
+            enddo
+
+            call mgset('PLCI',1.)
+            call mpl3(ncorno,xpl,zplm,ypl)
+
+            xc=0.
+            yc=0.
+            zc=0.
+
+            do i=1,ncorno-1
+              xc=xc+xpl(i)
+              yc=yc+ypl(i)
+              zc=zc+zpl(i)
+            enddo
+
+            xc=xc/(ncorno-1)
+            yc=yc/(ncorno-1)
+            zc=zc/(ncorno-1)
+
+            do i=1,ncorno
+              xpl(i)=xpl(i)+(xc-xpl(i))*0.015*rcol
+              ypl(i)=ypl(i)+(yc-ypl(i))*0.015*rcol
+              zpl(i)=zpl(i)+(zc-zpl(i))*0.015*rcol
+              zplm(i)=-zpl(i)
+            enddo
+
+            call mgset('PLCI',rcol)
+            call mpl3(ncorno,xpl,zplm,ypl)
+
+          endif !iplano
+
+          xpl(ncorn)=x
+          ypl(ncorn)=y
+          zpl(ncorn)=z
+
+          iplano=iplan
+          ncorno=ncorn
+          rcol=rcolb(iline)
+
+        enddo !nline
+
+        call mshplt_set_line_width(rlwidth*2.)
+        do iw=1,ncwires
+          rcol=sngl(wire(9,iw))
+          call mgset('PLCI',rcol)
+          xpl(1)=sngl(wire(3,iw))
+          xpl(2)=sngl(wire(6,iw))
+          ypl(1)=sngl(wire(4,iw))
+          ypl(2)=sngl(wire(7,iw))
+          zpl(1)=-sngl(wire(5,iw))
+          zpl(2)=-sngl(wire(8,iw))
+          call mpl3(2,xpl,zpl,ypl)
+        enddo
+        call mshplt_set_line_width(rlwidth/2.)
+
+      endif !(theta.eq.0.0.and.phi.eq.0.0) then
+
+      call muwk(0,0)
+
+      if (kunduplot_mode.ne.0) goto 9999
+
+c--- 3D }
+
+c--- y vs z or z vs y {
+
+      !call mplfra(zplmin,zplmax,yplmin,yplmax,' ')
+      !call mplax('z (mm)', 'y (mm)')
+      call mshplt_frame(zplmin,zplmax,yplmin,yplmax,'z[mm]','y[mm]',' ')
+      if (nbforcx*nbforcy*nbforcz.ne.0)
+     &  call undumag_bpolypl2(forzpl,forypl,forcol,23)
+
+      iplano=1
+
+      do iline=1,nline
+
+        x=xb(iline)
+        y=yb(iline)
+        z=zb(iline)
+        bx=bxb(iline)
+        by=byb(iline)
+        bz=bzb(iline)
+
+        if (bx**2+by**2+bz**2.eq.0.0d0) cycle
+
+        imag=nint(rmagb(iline))
+        icol=nint(rcolb(iline))
+        iplan=nint(rplanb(iline))
+        icorn=nint(rcornb(iline))
+
+        ncorn=abs(icorn)
+
+        if (iline.eq.nline) then
+
+          xpl(ncorn)=x
+          ypl(ncorn)=y
+          zpl(ncorn)=z
+
+          iplano=iplan
+          ncorno=ncorn
+          rcol=rcolb(iline)
+
+        endif !(iline.eq.nline
+
+        if(iplan.ne.iplano.or.iline.eq.nline) then
+
+          do i=1,ncorno
+            zplm(i)=-zpl(i)
+          enddo
+
+          call mshplt_set_line_width(rlwidth/5.)
+          call mgset('PLCI',1.)
+          call mpl(ncorno,zpl,ypl)
+
+          xc=0.
+          yc=0.
+          zc=0.
+
+          do i=1,ncorno-1
+            xc=xc+xpl(i)
+            yc=yc+ypl(i)
+            zc=zc+zpl(i)
+          enddo
+
+          xc=xc/(ncorno-1)
+          yc=yc/(ncorno-1)
+          zc=zc/(ncorno-1)
+
+          izero=0
+          do i=1,ncorno
+            if (
+     &        abs(yc-ypl(i)).gt.1.0e-6 .and. abs(zc-zpl(i)).gt.1.0e-6
+     &        ) izero=1
+            xpl(i)=xpl(i)+(xc-xpl(i))*2.0*rlwidth
+            ypl(i)=ypl(i)+(yc-ypl(i))*2.0*rlwidth
+            zpl(i)=zpl(i)+(zc-zpl(i))*2.0*rlwidth
+            zplm(i)=-zpl(i)
+          enddo
+
+          call mgset('PLCI',rcol)
+
+          if (izero.ne.0) call mpl(ncorno,zpl,ypl)
+
+        endif !iplano
+
+        xpl(ncorn)=x
+        ypl(ncorn)=y
+        zpl(ncorn)=z
+
+        iplano=iplan
+        ncorno=ncorn
+        rcol=rcolb(iline)
+
+      enddo !nline
+
+      call mshplt_set_line_width(rlwidth*2.)
+      do iw=1,ncwires
+        rcol=sngl(wire(9,iw))
+        call mgset('PLCI',rcol)
+        xpl(1)=sngl(wire(3,iw))
+        xpl(2)=sngl(wire(6,iw))
+        ypl(1)=sngl(wire(4,iw))
+        ypl(2)=sngl(wire(7,iw))
+        zpl(1)=sngl(wire(5,iw))
+        zpl(2)=sngl(wire(8,iw))
+        call mpl(2,zpl,ypl)
+      enddo
+      call mshplt_set_line_width(rlwidth/2.)
+
+      call mshplt_set_line_width(rlwidtho)
+
+      if (nbforcx*nbforcy*nbforcz.ne.0)
+     &  call undumag_bpolypl2(forzpl,forypl,forcol,23)
+
+c--- y vs z or z vs y }
+
+c--- top views of girder {
+
+      call muwk(0,0)
+      call mplzon(1,4,3,'S')
+
+      do igird=1,2
+
+c--- z vs x, y is vertical coordinate {
+        !hier
+        call mplfra(xplmin,xplmax,zplmin,zplmax,' ')
+        !call mplax('x (mm)', 'z (mm)')
+        !call mshplt_frame(xplmin,xplmax,zplmin,zplmax,'x[mm]','z[mm]',' ')
+
+        if (nbforcx*nbforcy*nbforcz.ne.0)
+     &    call undumag_bpolypl2(forxpl,forzpl,forcol,13)
+
+        if (nline.gt.0) then
+          imago=int(rmagb(nline))
+          kpole=ispole(imago)
+          iplano=1
+          impl=0
+        endif
+
+        do iline=1,nline
+
+          x=xb(iline)
+          y=yb(iline)
+          z=zb(iline)
+
+          bx=bxb(iline)
+          by=byb(iline)
+          bz=bzb(iline)
+
+          if (bx**2+by**2+bz**2.eq.0.0d0) cycle
+
+          imag=nint(rmagb(iline))
+          icol=nint(rcolb(iline))
+          iplan=nint(rplanb(iline))
+          icorn=nint(rcornb(iline))
+
+          ncorn=abs(icorn)
+
+          if (iline.eq.nline) then
+
+            xpl(ncorn)=x
+            ypl(ncorn)=y
+            zpl(ncorn)=z
+
+            iplano=iplan
+            ncorno=ncorn
+            rcol=rcolb(iline)
+
+          endif !(iline.eq.nline
+
+          if (imag.ne.imago.or.iline.eq.nline) then
+
+            xmc(1)=0.
+            ymc(1)=0.
+            zmc(1)=0.
+
+            xmmx=-1.0e30
+            xmmn= 1.0e30
+            ymmx=-1.0e30
+            ymmn= 1.0e30
+            zmmx=-1.0e30
+            zmmn= 1.0e30
+
+            do i=1,impl-1
+              xmc(1)=xmc(1)+xmpl(i)
+              ymc(1)=ymc(1)+ympl(i)
+              zmc(1)=zmc(1)+zmpl(i)
+              if (xmpl(i).gt.xmmx) xmmx=xmpl(i)
+              if (xmpl(i).lt.xmmn) xmmn=xmpl(i)
+              if (ympl(i).gt.ymmx) ymmx=ympl(i)
+              if (ympl(i).lt.ymmn) ymmn=ympl(i)
+              if (zmpl(i).gt.zmmx) zmmx=zmpl(i)
+              if (zmpl(i).lt.zmmn) zmmn=zmpl(i)
+            enddo
+
+            xmc(1)=xmc(1)/(impl-1)
+            ymc(1)=ymc(1)/(impl-1)
+            zmc(1)=zmc(1)/(impl-1)
+
+            dx=xmmx-xmmn
+            dy=ymmx-ymmn
+            dz=zmmx-zmmn
+
+            impl=0
+
+          endif !imag.ne.imago
+
+          impl=impl+1
+
+          if (iline.eq.nline) then
+
+            xpl(ncorn)=x
+            ypl(ncorn)=y
+            zpl(ncorn)=z
+
+            xmpl(impl)=x
+            ympl(impl)=y
+            zmpl(impl)=z
+
+            bxo=bx
+            byo=by
+            bzo=bz
+
+            iplano=iplan
+            ncorno=ncorn
+            rcol=rcolb(iline)
+
+          endif !(iline.eq.nline
+
+          if(iplan.ne.iplano.or.iline.eq.nline) then
+
+            xc=0.
+            yc=0.
+            zc=0.
+
+            do i=1,ncorno-1
+              xc=xc+xpl(i)
+              yc=yc+ypl(i)
+              zc=zc+zpl(i)
+            enddo
+
+            xc=xc/(ncorno-1)
+            yc=yc/(ncorno-1)
+            zc=zc/(ncorno-1)
+
+            if (igird.eq.1.and.yc.ge.0.0) then
+
+              do i=1,ncorno
+                zplm(i)=-zpl(i)
+              enddo
+
+              call mgset('PLCI',1.)
+              call mpl(ncorno,xpl,zpl)
+
+              izero=0
+              do i=1,ncorno
+                if (
+     &            abs(xc-xpl(i)).gt.1.0e-6 .and. abs(zc-zpl(i)).gt.1.0e-6
+     &            ) izero=1
+                xpl(i)=xpl(i)+(xc-xpl(i))*0.03*rcol
+                ypl(i)=ypl(i)+(yc-ypl(i))*0.03*rcol
+                zpl(i)=zpl(i)+(zc-zpl(i))*0.03*rcol
+                zplm(i)=-zpl(i)
+              enddo
+
+              call mgset('PLCI',rcol)
+              if (izero.ne.0) call mpl(ncorno,xpl,zpl)
+
+              if (imag.ne.imago.or.iline.eq.nline) then
+
+                bo=sqrt(bxo*bxo+byo*byo+bzo*bzo)
+
+                if (abs(bxo).lt.bo*eps) bxo=0.0
+                if (abs(byo).lt.bo*eps) byo=0.0
+                if (abs(bzo).lt.bo*eps) bzo=0.0
+
+                xplb(1)=xmc(1)-2.*bxo/bo*dx/6.
+                xplb(2)=xmc(1)+2.*bxo/bo*dx/6.
+                yplb(1)=ymc(1)-2.*byo/bo*dy/8.
+                yplb(2)=ymc(1)+2.*byo/bo*dy/8.
+                zplb(1)=zmc(1)-2.*bzo/bo*dz/5.
+                zplb(2)=zmc(1)+2.*bzo/bo*dz/5.
+
+                xplbo(1)=xplb(1)
+                xplbo(2)=xplb(2)
+                yplbo(1)=yplb(1)
+                yplbo(2)=yplb(2)
+                zplbo(1)=zplb(1)
+                zplbo(2)=zplb(2)
+
+                if (kpole.eq.0) call mpl(2,xplbo,zplbo)
+
+                vn=sqrt((xplbo(2)-xplbo(1))**2+(zplbo(2)-zplbo(1))**2)
+
+                if (vn.ne.0.0d0) then
+
+                  vnx=(xplbo(2)-xplbo(1))/vn
+                  vnz=(zplbo(2)-zplbo(1))/vn
+
+                  xplb(1)=xplbo(2)+vnz*dx/10.0-vnx*dx/10.0
+                  zplb(1)=zplbo(2)-vnx*dz/10.0-vnz*dz/10.0
+
+                  if (kpole.eq.0) call mpl(2,xplb,zplb)
+
+                  xplb(1)=xplbo(2)-vnz*dx/10.0-vnx*dx/10.0
+                  zplb(1)=zplbo(2)+vnx*dz/10.0-vnz*dz/10.0
+
+                  if (kpole.eq.0) call mpl(2,xplb,zplb)
+
+                endif !vn
+
+                if (byo.gt.1.e-9) then
+                  call mgset('MTYP',rmtyp24)
+                  call mgset('MSCF',circ0*pscal/5.)
+                  call mpm(1,xmc(1),zmc(1))
+                  call mgset('MTYP',rmtyp20)
+                  call mgset('MSCF',dot0*pscal/5.)
+                  call mpm(1,xmc(1),zmc(1))
+                else if (byo.lt.0.0) then
+                  call mgset('MTYP',rmtyp24)
+                  call mgset('MSCF',circ0*pscal/5.)
+                  call mpm(1,xmc(1),zmc(1))
+                  call mgset('MTYP',rmtyp31)
+                  call mgset('MSCF',dot0*pscal/5.)
+                  call mpm(1,xmc(1),zmc(1))
+                endif
+
+              endif !imago
+
+            else if (igird.eq.2.and.yc.le.0.0) then
+
+              do i=1,ncorno
+                zplm(i)=-zpl(i)
+              enddo
+
+              call mgset('PLCI',1.)
+              call mpl(ncorno,xpl,zpl)
+
+              izero=0
+              do i=1,ncorno
+                if (
+     &            abs(xc-xpl(i)).gt.1.0e-6 .and. abs(zc-zpl(i)).gt.1.0e-6
+     &            ) izero=1
+                xpl(i)=xpl(i)+(xc-xpl(i))*0.03*rcol
+                ypl(i)=ypl(i)+(yc-ypl(i))*0.03*rcol
+                zpl(i)=zpl(i)+(zc-zpl(i))*0.03*rcol
+                zplm(i)=-zpl(i)
+              enddo
+
+              call mgset('PLCI',rcol)
+              if (izero.ne.0) call mpl(ncorno,xpl,zpl)
+
+              if (imag.ne.imago.or.iline.eq.nline) then
+
+                bo=sqrt(bxo*bxo+byo*byo+bzo*bzo)
+                if (abs(bxo).lt.bo*eps) bxo=0.0
+                if (abs(byo).lt.bo*eps) byo=0.0
+                if (abs(bzo).lt.bo*eps) bzo=0.0
+
+                xplb(1)=xmc(1)-2.*bxo/bo*dx/6.
+                xplb(2)=xmc(1)+2.*bxo/bo*dx/6.
+                yplb(1)=ymc(1)-2.*byo/bo*dy/8.
+                yplb(2)=ymc(1)+2.*byo/bo*dy/8.
+                zplb(1)=zmc(1)-2.*bzo/bo*dz/5.
+                zplb(2)=zmc(1)+2.*bzo/bo*dz/5.
+
+                xplbo(1)=xplb(1)
+                xplbo(2)=xplb(2)
+                yplbo(1)=yplb(1)
+                yplbo(2)=yplb(2)
+                zplbo(1)=zplb(1)
+                zplbo(2)=zplb(2)
+
+                if (kpole.eq.0) call mpl(2,xplbo,zplbo)
+
+                vn=sqrt((xplbo(2)-xplbo(1))**2+(zplbo(2)-zplbo(1))**2)
+
+                if (vn.ne.0.0d0) then
+
+                  vnx=(xplbo(2)-xplbo(1))/vn
+                  vnz=(zplbo(2)-zplbo(1))/vn
+
+                  xplb(1)=xplbo(2)+vnz*dx/10.0-vnx*dx/10.0
+                  zplb(1)=zplbo(2)-vnx*dz/10.0-vnz*dz/10.0
+
+                  if (kpole.eq.0) call mpl(2,xplb,zplb)
+
+                  xplb(1)=xplbo(2)-vnz*dx/10.0-vnx*dx/10.0
+                  zplb(1)=zplbo(2)+vnx*dz/10.0-vnz*dz/10.0
+
+                  if (kpole.eq.0) call mpl(2,xplb,zplb)
+
+                endif !vn
+
+                if (byo.gt.1.e-9) then
+                  call mgset('MTYP',rmtyp24)
+                  call mgset('MSCF',circ0*pscal/5.)
+                  call mpm(1,xmc(1),zmc(1))
+                  call mgset('MTYP',rmtyp20)
+                  call mgset('MSCF',dot0*pscal/5.)
+                  call mpm(1,xmc(1),zmc(1))
+                else if (byo.lt.0.0) then
+                  call mgset('MTYP',rmtyp24)
+                  call mgset('MSCF',circ0*pscal/5.)
+                  call mpm(1,xmc(1),zmc(1))
+                  call mgset('MTYP',rmtyp31)
+                  call mgset('MSCF',dot0*pscal/5.)
+                  call mpm(1,xmc(1),zmc(1))
+                endif
+
+              endif !imago
+
+            endif !yc
+
+          endif !iplano
+
+          xpl(ncorn)=x
+          ypl(ncorn)=y
+          zpl(ncorn)=z
+
+          xmpl(impl)=x
+          ympl(impl)=y
+          zmpl(impl)=z
+
+          bxo=bx
+          byo=by
+          bzo=bz
+
+          iplano=iplan
+          ncorno=ncorn
+          rcol=rcolb(iline)
+          imago=imag
+          kpole=ispole(imago)
+
+        enddo !nline
+
+        if (nbforcx*nbforcy*nbforcz.ne.0) call undumag_bpolypl2(forxpl,forzpl,forcol,13)
+
+        if (igird.eq.1) then
+          call mshplt_set_line_width(rlwidth*2.)
+          do iw=1,ncwires
+            rcol=sngl(wire(9,iw))
+            call mgset('PLCI',rcol)
+            xpl(1)=sngl(wire(3,iw))
+            xpl(2)=sngl(wire(6,iw))
+            ypl(1)=sngl(wire(4,iw))
+            ypl(2)=sngl(wire(7,iw))
+            zpl(1)=sngl(wire(5,iw))
+            zpl(2)=sngl(wire(8,iw))
+            if (ypl(1).gt.0.0.or.ypl(2).gt.0.0) call mpl(2,xpl,zpl)
+          enddo
+          call mshplt_set_line_width(rlwidth/2.)
+        else
+          call mshplt_set_line_width(rlwidth*2.)
+          do iw=1,ncwires
+            rcol=sngl(wire(9,iw))
+            call mgset('PLCI',rcol)
+            xpl(1)=sngl(wire(3,iw))
+            xpl(2)=sngl(wire(6,iw))
+            ypl(1)=sngl(wire(4,iw))
+            ypl(2)=sngl(wire(7,iw))
+            zpl(1)=sngl(wire(5,iw))
+            zpl(2)=sngl(wire(8,iw))
+            if (ypl(1).lt.0.0.or.ypl(2).lt.0.0) call mpl(2,xpl,zpl)
+          enddo
+          call mshplt_set_line_width(rlwidth/2.)
+        endif
+
+      enddo !igird
+
+      call muwk(0,0)
+
+c--- y vs x }
+
+c--- top views of girder}
+
+c--- 3D, top and side views }
+
+9999  continue
+
+      if (iallo.eq.1) then
+        deallocate(xpl)
+        deallocate(ypl)
+        deallocate(zpl)
+        deallocate(zplm)
+        deallocate(xmpl)
+        deallocate(ympl)
+        deallocate(zmpl)
+      endif
+
+c      call mgmeta(0,0)
+c      call mplend
+
+      call mshplt_end
+
+      write(lun6,*)"Done"
+      write(lun6,*)
+
+      deallocate(rmothb,rmagb,rcolb,rplanb,rcornb,
+     &  xb,yb,zb,bxb,byb,bzb,rmatb)
+
+      return
+      end
