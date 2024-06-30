@@ -5,12 +5,15 @@
 from __future__ import print_function #Python 2.7 compatibility
 import radia as rad
 
+import sys,os,platform
 import numpy as np
 from numpy import *
 from copy import *
 
 from scipy.spatial.transform import Rotation as ROT
-from pyhull import qconvex
+from scipy.spatial import ConvexHull
+
+#from pyhull import qconvex
 
 import matplotlib as mpl
 mpl.use('TkAgg')
@@ -20,12 +23,13 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits import mplot3d
 from matplotlib import cm #color maps
 
-global  mshObs,mshTrf,mshNames,mshColors,mshCnt
+global  mshObs,mshTrf,mshNames,mshColors,mshCnt,mshCntMaster,mshCntMembers,mshMagPols
 global Ax,Fig
 global MagVoxelField, PolVoxelField
 
 mshObs = {}
 mshTrf = {}
+mshMagPols = {}
 mshNames = {}
 mshColors = {}
 mshCnt = {}
@@ -34,6 +38,12 @@ mshCntMaster = []
 
 MagVoxelField = []
 PolVoxelField = []
+
+def mshabort(text='\n*** Aborted ***'):
+  print(text)
+  if platform.system() == 'Windows': stat = os.system("taskkill /F /PID " + str(os.getpid()))
+  else: stat = os.system("kill " + str(os.getpid()))
+#enddef abort
 
 def mshObjAddToCnt(cnt,obj):
   global mshCntMaster,mshCntMembers
@@ -63,8 +73,9 @@ def mshIsPole(obj):
 
 def mshGetObjName(obj):
   global mshObs,mshCnt
+  breakpoint()
   if obj in mshCnt: return mshCnt[obj]
-  else: return mshObs[obj][-1]
+  else: return -1
 #enddef
 
 def mshObjDpl(obj, sopt='FreeSym->False',nam=''):
@@ -176,22 +187,17 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.1,scale='xyz',tit='',
   global Fig,Ax,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax,Xcen,Ycen,Zcen
   global MagVoxelField, PolVoxelField
 
-  #breakpoint()
+  #reakpoint()
 
   if obj in mshCnt:
     print(rad.ObjCntStuf(obj))
     return
   #endif
 
-  Fig = plt.gcf()
-  if isame == 0:
-    Ax = Axes3D(Fig)
-
   faces = mshObs[obj][0][2]
-
   fpl =faces
 
-  #breakpoint()
+  #reakpoint()
 
   xmin = Xmin
   xmax = Xmax
@@ -220,7 +226,7 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.1,scale='xyz',tit='',
       rota = mshTrf[itr][2][0]
       for ifpl in range(len(fpl)):
         for ip in range(len(fpl[ifpl])):
-          fpl[ifpl][ip] = rota.apply(fpl[ifpl][ip])
+          fpl[ifpl][ip] = list(rota.apply(fpl[ifpl][ip])[0])
           xmin = min(xmin,fpl[ifpl][ip][0])
           xmax = max(xmax,fpl[ifpl][ip][0])
           ymin = min(ymin,fpl[ifpl][ip][1])
@@ -230,6 +236,19 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.1,scale='xyz',tit='',
         #endfor
       #endfor
     #endif
+  #endfor
+
+  #reakpoint()
+
+  if isame == 0:
+    Fig = plt.figure('MSHRADIA')
+    Ax = Fig.add_subplot(111,projection='3d',visible=True,label='111')
+    plt.show(block=False)
+    #Fig = plt.gcf()
+    #Ax = Axes3D(Fig)
+    #null3d(xmin,xmax,ymin,ymax,zmin,zmax)
+  else:
+    Ax = plt.gca()
   #endfor
 
   Xmin = xmin
@@ -247,12 +266,13 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.1,scale='xyz',tit='',
   Ycen = (ymax+ymin)/2.
   Zcen = (zmax+zmin)/2.
 
+  #reakpoint()
   if scale == 'xz':
     xzmin = min(xmin,zmin)
     xzmax = max(xmax,zmax)
     dxz = (xzmax-xzmin)*0.55
     Ax.set_xlim3d(Xcen-dxz,xcen+dxz)
-    Ax.set_xlim3d(Ycen-dy,ycen+dy)
+    Ax.set_ylim3d(Ycen-dy,ycen+dy)
     Ax.set_zlim3d(Zcen-dxz,Zcen+dxz)
   elif scale == 'xyz':
     xyzmin = min(xmin,ymin,zmin)
@@ -263,7 +283,7 @@ def _mshObjDrw(obj,facecolor='b',edgecolor='black',alpha=0.1,scale='xyz',tit='',
     Ax.set_zlim3d(Zcen-dxyz,Zcen+dxyz)
   else:
     Ax.set_xlim3d(Xcen-dx,Xcen+dx)
-    Ax.set_xlim3d(Ycen-dy,Ycen+dy)
+    Ax.set_ylim3d(Ycen-dy,Ycen+dy)
     Ax.set_xlim3d(Zcen-dz,Zcen+dz)
   #endif
 
@@ -322,16 +342,23 @@ def mshObjCnt(nam=''):
 #endif
 
 def mshObjPolyhdr(verts, ifaces, faces, bounds, Br, nam='',color='b',IsPole=-1):
-  global  mshObs,mshTrf,mshNames,mshColors
+
+  global  mshObs,mshTrf,mshNames,mshColors,mshMagPols
+
   if IsPole == -1:
     if Br[0]*Br[0]+Br[1]*Br[1]+Br[2]*Br[2] == 0: IsPole = 1
     else: IsPole = 0
   #endif
+
   poly = rad.ObjPolyhdr(verts, ifaces, Br)
+
   if nam == '': nam = 'obj_index_' + str(poly)
+
   mshNames[poly] = nam
   mshObs[poly] = [[verts,ifaces,faces,bounds,Br],[],IsPole,nam]
   mshColors[poly] = color
+  mshMagPols[nam] = poly
+
   return poly
 #enddef
 
@@ -358,34 +385,239 @@ def mshTrfRot(crot,vrot,ang):
   return rot
 #enddef mshTrfTrsl(dxyz)
 
-def mshhull3d(vertices):
+def mshqhull2d(x,y):
 
-  vt = vertices.T
-  bounds = [vt[0].min(),vt[0].max(),vt[1].min(),vt[1].max(),vt[2].min(),vt[2].max()]
-  lhull = qconvex('i p',vertices)
+  points = np.array([x,y]).T
 
-  nface = int(lhull[0])
-  ivert = nface + 2
-  nvert = int(lhull[ivert])
+  Hull2D = ConvexHull(points)
+
+  nfaces = Hull2D.nsimplex
+  ifaces = Hull2D.simplices
+  iverts = Hull2D.vertices
+
+  return nfaces,ifaces,iverts
+
+#enddef mshqhull2d(x,y)
+
+def mshhull3d(points, modus='merge'):
+
+  if type(points) == list: points = np.array(points)
+
+  Hull3D = ConvexHull(points,qhull_options="")
+
+  nface = Hull3D.nsimplex
+  ifaces = Hull3D.simplices
+  iverts = Hull3D.vertices
+
+  xmin = 1.0e30
+  xmax = -1.0e30
+  ymin = 1.0e30
+  ymax = -1.0e30
+  zmin = 1.0e30
+  zmax = -1.0e30
+
+  gcen = [0.0,0.0,0.0]
+
+  for i in range(len(iverts)):
+    p = points[iverts[i]]
+    if p[0] < xmin: xmin = p[0]
+    if p[0] > xmax: xmax = p[0]
+    if p[1] < ymin: ymin = p[1]
+    if p[1] > ymax: ymax = p[1]
+    if p[2] < zmin: zmin = p[2]
+    if p[2] > zmax: zmax = p[2]
+    gcen += p
+  #endfor
+
+  gcen /= len(iverts)
+  bounds = [xmin,xmax,ymin,ymax,zmin,zmax]
+
+  vn = np.zeros([nface,6])
+
+  mface = 0
+
+  for i in range(nface):
+
+    if vn[i][0] != 0: continue
+
+    mface += 1
+
+    pois = points[ifaces[i]]
+    dp1 = pois[1]-pois[0]
+    dp2 = pois[2]-pois[1]
+
+    vnx = dp1[1]*dp2[2] - dp1[2]*dp2[1]
+    vny = dp1[2]*dp2[0] - dp1[0]*dp2[2]
+    vnz = dp1[0]*dp2[1] - dp1[1]*dp2[0]
+
+    vnn = (vnx*vnx+vny*vny+vnz*vnz)**0.5
+    vnx /= vnn
+    vny /= vnn
+    vnz /= vnn
+
+    u = pois[0] - gcen
+
+    if u[0]*vnx+u[1]*vny+u[2]*vnz < 0:
+      ifis = ifaces[i]
+      if1 = ifaces[i][1]
+      ifis[1] = ifis[2]
+      ifis[2] = if1
+      ifaces[i] = ifis
+      vnx = -vnx
+      vny = -vny
+      vnz = -vnz
+    #endif
+
+    vn[i][0] = i + 1
+    vn[i][1] = vnx
+    vn[i][2] = vny
+    vn[i][3] = vnz
+    vn[i][5] = mface
+
+    ax = abs(vnx)
+    ay = abs(vny)
+    az = abs(vnz)
+
+    if ax >= ay and ax >= az:
+      vn[i][4] = 1
+    elif ay >= ax and ay >= az:
+      vn[i][4] = 2
+    else:
+      vn[i][4] = 3
+    #endif
+
+    if modus == 'merge':
+
+      for j in range(i+1,nface):
+        if vn[j][0] != 0.0: continue
+        pois = points[ifaces[j]]
+        dp1 = pois[1]-pois[0]
+        dp2 = pois[2]-pois[1]
+        wnx = dp1[1]*dp2[2] - dp1[2]*dp2[1]
+        wny = dp1[2]*dp2[0] - dp1[0]*dp2[2]
+        wnz = dp1[0]*dp2[1] - dp1[1]*dp2[0]
+        wnn = (wnx*wnx+wny*wny+wnz*wnz)**0.5
+        wnx /= wnn
+        wny /= wnn
+        wnz /= wnn
+        u = pois[0] - gcen
+        if u[0]*wnx+u[1]*wny+u[2]*wnz < 0:
+          ifis = ifaces[j]
+          if1 = ifaces[j][1]
+          ifis[1] = ifis[2]
+          ifis[2] = if1
+          ifaces[j] = ifis
+          wnx = -wnx
+          wny = -wny
+          wnz = -wnz
+        #endif
+        if wnx*vnx+wny*vny+wnz*vnz > 0.999:
+          vn[j] = vn[i]
+        #endif
+      #endfor j
+    #endif if modus == 'merge'
+
+  #endfor i
+
+  facets = []
+
+  for m in range(mface):
+
+    if modus == 'merge':
+
+      x = []
+      y = []
+      lface = []
+
+      for i in range(nface):
+        if vn[i][5] == m+1:
+          lface.append(ifaces[i][0])
+          lface.append(ifaces[i][1])
+          lface.append(ifaces[i][2])
+          if vn[i][4] == 1:
+            x.append(points[ifaces[i][0]][1])
+            y.append(points[ifaces[i][0]][2])
+            x.append(points[ifaces[i][1]][1])
+            y.append(points[ifaces[i][1]][2])
+            x.append(points[ifaces[i][2]][1])
+            y.append(points[ifaces[i][2]][2])
+          elif vn[i][4] == 2:
+            x.append(points[ifaces[i][0]][0])
+            y.append(points[ifaces[i][0]][2])
+            x.append(points[ifaces[i][1]][0])
+            y.append(points[ifaces[i][1]][2])
+            x.append(points[ifaces[i][2]][0])
+            y.append(points[ifaces[i][2]][2])
+          else:
+            x.append(points[ifaces[i][0]][0])
+            y.append(points[ifaces[i][0]][1])
+            x.append(points[ifaces[i][1]][0])
+            y.append(points[ifaces[i][1]][1])
+            x.append(points[ifaces[i][2]][0])
+            y.append(points[ifaces[i][2]][1])
+          #endif
+        #endif
+      #endfor nface
+
+      nfaces2,ifaces2,iverts2 = mshqhull2d(x,y)
+
+      p1 = points[lface[iverts2[0]]]
+      p2 = points[lface[iverts2[1]]]
+      p3 = points[lface[iverts2[2]]]
+
+      dp1 = p2 - p1
+      dp2 = p3 - p2
+
+      vnx = dp1[1]*dp2[2] - dp1[2]*dp2[1]
+      vny = dp1[2]*dp2[0] - dp1[0]*dp2[2]
+      vnz = dp1[0]*dp2[1] - dp1[1]*dp2[0]
+
+      vnn = (vnx*vnx+vny*vny+vnz*vnz)**0.5
+
+      vnx /= vnn
+      vny /= vnn
+      vnz /= vnn
+
+      u = p1 - gcen
+
+      lv = len(iverts2)
+      kface = []
+      if u[0]*vnx+u[1]*vny+u[2]*vnz < 0:
+        for i in range(lv):
+          kface.append(lface[iverts2[lv-1-i]])
+        #endfor
+      else:
+        for i in range(lv):
+          kface.append(lface[iverts2[i]])
+        #endfor
+      #endif
+    else:
+      kface = ifaces[m]
+      lv = len(kface)
+    #endif modus == 'merge'
+
+    fac = []
+    for i in range(lv):
+      ipoi = kface[i]
+      fac.append([points[ipoi][0],points[ipoi][1],points[ipoi][2]])
+    #endfor
+    facets.append(fac)
+
+  #endfor mface
+
+  verts =[]
+
+  for pois in points[iverts]: verts.append(list(pois))
 
   ifaces = []
-  faces = []
 
-  for i in range(1,nface+1):
-    iface = np.fromstring(lhull[i],dtype=np.int,sep=' ')
-    faces.append(vertices[iface])
-    for i in range(len(iface)): iface[i] += 1
-    ifaces.append(list(iface))
+  for f in facets:
+    ifac = []
+    for p in f: ifac.append(verts.index(p)+1) #RADIA counts indices from one
+    ifaces.append(ifac)
   #endfor
 
-  verts = []
-
-  for i in range(ivert+1,ivert+1+nvert):
-    dv = np.fromstring(lhull[i],sep=' ')
-    verts.append(list(dv))
-  #endfor
-
-  return verts,ifaces,faces,bounds
+  return verts,ifaces,facets,bounds
 
 #enddef mshhull3d(vertices)
 

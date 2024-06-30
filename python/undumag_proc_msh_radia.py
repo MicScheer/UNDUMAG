@@ -2,16 +2,14 @@
 # +PATCH,//RADIA/PYTHON
 # +DECK,undumag_proc_msh_radia,T=PYTHON.
 
-UnduSetUp = mshObjCnt('UnduSetup')
-mshObjAddToCnt(UnduSetUp,AllMagPols)
+UnduSetUp = msh.mshObjCnt('UnduSetup')
+msh.mshObjAddToCnt(UnduSetUp,AllMagPols)
 
 ForceColor=[1,0,0.5]
 
 FPrec=0.1
 
 rad.FldCmpPrc('PrcForce->' + repr(FPrec))
-
-if iUnduForce==0: kForceMagPol=0
 
 t0= time.time()
 
@@ -191,7 +189,7 @@ if iSolve !=0 :
 
     FPOLMAP = open("unduradia_pol.map",'w')
 
-    for po in mshCntMembers[UnduPol]:
+    for po in msh.mshCntMembers[UnduPol]:
 
       Voxel = rad.ObjM(po)
       nVoxel = len(Voxel)
@@ -249,7 +247,7 @@ if iSolve !=0 :
 
     FMAGMAP = open("unduradia_mag.map",'w')
 
-    for mg in mshCntMembers[UnduMag]:
+    for mg in msh.mshCntMembers[UnduMag]:
 
       Voxel = rad.ObjM(mg)
       nVoxel = len(Voxel)
@@ -316,9 +314,9 @@ if iSolve !=0 :
   t1=time.time()
   print(NL,"SetUp and solution done in:    ",round(t1-t0,2),"  seconds  ")
 
-  if  kForceMagPol > 0:
+  if  ForceMagPol > 0:
 
-    Force= rad.FldEnrFrc(AllMagPols(kForceMagPol), UnduSetUp,"fxfyfz")
+    Force= rad.FldEnrFrc(ForceMagPol, UnduSetUp,"fxfyfz")
 
     Fx=Force[0]
     Fy=Force[1]
@@ -338,7 +336,7 @@ if iSolve !=0 :
     TCenZ = UnduTorqCenY
     TCenX = UnduTorqCenZ
 
-    TorqueX = rad.FldEnrTrq(AllMagPols[kForceMagPol], UnduSetUp,"tx",[TCenX,TCenY,TCenZ])
+    TorqueX = rad.FldEnrTrq(ForceMagPol, UnduSetUp,"tx",[TCenX,TCenY,TCenZ])
 
     if ixsym!=0:
       TorqueX=2.*TorqueX
@@ -371,7 +369,7 @@ if kDraw !=0:
 
     FPOLMAP = open("unduradia_pol.map",'w')
 
-    for po in mshCntMembers[UnduPol]:
+    for po in msh.mshCntMembers[UnduPol]:
 
      Voxel = rad.ObjM(po)
      nVoxel = len(Voxel)
@@ -407,7 +405,7 @@ if kDraw !=0:
 
     FMAGMAP = open("unduradia_mag.map",'w')
 
-    for mg in mshCntMembers[UnduMag]:
+    for mg in msh.mshCntMembers[UnduMag]:
 
      Voxel = rad.ObjM(mg)
      nVoxel = len(Voxel)
@@ -443,7 +441,7 @@ if kDraw !=0:
 
 #endif
 
-mshObjDrw(UnduSetUp)
+msh.mshObjDrw(UnduSetUp)
 
 #breakpoint()
 
