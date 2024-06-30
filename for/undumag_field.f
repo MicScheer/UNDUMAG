@@ -1,4 +1,4 @@
-*CMZ :          13/06/2024  16.14.12  by  Michael Scheer
+*CMZ :          30/06/2024  16.17.15  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  11.04.17  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/01 12/04/2021  14.05.35  by  Michael Scheer
@@ -47,11 +47,11 @@
       save ical
 
 c      kfail=iwarnbound
-c      ifailin=ifail
+      ifailin=ifail
       ifail=0
 c      kinside=0 ! use as flag, see undmag_end
 
-      if (knomagmap.eq.0.and.knopolmap.eq.0) then
+      if (knomagmap.eq.0.and.knopolmap.eq.0.and.ifailin.eq.0) then
         kinside=0
       else
         kinside=-1

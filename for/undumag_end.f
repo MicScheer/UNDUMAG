@@ -1,4 +1,4 @@
-*CMZ :          14/06/2024  09.20.40  by  Michael Scheer
+*CMZ :          30/06/2024  16.08.56  by  Michael Scheer
 *CMZ :  2.05/04 06/02/2024  15.02.28  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.05.20  by  Michael Scheer
 *CMZ :  2.05/01 22/10/2023  14.47.55  by  Michael Scheer
@@ -101,7 +101,7 @@
 
       implicit none
 
-*KEEP,DEBUGUTIL.
+*KEEP,debugutil,T=F77.
       double precision x_debug,y_debug,z_debug,a_debug(100)
       integer i_debug,k_debug
       character(64) c64_debug
@@ -1127,6 +1127,7 @@ c              if (ix.eq.70) i_debug=1
               call undumag_field(xx/1000.0d0,yy/1000.0d0,zz/1000.0d0,
      &          hx,hy,hz,ifail)
 
+c              if (xx.gt.20) print*,ix,x,xx
               if (itry.eq.0.and.ifail.eq.-1) then
                 ifail=0
               endif
@@ -1257,6 +1258,7 @@ c              write(lun6,*)"field:",ix,iy,iz
           bcy=bpebc(5,kmag)
           bcz=bpebc(6,kmag)
 
+          ifail=kinside
           call undumag_field(x/1000.0d0,y/1000.0d0,z/1000.0d0,hx,hy,hz,ifail)
           if (ifail.gt.0) then
             write(lun6,*)"Undumag_field returned failure at point: ",x,y,z
@@ -1370,6 +1372,7 @@ c              write(lun6,*)"field:",ix,iy,iz
           bcz=bpebc(6,kmag)
           bc=sqrt(bcx*bcx+bcy*bcy+bcz*bcz)
 
+          ifail=kinside
           call undumag_field(x/1000.0d0,y/1000.0d0,z/1000.0d0,hx,hy,hz,ifail)
 
           if (ifail.gt.0) then
@@ -1442,6 +1445,7 @@ c              write(lun6,*)"field:",ix,iy,iz
           bcy=bpebc(5,kmag)
           bcz=bpebc(6,kmag)
 
+          ifail=kinside
           call undumag_field(x/1000.0d0,y/1000.0d0,z/1000.0d0,hx,hy,hz,ifail)
 
           if (ifail.gt.0) then

@@ -1,4 +1,4 @@
-*CMZ :          25/06/2024  10.08.38  by  Michael Scheer
+*CMZ :          30/06/2024  15.40.49  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.14.41  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/00 26/10/2020  14.56.48  by  Michael Scheer
@@ -61,7 +61,7 @@ c oder Reduce olegqz.red, qxqyqz.red, rec_int.red etc.
       use commandlinef90m
 
       implicit none
-*KEEP,debugutil,T=F77.
+*KEEP,DEBUGUTIL.
       double precision x_debug,y_debug,z_debug,a_debug(100)
       integer i_debug,k_debug
       character(64) c64_debug
@@ -322,7 +322,7 @@ c                    stop
 
               if (iout.eq.-1) then
                 if (kinsidelocal(ith).gt.0) then
-                  write(lun6,*)"*** Error 1 in subroutine undumag_bpolyeder: Colliding Magnets: ",imag,kinsidelocal(ith)
+                  write(lun6,*)"*** Warning in subroutine undumag_bpolyeder: Inside Magnet or colliding Magnets: ",imag,kinsidelocal(ith)
 c                  print*,i_debug
 c                  stop
                 endif
