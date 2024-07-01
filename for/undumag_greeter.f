@@ -5,7 +5,32 @@
       use commandlinef90m
       implicit none
 *KEEP,unduver.
-      include 'unduver.cmn'
+      print *
+      print *
+      print *
+      write(lun6,*)'     **********************************************************'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                       UNDUMAG                          *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                    Version 2.05/05                     *'
+      write(lun6,*)'     *                        1.7.2024                        *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     *                     Michael Scheer                     *'
+      write(lun6,*)'     *                       HZB/BESSY                        *'
+      write(lun6,*)'     *                                                        *'
+      write(lun6,*)'     **********************************************************'
+
+      print *
+      print *
+      print *
+
+      call util_zeit_kommentar(lun6,"")
+
+      open(unit=999,file="undumag.ver")
+      chuvers="2.05/03"
+      write(999,*)chuvers
+      close(999)
+
 *KEND.
       return
       end

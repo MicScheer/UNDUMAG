@@ -1,4 +1,4 @@
-*CMZ :          30/06/2024  14.01.34  by  Michael Scheer
+*CMZ :          01/07/2024  09.43.02  by  Michael Scheer
 *CMZ :  2.04/28 30/09/2023  08.41.15  by  Michael Scheer
 *CMZ :  2.04/22 22/09/2023  12.32.06  by  Michael Scheer
 *CMZ :  2.04/21 21/09/2023  16.03.24  by  Michael Scheer
@@ -668,7 +668,8 @@ c                call util_string_append(cline,'],',nfirst,nlast)
             if (iforce.ne.0.and.t_magcopy(imp)%cnam.eq.chforcemag) then
               write(lunrad,'(a)')
               write(lunrad,'(a)')"iForceTyp = 1"
-              write(lunrad,'(a)')"ForceMagPol = msh.mshMagPols[msh.mshNames[" // trim(chforcemag) // "]]"
+              write(lunrad,'(a)')"# ForceMagPol = msh.mshMagPols[msh.mshNames[" // trim(chforcemag) // "]]"
+              write(lunrad,'(a)')"ForceMagPol = " // trim(chforcemag)
               write(lunrad,'(a)')
             endif
 
@@ -692,8 +693,8 @@ c                call util_string_append(cline,'],',nfirst,nlast)
             if (iforce.ne.0.and.t_magcopy(imp)%cnam.eq.chforcemag) then
               write(lunrad,'(a)')
               write(lunrad,'(a)')"iForceTyp = 1"
-              write(c32,*)nUnduPol
-              write(lunrad,'(a)')"ForceMagPol = msh.mshMagPols[msh.mshNames[" // trim(chforcemag) // "]]"
+              write(lunrad,'(a)')"# ForceMagPol = msh.mshMagPols[msh.mshNames[" // trim(chforcemag) // "]]"
+              write(lunrad,'(a)')"ForceMagPol = " // trim(chforcemag)
               write(lunrad,'(a)')
             endif
 
@@ -740,7 +741,8 @@ c                call util_string_append(cline,'],',nfirst,nlast)
               if (iforce.ne.0.and.t_magcopy(imp)%cnam.eq.chforcemag) then
                 write(lunrad,'(a)')' '
                 write(lunrad,'(a)')"iForceTyp = 1"
-                write(lunrad,'(a)')"ForceMagPol = msh.mshMagPols[msh.mshNames[" // trim(chforcemag) // "]]"
+                write(lunrad,'(a)')"# ForceMagPol = msh.mshMagPols[msh.mshNames[" // trim(chforcemag) // "]]"
+                write(lunrad,'(a)')"ForceMagPol = " // trim(chforcemag)
                 write(lunrad,'(a)')
                 print*,"*** Warning in clcmag_to_msh_radia: Force calculations for cylinders not yet tested..."
               endif
@@ -778,10 +780,9 @@ c                call util_string_append(cline,'],',nfirst,nlast)
               write(lunrad,'(a)')
 
               if (t_magcopy(imp)%cnam.eq.chforcemag) then
-                write(lunrad,'(a)')' '
+                write(lunrad,'(a)')
                 write(lunrad,'(a)')"iForceTyp = 1"
-                write(c32,*)nUnduPol
-                write(lunrad,'(a)')"nForce = " // trim(adjustl(c32))
+                write(lunrad,'(a)')"ForceMagPol = " // trim(chforcemag)
                 write(lunrad,'(a)')
                 print*,"*** Warning in clcmag_to_msh_radia: Force calculations for cylinders not yet tested..."
               endif
