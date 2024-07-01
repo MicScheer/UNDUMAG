@@ -8,12 +8,6 @@ FPrec=0.1
 
 rad.FldCmpPrc('PrcForce->' + repr(FPrec))
 
-if iUnduForce==0:
-  ForceMagPol=0
-else:
-  print('\n *** Force calculations not implemented, setting ForceMagPol = iforce ***\n')
-  ForceMagPol = iUnduForce
-#endif
 
 t0= time.time()
 
@@ -42,11 +36,6 @@ UnduSetUp = rad.ObjCnt([])
 # 10: number coil in group
 # 11: absolute coil number
 
-for imagpol in range(nMagPolTot):
-  if imagpol==ForceMagPol:
-     rad.ObjDrwAtr(AllMagPols[imagpol],ForceColor,0.0001)
-  #endif
-#endfor
 
 rad.ObjAddToCnt(UnduSetUp,AllMagPols)
 
@@ -157,8 +146,6 @@ if kDraw !=0:
     FMAGMAP.close()
 
   #endif
-
-#  mshDrw(AllMagPols[0])
 
 #endif
 
@@ -371,7 +358,7 @@ if iSolve !=0 :
 
   if  ForceMagPol > 0:
 
-    Force= rad.FldEnrFrc(AllMagPols(ForceMagPol), UnduSetUp,"fxfyfz")
+    Force= rad.FldEnrFrc(ForceMagPol, UnduSetUp,"fxfyfz")
 
     Fx=Force[0]
     Fy=Force[1]
