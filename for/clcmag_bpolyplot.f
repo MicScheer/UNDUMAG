@@ -1,4 +1,4 @@
-*CMZ :          13/08/2024  15.53.46  by  Michael Scheer
+*CMZ :          14/08/2024  08.57.48  by  Michael Scheer
 *CMZ :  2.05/05 25/06/2024  10.28.04  by  Michael Scheer
 *CMZ :  2.04/11 28/08/2023  14.35.56  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  16.06.46  by  Michael Scheer
@@ -66,7 +66,7 @@
       subroutine clcmag_bpolyplot(iplot,xmin,xmax,ymin,ymax,zmin,zmax,
      &  theta,phi,nwitems,ncwires,wire)
 
-*KEEP,bpolyederf90u.
+*KEEP,BPOLYEDERF90U.
 
       use bpolyederf90m
 
@@ -77,7 +77,7 @@
 
       implicit none
 
-*KEEP,mshplt.
+*KEEP,MSHPLT.
       real
      &  pttomm_ps,pttocm_ps, !convert from pt to mm or cm respectively
      &  scale_ps, isscale_ps, !current scale to convert from pt
@@ -253,7 +253,7 @@
      &  xb,yb,zb,bxb,byb,bzb,rmatb
 
       real, dimension (:), allocatable :: xpl,ypl,zpl,zplm,xmpl,ympl,zmpl
-      integer, dimension (:), allocatable :: ispole
+      integer, dimension (:), allocatable :: ispole,ispolemag
 
       real
      &  xplb(2),yplb(2),zplb(2),xt(1),yt(1),zt(1),
@@ -345,7 +345,7 @@
       allocate(
      &  rmothb(nline),rmagb(nline),rcolb(nline),rplanb(nline),rcornb(nline),
      &  xb(nline),yb(nline),zb(nline),bxb(nline),byb(nline),bzb(nline),
-     &  rmatb(nline),cnam(nline),cmoth(nline),ispole(nline)
+     &  rmatb(nline),cnam(nline),cmoth(nline),ispole(nline),ispolemag(nline))
 
       read(lunmag,'(a)')cline
 
@@ -362,8 +362,8 @@
         if (abs(bxb(i)).lt.1.0e-12) bxb(i)=0.0
         if (abs(byb(i)).lt.1.0e-12) byb(i)=0.0
         if (abs(bzb(i)).lt.1.0e-12) bzb(i)=0.0
-c        imag=nint(rmagb(i))
-c        ispolemag(imag)=ispole(i)
+        imag=nint(rmagb(i))
+        ispolemag(imag)=ispole(i)
       enddo
 
       close(lunmag)
@@ -807,7 +807,7 @@ c     &    xyzmin,xyzmax,theta,phi,'W')
           by=byb(iline)
           bz=bzb(iline)
 
-          if (bx**2+by**2+bz**2.eq.0.0d0) cycle
+          if (bx**2+by**2+bz**2.eq.0.0d0.and.ispole(iline).eq.0) cycle
 
           imag=nint(rmagb(iline))
           icol=nint(rcolb(iline))
@@ -925,7 +925,7 @@ c--- y vs z or z vs y {
         by=byb(iline)
         bz=bzb(iline)
 
-        if (bx**2+by**2+bz**2.eq.0.0d0) cycle
+        if (bx**2+by**2+bz**2.eq.0.0d0.and.ispole(iline).eq.0) cycle
 
         imag=nint(rmagb(iline))
         icol=nint(rcolb(iline))
@@ -1051,7 +1051,7 @@ c--- z vs x, y is vertical coordinate {
           by=byb(iline)
           bz=bzb(iline)
 
-          if (bx**2+by**2+bz**2.eq.0.0d0) cycle
+          if (bx**2+by**2+bz**2.eq.0.0d0.and.ispole(iline).eq.0) cycle
 
           imag=nint(rmagb(iline))
           icol=nint(rcolb(iline))
