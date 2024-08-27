@@ -1672,7 +1672,7 @@ Gdebug = 0
 
 global TransRotCop, EchoCLC,DictTransRotCop
 global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
-
+global Inhom,DictInhom
 global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
 Magnets, Pols, SpecMags, SpecPols, NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
 NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -2111,6 +2111,19 @@ def qhull3d(x,y=None,z=None,modus='merge'):
   points = np.array([x,y,z]).T
   #reakpoint()
 
+  x = np.array(x)
+  y = np.array(y)
+  z = np.array(z)
+
+  xmin = x.min()
+  xmax = x.max()
+  ymin = y.min()
+  ymax = y.max()
+  zmin = z.min()
+  zmax = z.max()
+
+  bounds = [xmin,xmax,ymin,ymax,zmin,zmax]
+
   Hull3D = ConvexHull(points,qhull_options="")
 
   nface = Hull3D.nsimplex
@@ -2285,19 +2298,6 @@ def qhull3d(x,y=None,z=None,modus='merge'):
     facets.append(fac)
 
   #endfor mface
-
-  x = np.array(x)
-  y = np.array(y)
-  z = np.array(z)
-
-  xmin = x.min()
-  xmax = x.max()
-  ymin = y.min()
-  ymax = y.max()
-  zmin = z.min()
-  zmax = z.max()
-
-  bounds = [xmin,xmax,ymin,ymax,zmin,zmax]
 
   verts =[]
   for pois in points[iverts]: verts.append(list(pois))
@@ -2661,6 +2661,7 @@ def nqhull3d(nt='?',varlis='x:y:z',select='', plopt='',iplot=1, iretval=0,linewi
     #endif isame
 
     ax = Ax
+
     faces = mplot3d.art3d.Poly3DCollection(facets)
     faces.set_color(facecolor)
     faces.set_edgecolor(edgecolor)
@@ -5287,8 +5288,9 @@ def plotoptions(plopt=''):
   #endif type(IsameGlobal) == int
 
   if not Kplots[Kzone-1]:
-    if re.search('same',plopt): plopt = re.sub("same","",plopt)
-    if re.search('S',plopt): plopt = re.sub("S","",plopt)
+    if re.search('same',plopt) or re.search('S',plopt):
+      if re.search('same',plopt): plopt = re.sub("same","",plopt)
+      if re.search('S',plopt): plopt = re.sub("S","",plopt)
   #endif
 
   if re.search('marker',plopt) or re.search('M',plopt) or re.search('P',plopt):
@@ -7948,6 +7950,14 @@ def nstat(nt='?',var='',select='', iretval=1, isilent=0):
 
 #enddef nstat(nt='?',var='',select='',iretval,isilent)
 
+def nmeanrms(nt='?',var='',select='', iretval=1, isilent=0):
+    #reakpoint()
+    res = nstat(nt,var,select,iretval,1)
+    if isilent==0: print(res[2],res[3])
+    if iretval: return [res[2],res[3]]
+    else: return
+#enddef nrms
+
 def nrms(nt='?',var='',select='', iretval=1, isilent=0):
     #reakpoint()
     res = nstat(nt,var,select,iretval,1)
@@ -9322,8 +9332,13 @@ def hbook2(idh=-1, tit='Histogram2D',
     return -3
   #endif ymin >= ymax
 
+  if nx > 1000:
+    print("*** Warning in hbook2: Number of x-channels too high, will set it to 1000 ***")
+    nx = 1000
+  #endif
+
   if nx <= 0:
-    print("*** Error in hbook2: Negative or zero number of channels ***")
+    print("*** Error in hbook2: Negative or zero number of x-channels ***")
     return -4
   elif nx == 1:
     dx = (xmax-xmin)
@@ -9335,6 +9350,11 @@ def hbook2(idh=-1, tit='Histogram2D',
   #endif nx <= 0:
 
   ix = np.arange(1,nx+1)
+
+  if ny > 1000:
+    print("*** Warning in hbook2: Number of y-channels too high, will set it to 1000 ***")
+    ny = 1000
+  #endif
 
   if ny <= 0:
     print("*** Error in hbook2: Negative or zero number of channels ***")
@@ -14275,7 +14295,6 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
 
-  #reakpoint()
   idn = -1
 
   varl = nlistcolon(var)
@@ -19549,14 +19568,18 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
 #enddef nplot(...) nt idn
 
-def nprof(nt='?',varlis='',select='',weights='',plopt='prof', legend='',
+def nprof(nt='?',varlis='',select='',weights='',plopt='', legend='',
 scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='HnPlot',
 color='default',isort=0):
 
+    if not re.search('prof',plopt): plopt = 'prof' + plopt
+
     plotoptions(plopt)
+
     if not Isame and hexist(hist): hdelete(hist)
-    nplot(nt,varlis,select,weights,plopt, legend,scalex, scaley, scalez, scalet,
-    cmap, hist,color,isort)
+
+    nplot(nt,varlis,select,weights,plopt, legend,scalex, scaley, scalez, scalet,cmap, hist,color,
+          isort)
 #enddef
 
 def nprofs(nt='?',varlis='',select='',weights='',plopt='sameprof', legend='',
@@ -29569,7 +29592,7 @@ def undu_plot_mag_3d(cnams='',alpha=1.0):
 
 global TransRotCop, EchoCLC,DictTransRotCop
 global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
-
+global Inhom,DictInhom
 global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
 Magnets, Pols, SpecMags, SpecPols, NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
 NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -29660,6 +29683,7 @@ for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 def utransrotcop():
 
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -30012,6 +30036,7 @@ def TransRot(cmag,cmoth,x,y,z):
 def checktransrotcop():
 
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -30583,6 +30608,7 @@ def util_rotate_vector_to_y_axis(vin):
 
 def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -30778,6 +30804,7 @@ def blockcorners(mp):
 
 def ureadclc(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -31229,6 +31256,14 @@ def ureadclc(callkey=''):
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         TransRotCop.append(trc)
+      elif ckey == "Inhomogeneity":
+        tinh = ['& ' + ckey]
+        while True:
+          iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+          tinh.append(cline)
+          if cline[:5] == '& End': break
+        #endif
+        Inhom.append(tinh)
       elif ckey == "Rotate" or ckey == "Rotate_Shape":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
@@ -31666,6 +31701,17 @@ def ureadclc(callkey=''):
 
   #endif NMagPolTot
 
+  #Baustelle
+
+  if S_IySym.get() == 'yes':
+    Ymin = - max(abs(Ymin),abs(Ymax))
+    Ymax = -Ymin
+  #endif
+
+  if S_IzSym.get() == 'yes':
+    Zmin = - max(abs(Zmin),abs(Zmax))
+    Zmax = -Zmin
+  #endif
 
   for imp in range(NMagPolTot):
     cnam = MagPolsTot[imp][0][0]
@@ -32620,6 +32666,7 @@ def _h3d(h3d,sx,sy,sz):
 
 def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,modus='line'):
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33095,6 +33142,7 @@ def _module_to_shift_and_rot(imodu):
 def _showGeoPython(modus='3d',item=-1,callkey=''):
 
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33446,6 +33494,14 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
     zplmax = max(zplmax,xyzcoils[5])
   #endif
 
+  if S_IzSym.get() == 'yes':
+    zplmin = -max(abs(zplmin),abs(zplmax))
+    zplmax = -zplmin
+
+  if S_IySym.get() == 'yes':
+    yplmin = -max(abs(yplmin),abs(yplmax))
+    yplmax = -yplmin
+
   dx = (xplmax - xplmin) * 0.05
   dy = (yplmax - yplmin) * 0.05
   dz = (zplmax - zplmin) * 0.05
@@ -33465,6 +33521,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
 def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
 
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33698,6 +33755,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
 
 def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -34036,6 +34094,7 @@ for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 def utransrotcop():
 
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -34388,6 +34447,7 @@ def TransRot(cmag,cmoth,x,y,z):
 def checktransrotcop():
 
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -34959,6 +35019,7 @@ def util_rotate_vector_to_y_axis(vin):
 
 def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -35154,6 +35215,7 @@ def blockcorners(mp):
 
 def ureadclc(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -35605,6 +35667,14 @@ def ureadclc(callkey=''):
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
         TransRotCop.append(trc)
+      elif ckey == "Inhomogeneity":
+        tinh = ['& ' + ckey]
+        while True:
+          iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+          tinh.append(cline)
+          if cline[:5] == '& End': break
+        #endif
+        Inhom.append(tinh)
       elif ckey == "Rotate" or ckey == "Rotate_Shape":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
@@ -36042,6 +36112,17 @@ def ureadclc(callkey=''):
 
   #endif NMagPolTot
 
+  #Baustelle
+
+  if S_IySym.get() == 'yes':
+    Ymin = - max(abs(Ymin),abs(Ymax))
+    Ymax = -Ymin
+  #endif
+
+  if S_IzSym.get() == 'yes':
+    Zmin = - max(abs(Zmin),abs(Zmax))
+    Zmax = -Zmin
+  #endif
 
   for imp in range(NMagPolTot):
     cnam = MagPolsTot[imp][0][0]

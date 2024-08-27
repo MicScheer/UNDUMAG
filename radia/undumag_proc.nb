@@ -1,0 +1,409 @@
+
+(*
+ +PATCH,//UNDUMAG/NB
+ +DECK,undumag_proc,T=TEXT.
+*)
+
+
+ForceColor={1,0,0.5};
+
+FPrec=0.1;
+radFldCmpPrc[PrcForce->FPrec];
+radFldCmpPrc[PrcTorque->FPrec];
+
+If [iUnduForce==0, kForceMagPol=0];
+
+t0=AbsoluteTime[];
+
+mPi=3.141592; (*** My Pi is a little smaller! Pi of Mathematica causes trouble in RADIA ?!?***)
+
+iSolve = 1;
+
+ixsym = 0;
+iysym = 0;
+izsym = 0;
+
+If [iUnduXsym>0, iysym = iUnduXsym;];
+If [iUnduYsym>0, izsym = iUnduYsym;];
+If [iUnduZsym>0, ixsym = iUnduZsym;];
+
+UnduSetUp = radObjCnt[{}];
+
+Do[
+  If[imagpol==kForceMagPol,
+     radObjDrwAtr[AllMagPols[imagpol],ForceColor,0.0001];
+  ];
+  radObjAddToCnt[UnduSetUp,{AllMagPols[imagpol]}];
+,{imagpol,1,nMagPolTot}
+]; (* EndDo nMagPolTot*)
+
+If[ixsym!=0,
+ RadTrfZerPerp[UnduSetUp,{0,0.,0},{1,0,0}];
+]; (* EndIf[ixsym!=0, *)
+
+If[iysym!=0,
+  RadTrfZerPerp[UnduSetUp,{0,UnduSymX,0},{0,1,0}];
+]; (* EndIf[iysym!=0, *)
+
+If[izsym!=0,
+  RadTrfZerPara[UnduSetUp,{0,0,0},{0,0,1}];
+]; (* EndIf[izsym!=0, *)
+
+If[kDraw!=0,
+
+  RadPlot3DOptions[];
+  UnduDraw = radObjDrw[UnduSetUp];
+
+  Show[Graphics3D[ UnduDraw,PlotLabel-> run comment]]
+
+  Export["undumag_radia.pdf", Graphics3D
+  [UnduDraw,PlotLabel-> run comment
+  ,ViewPoint->{100.,100.,100.}],"PDF"]
+
+] (* EndIf[kDraw*)
+
+If[iSolve!=0,
+
+  tiny=0.00;
+  Prec=0.000001;
+  MaxIter=5000;
+  RelaxMethode=0;
+  re=RadSolve[UnduSetUp,Prec,MaxIter,RelaxMethode];
+  UnCert=re[[1]];
+  Iter=re[[4]];
+
+  Print["RelaxMethode, UnCert, MaxIter, Iter:"," ",RelaxMethode," ",
+  UnCert," ",MaxIter," ",Iter];
+
+  FILEMAP = OpenWrite["unduradia.map",FormatType -> OutputForm];
+  SetOptions["unduradia.map",PageWidth->513];
+
+  BzMaxTot = -9999.;
+
+  x=(UnduZMapMin+UnduZMapMax)/2.+tiny;
+  z=(UnduYMapMin+UnduYMapMax)/2.+tiny;
+
+  ya = UnduXMapMin;
+  ye = UnduXMapMax;
+
+  Field = radFldLst[UnduSetUp,"",{x,ya,z}, {x,ye,z},
+  nUnduXMap, "arg", ya];
+
+  Do[ (* iy *)
+
+    y = ya + (ye-ya)/(nUnduXMap-1)*(iy-1) + tiny;
+
+    Bx = Field[[iy,2,1,1]];
+    By = Field[[iy,2,1,2]];
+    Bz = Field[[iy,2,1,3]];
+
+    Hx = Field[[iy,2,2,1]];
+    Hy = Field[[iy,2,2,2]];
+    Hz = Field[[iy,2,2,3]];
+
+    Ax = Field[[iy,2,3,1]];
+    Ay = Field[[iy,2,3,2]];
+    Az = Field[[iy,2,3,3]];
+
+    Mx = Field[[iy,2,4,1]];
+    My = Field[[iy,2,4,2]];
+    Mz = Field[[iy,2,4,3]];
+
+    If[Abs[Bz] > BzMaxTot,BzMaxTot = Abs[Bz];];
+
+    Write[FILEMAP,
+      CForm[x]," ",
+      CForm[y]," ",
+      CForm[z]," ",
+      CForm[Bx]," ",
+      CForm[By]," ",
+      CForm[Bz]," ",
+      CForm[Sqrt[Bx*Bx+By*By+Bz*Bz]]," ",
+      CForm[Hx]," ",
+      CForm[Hy]," ",
+      CForm[Hz]," ",
+      CForm[Sqrt[Hx*Hx+Hy*Hy+Hz*Hz]]," ",
+      CForm[Mx]," ",
+      CForm[My]," ",
+      CForm[Mz]," ",
+      CForm[Sqrt[Mx*Mx+My*My+Mz*Mz]]
+    ];
+
+  ,{iy,nUnduXMap}
+  ]; (* EndDo *)
+
+  Close[FILEMAP];
+
+  If[nUnduNoPolMap == 0,
+
+    FPOLMAP = OpenWrite["unduradia_pol.map",FormatType -> OutputForm];
+    SetOptions["unduradia_pol.map",PageWidth->513];
+
+    Do[ (* ipol *)
+
+      Voxel = radObjM[UnduPol[ipol]];
+      nVoxel = Length[Voxel];
+
+      Do[ (* ivox *)
+
+        x = Voxel[[ivox,1,1]];
+	y = Voxel[[ivox,1,2]];
+	z = Voxel[[ivox,1,3]];
+	
+	Field = radFld[UnduSetUp,"bxbybzhxhyhzmxmymz",{x,y,z}];
+	
+	Bx = Field[[1]];
+	By = Field[[2]];
+	Bz = Field[[3]];
+	
+	Hx = Field[[4]];
+	Hy = Field[[5]];
+	Hz = Field[[6]];
+	
+	Mx = Field[[7]];
+	My = Field[[8]];
+	Mz = Field[[9]];
+	
+	Write[FPOLMAP,
+	  CForm[x]," ",
+	  CForm[y]," ",
+	  CForm[z]," ",
+	  CForm[Bx]," ",
+	  CForm[By]," ",
+	  CForm[Bz]," ",
+	  CForm[Sqrt[Bx*Bx+By*By+Bz*Bz]]," ",
+	  CForm[Hx]," ",
+	  CForm[Hy]," ",
+	  CForm[Hz]," ",
+	  CForm[Sqrt[Hx*Hx+Hy*Hy+Hz*Hz]]," ",
+	  CForm[Mx]," ",
+	  CForm[My]," ",
+	  CForm[Mz]," ",
+	  CForm[Sqrt[Mx*Mx+My*My+Mz*Mz]]
+	  ];
+
+        ,{ivox,1,nVoxel}
+	]; (* EndDo nVoxel*)
+
+      ,{ipol,1,nUnduPol}
+      ]; (* EndDo nUnduPol*)
+
+      Do[ (* ipol *)
+
+	Voxel = radObjM[UnduSpecPol[ipol]];
+	nVoxel = Length[Voxel];
+	
+	Do[ (* ivox *)
+	
+	  x = Voxel[[ivox,1,1]];
+	  y = Voxel[[ivox,1,2]];
+	  z = Voxel[[ivox,1,3]];
+	
+	  Field = radFld[UnduSetUp,"bxbybzhxhyhzmxmymz",{x,y,z}];
+	
+	  Bx = Field[[1]];
+	  By = Field[[2]];
+	  Bz = Field[[3]];
+	
+	  Hx = Field[[4]];
+	  Hy = Field[[5]];
+	  Hz = Field[[6]];
+	
+	  Mx = Field[[7]];
+	  My = Field[[8]];
+	  Mz = Field[[9]];
+	
+	  Write[FPOLMAP,
+	  CForm[x]," ",
+	  CForm[y]," ",
+	  CForm[z]," ",
+	  CForm[Bx]," ",
+	  CForm[By]," ",
+	  CForm[Bz]," ",
+	  CForm[Sqrt[Bx*Bx+By*By+Bz*Bz]]," ",
+	  CForm[Hx]," ",
+	  CForm[Hy]," ",
+	  CForm[Hz]," ",
+	  CForm[Sqrt[Hx*Hx+Hy*Hy+Hz*Hz]]," ",
+	  CForm[Mx]," ",
+	  CForm[My]," ",
+	  CForm[Mz]," ",
+	  CForm[Sqrt[Mx*Mx+My*My+Mz*Mz]]
+	  ];
+	
+	,{ivox,1,nVoxel}
+	]; (* EndDo nVoxel*)
+	
+      ,{ipol,1,nUnduSpecPol}
+      ]; (* EndDo nUnduSpecPol*)
+
+      Close[FPOLMAP];
+
+  ]; (* Endif PolMap*)
+
+  If[nUnduNoMagMap == 0,
+
+    FMAGMAP = OpenWrite["unduradia_mag.map",FormatType -> OutputForm];
+    SetOptions["unduradia_mag.map",PageWidth->513];
+
+    Do[ (* imag *)
+
+      Voxel = radObjM[UnduMag[imag]];
+      nVoxel = Length[Voxel];
+
+      Do[ (* ivox *)
+
+	x = Voxel[[ivox,1,1]];
+	y = Voxel[[ivox,1,2]];
+	z = Voxel[[ivox,1,3]];
+	
+	Field = radFld[UnduSetUp,"bxbybzhxhyhzmxmymz",{x,y,z}];
+	
+	Bx = Field[[1]];
+	By = Field[[2]];
+	Bz = Field[[3]];
+	
+	Hx = Field[[4]];
+	Hy = Field[[5]];
+	Hz = Field[[6]];
+	
+	Mx = Field[[7]];
+	My = Field[[8]];
+	Mz = Field[[9]];
+	
+	Write[FMAGMAP,
+	  CForm[x]," ",
+	  CForm[y]," ",
+	  CForm[z]," ",
+	  CForm[Bx]," ",
+	  CForm[By]," ",
+	  CForm[Bz]," ",
+	  CForm[Sqrt[Bx*Bx+By*By+Bz*Bz]]," ",
+	  CForm[Hx]," ",
+	  CForm[Hy]," ",
+	  CForm[Hz]," ",
+	  CForm[Sqrt[Hx*Hx+Hy*Hy+Hz*Hz]]," ",
+	  CForm[Mx]," ",
+	  CForm[My]," ",
+	  CForm[Mz]," ",
+	  CForm[Sqrt[Mx*Mx+My*My+Mz*Mz]]
+	];
+	
+      ,{ivox,1,nVoxel}
+      ]; (* EndDo nVoxel*)
+
+    ,{imag,1,nUnduMag}
+    ]; (* EndDo nUnduMag*)
+
+    Do[ (* imag *)
+
+      Voxel = radObjM[UnduSpecMag[imag]];
+      nVoxel = Length[Voxel];
+
+      Do[ (* ivox *)
+
+	x = Voxel[[ivox,1,1]];
+	y = Voxel[[ivox,1,2]];
+	z = Voxel[[ivox,1,3]];
+	
+	Field = radFld[UnduSetUp,"bxbybzhxhyhzmxmymz",{x,y,z}];
+	
+	Bx = Field[[1]];
+	By = Field[[2]];
+	Bz = Field[[3]];
+	
+	Hx = Field[[4]];
+	Hy = Field[[5]];
+	Hz = Field[[6]];
+	
+	Mx = Field[[7]];
+	My = Field[[8]];
+	Mz = Field[[9]];
+	
+	Write[FMAGMAP,
+	  CForm[x]," ",
+	  CForm[y]," ",
+	  CForm[z]," ",
+	  CForm[Bx]," ",
+	  CForm[By]," ",
+	  CForm[Bz]," ",
+	  CForm[Sqrt[Bx*Bx+By*By+Bz*Bz]]," ",
+	  CForm[Hx]," ",
+	  CForm[Hy]," ",
+	  CForm[Hz]," ",
+	  CForm[Sqrt[Hx*Hx+Hy*Hy+Hz*Hz]]," ",
+	  CForm[Mx]," ",
+	  CForm[My]," ",
+	  CForm[Mz]," ",
+	  CForm[Sqrt[Mx*Mx+My*My+Mz*Mz]]
+	];
+	
+      ,{ivox,1,nVoxel}
+      ]; (* EndDo nVoxel*)
+
+    ,{imag,1,nUnduSpecMag}
+    ]; (* EndDo nUnduSpecMag*)
+
+    Close[FMAGMAP];
+
+  ]; (* Endif nUnduNoPolMap == 0 *)
+
+  Print[" "];
+  Print["BzMaxTot on-axis: ", BzMaxTot];
+
+  BzIntInf = radFldInt[UnduSetUp, "inf", "bz",{0.,ya,0.}, {0.,ye,0.}];
+  BxIntInf = radFldInt[UnduSetUp, "inf", "bx",{0.,ya,0.}, {0.,ye,0.}];
+  Print[" "];
+  Print["1. vert. Integral on-axis: " ,BzIntInf];
+  Print["1. hori. Integral on-axis: " ,BxIntInf];
+
+]; (* If[iSolve!=0, *)
+
+t1=AbsoluteTime[];
+Print["SetUp and solution done in:    ",Round[t1-t0],"  seconds  "];
+
+Print[" "];
+Print["kForceMagPol = ",kForceMagPol];
+Print[" "];
+
+If [ kForceMagPol>0,
+
+  Force= radFldEnrFrc[AllMagPols[kForceMagPol], UnduSetUp,"fxfyfz"];
+
+  Fx=Force[[1]];
+  Fy=Force[[2]];
+  Fz=Force[[3]];
+
+  (* Not fully clear, be careful *)
+
+  If[ixsym!=0,
+     Fx=0.;
+     Fy=2.*Fy;
+     Fz=2.*Fz;
+  ];
+
+  Print["Fx, Fy, Fz: ",Fx," ",Fy," ",Fz];
+
+  TCenY = UnduTorqCenX;
+  TCenZ = UnduTorqCenY;
+  TCenX = UnduTorqCenZ;
+
+  TorqueX = radFldEnrTrq[AllMagPols[kForceMagPol], UnduSetUp,"tx",
+  {TCenX,TCenY,TCenZ}];
+
+  If[ixsym!=0,
+     TorqueX=2.*TorqueX;
+  ];
+
+  Print["TorqueX: ",TorqueX];
+
+  FILEFORCE = OpenWrite["unduradia.force",FormatType -> OutputForm];
+       Write[FILEFORCE,run," ",CForm[Fx]," ",CForm[Fy]," ",CForm[Fz]," ", CForm[TorqueX]];
+
+  Close[FILEFORCE];
+
+]; (* EndIf [iUnduForce!=0, *)
+
+t2=AbsoluteTime[];
+Print["Force calculations done in:    ",Round[t2-t1],"  seconds  "];
+
