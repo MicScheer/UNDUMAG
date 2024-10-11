@@ -1,4 +1,5 @@
-*CMZ :          30/06/2024  16.25.45  by  Michael Scheer
+*CMZ :  2.05/06 11/10/2024  10.23.55  by  Michael Scheer
+*CMZ :  2.05/05 30/06/2024  16.25.45  by  Michael Scheer
 *CMZ :  2.02/02 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/01 14/01/2022  12.54.16  by  Michael Scheer
 *CMZ :  2.02/00 31/03/2021  20.30.51  by  Michael Scheer
@@ -110,7 +111,7 @@
 
       implicit none
 
-*KEEP,PHYCONparam,T=F77.
+*KEEP,PHYCONPARAM.
 c-----------------------------------------------------------------------
 c     phyconparam.cmn
 c-----------------------------------------------------------------------
@@ -192,10 +193,10 @@ c      vstokes(4,3)=(-sqrt(1./2.),        0.0d0)
 c-----------------------------------------------------------------------
 c     end of phyconparam.cmn
 c-----------------------------------------------------------------------
-*KEEP,seqdebug.
+*KEEP,SEQDEBUG.
       integer iseqdebug
       common/seqdebugc/iseqdebug
-*KEEP,random.
+*KEEP,RANDOM.
       integer*8 irancalls
       integer, parameter :: irnsize=64
       integer irnseed(irnsize),irnmode,irnseedi(irnsize)
@@ -207,7 +208,7 @@ c-----------------------------------------------------------------------
       double precision undumag_variable_getval,val
       double precision xminfb,xmaxfb,yminfb,ymaxfb,zminfb,zmaxfb,x,y,z,gcen(3)
 
-      integer imag
+      integer imag,luno,ix,iy,iz
 
       nowarnugv=1
 
@@ -248,6 +249,10 @@ c-----------------------------------------------------------------------
       nowarnugv=0
 
       ndivfby=max(ndivfboxy,1)
+
+      ubflenx=ubflenx+2.0*dedgefb
+      ubfleny=ubfleny+2.0*dedgefb
+      ubflenz=ubflenz+2.0*dedgefb
 
       if (iforce.ne.9999) then
 
@@ -292,16 +297,6 @@ c-----------------------------------------------------------------------
         forzpl(2)=sngl(bfcenzmm+bflenzmm/2.)
 
       endif !(iforce.ne.9999) then
-
-c      if (iforce.ne.9999)  then
-c        ubfcenx=ubfcenx+xcentershift
-c        bfcenxmm=ubfcenx
-c        utorqcenx=utorqcenx+xcentershift
-c        if (utorqcenx.eq.9999.0d0) utorqcenx=ubfcenx
-c        bfcenx=ubfcenx/1000.0d0
-c        torqcenxmm=utorqcenx
-c        torqcenx=utorqcenx/1000.0d0
-c      endif
 
       forxpl=forxpl+sngl(xcentershift)
 
@@ -361,7 +356,7 @@ c      endif
 
           gcen=t_magcopy(imag)%gcen
 
-          x=t_magcopy(imag)%xmin+gcen(1)
+          x=t_magcopy(imag)%xmin+gcen(1)+xcentershift
           y=t_magcopy(imag)%ymin+gcen(2)
           z=t_magcopy(imag)%zmin+gcen(3)
 
@@ -369,7 +364,7 @@ c      endif
           if (y.lt.yminfb) yminfb=y
           if (z.lt.zminfb) zminfb=z
 
-          x=t_magcopy(imag)%xmax+gcen(1)
+          x=t_magcopy(imag)%xmax+gcen(1)+xcentershift
           y=t_magcopy(imag)%ymax+gcen(2)
           z=t_magcopy(imag)%zmax+gcen(3)
 
@@ -457,5 +452,15 @@ c      endif
         outbox(1,3)=+1.0d30
         outbox(2,3)=-1.0d30
       endif
+
+      open(newunit=luno,file='force.box')
+      do ix=1,2
+        do iy=1,2
+          do iz=1,2
+            write(luno,*)outbox(ix,1),outbox(iy,2),outbox(iz,3)
+          enddo
+        enddo
+      enddo
+      close(luno)
 
       end

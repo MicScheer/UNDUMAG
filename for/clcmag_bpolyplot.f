@@ -1,4 +1,4 @@
-*CMZ :          14/08/2024  08.57.48  by  Michael Scheer
+*CMZ :          09/10/2024  11.13.57  by  Michael Scheer
 *CMZ :  2.05/05 25/06/2024  10.28.04  by  Michael Scheer
 *CMZ :  2.04/11 28/08/2023  14.35.56  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  16.06.46  by  Michael Scheer
@@ -66,7 +66,7 @@
       subroutine clcmag_bpolyplot(iplot,xmin,xmax,ymin,ymax,zmin,zmax,
      &  theta,phi,nwitems,ncwires,wire)
 
-*KEEP,BPOLYEDERF90U.
+*KEEP,bpolyederf90u.
 
       use bpolyederf90m
 
@@ -77,7 +77,7 @@
 
       implicit none
 
-*KEEP,MSHPLT.
+*KEEP,mshplt.
       real
      &  pttomm_ps,pttocm_ps, !convert from pt to mm or cm respectively
      &  scale_ps, isscale_ps, !current scale to convert from pt
@@ -603,12 +603,14 @@ c--- 3D, top and side views {
         endif
 
         call mgset('CHHE',0.5)
-        call mtx(4.1,4.7,'upper magnets')
-        call mtx(4.1,1.8,'lower magnets')
+        call mtx(4.1,4.1,'upper magnets')
+        call mtx(4.1,0.9,'lower magnets')
         call mgset('CHHE',0.4)
-        call mtx(4.6,-0.75,'x[mm]')
+        call mtx(4.6,1.4,'x[mm]')
+        call mtx(4.6,-1.8,'x[mm]')
         call mshplt_set_text_angle(90.)
         call mtx(-1.,2.4,'z[mm]')
+        call mtx(-1.,-0.6,'z[mm]')
         call mshplt_set_text_angle(0.)
         call mplset('YMGL',2.)
         call mplset('YMGL',0.5)
@@ -998,6 +1000,7 @@ c--- y vs z or z vs y {
       enddo !nline
 
       call mshplt_set_line_width(rlwidth*2.)
+
       do iw=1,ncwires
         rcol=sngl(wire(9,iw))
         call mgset('PLCI',rcol)
@@ -1009,8 +1012,8 @@ c--- y vs z or z vs y {
         zpl(2)=sngl(wire(8,iw))
         call mpl(2,zpl,ypl)
       enddo
-      call mshplt_set_line_width(rlwidth/2.)
 
+      call mshplt_set_line_width(rlwidth/2.)
       call mshplt_set_line_width(rlwidtho)
 
       if (nbforcx*nbforcy*nbforcz.ne.0)

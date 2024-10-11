@@ -1,4 +1,5 @@
-*CMZ :          01/07/2024  09.43.02  by  Michael Scheer
+*CMZ :  2.05/06 11/10/2024  10.29.40  by  Michael Scheer
+*CMZ :  2.05/05 01/07/2024  09.43.02  by  Michael Scheer
 *CMZ :  2.04/28 30/09/2023  08.41.15  by  Michael Scheer
 *CMZ :  2.04/22 22/09/2023  12.32.06  by  Michael Scheer
 *CMZ :  2.04/21 21/09/2023  16.03.24  by  Michael Scheer
@@ -439,7 +440,7 @@ c      write(lunrad,'(a)') 'global MagVoxelField, PolVoxelField'
 
           do kpoi=1,t_magnets(kproto)%nhull
 
-            write(c32x,*)sngl(t_magnets(kproto)%xhull(kpoi)+gcen(1))
+            write(c32x,*)sngl(t_magnets(kproto)%xhull(kpoi)+gcen(1)+xcentershift)
             write(c32y,*)sngl(t_magnets(kproto)%yhull(kpoi)+gcen(2))
             write(c32z,*)sngl(t_magnets(kproto)%zhull(kpoi)+gcen(3))
 
@@ -557,7 +558,7 @@ c      write(lunrad,'(a)') 'global MagVoxelField, PolVoxelField'
             do ipoi=1,npoi
 
               write(c32x,*)sngl(t_magnets(kproto)%t_voxels(kvoxel)%xhull(ipoi)+
-     &          gcen(1))
+     &          gcen(1)+xcentershift)
               write(c32y,*)sngl(t_magnets(kproto)%t_voxels(kvoxel)%yhull(ipoi)+
      &          gcen(2))
               write(c32z,*)sngl(t_magnets(kproto)%t_voxels(kvoxel)%zhull(ipoi)+
