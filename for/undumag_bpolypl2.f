@@ -1,3 +1,4 @@
+*CMZ :          10/10/2024  11.17.58  by  Michael Scheer
 *CMZ :  1.18/02 13/06/2017  12.39.31  by  Michael Scheer
 *CMZ :  0.00/00 20/04/2016  12.46.26  by  Michael Scheer
 *CMZ :  1.17/02 09/10/2014  14.45.46  by  Michael Scheer
@@ -10,8 +11,10 @@
 *-- Author :    Michael Scheer   13/08/2004
       subroutine undumag_bpolypl2(xpl,ypl,col,ixyz)
 
-*KEEP,bpolyederf90u.
-      include 'bpolyederf90u.cmn'
+*KEEP,BPOLYEDERF90U.
+
+      use bpolyederf90m
+
 *KEND.
 
       implicit none
@@ -41,6 +44,7 @@
         x(2)=sngl(outbox(2,1))
         y(2)=sngl(outbox(2,2))
         call mshplt_box(x(1),y(1),x(2),y(2))
+        call muwk(0,0)
       else if (ixyz.eq.13) then
         x(1)=sngl(torqcenxmm)
         y(1)=sngl(torqcenzmm)
@@ -59,36 +63,38 @@
         x(2)=sngl(outbox(2,3))
         y(2)=sngl(outbox(2,2))
         call mshplt_box(x(1),y(1),x(2),y(2))
+
+      else
+
+        call mgset('PMCI',1.)
+
+        x(1)=xpl(1)
+        x(2)=xpl(2)
+        y(1)=ypl(1)
+        y(2)=ypl(1)
+        call mpl(2,x,y)
+
+        x(1)=xpl(1)
+        x(2)=xpl(1)
+        y(1)=ypl(1)
+        y(2)=ypl(2)
+        call mpl(2,x,y)
+
+        x(1)=xpl(1)
+        x(2)=xpl(2)
+        y(1)=ypl(2)
+        y(2)=ypl(2)
+        call mpl(2,x,y)
+
+        x(1)=xpl(2)
+        x(2)=xpl(2)
+        y(1)=ypl(1)
+        y(2)=ypl(2)
+        call mpl(2,x,y)
+
       endif
 
-      call mgset('PMCI',1.)
-
-      x(1)=xpl(1)
-      x(2)=xpl(2)
-      y(1)=ypl(1)
-      y(2)=ypl(1)
-      call mpl(2,x,y)
-
-      x(1)=xpl(1)
-      x(2)=xpl(1)
-      y(1)=ypl(1)
-      y(2)=ypl(2)
-      call mpl(2,x,y)
-
-      x(1)=xpl(1)
-      x(2)=xpl(2)
-      y(1)=ypl(2)
-      y(2)=ypl(2)
-      call mpl(2,x,y)
-
-      x(1)=xpl(2)
-      x(2)=xpl(2)
-      y(1)=ypl(1)
-      y(2)=ypl(2)
-      call mpl(2,x,y)
-
       call mshplt_set_line_width(rlwidtho)
-
       call muwk(0,0)
 
       return
