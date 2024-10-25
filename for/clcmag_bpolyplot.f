@@ -1,4 +1,5 @@
-*CMZ :          09/10/2024  11.13.57  by  Michael Scheer
+*CMZ :          25/10/2024  11.42.23  by  Michael Scheer
+*CMZ :  2.05/06 10/10/2024  11.18.39  by  Michael Scheer
 *CMZ :  2.05/05 25/06/2024  10.28.04  by  Michael Scheer
 *CMZ :  2.04/11 28/08/2023  14.35.56  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  16.06.46  by  Michael Scheer
@@ -272,7 +273,7 @@
      &  iplano,ncorno,iline,iw,nline,iallo,
      &  ncorn,ncornmax,igird,imago,impl,izero,nfirst,nlast
 
-      integer luncnf,lunmag
+      integer :: luncnf,lunmag,ical=0
 
       character(64) ctitle,cline
       character(32), dimension(:), allocatable ::  cnam,cmoth
@@ -286,6 +287,7 @@
       data eps/0.01/
 
       iallo=0
+      ical=ical+1
 
       write(lun6,*)
       if (kunduplot_mode.eq.0) then
@@ -775,7 +777,9 @@ c y is vertical (WAVE-system)
         enddo !nline
 
         call mshplt_set_line_width(rlwidth*2.)
+
         do iw=1,ncwires
+          if (abs(wire(2,iw)).eq.0.0d0) cycle
           rcol=sngl(wire(9,iw))
           call mgset('PLCI',rcol)
           xpl(1)=sngl(wire(3,iw))
@@ -888,6 +892,7 @@ c     &    xyzmin,xyzmax,theta,phi,'W')
 
         call mshplt_set_line_width(rlwidth*2.)
         do iw=1,ncwires
+          if (abs(wire(2,iw)).eq.0.0d0) cycle
           rcol=sngl(wire(9,iw))
           call mgset('PLCI',rcol)
           xpl(1)=sngl(wire(3,iw))
@@ -913,6 +918,7 @@ c--- y vs z or z vs y {
       !call mplfra(zplmin,zplmax,yplmin,yplmax,' ')
       !call mplax('z (mm)', 'y (mm)')
       call mshplt_frame(zplmin,zplmax,yplmin,yplmax,'z[mm]','y[mm]',' ')
+c      print*,"Bau 2"
       if (nbforcx*nbforcy*nbforcz.ne.0)
      &  call undumag_bpolypl2(forzpl,forypl,forcol,23)
 
@@ -1002,6 +1008,7 @@ c--- y vs z or z vs y {
       call mshplt_set_line_width(rlwidth*2.)
 
       do iw=1,ncwires
+        if (abs(wire(2,iw)).eq.0.0d0) cycle
         rcol=sngl(wire(9,iw))
         call mgset('PLCI',rcol)
         xpl(1)=sngl(wire(3,iw))
@@ -1016,6 +1023,7 @@ c--- y vs z or z vs y {
       call mshplt_set_line_width(rlwidth/2.)
       call mshplt_set_line_width(rlwidtho)
 
+c      print*,"Bau 3"
       if (nbforcx*nbforcy*nbforcz.ne.0)
      &  call undumag_bpolypl2(forzpl,forypl,forcol,23)
 
@@ -1034,6 +1042,7 @@ c--- z vs x, y is vertical coordinate {
         !call mplax('x (mm)', 'z (mm)')
         !call mshplt_frame(xplmin,xplmax,zplmin,zplmax,'x[mm]','z[mm]',' ')
 
+c        print*,"Bau 4"
         if (nbforcx*nbforcy*nbforcz.ne.0)
      &    call undumag_bpolypl2(forxpl,forzpl,forcol,13)
 
@@ -1337,15 +1346,17 @@ c--- z vs x, y is vertical coordinate {
           ncorno=ncorn
           rcol=rcolb(iline)
           imago=imag
-          kpole=ispole(imago)
+          kpole=ispolemag(imago)
 
         enddo !nline
 
+c        print*,"Bau 5"
         if (nbforcx*nbforcy*nbforcz.ne.0) call undumag_bpolypl2(forxpl,forzpl,forcol,13)
 
         if (igird.eq.1) then
           call mshplt_set_line_width(rlwidth*2.)
           do iw=1,ncwires
+            if (abs(wire(2,iw)).eq.0.0d0) cycle
             rcol=sngl(wire(9,iw))
             call mgset('PLCI',rcol)
             xpl(1)=sngl(wire(3,iw))
@@ -1360,6 +1371,7 @@ c--- z vs x, y is vertical coordinate {
         else
           call mshplt_set_line_width(rlwidth*2.)
           do iw=1,ncwires
+            if (abs(wire(2,iw)).eq.0.0d0) cycle
             rcol=sngl(wire(9,iw))
             call mgset('PLCI',rcol)
             xpl(1)=sngl(wire(3,iw))

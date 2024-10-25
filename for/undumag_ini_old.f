@@ -134,98 +134,12 @@
 ! bpebc(17,imag) select flag
 ! bpebc(18:20,imag) external field and field of coils
 
-*KEEP,PHYCONparam,T=F77.
-c-----------------------------------------------------------------------
-c     phyconparam.cmn
-c-----------------------------------------------------------------------
-
-      complex*16, parameter :: zone1=(1.0d0,0.0d0), zi1=(0.0d0,1.0d0)
-
-      complex*16, dimension(4,3), parameter ::
-     &  vstokes=reshape([
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0,  0.0000000000000000d0),
-     &  ( 0.0000000000000000d0, -0.70710678118654746d0),
-     &  ( 0.0000000000000000d0, -0.70710678118654746d0),
-     &  ( 0.70710678118654746d0, 0.0000000000000000d0),
-     &  (-0.70710678118654746d0,-0.70710678118654746d0),
-     &  ( 0.70710678118654746d0, 0.0000000000000000d0),
-     &  (-0.70710678118654746d0, 0.0000000000000000d0),
-     &  (-0.70710678118654746d0, 0.0000000000000000d0)
-     &  ],[4,3])
-
-c      vstokes(1,1)=( 0.0d0,        0.0d0)      !horizontal polarization
-c      vstokes(1,2)=( 0.0d0,        0.0d0)
-c      vstokes(1,3)=(-sqrt(1./2.),       -sqrt(1./2.))
-c
-c      vstokes(2,1)=( 0.0d0,        0.0d0)      !right handed polarization
-c      vstokes(2,2)=( 0.0d0,       -sqrt(1./2.))
-c      vstokes(2,3)=(+sqrt(1./2.),        0.0d0)
-c
-c      vstokes(3,1)=( 0.0d0,        0.0d0)      !left handed polarization
-c      vstokes(3,2)=( 0.0d0,       -sqrt(1./2.))
-c      vstokes(3,3)=(-sqrt(1./2.),        0.0d0)
-c
-c      vstokes(4,1)=( 0.0d0,        0.0d0)      !45 degree linear polarization
-c      vstokes(4,2)=( sqrt(1./2.),        0.0d0)
-c      vstokes(4,3)=(-sqrt(1./2.),        0.0d0)
-
-      double precision, parameter ::
-     &  HBAREV1=6.58211889D-16
-     &  ,CLIGHT1=2.99792458D8
-     &  ,EMASSKG1=9.10938188D-31
-     &  ,EMASSE1=0.510998902D6
-     &  ,EMASSG1=0.510998902D-3
-     &  ,ECHARGE1=1.602176462D-19
-     &  ,ERAD1=2.8179380D-15
-     &  ,EPS01=8.854187817D-12
-     &  ,PI1=3.141592653589793D0
-     &  ,rmu04pi1=1.0D-7
-     &  ,dnull1=0.0d0
-     &  ,done1=1.0d0
-     & ,HPLANCK1=6.626176D-34
-
-      double precision, parameter ::
-     & GRARAD1=PI1/180.0d0
-     & ,RADGRA1=180.0d0/PI1
-     & ,HBAR1=HBAREV1*ECHARGE1
-     & ,WTOE1=CLIGHT1*HPLANCK1/ECHARGE1*1.0d9
-     & ,CQ1=55.0d0/32.0d0/DSQRT(3.0D0)*HBAR1/EMASSKG1/CLIGHT1
-     & ,CGAM1=4.0d0/3.0d0*PI1*ERAD1/EMASSG1**3
-     & ,POL1CON1=8.0d0/5.0d0/DSQRT(3.0D0)
-     & ,POL2CON1=8.0d0/5.0d0/DSQRT(3.0D0)/2.0d0/PI1/3600.0d0
-     &  *EMASSKG1/HBAR1/ERAD1*EMASSG1**5
-     & ,TWOPI1=2.0D0*PI1
-     & ,HALFPI1=PI1/2.0D0
-     & ,sqrttwopi1=sqrt(twopi1)
-     & ,rmu01=4.0D0*PI1/1.0D7
-     & ,alpha1=echarge1**2/(4.0d0*pi1*eps01*hbar1*clight1)
-     & ,gaussn1=1.0d0/sqrt(twopi1)
-     & ,cK934=ECHARGE1/(2.0d0*PI1*EMASSKG1*CLIGHT1)/100.0d0
-     & ,powcon1=cgam1/2.0d0/pi1*clight1*(clight1/1.0d9)**2*emassg1
-     &  ,gamma1=1.0d0/emassg1
-     &  ,emom1=emasse1*dsqrt((gamma1-1.0d0)*(gamma1+1.0d0))
-     &  ,rho1=emom1/clight1
-     &  ,omegac1=1.5d0*gamma1**3*clight1/rho1
-     &  ,ecdipev1=omegac1*hbar1/echarge1
-     &  ,ecdipkev1=ecdipev1/1000.0d0
-
-c-----------------------------------------------------------------------
-c     end of phyconparam.cmn
-c-----------------------------------------------------------------------
+*KEEP,phyconparam.
+      include 'phyconparam.cmn'
 *KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+      include 'seqdebug.cmn'
 *KEEP,random.
-      integer*8 irancalls
-      integer, parameter :: irnsize=64
-      integer irnseed(irnsize),irnmode,irnseedi(irnsize)
-      common /randomc/ irancalls,irnseed,irnmode,irnseedi
-
-      namelist /randomn/ irnmode,irnseed
+      include 'random.cmn'
 *KEND.
 
       double precision, dimension (:,:), allocatable :: bciron,bcrec,
@@ -350,39 +264,15 @@ c-----------------------------------------------------------------------
 
       modegui=0
 
+      print*,"-trace-: undumag_ini_old entered"
 
       open(newunit=lun,file="undumag.stat")
       write(lun,*)"1"
       flush(lun)
       close(lun)
 
-*KEEP,UNDUVER.
-      print *
-      print *
-      print *
-      write(lun6,*)'     **********************************************************'
-      write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     *                       UNDUMAG                          *'
-      write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     *                    Version 2.05/06                     *'
-      write(lun6,*)'     *                       11.10.2024                       *'
-      write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     *                     Michael Scheer                     *'
-      write(lun6,*)'     *                       HZB/BESSY                        *'
-      write(lun6,*)'     *                                                        *'
-      write(lun6,*)'     **********************************************************'
-
-      print *
-      print *
-      print *
-
-      call util_zeit_kommentar(lun6,"")
-
-      open(unit=999,file="undumag.ver")
-      chuvers="2.05/06"
-      write(999,*)chuvers
-      close(999)
-
+*KEEP,unduver.
+      include 'unduver.cmn'
 *KEND.
 
 c+seq,phycon1.
@@ -485,6 +375,7 @@ cdebug
       iysymo=iysym
       izsymo=izsym
 
+      print*,"-trace-: Mark 1"
       if (irnmode.eq.1.or.irnmode.eq.2) then
         kundurun=0
         open(newunit=lundum,file="undumag.run",form='formatted',recl=512)
@@ -505,6 +396,7 @@ cdebug
         call util_random_init(irnsize,irnseed)
       endif
 
+      print*,"-trace-: Mark 2"
       ndisp=0
       if (kdisplace.ne.0) then
         if (ixsym.gt.0.or.iysym.gt.0.or.izsym.gt.0) then
@@ -537,6 +429,7 @@ cdebug
         enddo
         close(lun)
       endif
+      print*,"-trace-: Mark 3"
 
       if (nchiiron.le.0) nchiiron=1
       nchimax=0
@@ -577,10 +470,12 @@ cdebug
 
       if (ireallo.ne.0) close(lunconv)
       if(kdumpconv.ne.0) open(newunit=lunconv,file="undumag.cnv")
+      print*,"-trace-: Mark 4"
 
       if (ireallo.eq.0.and.kcalcvars.ne.0) then
         call undumag_calc(kechocalc,kcalcvars)
       endif
+      print*,"-trace-: Mark 5"
 
       if (ireallo.eq.0) then
         c128="izsym"
@@ -641,6 +536,7 @@ cdebug
           endif
         endif
       endif
+      print*,"-trace-: Mark 6"
 
       if (dedgefb.eq.0.0d0) dedgefb=0.02d0
 
@@ -655,7 +551,9 @@ cdebug
       ubflenz=ubflenz+2.0d0*dedgefb
 
       if (iforce.lt.0) then
+        print*,"-trace-: Calling undumag_force_parameters"
         call undumag_force_parameters
+        print*,"-trace-: Passed undumag_force_parameters"
       endif
 
       if (iforce.ne.9999) then
@@ -715,6 +613,7 @@ cdebug
       tiny=corrtiny
       tiny2=tiny*tiny
 
+      print*,"-trace-: Mark 6"
       scalcur=1.0d0
 
       TWOPI=2.0D0*PI1
@@ -728,9 +627,12 @@ cdebug
       pphi=unduplot_phi   !plotting angle
 
       lunbpe=98
+      print*,"-trace-: Mark 7"
       close(lunbpe)
 
+      print*,"-trace-: Calling undumag_drop_zero_magnets"
       call undumag_drop_zero_magnets(kfoundplanes,kechocalc,hulltiny)
+      print*,"-trace-: Passed undumag_drop_zero_magnets"
 
       open(unit=lunbpe,file=filebpe,form='formatted',status='old')
 
@@ -1007,6 +909,7 @@ cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
         call util_convex_hull_3d(npoi,xhull,yhull,zhull,khull,kedge,kface,
      &    nhull,nedge,nface,kfacelast,hulltiny,ifailhull)
+        print*,"-trace-: Passed util_convex_hull_3d"
 
         if (ifailhull.ne.0.or.nhull.lt.4) then
           write(lun6,*)"*** Error in undumag_ini_old: Subroutine util_convex_hull_3d failed for ",
@@ -1633,6 +1536,7 @@ c        khull(1:kfacelast)=kface(1:kfacelast)
         backspace(lunbpe)
       endif
 
+      print*,"-trace-: Going to material files"
 
       read(lunbpe,*)nmatfiles
 
@@ -9322,6 +9226,7 @@ c            write(33,*),ipre,iplan,bcpre(1:6,iplan,ipre)
       endif !(iundugeo.ne.0) then
 
       if (kseg.eq.1) then
+      print*,"-trace-: Leaving undumag_ini_old "
         return
       endif
 
@@ -10035,4 +9940,5 @@ c          write(lun6,*)"4 Info:",ncount,chmoth1,gcen
         stop "--- Programm UNDUMAG terminated due to iunduplot < 0 ---"
       endif
 
+      print*,"-trace-: Leaving undumag_ini_old "
       end
