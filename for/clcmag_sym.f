@@ -1,3 +1,4 @@
+*CMZ :          25/10/2024  11.41.44  by  Michael Scheer
 *CMZ :  2.04/19 17/09/2023  20.40.22  by  Michael Scheer
 *CMZ :  2.04/07 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/06 02/05/2023  10.37.14  by  Michael Scheer
@@ -38,6 +39,7 @@
 
       if (ncwires.gt.0) then
         do i=1,ncwires
+          if (abs(wire(2,i)).lt.1.0e-30) cycle
           if (wire(3,i).lt.xcwmin) xcwmin=wire(3,i)
           if (wire(6,i).lt.xcwmin) xcwmin=wire(6,i)
           if (wire(3,i).gt.xcwmax) xcwmax=wire(3,i)
@@ -52,13 +54,6 @@
           if (wire(8,i).gt.zcwmax) zcwmax=wire(8,i)
         enddo
       endif
-
-      xmin_t=min(xmin_t,xcwmin)
-      xmax_t=max(xmax_t,xcwmax)
-      ymin_t=min(ymin_t,ycwmin)
-      ymax_t=max(ymax_t,ycwmax)
-      zmin_t=min(zmin_t,zcwmin)
-      zmax_t=max(zmax_t,zcwmax)
 
       xmin=xmin_t
       ymin=ymin_t
@@ -308,6 +303,22 @@
       xmax_t=xmax
       ymax_t=ymax
       zmax_t=zmax
+
+      if (nmag_t+nspecmag_t.gt.0) then
+        xmin_t=min(xmin_t,xcwmin)
+        xmax_t=max(xmax_t,xcwmax)
+        ymin_t=min(ymin_t,ycwmin)
+        ymax_t=max(ymax_t,ycwmax)
+        zmin_t=min(zmin_t,zcwmin)
+        zmax_t=max(zmax_t,zcwmax)
+      else
+        xmin_t=xcwmin
+        xmax_t=xcwmax
+        ymin_t=ycwmin
+        ymax_t=ycwmax
+        zmin_t=zcwmin
+        zmax_t=zcwmax
+      endif
 
       return
       end

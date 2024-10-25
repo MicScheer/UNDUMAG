@@ -1,3 +1,4 @@
+*CMZ :          12/10/2024  07.30.51  by  Michael Scheer
 *CMZ :  2.02/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  1.25/00 29/01/2018  11.03.33  by  Michael Scheer
 *CMZ :  1.24/01 13/10/2017  08.16.08  by  Michael Scheer
@@ -28,6 +29,10 @@
       integer imag,ifail,kmag,luno,kfail,moth,kmoth
 
       call util_zeit_kommentar(lun6,"Starting force calculations for dipole approximation")
+
+      print*," "
+      print*,"** Undumag_force_dipoles is obsolete, be careful ***"
+      print*," "
 
       if (kallodip.ne.1) then
         x=0.0d0
