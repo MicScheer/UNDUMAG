@@ -1,4 +1,5 @@
-*CMZ :          30/06/2024  16.08.56  by  Michael Scheer
+*CMZ :          26/10/2024  17.27.20  by  Michael Scheer
+*CMZ :  2.05/05 30/06/2024  16.08.56  by  Michael Scheer
 *CMZ :  2.05/04 06/02/2024  15.02.28  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.05.20  by  Michael Scheer
 *CMZ :  2.05/01 22/10/2023  14.47.55  by  Michael Scheer
@@ -187,7 +188,7 @@
       real hpaw(npawp)
       common/pawc/hpaw
 
-*KEEP,MSHPLT.
+*KEEP,mshplt.
       real
      &  pttomm_ps,pttocm_ps, !convert from pt to mm or cm respectively
      &  scale_ps, isscale_ps, !current scale to convert from pt
@@ -2367,139 +2368,6 @@ c      if (xbeff.eq.9999.0d0) xbeff=xconv(nxconv/2+1)
 
       halfperlen=perlen/2.0d0
       quadperlen=perlen/4.0d0
-
-      bymaxbeff=-1.0d30
-      bzmaxbeff=-1.0d30
-
-      if (kbeffmode.eq.9999) then
-        if (nper.gt.0) then
-          kbeffmode=0
-        else
-          kbeffmode=1
-        endif
-      endif
-
-      if (kbeffmode.eq.0) then
-        xminbeff=xbeff-perlen*0.51
-        xmaxbeff=xbeff+perlen*0.51
-        dx=(xmaxbeff-xminbeff)/(nxbeff-1)
-        xminbeffnor=xminbeff
-        xmaxbeffnor=xmaxbeff
-        dxkbmode=abs(kbeffmode)*dx
-      else
-        xminbeff=xbeff-quadperlen
-        xmaxbeff=xbeff+quadperlen
-        dx=(xmaxbeff-xminbeff)/(nxbeff-1)
-        dxkbmode=abs(kbeffmode)*dx
-        xminbeffnor=xminbeff
-        xmaxbeffnor=xmaxbeff
-      endif
-
-      xbymax=xbeff
-      xbzmax=xbeff
-
-      do ix=1,nxbeff
-
-        x=xminbeff+(ix-1)*dx
-        xx=x
-
-        if (kbeffmode.ne.0.and.abs(abs(x-xbeff)-quadperlen).lt.dxkbmode) then
-          cycle
-        endif
-
-        call util_random(3,g)
-        g=g-0.5
-        if (abs(g(1)).lt.randox10) then
-          if (g(1).gt.0.0d0) then
-            g(1)=g(1)+randox10
-          else
-            g(1)=g(1)-randox10
-          endif
-        endif
-        if (abs(g(2)).lt.randoy10) then
-          if (g(2).gt.0.0d0) then
-            g(2)=g(2)+randoy10
-          else
-            g(2)=g(2)-randoy10
-          endif
-        endif
-        if (abs(g(3)).lt.randoz10) then
-          if (g(3).gt.0.0d0) then
-            g(3)=g(3)+randoz10
-          else
-            g(3)=g(3)-randoz10
-          endif
-        endif
-
-        if (randox.ge.0.0d0) then
-          x=x+g(1)*randoxa ! millimeter!
-        else
-          x=x+randoxa ! millimeter!
-        endif
-
-        xint(ix)=x
-
-        if (kbeffmode.ne.0.and.abs(abs(x-xbeff)-quadperlen).lt.dxkbmode) then
-          if (x.lt.xbeff) then
-            x=xx+abs(xx-x)
-          else
-            x=xx-abs(xx-x)
-          endif
-        endif
-
-        if (randoy.ge.0.0d0) then
-          y=g(2)*randoya
-        else
-          y=randoya
-        endif
-        if (randoz.ge.0.0d0) then
-          z=g(3)*randoza
-        else
-          z=randoza
-        endif
-
-        if (kbeffmode.eq.0) then
-          call undumag_field(x/1000.0d0,y/1000.0d0,z/1000.0d0,
-     &      bx,by,bz,ifail)
-        else
-          if (abs(abs(x-xbeff)-quadperlen).lt.dxkbmode) then
-            cycle
-          endif
-          if (abs(x-xbeff).le.quadperlen) then
-            call undumag_field(x/1000.0d0,y/1000.0d0,z/1000.0d0,
-     &        bx,by,bz,ifail)
-          else if (x.lt.xbeff) then
-            call undumag_field((x+halfperlen)/1000.0d0,y/1000.0d0,z/1000.0d0,
-     &        bx,by,bz,ifail)
-            bx=-bx
-            by=-by
-            bz=-bz
-          else
-            call undumag_field((x-halfperlen)/1000.0d0,y/1000.0d0,z/1000.0d0,
-     &        bx,by,bz,ifail)
-            bx=-bx
-            by=-by
-            bz=-bz
-          endif
-        endif !kbeffmode
-
-        if (ifail.ne.0) cycle
-
-        if (abs(by).gt.bymaxbeff) then
-          bymaxbeff=abs(by)
-          xbymax=xminbeff+(ix-1)*dx
-        endif
-
-        if (abs(bz).gt.bzmaxbeff) then
-          bzmaxbeff=abs(bz)
-          xbzmax=xminbeff+(ix-1)*dx
-        endif
-
-      enddo !ix
-
-      if (bymaxbeff.lt.1.0d-4*bzmaxbeff) xbymax=xbzmax
-      if (bzmaxbeff.lt.1.0d-4*bymaxbeff) xbzmax=xbymax
-
       call undumag_beffy_beffz(
      &  byint1f,bzint1f,
      &  byint2f,bzint2f,
