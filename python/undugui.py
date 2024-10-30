@@ -54298,6 +54298,16 @@ def _ushow_beff():
   undu_nbybz_eff()
 #enddef _ushow_beff()
 
+def set_namelist(key,val):
+  global NamelistVars,DcitNamelistVars
+  try:
+    NamelistVars[DictNamelistVars[key]][1] = str(val)
+  except:
+    print("\n*** undumag.nam variable",key,"unknown. Please, check undumag.nam ***\n")
+    sleep(3)
+  #endtry
+#enddef set_namelist(key)
+
 def uwritenam(key=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
@@ -54394,45 +54404,44 @@ def uwritenam(key=''):
     _ReSetSym()
     _SetCenter()
 
-    NamelistVars[DictNamelistVars['XBEFF']][1] = '0.0'
-    NamelistVars[DictNamelistVars['KBEFFMODE']][1] = '0'
-    NamelistVars[DictNamelistVars['XBEFF']][1] = '0.0'
-    NamelistVars[DictNamelistVars['KRESIRON']][1] = '0'
-    NamelistVars[DictNamelistVars['HCONV']][1] = '1.0e-6'
-    NamelistVars[DictNamelistVars['XCONVMIN']][1] = '9999.'
-    NamelistVars[DictNamelistVars['XCONVMAX']][1] = '9999.'
-    NamelistVars[DictNamelistVars['DXCONV']][1] = '0.0'
-    NamelistVars[DictNamelistVars['NXCONV']][1] = '9999'
+    set_namelist('XBEFF',0.0)
+    set_namelist('KBEFFMODE',0)
+    set_namelist('KRESIRON',0)
+    set_namelist('HCONV',1.0e-6)
+    set_namelist('XCONVMIN',9999.)
+    set_namelist('XCONVMAX',9999.)
+    set_namelist('DXCONV',0.0)
+    set_namelist('NXCONV',9999)
 
   elif int(Hybrid_Mode) == 1:
 
     _SetSym()
     _SetCenter()
 
-    NamelistVars[DictNamelistVars['XBEFF']][1] = '0.0'
-    NamelistVars[DictNamelistVars['KBEFFMODE']][1] = '0'
-    NamelistVars[DictNamelistVars['XBEFF']][1] = '0.0'
-    NamelistVars[DictNamelistVars['KRESIRON']][1] = '2'
-    NamelistVars[DictNamelistVars['RESIRON']][1] = '0.0003'
-    NamelistVars[DictNamelistVars['KRESIRON']][1] = '1'
-    NamelistVars[DictNamelistVars['CORRTINY']][1] = '0.0123'
-    NamelistVars[DictNamelistVars['HCONV']][1] = '1.0e-6'
-    NamelistVars[DictNamelistVars['XCONVMIN']][1] = '9999.'
-    NamelistVars[DictNamelistVars['XCONVMAX']][1] = '9999.'
-    NamelistVars[DictNamelistVars['DXCONV']][1] = '0.0'
-    NamelistVars[DictNamelistVars['NXCONV']][1] = '9999'
+    set_namelist('XBEFF', '0.0')
+    set_namelist('KBEFFMODE', '0')
+    set_namelist('XBEFF', '0.0')
+    set_namelist('KRESIRON', '2')
+    set_namelist('RESIRON', '0.0003')
+    set_namelist('KRESIRON', '1')
+    set_namelist('CORRTINY', '0.0123')
+    set_namelist('HCONV', '1.0e-6')
+    set_namelist('XCONVMIN', '9999.')
+    set_namelist('XCONVMAX', '9999.')
+    set_namelist('DXCONV', '0.0')
+    set_namelist('NXCONV', '9999')
 
   elif int(Hybrid_Mode) == 2:
 
     _SetSym()
     _SetCenter()
 
-    NamelistVars[DictNamelistVars['XBEFF']][1] = '0.0'
-    NamelistVars[DictNamelistVars['KBEFFMODE']][1] = '1'
-    NamelistVars[DictNamelistVars['XBEFF']][1] = '0.0'
-    NamelistVars[DictNamelistVars['KRESIRON']][1] = '1'
-    NamelistVars[DictNamelistVars['RESIRON']][1] = '0.001'
-    NamelistVars[DictNamelistVars['CORRTINY']][1] = '0.0123'
+    set_namelist('XBEFF', '0.0')
+    set_namelist('KBEFFMODE', '1')
+    set_namelist('XBEFF', '0.0')
+    set_namelist('KRESIRON', '1')
+    set_namelist('RESIRON', '0.001')
+    set_namelist('CORRTINY', '0.0123')
 
   #endif
 
