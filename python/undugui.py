@@ -1949,7 +1949,7 @@ else:
 
 Backslash = '\\'
 
-from numpy import *
+#from numpy import *
 
 global Narg,Argv
 Narg = len(sys.argv)
@@ -6021,7 +6021,7 @@ def pplot(pname="WavePlot.pdf",w=0,h=0):
   #endif type(w) ==  float and type(h) == float and w*h != 0.0 or type(w)== str
 
   try:
-    Fig.savefig(pname)
+    Fig.savefig(pname,bbox_inches='tight')
     print("\nFigure written to ",pname)
   except:
     print("\nCould not write PDF-Dokument, try another format... ")
@@ -15990,6 +15990,8 @@ def window_geometry(geom='', fig=-1, set=True):
     Figman =  plt.get_current_fig_manager()
   #endif type(fig) == int and fig == -1
 
+  print("geom:",geom)
+
   if set:
     fig.canvas.manager.window.wm_geometry(geom)
   else:
@@ -17802,7 +17804,7 @@ def txyz(pltit='Title',xtit='', ytit='', ztit='', tfs=-9., xyzfs=-9,
 
   plt.show(block=False)
 
-#enddef set_txyz(pltit='Title',xtit='xTit', ytit='yTit', ztit='')
+#enddef txyz(pltit='Title',xtit='xTit', ytit='yTit', ztit='')
 
 def null3d(xmin=-10., xmax=10., ymin=-10., ymax=10., zmin=-10., zmax=10.,elev=30,azim=-60,roll=0):
 #+KEEP,plotglobind,T=PYTHON.
@@ -26043,6 +26045,7 @@ plotncyl = plotncylinder
 read_facets = read_faces
 nex = nextzone
 gtit = set_global_title
+setgeo = window_geometry
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -28648,7 +28651,7 @@ def undu_read_mat():
 #enddef
 
 def undu_mat_mh(mat=12):
-  global TeX_mu0eq,TeX_mu0,TeX_mueq,TeX_muplus,TeX_mu
+  global TeX_mu0eq,TeX_mu0,TeX_mueq,TeX_muplus,TeX_mu,TeX_mum
   global TeX_chi2ndf,TeX_chi2prob,TeX_beta,TeX_gamma,TeX_egammaev,TeX_foregammaeq
   global TeX_pow,TeX_rKauf,TeX_rKzu,TeX_eKauf,TeX_eKzu,TeX_plus,TeX_mul,TeX_slash,Tex_blank
 
@@ -29991,6 +29994,7 @@ def undugui_clean(key=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30071,7 +30075,7 @@ def undugui_clean(key=''):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-  global TeX_mu0eq,TeX_mu0,TeX_mueq,TeX_muplus,TeX_mu
+  global TeX_mu0eq,TeX_mu0,TeX_mueq,TeX_muplus,TeX_mu,TeX_mum
   global TeX_chi2ndf,TeX_chi2prob,TeX_beta,TeX_gamma,TeX_egammaev,TeX_foregammaeq
   global TeX_pow,TeX_rKauf,TeX_rKzu,TeX_eKauf,TeX_eKzu,TeX_plus,TeX_mul,TeX_slash,Tex_blank
 
@@ -30190,6 +30194,7 @@ def calc_var(svar):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30270,7 +30275,7 @@ def calc_var(svar):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-  global TeX_mu0eq,TeX_mu0,TeX_mueq,TeX_muplus,TeX_mu
+  global TeX_mu0eq,TeX_mu0,TeX_mueq,TeX_muplus,TeX_mu,TeX_mum
   global TeX_chi2ndf,TeX_chi2prob,TeX_beta,TeX_gamma,TeX_egammaev,TeX_foregammaeq
   global TeX_pow,TeX_rKauf,TeX_rKzu,TeX_eKauf,TeX_eKzu,TeX_plus,TeX_mul,TeX_slash,Tex_blank
 
@@ -30367,6 +30372,7 @@ def ugui_get_clc_line(iline,nlines,icomm):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30531,6 +30537,7 @@ def ugui_calc():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30720,6 +30727,7 @@ def ugui_calc_line(cline):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30842,6 +30850,7 @@ def ugui_ini():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -31030,6 +31039,7 @@ def utransrotcop():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -31383,6 +31393,7 @@ def checktransrotcop():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -31955,6 +31966,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -32151,6 +32163,7 @@ def ureadclc(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -33101,6 +33114,7 @@ def _MbLeave(ev):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -33189,6 +33203,7 @@ def _MenuBar(ev):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -33450,6 +33465,7 @@ def write_variables(Fclc):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -33681,6 +33697,7 @@ def uwriteclc(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -35544,6 +35561,7 @@ def ureadfil(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -35704,6 +35722,7 @@ def _undumag(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -35895,6 +35914,7 @@ def _runundumag(callkey='',modus=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -36106,6 +36126,7 @@ def utransrotcop():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -36459,6 +36480,7 @@ def checktransrotcop():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -37031,6 +37053,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -37227,6 +37250,7 @@ def ureadclc(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -38925,9 +38949,11 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   global Coils, Filaments, UnduColors, CurrLoops, NMagPolTot
 
+  xyzcoils = [1.0e30,-1.0e30,1.0e30,-1.0e30,1.0e30,-1.0e30,1]
+
 
   if NMagPolTot >= 0 and len(Filaments) == 0:
-    return
+    return xyzcoils
   #endif
 
   xmin = 1.e30
@@ -39088,6 +39114,7 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -39564,6 +39591,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -39652,7 +39680,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   isameo = getisame()
 
   if not isameo: zone(1,1)
-
+  Quit(NMagPolTot)
   if NMagPolTot == 0 and len(Filaments) == 0:
     print("Nothing to plot!")
     return
@@ -39976,6 +40004,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -40064,6 +40093,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   print(NL,"trace:: _showGeoPythonXYZ:",modus,item,callkey)
 #+self.
 
+  Quit(modus,item,callkey)
   isameo = getisame()
 
   if not isameo: zone(1,1)
@@ -40083,7 +40113,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   zplmax = -1.e30
 
   if not NMagPolTot:
-    _ucoilplot(modus,'notsame',callkey='ShowGeoPythonXYZ')
+    xyzcoils = _ucoilplot(modus,'notsame',callkey='ShowGeoPythonXYZ')
   #endif not NMagPolTot
 
 
@@ -40210,6 +40240,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -40591,6 +40622,7 @@ def _GetMirror(key=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -40822,6 +40854,7 @@ def _GetHybrid():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41089,6 +41122,7 @@ def GetHybridEnd():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41318,6 +41352,7 @@ def _EndPoles_Whybrid():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41502,6 +41537,7 @@ def _mirror():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41708,6 +41744,7 @@ def _hybrid():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -41913,6 +41950,7 @@ def _updateMenu(menu):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -42000,6 +42038,7 @@ def _enterMenu(ev,menu):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -42089,6 +42128,7 @@ def _keypressMenu(ev,menu):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -42178,6 +42218,7 @@ def _leaveMenu(ev,menu):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -42272,6 +42313,7 @@ def _clWfclc(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -42465,6 +42507,7 @@ def _uclc(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -42600,6 +42643,7 @@ def ugui_ini_mirror(mode=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -42936,6 +42980,7 @@ def ugui_ini_hybrid(mode=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -43317,6 +43362,7 @@ def ugui_ini_appleII(mode=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -43639,6 +43685,7 @@ def _cnWappleII():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -43726,6 +43773,7 @@ def _clWappleII(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -43842,6 +43890,7 @@ def _appleII(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -44111,24 +44160,24 @@ MShowGeo2d = Menu(Mgeo,tearoff=1,font=MyFont)
 
 MShowGeo.add_cascade(label='2D views', menu=MShowGeo2d,font=MyFont)
 
-MShowGeo2d.add_command(label='XY view', command= lambda modus='xy', item=-1: _showGeoPythonXYZ(modus,item),font=MyFont)
-MShowGeo2d.add_command(label='XZ view', command= lambda modus='xz', item=-1: _showGeoPythonXYZ(modus,item),font=MyFont)
-MShowGeo2d.add_command(label='ZY view', command= lambda modus='zy', item=-1: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='XY view', command= lambda modus='xy', item=-1,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
+MShowGeo2d.add_command(label='XZ view', command= lambda modus='xz', item=-1,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
+MShowGeo2d.add_command(label='ZY view', command= lambda modus='zy', item=-1,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
 MShowGeo2d.add_separator()
 
-MShowGeo2d.add_command(label='XY periodic', command= lambda modus='xy', item=-3: _showGeoPythonXYZ(modus,item),font=MyFont)
-MShowGeo2d.add_command(label='XZ periodic', command= lambda modus='xz', item=-3: _showGeoPythonXYZ(modus,item),font=MyFont)
-MShowGeo2d.add_command(label='ZY periodic', command= lambda modus='zy', item=-3: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='XY periodic', command= lambda modus='xy', item=-3,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
+MShowGeo2d.add_command(label='XZ periodic', command= lambda modus='xz', item=-3,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
+MShowGeo2d.add_command(label='ZY periodic', command= lambda modus='zy', item=-3,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
 
 MShowGeo2d.add_separator()
-MShowGeo2d.add_command(label='XY specials', command= lambda modus='xy', item=-4: _showGeoPythonXYZ(modus,item),font=MyFont)
-MShowGeo2d.add_command(label='XZ specials', command= lambda modus='xz', item=-4: _showGeoPythonXYZ(modus,item),font=MyFont)
-MShowGeo2d.add_command(label='ZY specials', command= lambda modus='zy', item=-4: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='XY specials', command= lambda modus='xy', item=-4,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
+MShowGeo2d.add_command(label='XZ specials', command= lambda modus='xz', item=-4,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
+MShowGeo2d.add_command(label='ZY specials', command= lambda modus='zy', item=-4,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
 
 MShowGeo2d.add_separator()
-MShowGeo2d.add_command(label='XY selected', command= lambda modus='xy', item=-2: _showGeoPythonXYZ(modus,item),font=MyFont)
-MShowGeo2d.add_command(label='XZ selected', command= lambda modus='xz', item=-2: _showGeoPythonXYZ(modus,item),font=MyFont)
-MShowGeo2d.add_command(label='ZY selected', command= lambda modus='zy', item=-2: _showGeoPythonXYZ(modus,item),font=MyFont)
+MShowGeo2d.add_command(label='XY selected', command= lambda modus='xy', item=-2,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
+MShowGeo2d.add_command(label='XZ selected', command= lambda modus='xz', item=-2,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
+MShowGeo2d.add_command(label='ZY selected', command= lambda modus='zy', item=-2,callkey='main': _showGeoPythonXYZ(modus,item,callkey),font=MyFont)
 
 MShowGeo.add_command(label='3D view', command= lambda modus='3d', item=-1: _showGeo(modus,item),font=MyFont)
 MShowGeo.add_command(label='3D periodic', command= lambda modus='3dperiodic', item=-2: _showGeo(modus,item),font=MyFont)
@@ -44235,6 +44284,7 @@ def Set_Coil(k):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -44352,6 +44402,7 @@ def Get_Coil(k):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -44475,6 +44526,7 @@ def update_coils(caller=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -44575,6 +44627,7 @@ def _WaddCoils(key=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -44684,6 +44737,7 @@ def _WaddCoilRace():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -44956,6 +45010,7 @@ def _WeditCoil():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45234,6 +45289,7 @@ def _clWaddCoils(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45359,6 +45415,7 @@ def _cnWaddCoilRace():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45446,6 +45503,7 @@ def _cnWaddCoil():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45533,6 +45591,7 @@ def _cnWaddCoils():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45629,6 +45688,7 @@ def _clWlistCoils():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -45717,6 +45777,7 @@ def _listCoils(modecoil='first'):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -46542,6 +46603,7 @@ def update_magnets():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -46624,6 +46686,17 @@ def update_magnets():
 
 
   if MagPolsTot == MagPolsUpdate: return
+
+  try:
+    xmin = Xmin
+  except:
+    Xmin = 1.0e30
+    Xmax = -1.0e30
+    Ymin = 1.0e30
+    Ymax = -1.0e30
+    Zmin = 1.0e30
+    Zmax = -1.0e30
+  #endtry
 
   Nmoth = 0
   Moths = []
@@ -46741,6 +46814,7 @@ def update_magnets():
     hull['z'] = hull.zr+zcen
 
     Hulls.append(hull)
+    DictHulls[cnam] = len(Hulls) - 1
 
   #endfor m in range(NMagPolTot)
 
@@ -46821,6 +46895,13 @@ def update_magnets():
 
     #endfor mo in range(len(Moths))
 
+    Xmin = min(xmin,xmins)
+    Xmax = max(xmax,xmaxs)
+    Ymin = min(ymin,ymins)
+    Ymax = max(ymax,ymaxs)
+    Zmin = min(zmin,zmins)
+    Zmax = max(zmax,zmaxs)
+
     MothsXYZ = pd.DataFrame(moli)
     MothsXYZ.columns = ['imoth',
                         'xmin','xmax','x',
@@ -46894,6 +46975,7 @@ def default_mag(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -47281,6 +47363,7 @@ def default_pol(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -47547,6 +47630,7 @@ def _WaddMag(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -47956,6 +48040,7 @@ def _WaddPol(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -48257,6 +48342,7 @@ def _clWaddPol(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -48480,6 +48566,7 @@ def _clWaddMag(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -48756,6 +48843,7 @@ def _EditMagGet(mag):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -49191,6 +49279,7 @@ def _clWEditMag(mag):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -49287,6 +49376,7 @@ def _focoEditMag(ev,imp,idx,kdx):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -49374,6 +49464,7 @@ def _editMag(imp):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -50176,6 +50267,7 @@ def _listMags(mode='all'):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -51080,6 +51172,7 @@ def _searchVariable(key='first'):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -51292,6 +51385,7 @@ def _EntryVarGet(stvar):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -51390,6 +51484,7 @@ def _listVarsGet():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -51602,6 +51697,7 @@ def _listVariables(mode='first'):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -52123,6 +52219,7 @@ def delParameter(vnam):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -52225,6 +52322,7 @@ def delVariable(vnam):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -52327,6 +52425,7 @@ def checkVariable(vnam,vdef):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -52432,6 +52531,7 @@ def addVariable(vnam,vdef,vcom):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -52552,6 +52652,7 @@ def _addVariables(mode='first'):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -53601,6 +53702,7 @@ def _MaddMatIron():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -53734,6 +53836,7 @@ def _MaddMatREClin():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -53884,6 +53987,7 @@ def _clWaddMatREClin():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -53979,6 +54083,7 @@ def addMatREClin(recfile='undugui_1.06_0.17.dat',rmu=1.06,rksi=0.17,iwdiget=0):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -54120,6 +54225,7 @@ def _MlistMat(sgeo=""):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -54442,6 +54548,7 @@ def uwritenam(key=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -54618,6 +54725,7 @@ def _clWSetMap():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -54732,6 +54840,7 @@ def _clWSetSym():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -54842,6 +54951,7 @@ def _SetCenter():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -54935,6 +55045,7 @@ def _SetSym():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -55039,6 +55150,7 @@ def _ReSetSym():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -55143,6 +55255,7 @@ def _Mcontrol_SetMap():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -55346,6 +55459,7 @@ def _Mcontrol_SetSym():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -55525,6 +55639,7 @@ def ureadnam():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -55748,6 +55863,7 @@ def _clWfnam(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -55870,6 +55986,7 @@ def _unam(key):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
   NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
