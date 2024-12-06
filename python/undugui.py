@@ -38857,7 +38857,7 @@ def read_facets_bounding_box(fb='undumag_bounding_box.fct'):
     Zmax = FcBox[5]
     print('\n--> Done')
   else:
-    wError("File undumag_main_facets not found!")
+    wError("File undumag_main_facets not found! Check, if IUNDUGEO >= 1000 in undumag.nam")
     return
   #endif
 #enddef read_facets_bounding_box(fb='undumag_bounding_box.fct')
@@ -40606,7 +40606,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
         Facets = [faces,voxels]
         print('\n--> Done')
       else:
-        wError("File undumag_facets.fct not found!")
+        wError("File undumag_facets.fct not found!  Check, if IUNDUGEO >= 1000 in undumag.nam")
         return
       #endif
 

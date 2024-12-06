@@ -1,4 +1,4 @@
-* Version 2.04/03
+* Version 2.05/03
  ! Name list file, to control UNDUMAG
 
  $undumagn
@@ -113,7 +113,7 @@
  irandmag=0   ! randomize calculation point inside voxel as well
               ! <0: Real deposition of the voxel center
 	
- kshuffle=0   ! shuffle the iron voxel for each main iteration cycle
+ kshuffle=0   ! shuffle the iron voxels for each main iteration cycle
 
  corrtiny=0.123e-3 ! x,y,z-shift for corrections of boundary errors [mm]
 
@@ -124,11 +124,20 @@
  hulltiny=1.e-6 ! precision parameter for routine util_convex_hull_3d
                 ! change may help in case of trouble
 		! 0: will be set to 1.e-6
+		
+ modsimphull=0  ! use simple convex-hull algorithm, slow but robuste
+ nvertmax=32    ! max. number of vertices of convex hulls
 
  iunduplot=1 ! Write Encapsulated PostScript files to show geometry
 	     ! iunduplot<0: stop UNDUMAG after writing undumag.eps
 
- iundugeo=1  ! Write geometry file
+ iundugeo=1111 ! Write geometry files
+             ! Four bits for
+	     ! undumag_facets.fct
+	     ! undumag_voxels.geo
+	     ! undumag.geo
+	     ! undumag.mag
+             ! ,i.e. iundugeo=1111 means to write all of them
 	     ! iundugeo<0: stop UNDUMAG after writing undumag.geo
 
  ivrml=1     ! Write CAD file of setup
@@ -141,6 +150,9 @@
  krunnum=1  ! Print run number to plots
  kdate=1  ! Print date to plots
 
+ iunduplot_mode=0   ! Plotting mode
+                   !0: Overview
+		   !else: Only 3d view according to unduplot_theta/phi
  unduplot_theta=0. ! Polar plotting angle
  unduplot_phi=0.   ! Azimut plotting angle
 
@@ -172,11 +184,11 @@
  iforcegrid=1  ! write x,y,z of grid nodes to map, not the noisy
                ! real position of calculation
 
- xmapmin=-9999. ! xmin for field map
+ xmapmin=9999. ! xmin for field map
                 ! 9999.: Auto scaling
 		! 9000.: -PerLen / 2
 		! -9000.: -PerLen / 4
- xmapmax=-9999. ! xmax for field map
+ xmapmax=9999. ! xmax for field map
                 ! 9999.: Auto scaling
 		! 9000.: PerLen / 2
 		! -9000.: +PerLen / 4
