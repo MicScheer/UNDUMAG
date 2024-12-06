@@ -1,4 +1,4 @@
-      include 'inputver.cmn'
+* Version 2.05/03
  ! Name list file, to control UNDUMAG
 
  $undumagn
@@ -150,7 +150,7 @@
  krunnum=1  ! Print run number to plots
  kdate=1  ! Print date to plots
 
- unduplot_mode=0   ! Plotting mode
+ iunduplot_mode=0   ! Plotting mode
                    !0: Overview
 		   !else: Only 3d view according to unduplot_theta/phi
  unduplot_theta=0. ! Polar plotting angle
