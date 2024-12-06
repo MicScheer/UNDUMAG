@@ -22942,6 +22942,7 @@ def get_console(console=''):
 
     stat = os.system(com)
     if stat: print('... Could not raise console, wmctrl is not installed ...')
+
   #endif
 
 #enddef get_console()
@@ -32075,7 +32076,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
 #enddef undu_coils_to_filaments()
 
 def blockcorners(mp):
-
+  #reakpoint()
   cen = mp[4]
   siz = mp[6]
   #print(NL,NL,mp)
@@ -32115,9 +32116,9 @@ def blockcorners(mp):
     #endif
 
     corns = [
-             [-x,-yc,-z],[x,-yc,-z],[x,-yc,z],[-x,-yc,z],
-             [-x,+yc,-z],[x,+yc,-z],[x,+yc,z],[-x,+yc,z],
-             [-xc,+y,-z],[xc,+y,-z],[xc,+y,z],[-xc,+y,z]
+             [-x,-y,-z], [x,-y,-z],  [x,-y,z], [-x,-y,z],
+             [-x,+yc,-z],[x,+yc,-z], [x,+yc,z],[-x,+yc,z],
+             [-xc,+y,-z],[xc,+y,-z], [xc,+y,z],[-xc,+y,z]
             ]
 
   elif typ == 'BlockDsChamf':
@@ -32131,8 +32132,8 @@ def blockcorners(mp):
     #endif
 
     corns = [
-             [-x,-yc,-z],[x,-yc,-z],[x,-yc,z],[-x,-yc,z],
-             [-x,+y,-z],[x,+yc,-z],[x,+yc,z],[-x,+y,z],
+             [-x,-y,-z], [x,-y,-z], [x,-y,z], [-x,-y,z],
+             [-x,+y,-z], [x,+yc,-z],[x,+yc,z],[-x,+y,z],
              [-xc,+y,-z],[xc,+y,-z],[xc,+y,z],[-xc,+y,z]
             ]
 
@@ -32146,9 +32147,9 @@ def blockcorners(mp):
     #endif
 
     corns = [
-             [-x,-yc,-z],[x,-yc,-z],[x,-yc,z],[-x,-yc,z],
-             [-x,+y,-z],[x,+yc,-z],[x,+yc,z],[-x,+y,z],
-             [-xc,+y,-z],[xc,+y,-z],[xc,+y,z],[-xc,+y,z]
+             [-x,-y,-z], [x,-y,-z], [x,-y,z], [-x,-y,z],
+             [-x,+yc,-z],[x,+yc,-z],[x,+yc,z],[-x,+yc,z],
+             [-xc,+y,-z],[x,+y,-z], [xc,+y,z],[-xc,+y,z]
             ]
 
   else:
@@ -37162,7 +37163,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
 #enddef undu_coils_to_filaments()
 
 def blockcorners(mp):
-
+  #reakpoint()
   cen = mp[4]
   siz = mp[6]
   #print(NL,NL,mp)
@@ -37202,9 +37203,9 @@ def blockcorners(mp):
     #endif
 
     corns = [
-             [-x,-yc,-z],[x,-yc,-z],[x,-yc,z],[-x,-yc,z],
-             [-x,+yc,-z],[x,+yc,-z],[x,+yc,z],[-x,+yc,z],
-             [-xc,+y,-z],[xc,+y,-z],[xc,+y,z],[-xc,+y,z]
+             [-x,-y,-z], [x,-y,-z],  [x,-y,z], [-x,-y,z],
+             [-x,+yc,-z],[x,+yc,-z], [x,+yc,z],[-x,+yc,z],
+             [-xc,+y,-z],[xc,+y,-z], [xc,+y,z],[-xc,+y,z]
             ]
 
   elif typ == 'BlockDsChamf':
@@ -37218,8 +37219,8 @@ def blockcorners(mp):
     #endif
 
     corns = [
-             [-x,-yc,-z],[x,-yc,-z],[x,-yc,z],[-x,-yc,z],
-             [-x,+y,-z],[x,+yc,-z],[x,+yc,z],[-x,+y,z],
+             [-x,-y,-z], [x,-y,-z], [x,-y,z], [-x,-y,z],
+             [-x,+y,-z], [x,+yc,-z],[x,+yc,z],[-x,+y,z],
              [-xc,+y,-z],[xc,+y,-z],[xc,+y,z],[-xc,+y,z]
             ]
 
@@ -37233,9 +37234,9 @@ def blockcorners(mp):
     #endif
 
     corns = [
-             [-x,-yc,-z],[x,-yc,-z],[x,-yc,z],[-x,-yc,z],
-             [-x,+y,-z],[x,+yc,-z],[x,+yc,z],[-x,+y,z],
-             [-xc,+y,-z],[xc,+y,-z],[xc,+y,z],[-xc,+y,z]
+             [-x,-y,-z], [x,-y,-z], [x,-y,z], [-x,-y,z],
+             [-x,+yc,-z],[x,+yc,-z],[x,+yc,z],[-x,+yc,z],
+             [-xc,+y,-z],[x,+y,-z], [xc,+y,z],[-xc,+y,z]
             ]
 
   else:
@@ -39317,8 +39318,29 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
     elif key == 'zy':
       for c in corns: points.append([zc+c[2],yc+c[1]])
     #endif
+    # alt verts, iedges, edges, bounds = qhull2d(points)
+    nfaces,ifaces,iverts = qhull2d(points)
 
-    verts, iedges, edges, bounds = qhull2d(points)
+    edges = []
+    xm = 1.0e30
+    xx = -1.0e30
+    ym = 1.0e30
+    yx = -1.0e30
+    for i in range(nfaces):
+      p1 = points[ifaces[i][0]]
+      xm = min(xm,p1[0])
+      xx = max(xx,p1[0])
+      ym = min(ym,p1[1])
+      yx = max(yx,p1[1])
+      p2 = points[ifaces[i][1]]
+      xm = min(xm,p2[0])
+      xx = max(xx,p2[0])
+      ym = min(ym,p2[1])
+      yx = max(yx,p2[1])
+      edges.append([p1,p2])
+    #endfor
+
+    bounds = [xm,xx,ym,yx]
 
   elif mp[3] == 'File' or mp[3] == 'Corners':
 
@@ -39347,7 +39369,12 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
 
     #endfor ic in range(len(mp[7]))
 
-    verts, iedges, edges, bounds = qhull2d(points)
+    #alt verts, iedges, edges, bounds = qhull2d(points)
+    nfaces,ifaces,iverts = qhull2d(points)
+
+    edges = []
+#    for i in range(nfaces):
+#      edges.append(points())
 
   elif mp[3] == 'Cylinder':
     ifound = 0
@@ -39422,11 +39449,12 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
     if key == 'xy':
       pass
     elif key == 'xz':
-      bounds[2]= bounds[4]
-      bounds[3]= bounds[5]
+      print(bdum)
+      bounds[2]= bdum[4]
+      bounds[3]= bdum[5]
     elif key == 'zy':
-      bounds[0]= bounds[4]
-      bounds[1]= bounds[5]
+      bounds[0]= bdum[4]
+      bounds[1]= bdum[5]
     #endif
 
   else:
@@ -39436,6 +39464,7 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
   edges = np.array(edges)
 
   if nmodules <= 0 or itrans == 0:
+
     for ed in edges:
       et = ed.T
       plt.plot(et[0],et[1],c=col)
@@ -39680,7 +39709,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   isameo = getisame()
 
   if not isameo: zone(1,1)
-  Quit(NMagPolTot)
+
   if NMagPolTot == 0 and len(Filaments) == 0:
     print("Nothing to plot!")
     return
@@ -39753,8 +39782,9 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   if len(Filaments) and modus == '3d':
     xyzcoils = _ucoilplot(callkey='_ShowGeoPython')
 
-  if item == -3: nmodul = 1
-  else: nmodul = Nmodul
+#  if item == -3: nmodul = 1
+#  else: nmodul = Nmodul
+  nmodul = Nmodul
 
   for mm in range(nmodul):
 
@@ -39966,6 +39996,205 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
     if ispec != 0: break
   #endfor mm in range(Nmodul)
 
+  if nmodul <= 0:
+
+    nmp = NMagPolTot
+
+    if item == -4:
+      nmp = NMagPolSel
+    #endif
+
+    for imp in range(nmp):
+
+      if item == -4:
+        cmag = MagPolsSel[imp]
+        imag = DictMagPolsTot[cmag]
+        mp = MagPolsTot[imag]
+        #print(mp)
+      else:
+        mp = MagPolsTot[imp]
+      #endif
+
+      sspec = str(mp[2])
+
+      if sspec == '1' or sspec == 'yes': ispec=1
+      else: ispec = 0
+
+      if item == -2 and ispec != 0: continue # skip specials
+      if item == -3 and ispec == 0: continue # only specials
+
+      cmag = mp[0][0]
+      cmoth = mp[0][1]
+
+      col = mp[5][5]
+
+      if not col in DictUnduColors:
+        kcol = int(calc_var(col))
+        col = UnduColors[kcol]
+      #endif col not in UnduColors
+
+      points = []
+      iscyl = 0
+
+      cen = mp[4]
+
+      xc = calc_var(cen[0])
+      yc = calc_var(cen[1])
+      zc = calc_var(cen[2])
+
+      rot11 = 1.0; rot12 = 0.0; rot13 = 0.0
+      rot21 = 0.0; rot22 = 1.0; rot23 = 0.0
+      rot31 = 0.0; rot32 = 0.0; rot33 = 1.0
+
+      if mp[3].find('Block') > -1:
+
+        corns = blockcorners(mp)
+
+        for corn in corns:
+
+          xx = corn[0]; yy = corn[1]; zz = corn[2]
+
+          if callkey != 'plotMag':
+            if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+              t = TransRot(cmag,cmoth,xx,yy,zz)
+              xx = t[0]
+              yy = t[1]
+              zz = t[2]
+              #print("t:",cmag,yy,t[2])
+            #endif
+            x = xc + rot11*xx + rot12*yy + rot13*zz
+            y = yc + rot21*xx + rot22*yy + rot23*zz
+            z = zc + rot31*xx + rot32*yy + rot33*zz
+          else:
+            x = xx + xc
+            y = yy + yc
+            z = zz + zc
+          #endif
+
+          points.append([x,y,z])
+
+        #endfor corn in corns
+
+      elif mp[3] == 'File' or mp[3] == 'Corners':
+
+        for ic in range(len(mp[7])):
+
+          xx = calc_var(mp[7][ic][0])
+          yy = calc_var(mp[7][ic][1])
+          zz = calc_var(mp[7][ic][2])
+
+          if callkey != 'plotMag':
+            if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+              t = TransRot(cmag,cmoth,c1,c2,c3)
+              xx = t[0]
+              yy = t[1]
+              zz = t[2]
+            #endif
+            x = xc + rot11*xx + rot12*yy + rot13*zz
+            y = yc + rot21*xx + rot22*yy + rot23*zz
+            z = zc + rot31*xx + rot32*yy + rot33*zz
+          else:
+            x = xx + xc
+            y = yy + yc
+            z = zz + zc
+          #endif
+
+          points.append([x,y,z])
+
+        #endfor ic in range(len(mp[7]))
+
+      elif mp[3] == 'Cylinder':
+        iscyl = 1
+      else:
+        Quit("_showGeoPython: " + mp[3] + " hier einfügen")
+      #endif mp[3] == 'Block'
+
+      #dtx = -tx; dty = -ty; dtz = -tz
+      dtx = 0.; dty = 0.; dtz = 0.
+
+      mper = 1
+
+      for iper in range(mper):
+
+        if not iscyl:
+
+          pp = []
+
+          for p in points:
+            pp.append([p[0]+dtx,p[1]+dty,p[2]+dtz])
+          #endfor p in points
+
+          verts,ifaces,faces,bounds = hull3d(pp)
+          plothull3dxzy(isame=1,edgecolor=col,ishow=0,modus='line')
+
+          if bounds[0] < xplmin: xplmin = bounds[0]
+          if bounds[1] > xplmax: xplmax = bounds[1]
+          if bounds[2] < yplmin: yplmin = bounds[2]
+          if bounds[3] > yplmax: yplmax = bounds[3]
+          if bounds[4] < zplmin: zplmin = bounds[4]
+          if bounds[5] > zplmax: zplmax = bounds[5]
+
+        else: #iscyl
+
+          for ntc in Ntcyls:
+            if ntc[1][0][0] == cmag:
+
+              poly,bounds = cylinderpoly(ntc[2])
+
+              for pgn in poly:
+
+                pp = []
+
+                for poi in pgn:
+
+                  p = [poi[0] + xc,poi[1] + yc,poi[2] + zc]
+
+                  if callkey != 'plotMag':
+                    if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+                      p = TransRot(cmag,cmoth,p[0],p[1],p[2])
+                    #endif
+                    if ang != 0:
+                      x = rot11*p[0] + rot12*p[1] + rot13*p[3] + dtx
+                      y = rot21*p[0] + rot22*p[1] + rot23*p[3] + dty
+                      z = rot31*p[0] + rot32*p[1] + rot33*p[3] + dtz
+                    else:
+                      x = p[0] + dtx
+                      y = p[1] + dty
+                      z = p[2] + dtz
+                    #endif
+                  else:
+                    x = p[0]
+                    y = p[1]
+                    z = p[2]
+                  #endif
+
+                  if x < xplmin: xplmin = x
+                  if x > xplmax: xplmax = x
+                  if y < yplmin: yplmin = y
+                  if y > yplmax: yplmax = y
+                  if z < zplmin: zplmin = z
+                  if z > zplmax: zplmax = z
+
+                  pp.append([x,y,z])
+
+                #endfor
+
+                pt = np.array(pp).T
+                vplxyz(pt[0],pt[2],pt[1],'samelineclosed',color=col)
+
+              #endfor
+              break
+            #endif
+          #endfor
+
+        #endif iscyl
+
+      #endfor iper in range(1,nper+1):
+
+    #endfor mag in range(nmag)
+
+  #endfor nmodul == 0
+
   if len(xyzcoils) and xyzcoils[6] == 0:
     xplmin = min(xplmin,xyzcoils[0])
     xplmax = max(xplmax,xyzcoils[1])
@@ -40089,11 +40318,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
-#+self,if=trace,debugsgp.
-  print(NL,"trace:: _showGeoPythonXYZ:",modus,item,callkey)
-#+self.
 
-  Quit(modus,item,callkey)
   isameo = getisame()
 
   if not isameo: zone(1,1)
