@@ -2,10 +2,7 @@
 # +PATCH,//UNDUMAG/PYTHON
 # +DECK,undumag_make,T=PYTHON.
 
-import os
-import sys
-import platform
-import glob
+import os,sys,platform,shutil,glob
 
 def Quit(*args, delay=0):
   #reakpoint()
@@ -44,32 +41,39 @@ def Quit(*args, delay=0):
 
 #enddef Quit(text = '', delay=0)
 
-global Iverbose,Idry,Idebug,UI
+global Iverbose,Idry,Idebug,UI,Sepp
 
 args=sys.argv; nargs = len(args)
 
-try:
-  UI = os.environ['UNDUMAG_INCL'] + "/"
-except:
-  UI = ''
-  path = args[0].split("/")
-  l = len(path)
-  if l == 1:
-    path = os.getcwd().split("/")
-    path.append(args[0])
-  elif l == 2:
-    path = os.getcwd().split("/")
-    pp = args[0].split("/")
-    path.append(pp[0])
-    path.append(pp[1])
+#reakpoint()
+
+if platform.system() == 'Windows':
+  Sepp = '\\'
+  OS = 'Windows'
+else:
+  Sepp = '/'
+  OS = 'Linux'
+#endif
+
+
+UI = os.getcwd() + Sepp
+tree = ['bin','for','lib','main','mshcern','mshplt','python']
+
+for d in tree:
+  if not os.path.exists(UI + d):
+    UINCL = os.environ['UNDUMAG_INCL'] + Sepp
+    print('\n Bad directory structure, trying',UINCL)
+    UI = UINCL
+    break
   #endif
-  for i in range(len(path)-2):
-    UI += path[i] + "/"
-  #endfor
-  print("\n*** Warning: Shell variable UNDUMAG_INCL not defined ***")
-  print("*** Assuming: ",UI," ***")
-  os.system('sleep 3')
-#endtry
+#endfor
+
+for d in tree:
+  if not os.path.exists(UI + d):
+    Quit('\n Bad directory structure, giving up!')
+  #endif
+#endfor
+
 
 Iverbose = 0
 Idebug = 0
@@ -82,14 +86,14 @@ if nargs > 1:
     n = '\n'
     print(n)
     print("Usage: python3 " + UI + args[0] + " [verbose level]",n)
-    print("To force total recompilation delete ",n,UI + "bin/undumag.exe",n)
+    print("To force total recompilation delete ",n,UI + Sepp + "bin"+Sepp+"undumag.exe",n)
     Quit()
   #end try
 #endif
 
 if nargs > 2: Idebug = int(args[2])
 
-global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Scomp_nowarn
+global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Tlibm,Scomp_nowarn
 
 Scomp = "gfortran -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
 Scomp_nowarn = "gfortran -w -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
@@ -98,22 +102,22 @@ Scomp_omp = "gfortran -std=legacy -c -O2 -cpp -finit-local-zero -fcheck=all -fop
 
 def get_undu_tree():
 
-  global UI,Undu_tree,Iverbose,Idry,Idebug,Texe,Tlib
+  global UI,Undu_tree,Iverbose,Idry,Idebug,Texe,Tlib,Tlibm
 
   try:
-    Texe = os.stat(UI + '/bin/undumag.exe').st_mtime_ns
+    Texe = os.stat(UI + Sepp + 'bin' + Sepp + 'undumag.exe').st_mtime_ns
   except:
     Texe = 0
   #endtry
 
-  top = glob.glob(UI+"/*")
+  top = glob.glob(UI+Sepp+"*")
 
   Undu_tree = []
   #reakpoint()
 
   for topd in top:
 
-    dd = topd.split("/")[-1]
+    dd = topd.split(Sepp)[-1]
 
     if dd == 'cmz' or dd == 'doc' or dd == 'check_system' or dd == 'bin' \
     or dd == 'python' or dd == 'main' or dd == 'lib' or dd == 'shell' \
@@ -121,35 +125,35 @@ def get_undu_tree():
 
     t = os.stat(topd).st_mtime_ns
 
-    modf = glob.glob(topd+"/mod/*.f")
+    modf = glob.glob(topd+Sepp+"mod"+Sepp+"*.f")
 
     modfor = []
     for ff in modf:
-      f = ff.split("/")[-1]
+      f = ff.split(Sepp)[-1]
       tf = os.stat(ff).st_mtime_ns
       modfor.append([f,tf])
     #endfor
 
-    modm = glob.glob(topd+"/*.mod")
+    modm = glob.glob(topd+Sepp+"*.mod")
     modmod = []
     for ff in modm:
-      f = ff.split("/")[-1]
+      f = ff.split(Sepp)[-1]
       tf = os.stat(ff).st_mtime_ns
       modmod.append([f,tf])
     #endfor
 
-    cm = glob.glob(topd+"/*.cmn")
+    cm = glob.glob(topd+Sepp+"*.cmn")
     cmn = []
     for ff in cm:
-      f = ff.split("/")[-1]
+      f = ff.split(Sepp)[-1]
       tf = os.stat(ff).st_mtime_ns
       cmn.append([f,tf])
     #endfor
 
-    ff = glob.glob(topd+"/*.f")
+    ff = glob.glob(topd+Sepp+"*.f")
     fort = []
     for fff in ff:
-      f = fff.split("/")[-1]
+      f = fff.split(Sepp)[-1]
       tf = os.stat(fff).st_mtime_ns
       fort.append([f,tf])
     #endfor
@@ -164,18 +168,20 @@ def undu_update():
 
   global UI,Undu_tree,Texe,Scomp_all,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
 
+  #reakpoint()
+
   kmain = 0
 
   get_undu_tree()
 
-  Tmain = os.stat(UI + '/main/undumag_main.f').st_mtime_ns
+  Tmain = os.stat(UI + 'main'+Sepp+'undumag_main.f').st_mtime_ns
   if Tmain > Texe: kmain = 1
 
   for td in Undu_tree:
 
     dd = td[0]
-    ds = dd + "/"
-    dsm = dd + "/mod/"
+    ds = dd + Sepp
+    dsm = dd + Sepp + "mod" + Sepp
     t = td[1]
     modfor = td[2]
     cmn = td[4]
@@ -190,29 +196,29 @@ def undu_update():
     slibm = ''
     slib = ''
 
-    ddd = dd.split("/")[-1]
+    ddd = dd.split(Sepp)[-1]
 
     if Iverbose >= 0: print("\nProcessing",dd)
-    #reakpoint()
+    breakpoint()
 
     if ddd == 'mshcern':
-      lib = UI + 'lib/libmshcern.a'
-      libm = UI + 'lib/libmshcern_module.a'
+      lib = UI + 'lib'+Sepp+'libmshcern.a'
+      libm = UI + 'lib'+Sepp+'libmshcern_module.a'
       scomp = Scomp_nowarn
     elif ddd == 'mshplt':
-      lib = UI + 'lib/libmshplt.a'
-      libm = UI + 'lib/libmshplt_modules.a'
+      lib = UI + 'lib'+Sepp+'libmshplt.a'
+      libm = UI + 'lib'+Sepp+'libmshplt_modules.a'
     elif ddd == 'for':
-      lib = UI + 'lib/libundu.a'
-      libm = UI + 'lib/libundu_modules.a'
+      lib = UI + 'lib'+Sepp+'libundu.a'
+      libm = UI + 'lib'+Sepp+'libundu_modules.a'
       scomp = Scomp_omp
     elif ddd == 'urad':
-      lib = UI + 'lib/liburad.a'
-      libm = UI + 'lib/liburad_module.a'
+      lib = UI + 'lib'+Sepp+'liburad.a'
+      libm = UI + 'lib'+Sepp+'liburad_module.a'
       scomp = Scomp_all  # uradcfft does boundary tricks
     elif ddd == 'util':
-      lib = UI + 'lib/libutil.a'
-      libm = UI + 'lib/libutil_module.a'
+      lib = UI + 'lib'+Sepp+'libutil.a'
+      libm = UI + 'lib'+Sepp+'libutil_module.a'
       scomp = Scomp_all
     #endif
 
@@ -223,30 +229,32 @@ def undu_update():
       pass
     #endtry
     try:
-      Tlib = os.stat(libm).st_mtime_ns
-      if Tlib > Texe: kmain = 1
+      Tlibm = os.stat(libm).st_mtime_ns
+      if Tlibm > Texe: kmain = 1
     except:
       pass
     #endtry
 
-    scompmod = "cd " + dd + "/mod && " + scomp
+    scompmod = "cd " + dd + Sepp + "mod && " + scomp
     scomp = "cd " + dd + " && " + scomp
 
     #if ddd == 'for': Iverbose=1
+
+    ranlm = 0
 
     for f in modfor: # Compile modules
 
       ff = f[0]
       t = f[1]
 
-      if t < Texe: continue
+      if t < Tlibm: continue
 
       if Iverbose > 0: print(ff)
 
       fo = ff[:-1] + "o"
       fm = ff[:-1] + "mod"
 
-      Flines = open(ds+"mod/"+ff,'r')
+      Flines = open(ds+"mod"+Sepp+ff,'r')
 
       while True:
         l = Flines.readline()
@@ -269,12 +277,6 @@ def undu_update():
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0: os.system(scom)
 
-      #if Iverbose > 0:
-      #print(ff)
-      #istat = os.system("ls -la " + UI + "undumag_greeter.f")
-      #breakpoint()
-      #endif
-
       scom = 'mv ' + dsm + m + ".mod " + dd
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0: os.system(scom)
@@ -289,7 +291,7 @@ def undu_update():
         f = ft[0]
         t = ft[1]
 
-        if t < Texe: continue
+        if t < Tlib: continue
 
         Flines = open(ds+f,'r')
         while True:
@@ -367,9 +369,9 @@ def undu_update():
       f = ft[0]
       t = os.stat(ds+f).st_mtime_ns
 
-      if t < Texe: continue
+      if t < Tlib: continue
 
-      fcmn = f.split("/")[-1]
+      fcmn = f.split(Sepp)[-1]
 
       for fft in fort:
 
@@ -406,16 +408,15 @@ def undu_update():
 
       #if Iverbose > 0:
       #  print(f,t,t-Texe)
-      #  if f == 'undumag_iron_residuals.f': breakpoint()
+      #  if f == 'undumag_iron_residuals.f': #reakpoint()
       #endif
 
-      istat = os.system("ls -la " + UI + "undumag_greeter.f 2>/dev/null")
-      if not istat:
-        print(ff)
-        breakpoint()
-      #endif
+#      if not os.path.exists(UI + "undumag_greeter.f"):
+#        print(ff)
+#        #reakpoint()
+#      #endif
 
-      if t < Texe: continue
+      if t < Tlib: continue
 
       fo = f[:-1] + "o"
 
@@ -443,12 +444,40 @@ def undu_update():
   #endfor dir
 
   if kmain:
-    scom = UI + "shell/compile_undumag_incl.sh"
+#    scom = UI + "shell/compile_undumag_incl.sh"
+    for frm in ['bpolyederf90m.mod','commandlinef90m.mod','undumagf90m.mod']:
+      scom = 'os.remove("' + UI + "main" + Sepp + frm + '")'
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0:
+        try:
+          exec(scom)
+        except:
+          print('*** Failed to execute ',scom)
+        #endtry
+      #reakpoint()
+      src = UI + "for" + Sepp + frm
+      dest = UI + "main" + Sepp + frm
+      scom = 'shutil.copyfile("' + src + '","' + dest + '")'
+      if Iverbose > 0: print("\n",scom,"\n")
+      if Idry == 0:
+        try:
+          exec(scom)
+        except:
+          print('*** Failed to execute ',scom)
+        #endtry
+    #endfor
+    sgfor = "gfortran -O2 -cpp -fd-lines-as-comments -Wno-align-commons -fopenmp -fcheck=bounds -ffixed-line-length-none -finit-local-zero  -funroll-loops -o " + UI + "bin" + Sepp + "undumag.exe " + UI + "main" + Sepp + "undumag_main.f"
+    slink = ' '
+    for flib in ['libundu.a','libundu_modules.a','liburad.a','libutil.a','libmshcern.a','libmshplt.a']:
+      slink += UI + "lib" + Sepp + flib + ' '
+    #endfor
+    #reakpoint()
+    scom = sgfor + slink
     if Iverbose > 0: print("\n",scom,"\n")
     if Idry == 0: os.system(scom)
-    if Iverbose >=0: print("\n--- " + UI  + "bin/undumag.exe updated ---\n")
+    if Iverbose >=0: print("\n--- " + UI  + "bin"+Sepp+"undumag.exe updated ---\n")
   else:
-    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin/undumag.exe ---\n")
+    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin"+Sepp+"undumag.exe ---\n")
   #endif
 
 #enddef undu_update
