@@ -14,6 +14,7 @@ def debug(arg=''):
   if arg: print("\n",arg,"\n")
 #enddef debug(arg)
 
+debug("trace:: $uguiimports")
 #!/usr/bin/env python
 
 # +PATCH,//WAVES/PYTHON
@@ -206,7 +207,7 @@ def set_console_title(console='Python'):
     sys.stdout.write("\x1b]2;" + console + "\x07")
   elif platform.system() == 'Windows':
     #ctypes.windll.kernel32.SetConsoleTitleW(console)
-    system("title "+console)
+    os.system("title "+console)
   #endif
 
 #enddef set_console_title()
@@ -1222,6 +1223,7 @@ LogX, LogY, LogZ, NxbBinMax, Khdeleted,WisLinux, Waveplot, \
 Mrun, Mcomment, Mdate, ROFx, ROFy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid,KyAxis,KxAxis,KzAxis,Kbox, \
 FillColor,Ishow
 
+print("trace::plotglobal:")
 
 FillColor = 'none'
 
@@ -1550,6 +1552,24 @@ Hull3DList = []
 THull3D = type(Hull3D)
 Ishow = 1
 
+def debug(kmenu=None,kitem=None):
+  global \
+  Wave, Root, WaveOut, Editor, WinGeo, \
+  Debug,FWAVEIN,FWVS,Wavein,WaveinO,Wmenu,Mapping,MenuVeto,MenuAllVeto,NMenuAllVeto,\
+  WAVECom, ROOTCom, EWOUTCom, EDICom, MenuActive, Nmenuactive, \
+  MappingVeto,Veto,InvVeto,Variables,Arrays,Specvar,Trigger,Calc,Help,NHelp,Nmenu,\
+  Nmenuveto,NmenuOld,Mother,MenuMother,MenuOld,Daughter,IMother,Nveto,\
+  Ninvveto,Nmap,Nvar,Iarr,Narr,Ntrigger,Ncalc,NULL,ONE,MONE,SNULL,SONE,SMONE,Lastvar,\
+  Nwavein,kWaveinRead, KWAVES,MMitem,Nmitem,Kmitem,Imenu,Ipmenu,\
+  Kmitemold, Iback, Istak, Tcolor, Vetocolor, SFrame, SComment, SMitem, \
+  VarToWaveIn, PosX, PosY, WinPos, Nsitem,Pmenu,PadX,PadY,SMexist, \
+  I,ZONE,ZNULL,Ical,Lmitem,FIOitem,PMenuGeo, Nfocus, MyWavesFont,Ifocus, \
+  ScreenW,ScreeH,WinX,WinY,CanW,CanH
+  pass
+#  print("\n\n debug::kmenu,kitem",kmenu,kitem,SMitem[kmenu])
+#  print("\n\n debug::kmenu,kitem",kmenu,kitem)
+#enddef debug(kmenu,kitem)
+debug("trace:: Leaving plotglobal")
 #+PATCH,//WAVES/PYTHON
 #+KEEP,nxyzglobal,T=PYTHON.
 global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv,Nx,Nxy,Nxyz
@@ -1697,6 +1717,24 @@ if System != 'WINDOWS':
 #if System != 'WINDOWS':
 
 Gdebug = 0
+def debug(kmenu=None,kitem=None):
+  global \
+  Wave, Root, WaveOut, Editor, WinGeo, \
+  Debug,FWAVEIN,FWVS,Wavein,WaveinO,Wmenu,Mapping,MenuVeto,MenuAllVeto,NMenuAllVeto,\
+  WAVECom, ROOTCom, EWOUTCom, EDICom, MenuActive, Nmenuactive, \
+  MappingVeto,Veto,InvVeto,Variables,Arrays,Specvar,Trigger,Calc,Help,NHelp,Nmenu,\
+  Nmenuveto,NmenuOld,Mother,MenuMother,MenuOld,Daughter,IMother,Nveto,\
+  Ninvveto,Nmap,Nvar,Iarr,Narr,Ntrigger,Ncalc,NULL,ONE,MONE,SNULL,SONE,SMONE,Lastvar,\
+  Nwavein,kWaveinRead, KWAVES,MMitem,Nmitem,Kmitem,Imenu,Ipmenu,\
+  Kmitemold, Iback, Istak, Tcolor, Vetocolor, SFrame, SComment, SMitem, \
+  VarToWaveIn, PosX, PosY, WinPos, Nsitem,Pmenu,PadX,PadY,SMexist, \
+  I,ZONE,ZNULL,Ical,Lmitem,FIOitem,PMenuGeo, Nfocus, MyWavesFont,Ifocus, \
+  ScreenW,ScreeH,WinX,WinY,CanW,CanH
+  pass
+#  print("\n\n debug::kmenu,kitem",kmenu,kitem,SMitem[kmenu])
+#  print("\n\n debug::kmenu,kitem",kmenu,kitem)
+#enddef debug(kmenu,kitem)
+debug("Check system")
 #import m_hbook as m
 
 global TransRotCop, EchoCLC,DictTransRotCop
@@ -1901,6 +1939,7 @@ ck934=echarge1/(2.0e0*pi1*emasskg1*clight1)/100.0e0
 fwhmgauss1=np.sqrt(2.0*np.log(2))*2.0
 fwhmsinxx21=2.783115
 rmssinxx21=1.05244
+debug("Physical constants set")
 
 global Ftyp,Ftype
 Ff = open("ftypedum","w")
@@ -26779,8 +26818,11 @@ def startup(sfile='ntupplot_startup.py'):
 
   global WaveFilePrefix, WavesMode
 
+  print("trace::startup:")
   if get_mshwelcome() == False:
+    print("trace::startup: Before mshwelcome")
     mshwelcome("Ntup-Plot",2021)
+    print("trace::startup: After mshwelcome")
   if WavesMode == 'WAVES' or WavesMode == 'WPLOT' or WavesMode == 'WSHOP': fcfg = 'waveplot.cfg'
   elif WavesMode == 'UNDUMAG': fcfg = 'undugui.cfg'
   else: fcfg = 'ntupplot.cfg'
@@ -26810,6 +26852,7 @@ def startup(sfile='ntupplot_startup.py'):
   #endif not os.path.exists(sfile)
 
   WaveFilePrefix = 'NtupPlot_'
+  print("trace:: Leaving startup")
 #enddef startup()
 
 def _showMenu(menu):
@@ -28371,6 +28414,7 @@ from PIL import Image
 
 print("\nLast run of UNDUMAG:")
 
+debug("trace:: $uguiimports, before $undumagplot")
 
 # +PATCH,//UNDUMAG/PYTHON
 # +KEEP,undumagplot,T=PYTHON.
@@ -29886,6 +29930,8 @@ def undu_plot_mag_3d(cnams='',alpha=1.0):
 
 #import undumag_plot as upl
 #from undumag_plot import *
+debug("trace:: $uguiimports, after $undumagplot")
+debug("trace:: End of $uguiimports")
 #import m_hbook as m
 
 global TransRotCop, EchoCLC,DictTransRotCop
@@ -29991,6 +30037,7 @@ DictCyls = {}
 DictHulls = {}
 #=============================================================================
 
+debug("trace:: Before $uguiini")
 def undugui_clean(key=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
@@ -30810,6 +30857,7 @@ def ugui_calc_line(cline):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  print(NL,"trace:: ugui_calc_line:",cline)
 
   idebug = 0
 
@@ -30845,6 +30893,7 @@ def ugui_calc_line(cline):
   #endwhile
 
   Quit("Error in ugui_calc_line(cline): " + cline)
+  print(NL,"trace:: Leaving ugui_calc_line:",cline)
 #enddef ugui_calc_line()
 
 def ugui_ini():
@@ -31034,6 +31083,7 @@ def ugui_get_clc_line_com(iline,nlines,icomm):
   else: com = ''
   return iline,cline,icomm,com
 #enddef
+debug("trace:: After $uguiini, before ureadclc")
 
 def utransrotcop():
 
@@ -32049,6 +32099,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  print(NL,"trace:: undu_coils_to_filaments",kcoil,callkey,NL)
 
   if len(Coils) == 0:
     Filaments = []
@@ -32073,6 +32124,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
 
   #Quit("Ende nach undumag")
 
+  print(NL,"trace:: Leaving undu_coils_to_filaments",NL)
 #enddef undu_coils_to_filaments()
 
 def blockcorners(mp):
@@ -32248,6 +32300,7 @@ def ureadclc(callkey=''):
   #reakpoint()
   NL = "\n"
 
+  debug("trace: ureadclc:callkey:",callkey)
 
   #reakpoint()
   undugui_clean(callkey)
@@ -33099,6 +33152,7 @@ def ureadclc(callkey=''):
 
 #enddef ureadclc()
 
+debug("trace:: After ureadclc")
 
 def start():
   pass
@@ -33333,11 +33387,13 @@ def _canvas_key(ev):
       Quit()
 #enddef canvas_key(ev)
 
+debug("trace:: Before uwriteclc")
 
 def uwritetrc(filename):
 
   idebug = 0
 
+  print("\ntrace:: uwritetrc:",filename)
 
   fclc = open(filename,'r')
   lins = fclc.readlines()
@@ -33780,6 +33836,7 @@ def uwriteclc(callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  print("\n\ntrace: uwriteclc:callkey:",callkey)
 
   if yesno(S_IzSym.get()) == 'yes': izsym = 1
   else: izsym = 0
@@ -33818,6 +33875,7 @@ def uwriteclc(callkey=''):
       Hybrid_Mode = 0
   #endif
 
+  debug("trace: uwriteclc:Mode",Mode)
   if int(AppleII_Mode) > 0:
 
     FileCLC = "undumag.clc"
@@ -35555,7 +35613,9 @@ def uwriteclc(callkey=''):
     uwritetrc(FileCLC)
   #endif
 
+  print(NL,"trace:: Leaving uwriteclc('",callkey,"')")
 #enddef uwriteclc()
+debug("trace:: After uwriteclc")
 
 def ureadfil(callkey=''):
 
@@ -35646,6 +35706,7 @@ def ureadfil(callkey=''):
 
   #debug("debug: Filaments")
 
+  print(NL,"trace::ureadfil:",callkey,NCoil)
 
   IUNDUMAGisRunning = 1
   os.system(RunUndu + " " + Rmodus)
@@ -35667,6 +35728,7 @@ def ureadfil(callkey=''):
     #endtry
 
     if not fexist("undumag.fil"):
+      print(NL,"trace:: Leaving ureadfil: No file undumag.fil")
       return
     #endif
   #endif NCoil
@@ -35716,8 +35778,10 @@ def ureadfil(callkey=''):
   if len(Filaments) != len(Coils): Quit("*** Error in ureadfil(): Number of coils does not match ***")
 
   #debug("debug: Ende Filaments")
+  print(NL,"trace:: Leaving ureadfil")
 #enddef
 
+debug("trace:: Before ureadclc")
 def _undumag(callkey=''):
 
   global TransRotCop,EchoCLC,DictTransRotCop
@@ -35814,18 +35878,22 @@ def _undumag(callkey=''):
       print('to perform segmentation, i.e. updating undumag.geo etc..\n')
     #endif
   #endif
+  debug("\ntrace::_undumag:",callkey + " " + str(Rmodus))
 
   if IUNDUMAGisRunning:
     wError("UNDUNMAG IS RUNNING!")
+    debug(NL,"trace:: Leaving _undumag due to  error")
     return
   #endif IUNDUMAGisRunning
 
   if NMagPolTot <= 0 and NCoil <= 0:
     wError("No magnetic items set-up so far...!")
+    debug(NL,"trace:: Leaving _undumag due to  error")
   #endif IUNDUMAGisRunning
 
   if type(Rmodus) == str and len(Rmodus) and NCoil > 0:
     ureadfil("_undumag")
+    debug(NL,"trace:: Leaving _undumag after call to ureadfil")
     return
     #Quit("Ende in _undumag")
 
@@ -35859,6 +35927,7 @@ def _undumag(callkey=''):
     if ifail:
       IUNDUMAGisRunning = 0
       wError("\n*** UNDUMAG run failed ***")
+      debug(NL,"trace:: Leaving _undumag due to  error")
       return
     #endif
 
@@ -35904,9 +35973,12 @@ def _undumag(callkey=''):
       #endif trim(cline) != ' Segmentation finished'
     except:
       wError("\n*** UNDUMAG run for segmentation failed ***")
+      debug(NL,"trace:: Leaving _undumag due to  error")
+      return
     #endtry
 
   #endif len(Rmodus) == 0
+    debug(NL,"trace:: Leaving _undumag")
 
 #enddef _undumag()
 
@@ -35997,11 +36069,13 @@ def _runundumag(callkey='',modus=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  debug(NL,"trace::_runundumag:",callkey,modus)
 
   Rmodus = modus
   _undumag('_rundunmag')
 
 #enddef
+debug("trace:: After $undumag")
 
 #=============================================================================
 
@@ -36039,10 +36113,14 @@ Rmodus = ''
 
 AppleII = {}
 
+debug("trace:: Before mshwelcome")
 mshwelcome(program='UNDUMAG',year='2022')
+debug("trace:: After mshwelcome, before undu_get_runnumber")
 
 undu_get_runnumber()
+debug("trace:: Before ugui_ini")
 ugui_ini()
+debug("trace:: After ugui_ini, before $ugui")
 
 
 MyFontStyle = 'arial'
@@ -37136,6 +37214,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  print(NL,"trace:: undu_coils_to_filaments",kcoil,callkey,NL)
 
   if len(Coils) == 0:
     Filaments = []
@@ -37160,6 +37239,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
 
   #Quit("Ende nach undumag")
 
+  print(NL,"trace:: Leaving undu_coils_to_filaments",NL)
 #enddef undu_coils_to_filaments()
 
 def blockcorners(mp):
@@ -37335,6 +37415,7 @@ def ureadclc(callkey=''):
   #reakpoint()
   NL = "\n"
 
+  debug("trace: ureadclc:callkey:",callkey)
 
   #reakpoint()
   undugui_clean(callkey)
@@ -38952,8 +39033,10 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   xyzcoils = [1.0e30,-1.0e30,1.0e30,-1.0e30,1.0e30,-1.0e30,1]
 
+  print(NL,"trace:: _ucoilplot:",view,modus,item,callkey)
 
   if NMagPolTot >= 0 and len(Filaments) == 0:
+    print(NL,"trace:: Leaving _ucoilplot, no coils...")
     return xyzcoils
   #endif
 
@@ -39000,6 +39083,7 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   if ifound == 0:
     wError("No coils to plot")
+    print(NL,"trace:: Leaving _ucoilplot due to error")
     kallzero = -1
     return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
   #endif
@@ -39088,6 +39172,7 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   #endif modus
 
+  print(NL,"trace:: Leaving _ucoilplot")
 
   return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
 
@@ -39567,10 +39652,12 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
 #enddef _plotSingleMag(imp)
 
 def _showGeo(modus='3d',item=-1,kseg=0,callkey=''):
+  print(NL,"trace:: _showGeo:",modus,item,kseg,callkey)
   if modus == 'undu3d' or modus == 'eps':
     _showGeoUndu(modus,item,1,callkey='showGeo')
   else:
     _showGeoPython(modus,item,callkey='showGeo')
+    print(NL,"trace:: Leaving _showGeo")
 #enddef _showGeo(modus='3d',item=-1,kseg=0)
 
 def _module_to_shift_and_rot(imodu):
@@ -39705,6 +39792,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
+  print(NL,"trace:: _showGeoPython:",modus,item,callkey)
 
   isameo = getisame()
 
@@ -39712,6 +39800,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
 
   if NMagPolTot == 0 and len(Filaments) == 0:
     print("Nothing to plot!")
+    print(NL,"trace:: Leaving _showGeoPython")
     return
   #endif NMagPolTot == 0
 
@@ -39735,6 +39824,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
 
 #  if not NMagPolTot:
 #    xyzcoils = _ucoilplot('3d','notsame',callkey='ShowGeoPython')
+    print(NL,"trace:: Leaving _showGeoPython after _ucoilplot(...)")
   #endif not NMagPolTot
 
 
@@ -39883,6 +39973,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
 
           if callkey != 'plotMag':
             if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+              print("*** Warning: Keywords Copy, Rotate, Translate not yet implemented ***")
               t = TransRot(cmag,cmoth,c1,c2,c3)
               xx = t[0]
               yy = t[1]
@@ -40226,6 +40317,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
 
   setisame(isameo)
 
+  print(NL,"trace:: Leaving _showGeoPython\n")
 #enddef _showGeoPython(modus='3d',item=-1)
 
 def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
@@ -40318,6 +40410,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
+  print(NL,"trace:: _showGeoPythonXYZ:",modus,item,callkey)
 
   isameo = getisame()
 
@@ -40325,6 +40418,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
 
   if NMagPolTot == 0 and len(Filaments) == 0:
     print("Nothing to plot!")
+    print(NL,"trace:: Leaving _showGeoPythonXYZ")
     return
   #endif NMagPolTot == 0
 
@@ -40339,8 +40433,15 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
 
   if not NMagPolTot:
     xyzcoils = _ucoilplot(modus,'notsame',callkey='ShowGeoPythonXYZ')
+    print(NL,"trace:: Leaving _showGeoPythonXYZ after _ucoilplot(...)")
   #endif not NMagPolTot
 
+  print(NL,"trace:: showGeoPythonXYZ")
+  imp = 0
+  for mp in MagPolsTot:
+    imp += 1
+    print(imp,mp[0:4])
+  #endfor
 
   #dot()
   getzone()
@@ -40454,8 +40555,10 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
 
   if not NMagPolTot:
     _ucoilplot(modus,'notsame',callkey='ShowGeoPythonXYZ')
+    print(NL,"trace:: Leaving _showGeoPythonXYZ after _ucoilplot(...)")
   #endif not NMagPolTot
 
+  print(NL,"trace:: Leaving _showGeoPythonXYZ")
 
   setisame(isameo)
 
@@ -40780,6 +40883,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
 
   Isame = isameo
 
+  print(NL,"trace:: Leaving _showGeoUndu",NL)
 
 #enddef _showGeoUndu(modus)
 
@@ -41310,6 +41414,7 @@ def _clWmirror():
 def _clWhybrid():
   global Hybrid_Mode,Whybrid, FileCLCO, FileCLC
 
+  print("trace:: Entered _clWhybrid\n")
 
   _GetHybrid()
   Hybrid_Mode = 1
@@ -41336,6 +41441,7 @@ def _clWhybrid():
 
   Whybrid.destroy()
 
+  print("trace:: Leaving _clWhybrid\n")
 #enddef _clhybrid()
 
 def _cnWhyEnd():
@@ -43669,6 +43775,7 @@ def ugui_ini_appleII(mode=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  print(NL,"Entered ugui_ini_appleII(",mode,")",NL)
 
   if mode != 'force' and fexist("appleii.lst"):
     AppleII = {}
@@ -43904,6 +44011,7 @@ def ugui_ini_appleII(mode=''):
 
   AppleIIOld = AppleII
 
+  print(NL,"Leaving ugui_ini_appleII",NL)
 #enddef ugui_ini_appleII()
 
 def _cnWappleII():
@@ -44080,6 +44188,7 @@ def _clWappleII(callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  print(NL,"trace:: _clWappleII")
 
   FileCLCO = FileCLC
   FileCLC = 'undumag.clc'
@@ -44108,6 +44217,7 @@ def _clWappleII(callkey=''):
   FileCLCO = FileCLC
   WappleII.destroy()
 
+  print(NL,"trace:: Leaving _clWappleII")
 
 #enddef _clappleII()
 
@@ -44197,6 +44307,7 @@ def _appleII(callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  print(NL,"trace:: _appleII('",callkey,"')")
 
   undugui_clean('AppleII')
   ugui_ini_appleII('_appleII')
@@ -44373,6 +44484,7 @@ def _appleII(callkey=''):
 
   Umaster.wait_window(WappleII)
 
+  print(NL,"trace:: Leaving _appleII")
 #enddef _appleII()
 
 ugui_ini_appleII('main')
@@ -53160,6 +53272,7 @@ def _clWlistTRC():
 
 def _listTRC(key='list'):
 
+  print('\nEntered _listTRC::'+key)
   global TransRotCop
   global Umaster,WlistTRC, WediTRC
 
@@ -53230,6 +53343,7 @@ def _listTRC(key='list'):
   bClose = Button(WlistTRC,text='Ok',command=_clWlistTRC)
   bClose.pack(expand=TRUE,fill=X)
 
+  print('\nLeaving _listTRC')
 #enddef _listTRC(key='list')
 
 MenuTRC.add_command(label='Add Copy', command= lambda key='copy': _AddTransRotCop(key),font=MyFont)
@@ -53268,6 +53382,7 @@ def TRCtoDTRC():
 
 def _EdiTRC(ied):
 
+  print('\nEntered _EdiTRC',ied)
   global TransRotCop
   global Umaster,WlistTRC, WediTRC
 
@@ -53542,10 +53657,12 @@ def _EdiTRC(ied):
   bClose = Button(WediTRC,text='Ok',command= lambda it = ied: _clWediTRC(it))
   bClose.pack(expand=TRUE,fill=X)
 
+  print('\nLeaving _EdiTRC')
 #enddef _EdiTRC(ied)
 
 def _clWediTRC(itrc):
 
+  print('\n_clWediTRC entered')
   global Umaster, WediTRC
   global TransRotCop
   global S_Remanence,S_BrX,S_BrY,S_BrZ,S_BrC,S_BrM
@@ -53577,10 +53694,12 @@ def _clWediTRC(itrc):
   WediTRC.destroy()
   _listTRC('refresh')
 
+  print('\nLeaving _clWediTRC')
 #enddef _clWediTRC()
 
 def _AddTransRotCop(key=''):
 
+  print('\n_AddTransRotCop entered')
 
   global TransRotCop
   global Umaster,WaddTRC
@@ -53832,15 +53951,18 @@ def _AddTransRotCop(key=''):
   bClose = Button(WaddTRC,text='Ok',command=_clWaddTRC)
   bClose.pack(expand=TRUE,fill=X)
 
+  print('\nLeaving _AddTransRotCop')
 #enddef _AddTransRotCop(key='')
 
 def _clWaddTRC():
   global WaddTRC, TransRotCop
 
+  print('\n_clWaddTRC entered')
 
   WaddTRC.destroy()
   _listTRC('refresh')
 
+  print('\nLeaving _clWaddTRC')
 
 #enddef _clWaddTRC()
 
@@ -55147,6 +55269,7 @@ def _clWSetSym():
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  print("\nEntered _clWSetSym")
 
   S_IxSym.set(yesno(S_IxSym.get()))
   S_IySym.set(yesno(S_IySym.get()))
@@ -55170,6 +55293,7 @@ def _clWSetSym():
   NamelistVars[DictNamelistVars['XCENTER']][1] = Xcenter
 
   WSetSym.destroy()
+  print("\nLeaving _clWSetSym")
 #enddef _clWSetSym()
 
 def _SetCenter():
@@ -56367,22 +56491,29 @@ ureadnam()
 Umaster.config(menu=MenuBar) # attach Menubar to Window
 
 plt.show(block=False)
+debug("trace:: After $ugui, before ntupini")
 start()
 
 ntupini()
+debug("trace:: After ntupini(), before startup")
 startup("undugui_start.py")
+debug("trace:: After startup")
 
 WaveFilePrefix = 'undugui_'
 
 #debug("Vor iLoad")
 if iLoad:
+  debug("trace:: Before ureadclc")
   try:
     ureadclc("Load")
   except:
     print('\n *** Error occured while loading clc-File due to "LoadLast" in undugui.cfg')
   #endtry
+  debug("trace:: After ureadclc")
   if iLoad > 1:
+    debug("trace:: Before _showGeo")
     _showGeo("3d")
+    debug("trace:: After _showGeo")
   #endif
 #endif
 #uwriteclc()

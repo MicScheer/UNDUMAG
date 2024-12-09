@@ -1,115 +1,95 @@
 
-* Example for UNDUMAG
+* +PATCH,//UNDUMAG/INPUT
+* +DECK,block_neu,T=TEXT.
 
-$PerLen = 50. ! Dummy
+$iXsym=0
+$iZsym=0
 
-$ixsym=0
-$izsym=0
-
-$fullgap=5.5
-$airgap=0.
+$FullGap=5.5
+$AirGap=0.0
+$PerLen = 17.
 
 $Br=1.62
-$Mcoating=0.014
 
-$magx=1.
-$magy=0.
-$magz=0.
+$MagX=1.
+$MagY=0.
+$MagZ=0.
 
-$lxpolfull=3.
-$lypol=30.
-$lzpolfull=40.
+$LxPolFull=3.
+$LyPol=30.
+$LzPolFull=40.
 
-$lxmag=5.272
-$lymag=34.972
-$lzmagfull=49.972
+$LxMag=5.272
+$LyMag=34.972
+$LzMagFull=49.972
 
-$idiv1=1
+$iDiv1=0
 
-$nmagdivx=2
-$nmagdivy=2
-$nmagdivz=2
+$nMagDivX=3
+$nMagDivY=5
+$nMagDivZ=5
 
-$npoldivx=5
-$npoldivy=7
-$npoldivz=5
+$nPolDivX=5
+$nPolDivY=15
+$nPolDivZ=11
 
-$mmagdivx = $nmagdivx * ( $idiv1 - 1 + $idiv1)
-$mmagdivy = $nmagdivy * ( $idiv1 - 1 + $idiv1)
-$mmagdivz = $nmagdivz * ( $idiv1 - 1 + $idiv1)
+$FracDivFeY = 1.
+$FracDivFeZ = 1.
 
-$mpoldivx = $npoldivx * ( $idiv1 - 1 + $idiv1)
-$mpoldivy = $npoldivy * ( $idiv1 - 1 + $idiv1)
-$mpoldivz = $npoldivz * ( $idiv1 - 1 + $idiv1)
+$mMagDivX = $nMagDivX * ( 1 - $iDiv1 ) + $iDiv1
+$mMagDivY = $nMagDivY * ( 1 - $iDiv1 ) + $iDiv1
+$mMagDivZ = $nMagDivZ * ( 1 - $iDiv1 ) + $iDiv1
 
-$lxpol = $lxpolfull /2. * ( 2. - $ixsym )
-$lzpol = $lzpolfull /2. * ( 2. - $izsym )
-$lzmag = $lzmagfull /2. * ( 2. - $izsym )
+$mPolDivX = $nPolDivX * ( 1 - $iDiv1 ) + $iDiv1
+$mPolDivY = $nPolDivY * ( 1 - $iDiv1 ) + $iDiv1
+$mPolDivZ = $nPolDivZ * ( 1 - $iDiv1 ) + $iDiv1
 
-$xpol = - $lxpol / 2.
-$ypol = -$fullgap / 2.  - $lypol / 2.
-$zpol = - $lzpol / 2.
+$LxPol = $LxPolFull /2. * ( 2. - $iXsym )
+$LzPol = $LzPolFull /2. * ( 2. - $iZsym )
+$LzMag = $LzMagFull /2. * ( 2. - $iZsym )
 
-$xmag= $xpol - $lxpol / 2. - $lxmag / 2.
-$ymag1=-$fullgap / 2. - $lymag / 2.
-$ymag2=-$ymag1
-$zmag = - $lzmag / 2.
+$ChamfM = 0.3
+$ChamfP = 0.1
 
-& User_Comment (one line)
-My Comment
+$xPol = - $LxPol / 2.
+$yPol = -$FullGap / 2.  - $LyPol / 2.
+$zPol = - $LzPol / 2.
 
-*& Magnet
-Block umag1 uMag1 2 ! key, name, mother, color
-$xmag $ymag1 $zmag  ! position
-$Br $magx $magy $magz 1 !length bc and components of mag. vector, material index
-$lxmag $lymag $lzmag ! size
-$mmagdivx $mmagdivy $mmagdivz 1. 1. ! segmentation
+$xMag= $xPol - $LxPol / 2. - $LxMag / 2.
+$yMag1=-$FullGap / 2. - $LyMag / 2.
+$yMag2=-$yMag1
+$zMag = - $LzMag / 2.
+
+$MagMat = 1
+$MagCol = 2
+$IronMat = 2
+$PCol = 3
+
+& User_Comment
+Block Neu
 
 & Magnet
-Corners mtet1 mTet1 2 ! key, name, mother, color
-$xmag $ymag1 $zmag  ! position
-$Br $magx $magy $magz 1 !length bc and components of mag. vector, material index
-$mmagdivx $mmagdivy $mmagdivz 1. 1. ! segmentation
-4
--1. -1. -1.
-0. -1. 1.
-1. -1. -1.
-0. 0. 0.
+Block umag1 uMag1 $MagCol           !key, name, mother, color
+$xMag $yMag1 $zMag                  !position
+$Br $MagX $MagY $MagZ $MagMat       !length bc and components of mag. vector, material index
+$LxMag $LyMag $LzMag                !size
+$mMagDivX $mMagDivY $mMagDivZ 1. 1. !segmentation
 
-& Remanence
-mTet1
-1.38 1. 1. 0. 1 3 ! Magnet, Br, mag. vector, material index, color
+& Pole
+Block Pol1 Pol1 $PCol                                    !key, name, mother, color
+$xPol $yPol $zPol                                        !position of magnet
+$IronMat                                                 !material index
+$LxPol $LyPol $LzPol                                     !dimensions
+$mPolDivX $mPolDivY $mPolDivZ $FracDivFeY $FracDivFeZ    !segmentation
 
-*& Magnet
-File mfile1 mFile1 2 ! key, name, mother, color
-$xmag $ymag1 $zmag  ! position
-$Br $magx $magy $magz 1 !length bc and components of mag. vector, material index
-$mmagdivx $mmagdivy $mmagdivz 1. 1. ! segmentation
-'corners.dat'
-
-*& Pole
-Block upol1 uPol1 2 ! key, name, mother, color
-$xpol $ypol $zpol  ! position
-2 ! material index
-$lxpol $lypol $lzpol ! size
-$mpoldivx $mpoldivy $mpoldivz 1. 1. ! segmentation
-
-& Copy
-mtet1 cop1 Cop1
-
-& Translate
-mtet1
-1. 2. 1
-
-& Rotate_Shape ! Br is not rotated
-mtet1
-1. 2. 1. ! center of rotation
-1. 0. 0. 90. ! rotation axis and angle [deg]
-
-& Rotate ! Shape and Br are rotated
-mtet1
-1. 2. 1. ! center of rotation
-1. 0. 0. 90. ! rotation axis and angle [deg]
+{
+& Pole
+BlockChamf Pol1 Pol1 $PCol                               !key, name, mother, color
+$xPol $yPol $zPol                                        !position of magnet
+$IronMat                                                 !material index
+$LxPol $LyPol $LzPol $ChamfP                             !dimensions
+$mPolDivX $mPolDivY $mPolDivZ $FracDivFeY $FracDivFeZ    !segmentation
+}
 
 ************
 & Module
@@ -120,22 +100,9 @@ $PerLen 1. 0. 0. 0. !spacing and direction of arrangement, rotation angle
 1. 1. 1. !scaling and symmetry of magnetization vector
 ************
 
-& Special_Magnet
-Corners stet1 sTet1 2 ! key, name, mother, color
-$xmag $ymag1 $zmag  ! position
-$Br $magx $magy $magz 1 !length bc and components of mag. vector, material index
-$mmagdivx $mmagdivy $mmagdivz 1. 1. ! segmentation
-4
--1. -1. -1.
-0. -1. 1.
-1. -1. -1.
-0. 0. 0.
-
-*& Coil
-
 & Materials
-************
 2 ! number of materials
 1 1 1 undumag_mu_77K.dat
-2 2 2 Vanadium_Permendur_Radia.dat
-************
+2 2 3 Vanadium_Permendur_Radia.dat
+2 2 0 iron_muinf_sat-2.34.dat
+1 1 1 undumag_mu_unity.dat

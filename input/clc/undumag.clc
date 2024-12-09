@@ -1,0 +1,108 @@
+
+* +PATCH,//UNDUMAG/INPUT
+* +DECK,block_neu,T=TEXT.
+
+$iXsym=0
+$iZsym=0
+
+$FullGap=5.5
+$AirGap=0.0
+$PerLen = 17.
+
+$Br=1.62
+
+$MagX=1.
+$MagY=0.
+$MagZ=0.
+
+$LxPolFull=3.
+$LyPol=30.
+$LzPolFull=40.
+
+$LxMag=5.272
+$LyMag=34.972
+$LzMagFull=49.972
+
+$iDiv1=0
+
+$nMagDivX=3
+$nMagDivY=5
+$nMagDivZ=5
+
+$nPolDivX=5
+$nPolDivY=15
+$nPolDivZ=11
+
+$FracDivFeY = 1.
+$FracDivFeZ = 1.
+
+$mMagDivX = $nMagDivX * ( 1 - $iDiv1 ) + $iDiv1
+$mMagDivY = $nMagDivY * ( 1 - $iDiv1 ) + $iDiv1
+$mMagDivZ = $nMagDivZ * ( 1 - $iDiv1 ) + $iDiv1
+
+$mPolDivX = $nPolDivX * ( 1 - $iDiv1 ) + $iDiv1
+$mPolDivY = $nPolDivY * ( 1 - $iDiv1 ) + $iDiv1
+$mPolDivZ = $nPolDivZ * ( 1 - $iDiv1 ) + $iDiv1
+
+$LxPol = $LxPolFull /2. * ( 2. - $iXsym )
+$LzPol = $LzPolFull /2. * ( 2. - $iZsym )
+$LzMag = $LzMagFull /2. * ( 2. - $iZsym )
+
+$ChamfM = 0.3
+$ChamfP = 0.1
+
+$xPol = - $LxPol / 2.
+$yPol = -$FullGap / 2.  - $LyPol / 2.
+$zPol = - $LzPol / 2.
+
+$xMag= $xPol - $LxPol / 2. - $LxMag / 2.
+$yMag1=-$FullGap / 2. - $LyMag / 2.
+$yMag2=-$yMag1
+$zMag = - $LzMag / 2.
+
+$MagMat = 1
+$MagCol = 2
+$IronMat = 2
+$PCol = 3
+
+& User_Comment
+Block Neu
+
+& Magnet
+Block umag1 uMag1 $MagCol           !key, name, mother, color
+$xMag $yMag1 $zMag                  !position
+$Br $MagX $MagY $MagZ $MagMat       !length bc and components of mag. vector, material index
+$LxMag $LyMag $LzMag                !size
+$mMagDivX $mMagDivY $mMagDivZ 1. 1. !segmentation
+
+& Pole
+Block Pol1 Pol1 $PCol                                    !key, name, mother, color
+$xPol $yPol $zPol                                        !position of magnet
+$IronMat                                                 !material index
+$LxPol $LyPol $LzPol                                     !dimensions
+$mPolDivX $mPolDivY $mPolDivZ $FracDivFeY $FracDivFeZ    !segmentation
+
+{
+& Pole
+BlockChamf Pol1 Pol1 $PCol                               !key, name, mother, color
+$xPol $yPol $zPol                                        !position of magnet
+$IronMat                                                 !material index
+$LxPol $LyPol $LzPol $ChamfP                             !dimensions
+$mPolDivX $mPolDivY $mPolDivZ $FracDivFeY $FracDivFeZ    !segmentation
+}
+
+************
+& Module
+ 0. 0. 0. 1 1 !offset of module, number and number of associated module
+****
+1 !number of arrays within module
+$PerLen 1. 0. 0. 0. !spacing and direction of arrangement, rotation angle
+1. 1. 1. !scaling and symmetry of magnetization vector
+************
+
+& Materials
+2 ! number of materials
+1 1 1 undumag_mu_77K.dat
+2 2 3 Vanadium_Permendur_Radia.dat
+2 2 0 iron_muinf_sat-2.34.dat
+1 1 1 undumag_mu_unity.dat

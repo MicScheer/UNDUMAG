@@ -4,6 +4,40 @@
 
 import os,sys,platform,shutil,glob
 
+global Move,Delete
+
+if platform.system() == 'Windows':
+  Move = 'move '
+  Delete = 'del '
+else:
+  Move = 'mv '
+  Delete = 'rm '
+#endif
+
+def forcomp(scom):
+  istat = os.system(scom)
+  if istat:
+    Quit("*** Error for:\n",scom)
+#enddef forcomp(scom)
+
+def touch(filename):
+  global OS, Iverbose, Idry
+  path = os.getcwd()
+  #reakpoint()
+  if Iverbose: print('Touching ' + filename)
+  if OS == 'Windows':
+    scom = 'type ' + filename + ' > ' + path + '\\Kopie'
+    if Idry == 0: forcomp(scom)
+    scom = 'type ' + path + '\\Kopie > ' + filename
+    if Idry == 0: forcomp(scom)
+    scom = 'del ' + path + '\\Kopie'
+    if Idry == 0: forcomp(scom)
+  else:
+    scom = 'touch ' + filename
+    if Idry == 0: forcomp(scom)
+  #endif
+#enddef touch(file)
+
 def Quit(*args, delay=0):
   #reakpoint()
   nargs =  len(args)
@@ -167,6 +201,7 @@ def get_undu_tree():
 def undu_update():
 
   global UI,Undu_tree,Texe,Scomp_all,Scomp_omp,Scomp,Iverbose,Idry,Idebug,Scomp_nowarn
+  global Move,Delete
 
   #reakpoint()
 
@@ -272,7 +307,7 @@ def undu_update():
         #endif
       #end while
       Flines.close()
-
+      #breakpoint()
       if Iverbose > 0: print("\nModule:",m)
 
       #if m == 'displacement': #reakpoint()
@@ -281,7 +316,7 @@ def undu_update():
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0: os.system(scom)
 
-      scom = 'mv ' + dsm + m + ".mod " + dd
+      scom = Move + dsm + m + ".mod " + dd
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0: os.system(scom)
 
@@ -308,9 +343,9 @@ def undu_update():
             key = sl[0].lower()
             if key== 'use':
               if sl[1].lower() == m:
-                scom = 'touch ' + ds+f
-                if Iverbose > 0: print("\n",scom,"\n")
-                if Idry == 0: os.system(scom)
+                scom = touch(ds+f)
+#                if Iverbose > 0: print("\n",scom,"\n")
+#                if Idry == 0: os.system(scom)
                 break
               #endif
             #endif
@@ -340,9 +375,9 @@ def undu_update():
               if sl[1].lower() == 'none': break
             elif key== 'use':
               if sl[1].lower() == m:
-                scom = 'touch ' + ds+f
-                if Iverbose > 0: print("\n",scom,"\n")
-                if Idry == 0: os.system(scom)
+                scom = touch(ds+f)
+#                if Iverbose > 0: print("\n",scom,"\n")
+#                if Idry == 0: os.system(scom)
                 break
               #endif
             #endif
@@ -391,9 +426,9 @@ def undu_update():
           if key== 'include':
             #reakpoint()
             if sl[1].lower() == "'" + fcmn + "'" or sl[1].lower() == '"' + fcmn + '"':
-              scom = 'touch ' + ds+fft[0]
-              if Iverbose > 0: print("\n",scom,"\n")
-              if Idry == 0: os.system(scom)
+              scom = touch(ds+fft[0])
+#              if Iverbose > 0: print("\n",scom,"\n")
+#              if Idry == 0: os.system(scom)
               break
             #endif
           #endif
