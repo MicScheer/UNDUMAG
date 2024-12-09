@@ -199,7 +199,7 @@ def undu_update():
     ddd = dd.split(Sepp)[-1]
 
     if Iverbose >= 0: print("\nProcessing",dd)
-    breakpoint()
+    #reakpoint()
 
     if ddd == 'mshcern':
       lib = UI + 'lib'+Sepp+'libmshcern_debug.a'
