@@ -4,7 +4,6 @@
 global WavesMode
 WavesMode = 'UNDUPLOT'
 
-debug("trace:: $uguiimports")
 #!/usr/bin/env python
 
 # +PATCH,//WAVES/PYTHON
@@ -1213,7 +1212,6 @@ LogX, LogY, LogZ, NxbBinMax, Khdeleted,WisLinux, Waveplot, \
 Mrun, Mcomment, Mdate, ROFx, ROFy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid,KyAxis,KxAxis,KzAxis,Kbox, \
 FillColor,Ishow
 
-print("trace::plotglobal:")
 
 FillColor = 'none'
 
@@ -1542,24 +1540,6 @@ Hull3DList = []
 THull3D = type(Hull3D)
 Ishow = 1
 
-def debug(kmenu=None,kitem=None):
-  global \
-  Wave, Root, WaveOut, Editor, WinGeo, \
-  Debug,FWAVEIN,FWVS,Wavein,WaveinO,Wmenu,Mapping,MenuVeto,MenuAllVeto,NMenuAllVeto,\
-  WAVECom, ROOTCom, EWOUTCom, EDICom, MenuActive, Nmenuactive, \
-  MappingVeto,Veto,InvVeto,Variables,Arrays,Specvar,Trigger,Calc,Help,NHelp,Nmenu,\
-  Nmenuveto,NmenuOld,Mother,MenuMother,MenuOld,Daughter,IMother,Nveto,\
-  Ninvveto,Nmap,Nvar,Iarr,Narr,Ntrigger,Ncalc,NULL,ONE,MONE,SNULL,SONE,SMONE,Lastvar,\
-  Nwavein,kWaveinRead, KWAVES,MMitem,Nmitem,Kmitem,Imenu,Ipmenu,\
-  Kmitemold, Iback, Istak, Tcolor, Vetocolor, SFrame, SComment, SMitem, \
-  VarToWaveIn, PosX, PosY, WinPos, Nsitem,Pmenu,PadX,PadY,SMexist, \
-  I,ZONE,ZNULL,Ical,Lmitem,FIOitem,PMenuGeo, Nfocus, MyWavesFont,Ifocus, \
-  ScreenW,ScreeH,WinX,WinY,CanW,CanH
-  pass
-#  print("\n\n debug::kmenu,kitem",kmenu,kitem,SMitem[kmenu])
-#  print("\n\n debug::kmenu,kitem",kmenu,kitem)
-#enddef debug(kmenu,kitem)
-debug("trace:: Leaving plotglobal")
 #+PATCH,//WAVES/PYTHON
 #+KEEP,nxyzglobal,T=PYTHON.
 global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv,Nx,Nxy,Nxyz
@@ -1707,24 +1687,6 @@ if System != 'WINDOWS':
 #if System != 'WINDOWS':
 
 Gdebug = 0
-def debug(kmenu=None,kitem=None):
-  global \
-  Wave, Root, WaveOut, Editor, WinGeo, \
-  Debug,FWAVEIN,FWVS,Wavein,WaveinO,Wmenu,Mapping,MenuVeto,MenuAllVeto,NMenuAllVeto,\
-  WAVECom, ROOTCom, EWOUTCom, EDICom, MenuActive, Nmenuactive, \
-  MappingVeto,Veto,InvVeto,Variables,Arrays,Specvar,Trigger,Calc,Help,NHelp,Nmenu,\
-  Nmenuveto,NmenuOld,Mother,MenuMother,MenuOld,Daughter,IMother,Nveto,\
-  Ninvveto,Nmap,Nvar,Iarr,Narr,Ntrigger,Ncalc,NULL,ONE,MONE,SNULL,SONE,SMONE,Lastvar,\
-  Nwavein,kWaveinRead, KWAVES,MMitem,Nmitem,Kmitem,Imenu,Ipmenu,\
-  Kmitemold, Iback, Istak, Tcolor, Vetocolor, SFrame, SComment, SMitem, \
-  VarToWaveIn, PosX, PosY, WinPos, Nsitem,Pmenu,PadX,PadY,SMexist, \
-  I,ZONE,ZNULL,Ical,Lmitem,FIOitem,PMenuGeo, Nfocus, MyWavesFont,Ifocus, \
-  ScreenW,ScreeH,WinX,WinY,CanW,CanH
-  pass
-#  print("\n\n debug::kmenu,kitem",kmenu,kitem,SMitem[kmenu])
-#  print("\n\n debug::kmenu,kitem",kmenu,kitem)
-#enddef debug(kmenu,kitem)
-debug("Check system")
 #import m_hbook as m
 
 global TransRotCop, EchoCLC,DictTransRotCop
@@ -1929,7 +1891,6 @@ ck934=echarge1/(2.0e0*pi1*emasskg1*clight1)/100.0e0
 fwhmgauss1=np.sqrt(2.0*np.log(2))*2.0
 fwhmsinxx21=2.783115
 rmssinxx21=1.05244
-debug("Physical constants set")
 
 global Ftyp,Ftype
 Ff = open("ftypedum","w")
@@ -26808,11 +26769,8 @@ def startup(sfile='ntupplot_startup.py'):
 
   global WaveFilePrefix, WavesMode
 
-  print("trace::startup:")
   if get_mshwelcome() == False:
-    print("trace::startup: Before mshwelcome")
     mshwelcome("Ntup-Plot",2021)
-    print("trace::startup: After mshwelcome")
   if WavesMode == 'WAVES' or WavesMode == 'WPLOT' or WavesMode == 'WSHOP': fcfg = 'waveplot.cfg'
   elif WavesMode == 'UNDUMAG': fcfg = 'undugui.cfg'
   else: fcfg = 'ntupplot.cfg'
@@ -26842,7 +26800,6 @@ def startup(sfile='ntupplot_startup.py'):
   #endif not os.path.exists(sfile)
 
   WaveFilePrefix = 'NtupPlot_'
-  print("trace:: Leaving startup")
 #enddef startup()
 
 def _showMenu(menu):
@@ -28404,7 +28361,6 @@ from PIL import Image
 
 print("\nLast run of UNDUMAG:")
 
-debug("trace:: $uguiimports, before $undumagplot")
 
 # +PATCH,//UNDUMAG/PYTHON
 # +KEEP,undumagplot,T=PYTHON.
@@ -29920,8 +29876,6 @@ def undu_plot_mag_3d(cnams='',alpha=1.0):
 
 #import undumag_plot as upl
 #from undumag_plot import *
-debug("trace:: $uguiimports, after $undumagplot")
-debug("trace:: End of $uguiimports")
 #import m_hbook as m
 
 global TransRotCop, EchoCLC,DictTransRotCop
@@ -31030,7 +30984,6 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  print(NL,"trace:: undu_coils_to_filaments",kcoil,callkey,NL)
 
   if len(Coils) == 0:
     Filaments = []
@@ -31055,7 +31008,6 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
 
   #Quit("Ende nach undumag")
 
-  print(NL,"trace:: Leaving undu_coils_to_filaments",NL)
 #enddef undu_coils_to_filaments()
 
 def blockcorners(mp):
@@ -31231,7 +31183,6 @@ def ureadclc(callkey=''):
   #reakpoint()
   NL = "\n"
 
-  debug("trace: ureadclc:callkey:",callkey)
 
   #reakpoint()
   undugui_clean(callkey)
@@ -32849,10 +32800,8 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   xyzcoils = [1.0e30,-1.0e30,1.0e30,-1.0e30,1.0e30,-1.0e30,1]
 
-  print(NL,"trace:: _ucoilplot:",view,modus,item,callkey)
 
   if NMagPolTot >= 0 and len(Filaments) == 0:
-    print(NL,"trace:: Leaving _ucoilplot, no coils...")
     return xyzcoils
   #endif
 
@@ -32899,7 +32848,6 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   if ifound == 0:
     wError("No coils to plot")
-    print(NL,"trace:: Leaving _ucoilplot due to error")
     kallzero = -1
     return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
   #endif
@@ -32988,7 +32936,6 @@ def _ucoilplot(view='3d', modus='same', item=-1,callkey=''):
 
   #endif modus
 
-  print(NL,"trace:: Leaving _ucoilplot")
 
   return [xmin,xmax,ymin,ymax,zmin,zmax,kallzero]
 
@@ -33468,12 +33415,10 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
 #enddef _plotSingleMag(imp)
 
 def _showGeo(modus='3d',item=-1,kseg=0,callkey=''):
-  print(NL,"trace:: _showGeo:",modus,item,kseg,callkey)
   if modus == 'undu3d' or modus == 'eps':
     _showGeoUndu(modus,item,1,callkey='showGeo')
   else:
     _showGeoPython(modus,item,callkey='showGeo')
-    print(NL,"trace:: Leaving _showGeo")
 #enddef _showGeo(modus='3d',item=-1,kseg=0)
 
 def _module_to_shift_and_rot(imodu):
@@ -33608,7 +33553,6 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
-  print(NL,"trace:: _showGeoPython:",modus,item,callkey)
 
   isameo = getisame()
 
@@ -33616,7 +33560,6 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
 
   if NMagPolTot == 0 and len(Filaments) == 0:
     print("Nothing to plot!")
-    print(NL,"trace:: Leaving _showGeoPython")
     return
   #endif NMagPolTot == 0
 
@@ -33640,7 +33583,6 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
 
 #  if not NMagPolTot:
 #    xyzcoils = _ucoilplot('3d','notsame',callkey='ShowGeoPython')
-    print(NL,"trace:: Leaving _showGeoPython after _ucoilplot(...)")
   #endif not NMagPolTot
 
 
@@ -34133,7 +34075,6 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
 
   setisame(isameo)
 
-  print(NL,"trace:: Leaving _showGeoPython\n")
 #enddef _showGeoPython(modus='3d',item=-1)
 
 def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
@@ -34226,7 +34167,6 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
-  print(NL,"trace:: _showGeoPythonXYZ:",modus,item,callkey)
 
   isameo = getisame()
 
@@ -34234,7 +34174,6 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
 
   if NMagPolTot == 0 and len(Filaments) == 0:
     print("Nothing to plot!")
-    print(NL,"trace:: Leaving _showGeoPythonXYZ")
     return
   #endif NMagPolTot == 0
 
@@ -34249,15 +34188,8 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
 
   if not NMagPolTot:
     xyzcoils = _ucoilplot(modus,'notsame',callkey='ShowGeoPythonXYZ')
-    print(NL,"trace:: Leaving _showGeoPythonXYZ after _ucoilplot(...)")
   #endif not NMagPolTot
 
-  print(NL,"trace:: showGeoPythonXYZ")
-  imp = 0
-  for mp in MagPolsTot:
-    imp += 1
-    print(imp,mp[0:4])
-  #endfor
 
   #dot()
   getzone()
@@ -34371,10 +34303,8 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
 
   if not NMagPolTot:
     _ucoilplot(modus,'notsame',callkey='ShowGeoPythonXYZ')
-    print(NL,"trace:: Leaving _showGeoPythonXYZ after _ucoilplot(...)")
   #endif not NMagPolTot
 
-  print(NL,"trace:: Leaving _showGeoPythonXYZ")
 
   setisame(isameo)
 
@@ -34699,7 +34629,6 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
 
   Isame = isameo
 
-  print(NL,"trace:: Leaving _showGeoUndu",NL)
 
 #enddef _showGeoUndu(modus)
 
@@ -35734,7 +35663,6 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  print(NL,"trace:: undu_coils_to_filaments",kcoil,callkey,NL)
 
   if len(Coils) == 0:
     Filaments = []
@@ -35759,7 +35687,6 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
 
   #Quit("Ende nach undumag")
 
-  print(NL,"trace:: Leaving undu_coils_to_filaments",NL)
 #enddef undu_coils_to_filaments()
 
 def blockcorners(mp):
@@ -35935,7 +35862,6 @@ def ureadclc(callkey=''):
   #reakpoint()
   NL = "\n"
 
-  debug("trace: ureadclc:callkey:",callkey)
 
   #reakpoint()
   undugui_clean(callkey)
