@@ -222,6 +222,10 @@ def undu_update():
       scomp = Scomp_all
     #endif
 
+
+    Tlib = 0
+    Tlibm = 0
+
     try:
       Tlib = os.stat(lib).st_mtime_ns
       if Tlib > Texe: kmain = 1
