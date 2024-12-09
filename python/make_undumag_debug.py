@@ -86,7 +86,7 @@ if nargs > 1:
     n = '\n'
     print(n)
     print("Usage: python3 " + UI + args[0] + " [verbose level]",n)
-    print("To force total recompilation delete ",n,UI + Sepp + "bin"+Sepp+"undumag.exe",n)
+    print("To force total recompilation delete ",n,UI + Sepp + "bin"+Sepp+"undumag_debug.exe",n)
     Quit()
   #end try
 #endif
@@ -105,7 +105,7 @@ def get_undu_tree():
   global UI,Undu_tree,Iverbose,Idry,Idebug,Texe,Tlib,Tlibm
 
   try:
-    Texe = os.stat(UI + Sepp + 'bin' + Sepp + 'undumag.exe').st_mtime_ns
+    Texe = os.stat(UI + Sepp + 'bin' + Sepp + 'undumag_debug.exe').st_mtime_ns
   except:
     Texe = 0
   #endtry
@@ -469,7 +469,7 @@ def undu_update():
           print('*** Failed to execute ',scom)
         #endtry
     #endfor
-    sgfor = "gfortran -g -cpp -fd-lines-as-comments -Wno-align-commons -fopenmp -fcheck=bounds -ffixed-line-length-none -finit-local-zero  -funroll-loops -o " + UI + "bin" + Sepp + "undumag.exe " + UI + "main" + Sepp + "undumag_main.f"
+    sgfor = "gfortran -g -cpp -fd-lines-as-comments -Wno-align-commons -fopenmp -fcheck=bounds -ffixed-line-length-none -finit-local-zero  -funroll-loops -o " + UI + "bin" + Sepp + "undumag_debug.exe " + UI + "main" + Sepp + "undumag_main.f"
     slink = ' '
     for flib in ['libundu_debug.a','libundu_modules_debug.a','liburad_debug.a','libutil_debug.a','libmshcern_debug.a','libmshplt_debug.a']:
       slink += UI + "lib" + Sepp + flib + ' '
@@ -478,9 +478,9 @@ def undu_update():
     scom = sgfor + slink
     if Iverbose > 0: print("\n",scom,"\n")
     if Idry == 0: os.system(scom)
-    if Iverbose >=0: print("\n--- " + UI  + "bin"+Sepp+"undumag.exe updated ---\n")
+    if Iverbose >=0: print("\n--- " + UI  + "bin"+Sepp+"undumag_debug.exe updated ---\n")
   else:
-    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin"+Sepp+"undumag.exe ---\n")
+    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin"+Sepp+"undumag_debug.exe ---\n")
   #endif
 
 #enddef undu_update
