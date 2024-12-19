@@ -1,4 +1,5 @@
-*CMZ :          27/02/2024  14.40.04  by  Michael Scheer
+*CMZ :          17/12/2024  15.54.59  by  Michael Scheer
+*CMZ :  2.05/05 27/02/2024  14.40.04  by  Michael Scheer
 *CMZ :  2.05/02 03/11/2023  16.01.07  by  Michael Scheer
 *CMZ :  2.04/11 26/08/2023  09.53.27  by  Michael Scheer
 *CMZ :  2.04/10 23/08/2023  08.05.44  by  Michael Scheer
@@ -45,6 +46,7 @@ c-----------------------------------------------------------------------
         t8=transrotcop(:,itr)
         key=int(t8(8))
         i=int(t8(1))
+        print*,itr,key
 
         if (i.le.0) cycle
 
@@ -116,6 +118,9 @@ c-----------------------------------------------------------------------
               t_magnets(mag)%xyz=t_magnets(mag)%xyz+t8(1:3)
               t_magnets(mag)%gcen=t_magnets(mag)%gcen+t8(1:3)
               do ipoi=1,tmag%nhull
+                t_magnets(mag)%xhull0(ipoi)=t_magnets(mag)%xhull0(ipoi)+t8(1)
+                t_magnets(mag)%yhull0(ipoi)=t_magnets(mag)%yhull0(ipoi)+t8(2)
+                t_magnets(mag)%zhull0(ipoi)=t_magnets(mag)%zhull0(ipoi)+t8(3)
                 t_magnets(mag)%xhull(ipoi)=t_magnets(mag)%xhull(ipoi)+t8(1)
                 t_magnets(mag)%yhull(ipoi)=t_magnets(mag)%yhull(ipoi)+t8(2)
                 t_magnets(mag)%zhull(ipoi)=t_magnets(mag)%zhull(ipoi)+t8(3)
@@ -138,13 +143,18 @@ c-----------------------------------------------------------------------
               if (t8(8).eq.2) then
                 call util_mat_mul_vec_3x3(rm,tmag%br,t_magnets(mag)%br)
               endif
-              r=tmag%xyz-t8(1:3)
+              r=tmag%gcen-t8(1:3)
               call util_mat_mul_vec_3x3(rm,r,r)
-              t_magnets(mag)%xyz=r+t8(1:3)
+              t_magnets(mag)%gcen=r+t8(1:3)
               r=tmag%gcen-t8(1:3)
               call util_mat_mul_vec_3x3(rm,r,r)
               t_magnets(mag)%gcen=r+t8(1:3)
               do ipoi=1,tmag%nhull
+                r=[tmag%xhull0(ipoi)-t8(1),tmag%yhull0(ipoi)-t8(2),tmag%zhull0(ipoi)-t8(3)]
+                call util_mat_mul_vec_3x3(rm,r,r)
+                t_magnets(mag)%xhull0(ipoi)=r(1)+t8(1)
+                t_magnets(mag)%yhull0(ipoi)=r(2)+t8(2)
+                t_magnets(mag)%zhull0(ipoi)=r(3)+t8(3)
                 r=[tmag%xhull(ipoi)-t8(1),tmag%yhull(ipoi)-t8(2),tmag%zhull(ipoi)-t8(3)]
                 call util_mat_mul_vec_3x3(rm,r,r)
                 t_magnets(mag)%xhull(ipoi)=r(1)+t8(1)

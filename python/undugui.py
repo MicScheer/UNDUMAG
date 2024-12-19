@@ -33406,12 +33406,19 @@ def uwritetrc(filename):
             #endif
 
             lc = lt
-
             for trc in TransRotCop:
+
               if idebug > 0:
                 print(trc)
               #endif
-              if trc[1] == cmag:
+
+              if trc[0] == 'Copy':
+                cnm = trc[1].split()[0]
+              else:
+                cnm = trc[0]
+              #endif
+
+              if cnm == cmag:
                 try:
                   mag = DictMagPolsTot[cmag]
                   fclc.write('& '+trc[0]+'\n')
@@ -33423,7 +33430,7 @@ def uwritetrc(filename):
                   print(trc)
                   print('\n*** Error in uwritetrc: Magnet',cmag,' not found ***')
                 #endtry
-              elif trc[1] == cmoth:
+              elif cnm == cmoth:
                 try:
                   moth = DictMoths[cmoth]
                   fclc.write('& '+trc[0]+'\n')
@@ -33444,6 +33451,7 @@ def uwritetrc(filename):
       lc += 1
       if lc > llins-1: break
     #endfor
+
     fclc.close()
 
   except:
@@ -39282,9 +39290,6 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
     col = UnduColors[kcol]
   #endif col not in UnduColors
 
-  points = []
-  cen = mp[4]
-
   if isame <= 0:
     store_kdump_kpdf(); optdump(False); optpdf(False)
   #endif
@@ -39293,6 +39298,9 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
     ms = getmarkersize()
     setmarkersize(0)
   #endif
+
+  points = []
+  cen = mp[4]
 
   xc = calc_var(cen[0])
   yc = calc_var(cen[1])
@@ -39351,14 +39359,13 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
       c3 = zc + calc_var(mp[7][ic][2])
 
       if itrans != 0 and (cmoth in DictTransRotCop or cmag in DictTransRotCop):
-        trc = TransRot(cmag,cmoth,c[0],c[1],c[2])
+        trc = TransRot(cmag,cmoth,c1,c2,c3)
       else:
         trc = [c1,c2,c3]
       #endif
+
       if key == 'xy':
         pass
-        #c1 = xc + calc_var(mp[7][ic][0])
-        #c2 = yc + calc_var(mp[7][ic][1])
       elif key == 'xz':
         c2 = c3
       elif key == 'zy':
@@ -39373,8 +39380,26 @@ def _plotSingleMag(imp,key='xy',isame=0,nmodules=0,itrans=1):
     nfaces,ifaces,iverts = qhull2d(points)
 
     edges = []
-#    for i in range(nfaces):
-#      edges.append(points())
+
+    xm = 1.0e30
+    xx = -1.0e30
+    ym = 1.0e30
+    yx = -1.0e30
+    for i in range(nfaces):
+      p1 = points[ifaces[i][0]]
+      xm = min(xm,p1[0])
+      xx = max(xx,p1[0])
+      ym = min(ym,p1[1])
+      yx = max(yx,p1[1])
+      p2 = points[ifaces[i][1]]
+      xm = min(xm,p2[0])
+      xx = max(xx,p2[0])
+      ym = min(ym,p2[1])
+      yx = max(yx,p2[1])
+      edges.append([p1,p2])
+    #endfor
+
+    bounds = [xm,xx,ym,yx]
 
   elif mp[3] == 'Cylinder':
     ifound = 0
@@ -39853,13 +39878,13 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
           xx = corn[0]; yy = corn[1]; zz = corn[2]
 
           if callkey != 'plotMag':
-            if cmoth in DictTransRotCop or cmag in DictTransRotCop:
-              t = TransRot(cmag,cmoth,xx,yy,zz)
-              xx = t[0]
-              yy = t[1]
-              zz = t[2]
-              #print("t:",cmag,yy,t[2])
-            #endif
+#            if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+#              t = TransRot(cmag,cmoth,xx,yy,zz)
+#              xx = t[0]
+#              yy = t[1]
+#              zz = t[2]
+#              #print("t:",cmag,yy,t[2])
+#            #endif
             x = xc + rot11*xx + rot12*yy + rot13*zz
             y = yc + rot21*xx + rot22*yy + rot23*zz
             z = zc + rot31*xx + rot32*yy + rot33*zz
@@ -39882,13 +39907,13 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
           zz = calc_var(mp[7][ic][2])
 
           if callkey != 'plotMag':
-            if cmoth in DictTransRotCop or cmag in DictTransRotCop:
-              print("*** Warning: Keywords Copy, Rotate, Translate not yet implemented ***")
-              t = TransRot(cmag,cmoth,c1,c2,c3)
-              xx = t[0]
-              yy = t[1]
-              zz = t[2]
-            #endif
+#            if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+#              print("*** Warning in _showGeoPython: Keywords Copy, Rotate, Translate not yet implemented ***")
+#              t = TransRot(cmag,cmoth,c1,c2,c3)
+#              xx = t[0]
+#              yy = t[1]
+#              zz = t[2]
+#            #endif
             x = xc + rot11*xx + rot12*yy + rot13*zz
             y = yc + rot21*xx + rot22*yy + rot23*zz
             z = zc + rot31*xx + rot32*yy + rot33*zz
@@ -39948,9 +39973,9 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
                   p = [poi[0] + xc,poi[1] + yc,poi[2] + zc]
 
                   if callkey != 'plotMag':
-                    if cmoth in DictTransRotCop or cmag in DictTransRotCop:
-                      p = TransRot(cmag,cmoth,p[0],p[1],p[2])
-                    #endif
+#                    if cmoth in DictTransRotCop or cmag in DictTransRotCop:
+#                      p = TransRot(cmag,cmoth,p[0],p[1],p[2])
+#                    #endif
                     if ang != 0:
                       x = rot11*p[0] + rot12*p[1] + rot13*p[3] + dtx
                       y = rot21*p[0] + rot22*p[1] + rot23*p[3] + dty

@@ -1,4 +1,5 @@
-*CMZ :          27/02/2024  21.58.56  by  Michael Scheer
+*CMZ :          17/12/2024  12.24.21  by  Michael Scheer
+*CMZ :  2.05/05 27/02/2024  21.58.56  by  Michael Scheer
 *CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.32.07  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
@@ -209,7 +210,6 @@
 
             ydiv=t_magnets(imag)%ydivs(iy)+gcen(2) !Labor
             ydiv=ydiv-gcenv(2) ! relative to gcenv
-
             ymin=1.0d30
             ymax=-1.0d30
             do iplan=1,nplanmax
@@ -424,6 +424,8 @@ c              stop
 
         do iy=1,nydiv
 
+          if (kcut.eq.0.and.iy.gt.1) exit
+
           nhull=t_magnets(imag)%t_xycuts(ix,iy)%nhull
 
           if (nhull.gt.0) then
@@ -475,12 +477,6 @@ c              stop
         write(lun6,*)"Maybe you should try MODSIMPHULL=1 in undumag.nam"
       endif
 
-c      if (imag.eq.2) then
-c        do ix=1,nxdiv
-c          print*,t_magnets(imag)%t_xycuts(ix,1)%kface(1:t_magnets(imag)%t_xycuts(ix,1)%kfacelast)
-c        enddo
-c        stop
-c      endif
 
       return
       end

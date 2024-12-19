@@ -1,4 +1,5 @@
-*CMZ :          27/02/2024  16.53.50  by  Michael Scheer
+*CMZ :          17/12/2024  12.33.21  by  Michael Scheer
+*CMZ :  2.05/05 27/02/2024  16.53.50  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.31.14  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/16 12/09/2023  13.51.44  by  Michael Scheer
@@ -60,10 +61,9 @@
       if (idebug.eq.10) then
         do ix=1,nxdiv
           do iy=1,nydiv
-            print*,ix,iy,t_magnets(imag)%t_xycuts(ix,iy)%volume
+            print*,ix,iy,t_magnets(imag)%t_xycuts(ix,iy)%nhull
           enddo
         enddo
-        stop
       endif
 
       ctype=t_magnets(imag)%ctype
@@ -115,12 +115,17 @@
 
       do ix=1,nxdiv
 
+        if (t_magnets(imag)%t_xcuts(ix)%nhull.eq.0) cycle
+
         do iy=1,nydiv
+
+          if (t_magnets(imag)%t_xycuts(ix,iy)%nhull.eq.0) cycle
 
           x02=0.0d0
           y02=0.0d0
           z02=0.0d0
 
+          t_magnets(imag)%t_xycuts(ix,iy)%mzdiv=0
           t_magnets(imag)%t_xycuts(ix,iy)%mzdiv=0
 
           tvox=t_magnets(imag)%t_xycuts(ix,iy)

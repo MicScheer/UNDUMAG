@@ -1,4 +1,5 @@
-*CMZ :          01/12/2023  13.39.21  by  Michael Scheer
+*CMZ :          17/12/2024  12.18.14  by  Michael Scheer
+*CMZ :  2.05/04 01/12/2023  13.39.21  by  Michael Scheer
 *CMZ :  2.05/02 31/10/2023  13.40.07  by  Michael Scheer
 *CMZ :  2.04/25 28/09/2023  08.00.38  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.03.22  by  Michael Scheer
@@ -27,8 +28,16 @@
 
       implicit none
 
-*KEEP,grarad.
-      include 'grarad.cmn'
+      Type(T_Magnet) tmag
+
+*KEEP,GRARAD.
+c-----------------------------------------------------------------------
+c     grarad.cmn
+c-----------------------------------------------------------------------
+      double precision, parameter ::
+     &  PI1=3.141592653589793D0,
+     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
+     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
 *KEND.
 
       character(2048) cline,cbuff(5),cfile,cline1
@@ -37,7 +46,7 @@
       double precision, dimension (:), allocatable :: xp,yp,zp,xpc,ypc,zpc
       double precision, dimension (:,:), allocatable :: brnmatc
 
-      double precision undumag_variable_getval,size(3),dphi
+      double precision undumag_variable_getval,size(3),dphi,xmin,xmax,ymin,ymax,zmin,zmax
 
       double precision x,dx,dy,dz,Br(5),xc,yc,zc,gcen(3),chamf,
      &  r,h,phi,radin,radout,height,angle,xyz(3),vol
@@ -49,7 +58,8 @@
      &  nxdiv,nydiv,nzdiv,nhull,nface,nedge,kfacelast,kblockch
 
 *KEEP,hulldim.
-      include 'hulldim.cmn'
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
 
       integer ipos(2,1000),jpos(2,1000),nwords,istat,ibrn,ifound
@@ -761,7 +771,19 @@
         t_magnets(nmag)%khull(1:npoi)=khull(1:npoi)
 
         gcen=0.0d0
+        xmin=1.0d30
+        xmax=-1.0d30
+        ymin=1.0d30
+        ymax=-1.0d30
+        zmin=1.0d30
+        zmax=-1.0d30
         do i=1,npoi
+          if (xp(i).lt.xmin) xmin=xp(i)
+          if (xp(i).gt.xmax) xmax=xp(i)
+          if (yp(i).lt.ymin) ymin=yp(i)
+          if (yp(i).gt.ymax) ymax=yp(i)
+          if (zp(i).lt.zmin) zmin=zp(i)
+          if (zp(i).gt.zmax) zmax=zp(i)
           t_magnets(nmag)%xhull0(i)=xp(i)
           t_magnets(nmag)%yhull0(i)=yp(i)
           t_magnets(nmag)%zhull0(i)=zp(i)
@@ -770,6 +792,13 @@
           t_magnets(nmag)%zhull(i)=zp(i)
           gcen=gcen+[xp(i),yp(i),zp(i)]
         enddo
+
+        t_magnets(nmag)%xmin=xmin
+        t_magnets(nmag)%xmax=xmax
+        t_magnets(nmag)%ymin=ymin
+        t_magnets(nmag)%ymax=ymax
+        t_magnets(nmag)%zmin=zmin
+        t_magnets(nmag)%zmax=zmax
 
         if (t_magnets(nmag)%ctype.eq.'Cylinder') then
           size=t_magnets(nmag)%size
@@ -835,6 +864,16 @@
       nmagtot_t=nmag_t+nspecmag_t
 
       deallocate(magmodule)
+
+      do i=1,nmagtot_t
+        tmag=t_magnets(i)
+        nxdiv=tmag%nxdiv
+        nydiv=tmag%nydiv
+        nzdiv=tmag%nzdiv
+        t_magnets(i)%t_xcuts(1:nxdiv)%nhull=0
+        t_magnets(i)%t_xycuts(1:nxdiv,1:nydiv)%nhull=0
+        t_magnets(i)%t_xyzcuts(1:nxdiv,1:nydiv,1:nzdiv)%nhull=0
+      enddo
 
       return
       end
