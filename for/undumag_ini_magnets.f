@@ -1,3 +1,4 @@
+*CMZ :          14/12/2024  13.29.44  by  Michael Scheer
 *CMZ :  2.05/02 26/10/2023  11.07.25  by  Michael Scheer
 *CMZ :  2.05/01 02/10/2023  16.19.49  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  10.23.44  by  Michael Scheer
@@ -39,6 +40,7 @@ c      print*,"bpebc(18:20),corrtiny, dedgefb, simpson-file, chicut und andere V
       if (itrace.ne.0) print*,"calling clcbuff_to_magnets"
       call clcbuff_to_magnets
 
+      !all util_break
       ! Apply translations, rotations, and copying of magnets and poles
       if (ntransrotcop.ne.0) call clctransrotcop
 
