@@ -1,4 +1,6 @@
-*CMZ :          03/08/2018  14.48.39  by  Michael Scheer
+*CMZ :          14/02/2025  14.22.11  by  Michael Scheer
+*CMZ :  1.04/00 13/02/2025  10.50.27  by  Michael Scheer
+*CMZ :  1.03/03 04/02/2025  11.45.06  by  Michael Scheer
 *CMZ :  1.03/02 22/09/2016  17.00.47  by  Michael Scheer
 *CMZ :  1.03/01 10/10/2014  08.51.19  by  Michael Scheer
 *CMZ :  1.02/00 01/10/2014  11.55.05  by  Michael Scheer
@@ -19,6 +21,8 @@
 *-- Author :    Michael Scheer   27/06/2014
       subroutine mshplt_init(idev,xpapsiz,ypapsiz,ibxl,ibyb,ibxr,ibyt,
      &  file,viewer,viewerkill,rescale)
+
+      use cmapmod
 
       implicit none
 
@@ -63,18 +67,21 @@
         ihigzmode_ps=0
       endif
 
-      viewer_ps=viewer(1:len_trim(viewer))
-      viewer_kill_mshplt=viewerkill(1:len_trim(viewerkill))
-
       if (rescale.le.0) then
         rescale_mshplt=1.
       else
         rescale_mshplt=rescale
       endif
 
-
       irunviewer_ps=1
-      if (len_trim(viewer).eq.0.or.idev.eq.0) irunviewer_ps=0
+
+      if (len_trim(viewer).eq.0.or.idev.eq.0) then
+        irunviewer_ps=0
+      else
+        viewer_ps=viewer(1:len_trim(viewer))
+        viewer_kill_mshplt=viewerkill(1:len_trim(viewerkill))
+      endif
+
       if (irunviewer_ps.ne.0.and.idev.ne.0) then
         iviewinter_ps=1
       else
@@ -163,11 +170,14 @@
       ticsiz_ps=0.2*scaletxt_ps !cm
 
       offgtitx_ps=-2. !cm
-      offgtity_ps=4.*chhe_ps
+c      offgtity_ps=4.*chhe_ps
+      offgtity_ps=-1.
+
+      adateheight_ps=0.3
 
       if (isoffdate_ps.ne.1) then
-        offdatex_ps=-10*chhe_ps
-        offdatey_ps=1.5*chhe_ps
+        offdatex_ps=-8*adateheight_ps
+        offdatey_ps=8*adateheight_ps
       endif
 
       rlinewidth_ps=0.03*scaletxt_ps !cm
@@ -236,7 +246,7 @@
       xmgr_ps=0.5/scaletxt_ps !cm
       ymgl_ps=2.0/scaletxt_ps !cm
       ymgu_ps=2.0/scaletxt_ps !cm
-      xwin_ps=2.5/scaletxt_ps !cm
+      xwin_ps=max(4.,2.5/scaletxt_ps) !cm
       ywin_ps=2.5/scaletxt_ps !cm
 
       xtit_ps=''
@@ -255,18 +265,22 @@
       endif
 
       call mshplt_set_marker_type(1)
-      call mshplt_set_marker_size(0.4) !cm
+      chmarker_ps=chch_ps(nint(rmtyp_ps(1,1)))
+      call mshplt_set_marker_size(xpapsiz/25.) !cm
 
       call mshplt_set_theta_phi(60.,30.)
 
-      call mshplt_set_color(1,0,0,0)
-      call mshplt_set_fill_color(3,0,0,0)
-      call mshplt_set_line_color(1,0,0,0)
-      call mshplt_set_text_color(1,0,0,0)
-      call mshplt_set_frame_color(1,0,0,0)
-      call mshplt_set_marker_color(1,0,0,0)
+      call mshplt_set_color(-1,0,0,0)
+      call mshplt_set_fill_color(-3,0,0,0)
+      call mshplt_set_line_color(-1,0,0,0)
+      call mshplt_set_text_color(-9,0,0,0)
+      call mshplt_set_frame_color(-1,0,0,0)
+      call mshplt_set_marker_color(-1,0,0,0)
 
       call mshplt_set_label_size(0.3)
+
+      call mshplt_set_colormap(1)
+      ksplinecmap=0
 
       write(lun_ps,'(a)')'% end of mshplt_init'
 

@@ -1,4 +1,5 @@
-*CMZ :          04/03/2023  17.35.33  by  Michael Scheer
+*CMZ :  1.04/00 12/02/2025  14.42.54  by  Michael Scheer
+*CMZ :  1.03/03 04/02/2025  11.54.06  by  Michael Scheer
 *CMZ :  1.03/02 25/04/2016  12.19.28  by  Michael Scheer
 *CMZ :  1.03/01 10/10/2014  13.29.05  by  Michael Scheer
 *CMZ :  1.02/00 03/10/2014  11.06.23  by  Michael Scheer
@@ -35,6 +36,8 @@ c       T: Top axis with labels
 c       t: top axis without labels
 c       c: Clipping mode is on
 
+      use cmapmod
+
       implicit none
 
 *KEEP,mshpltincl.
@@ -46,7 +49,7 @@ c       c: Clipping mode is on
      &  xminin,xmaxin,yminin,ymaxin,
      &  theo,phio
       real sizlab(100),xlabrel(100),ylaboffset(100),anglabrel(100),ticlen(100),
-     &  ticposrel(100),titoff,titangrel,ticangrel(100),titsiz,titposrel
+     &  ticposrel(100),titoff,titangrel,ticangrel(100),titsiz,titposrel,rlinewido
 
       integer il,ir,ib,it,i,iclip,ix,iy,ifirst
       integer kred,kgreen,kblue,kcolor,nlab,ntic
@@ -56,9 +59,15 @@ c       c: Clipping mode is on
       character(2048) copt
       character c1
       character(12) chlab(100)
+
       call mshplt_flush_buff
 
+      rlinewido=rlinewidth_ps
+      call mshplt_set_line_width(0.03)
+
       write(lun_ps,'(a)')'% begin of mshplt_frame'
+
+      chmapvar=trim(ytit)
 
       if (idrawgtit_ps.eq.1) call mshplt_draw_title
 
@@ -390,6 +399,7 @@ c     &      1,1,0.,-xtitoff_ps*scaletxt_ps,-xlaboff_ps*scaletxt_ps)
       endif !ib
 
       if (it.ne.0) then
+
         if (it.lt.0) then
           inolabs_ps=1
         else
@@ -448,10 +458,13 @@ c      ired_ps=kred
 c      igreen_ps=kgreen
 c      iblue_ps=kblue
 
+      call mshplt_set_line_width(rlinewido)
       call mshplt_set_line_color(kcoloro,kgreeno,kredo,kblueo)
       call mshplt_set_theta_phi(theo,phio) ! due to axis routines
 
       write(lun_ps,'(a)')'% end of mshplt_frame'
+
+      inolabs_ps=0
 
       return
       end

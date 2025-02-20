@@ -1,10 +1,10 @@
-*CMZ :  1.04/00 12/02/2025  12.59.03  by  Michael Scheer
+*CMZ :  1.04/00 12/02/2025  13.27.29  by  Michael Scheer
 *CMZ :  1.03/03 04/02/2025  10.25.27  by  Michael Scheer
 *CMZ :  1.03/00 07/10/2014  10.55.15  by  Michael Scheer
 *CMZ :  1.02/01 05/10/2014  14.25.34  by  Michael Scheer
 *CMZ :  1.02/00 03/10/2014  12.39.05  by  Michael Scheer
 *-- Author :    Michael Scheer   30/09/2014
-      subroutine mshplt_surf(nxin,xmin,xmax,nyin,ymin,ymax,z,chopt,icolor)
+      subroutine mshplt_top(nxin,xmin,xmax,nyin,ymin,ymax,z,chopt,icolor)
 
       use cmapmod
 
@@ -17,7 +17,7 @@
 *KEND.
 
       real xmin,xmax,ymin,ymax,xp(4),yp(4),zp(4),dx,dy,z(nxin*nyin),zminmax,
-     &  dz10,zmin,zmax,zs(nxspline*nyspline),red,green,blue
+     &  dz10,zmin,zmax,zs(nxspline*nyspline),red,green,blue,zpmax(4)
 
       integer nxin,nyin,nx,ny,ix,iy,ioutlined,i,icoltile,icolor,icolmap,
      &  kco,kro,kbo,kgo,kc,imcol,mco,mro,mgo,mbo,isurf,ianf,iend,istatus
@@ -83,6 +83,7 @@
       zmin=minval(zs)
       zmax=maxval(zs)
       zminmax=zmax-zmin
+      zpmax=zmax
 
 c      if (log10z_ps.eq.0) then
         zmincmap=zmin
@@ -104,7 +105,7 @@ c      endif
         yp(1)=ymin
         zp(1)=zs(1)
         call mshplt_cmap_inter(zs(1),icolmap,red,green,blue)
-        call mshplt_marker_3d(1,xp,yp,zp)
+        call mshplt_marker_3d(1,xp,yp,zpmax)
 
       else if (nx.gt.1.and.ny.eq.1) then
 
@@ -116,7 +117,7 @@ c      endif
           yp(2)=ymin
           zp(1)=zs(ix)
           zp(2)=zs(ix+1)
-          call mshplt_pline_3d(2,xp,yp,zp)
+          call mshplt_pline_3d(2,xp,yp,zpmax)
         enddo
 
       else if (ny.gt.1.and.nx.eq.1) then
@@ -129,7 +130,7 @@ c      endif
           xp(2)=xmin
           zp(1)=zs(iy)
           zp(2)=zs(iy+1)
-          call mshplt_pline_3d(2,xp,yp,zp)
+          call mshplt_pline_3d(2,xp,yp,zpmax)
         enddo
 
       else
@@ -180,7 +181,7 @@ c     &                alog10(zmin))/dz10)+1,(ncol+1))
 c                  endif
                 endif
 
-                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zp,ioutlined)
+                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zpmax,ioutlined)
 
                 if (imcol.ne.0) then
                   do i=1,4
@@ -196,7 +197,7 @@ c                    if(log10z_ps.eq.0) then
      &                  int(green*100000),
      &                  int(blue*100000))
                     endif
-                    call mshplt_marker_3d(1,xp(i),yp(i),zp(i))
+                    call mshplt_marker_3d(1,xp(i),yp(i),zpmax(i))
 c                    else
 c                      kc=mod(int((alog10(zp(i))-alog10(zmin))/dz10)+1,(ncol+1))
 c                    endif
@@ -239,7 +240,7 @@ c                    endif
                   endif
                 endif
 
-                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zp,ioutlined)
+                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zpmax,ioutlined)
 
                 if (imcol.ne.0) then
                   do i=1,4
@@ -254,7 +255,7 @@ c                    endif
      &                  int(green*100000),
      &                  int(blue*100000))
                     endif
-                    call mshplt_marker_3d(1,xp(i),yp(i),zp(i))
+                    call mshplt_marker_3d(1,xp(i),yp(i),zpmax(i))
                   enddo
                 endif
 
@@ -295,7 +296,7 @@ c                    endif
                   endif
                 endif
 
-                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zp,ioutlined)
+                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zpmax,ioutlined)
 
                 if (imcol.ne.0) then
                   do i=1,4
@@ -310,7 +311,7 @@ c                    endif
      &                  int(green*100000),
      &                  int(blue*100000))
                     endif
-                    call mshplt_marker_3d(1,xp(i),yp(i),zp(i))
+                    call mshplt_marker_3d(1,xp(i),yp(i),zpmax(i))
                   enddo
                 endif
               enddo
@@ -349,7 +350,7 @@ c                    endif
                   endif
                 endif
 
-                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zp,ioutlined)
+                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zpmax,ioutlined)
 
                 if (imcol.ne.0) then
                   do i=1,4
@@ -364,7 +365,7 @@ c                    endif
      &                  int(green*100000),
      &                  int(blue*100000))
                     endif
-                    call mshplt_marker_3d(1,xp(i),yp(i),zp(i))
+                    call mshplt_marker_3d(1,xp(i),yp(i),zpmax(i))
                   enddo
                 endif
 
@@ -410,7 +411,7 @@ c                    endif
 
                 endif
 
-                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zp,ioutlined)
+                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zpmax,ioutlined)
 
                 if (imcol.ne.0) then
                   do i=1,4
@@ -425,7 +426,7 @@ c                    endif
      &                  int(green*100000),
      &                  int(blue*100000))
                     endif
-                    call mshplt_marker_3d(1,xp(i),yp(i),zp(i))
+                    call mshplt_marker_3d(1,xp(i),yp(i),zpmax(i))
                   enddo
                 endif
               enddo
@@ -465,7 +466,7 @@ c                    endif
                   endif
                 endif
 
-                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zp,ioutlined)
+                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zpmax,ioutlined)
 
                 if (imcol.ne.0) then
                   do i=1,4
@@ -480,7 +481,7 @@ c                    endif
      &                  int(green*100000),
      &                  int(blue*100000))
                     endif
-                    call mshplt_marker_3d(1,xp(i),yp(i),zp(i))
+                    call mshplt_marker_3d(1,xp(i),yp(i),zpmax(i))
                   enddo
                 endif
               enddo
@@ -520,7 +521,7 @@ c                    endif
                   endif
                 endif
 
-                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zp,ioutlined)
+                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zpmax,ioutlined)
 
                 if (imcol.ne.0) then
                   do i=1,4
@@ -530,12 +531,12 @@ c                    endif
                     else
                       zcmap=(sum(zp)/size(zp)-zmin)/zminmax
                       call mshplt_cmap_inter(zcmap,icolmap,red,green,blue)
-                    call mshplt_set_marker_color(9999,
-     &                int(red*100000),
-     &                int(green*100000),
-     &                int(blue*100000))
+                      call mshplt_set_marker_color(9999,
+     &                  int(red*100000),
+     &                  int(green*100000),
+     &                  int(blue*100000))
                     endif
-                    call mshplt_marker_3d(1,xp(i),yp(i),zp(i))
+                    call mshplt_marker_3d(1,xp(i),yp(i),zpmax(i))
                   enddo
                 endif
               enddo
@@ -575,7 +576,7 @@ c                    endif
                   endif
                 endif
 
-                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zp,ioutlined)
+                if (isurf.ne.0) call mshplt_filled_mesh_3d(4,xp,yp,zpmax,ioutlined)
 
                 if (imcol.ne.0) then
                   do i=1,4
@@ -591,7 +592,7 @@ c                    endif
      &                  int(blue*100000))
                     endif
                   enddo
-                  call mshplt_marker_3d(1,xp(i),yp(i),zp(i))
+                  call mshplt_marker_3d(1,xp(i),yp(i),zpmax(i))
                 endif
               enddo
             enddo

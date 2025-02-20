@@ -1,4 +1,4 @@
-*CMZ :          27/10/2017  08.39.09  by  Michael Scheer
+*CMZ :  1.03/03 04/02/2025  10.57.39  by  Michael Scheer
 *CMZ :  0.01/02 05/09/2014  15.41.43  by  Michael Scheer
 *CMZ :  0.01/00 23/08/2014  09.16.36  by  Michael Scheer
 *CMZ :  0.00/06 22/08/2014  15.16.33  by  Michael Scheer
@@ -7,6 +7,8 @@
 *CMZ :  0.00/02 07/07/2014  12.22.09  by  Michael Scheer
 *-- Author :    Michael Scheer   07/07/2014
       subroutine mshplt_zone(nxzon,nyzon,ifirst,chopt)
+
+      use cmapmod
 
       implicit none
 
@@ -81,6 +83,14 @@
 
       write(cline_ps,*)'% end of mshplt_zone'
       write(lun_ps,'(a)')cline_ps(2:len_trim(cline_ps))
+
+c      if (isamecanvas_ps.eq.0) then
+c        if (nxzon.eq.1) then
+c          xcolorbar=0.75
+c        else
+c          xcolorbar=0.75
+c        endif
+c      endif
 
       return
       end

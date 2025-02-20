@@ -1,4 +1,5 @@
-*CMZ :          06/08/2018  15.49.27  by  Michael Scheer
+*CMZ :  1.04/00 12/02/2025  11.27.11  by  Michael Scheer
+*CMZ :  1.03/03 04/02/2025  11.52.38  by  Michael Scheer
 *CMZ :  1.03/01 08/10/2014  14.16.19  by  Michael Scheer
 *CMZ :  1.03/00 06/10/2014  16.06.01  by  Michael Scheer
 *CMZ :  1.02/01 05/10/2014  10.00.08  by  Michael Scheer
@@ -16,28 +17,46 @@
       subroutine mshplt_frame3d(xminin,xmaxin,yminin,ymaxin,zminin,zmaxin,
      &  xtit,ytit,ztit,chopt)
 
+      use cmapmod
+
       implicit none
 
 *KEEP,mshpltincl.
       include 'mshplt.cmn'
 *KEND.
 
-
       real xmin,xmax,ymin,ymax,zmin,zmax,
-     &  xminin,xmaxin,yminin,ymaxin,zminin,zmaxin,
-     &  xcorn(8),ycorn(8),zcorn(8),ang,xyplen,
-     &  ticheight,chhe,titang,rellabang
+     &  xminin,xmaxin,yminin,ymaxin,zminin,zmaxin,ang,xyplen,
+     &  ticheight,chhe,titang,rellabang,rlinewido
 
       integer ilinestyleo,ilinecoloro,iaxis,ibox,ic,iticside,ilabside
       integer kred,kgreen,kblue,kcolor,ifirst
       integer kredo,kgreeno,kblueo
+      integer kc,kr,kg,kb,ir,ig,ib,kcoloro
 
       character(*) xtit,ytit,ztit,chopt
       character(2048) xtitd,ytitd,ztitd,choptd
 
-      data xcorn/-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5/
-      data ycorn/-0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5/
-      data zcorn/-0.5,-0.5,-0.5,-0.5,0.5,0.5,0.5,0.5/
+      call mshplt_flush_buff
+
+      rlinewido=rlinewidth_ps
+      call mshplt_set_line_width(0.03)
+
+      call mshplt_get_line_color(ic,ir,ig,ib)
+      call mshplt_get_color(kc,kr,kg,kb)
+      if (ic.ne.kc.or.ir.ne.kr.or.kg.ne.ig.or.ib.ne.kb) then
+        call mshplt_set_line_color(ic,ir,ig,ib)
+      endif
+
+      kgreen=kFramegreen_ps
+      kred=kFramered_ps
+      kblue=kFrameblue_ps
+
+      call mshplt_set_frame_color(kcolor,kgreen,kred,kblue)
+      call mshplt_get_line_color(kcoloro,kgreeno,kredo,kblueo)
+      call mshplt_set_line_color(kcolor,kgreen,kred,kblue)
+
+      chmapvar=trim(ztit)
 
       xmax=xmaxin
       xmin=xminin
@@ -128,58 +147,62 @@
       kred=kFramered_ps
       kblue=kFrameblue_ps
 
-      call mshplt_set_frame_color(kcolor,kgreen,kred,kblue)
+      call mshplt_get_line_color(ic,ir,ig,ib)
+      call mshplt_get_color(kc,kr,kg,kb)
+      if (ic.ne.kc.or.ir.ne.kr.or.kg.ne.ig.or.ib.ne.kb) then
+        call mshplt_set_line_color(ic,ir,ig,ib)
+      endif
 
       if (nzone_ps.le.0) then
-        xcorn(1)=-0.5
-        xcorn(2)=0.5
-        xcorn(3)=0.5
-        xcorn(4)=-0.5
-        xcorn(5)=-0.5
-        xcorn(6)=0.5
-        xcorn(7)=0.5
-        xcorn(8)=-0.5
-        ycorn(1)=-0.5
-        ycorn(2)=-0.5
-        ycorn(3)=0.5
-        ycorn(4)=0.5
-        ycorn(5)=-0.5
-        ycorn(6)=-0.5
-        ycorn(7)=0.5
-        ycorn(8)=0.5
-        zcorn(1)=-0.5
-        zcorn(2)=-0.5
-        zcorn(3)=-0.5
-        zcorn(4)=-0.5
-        zcorn(5)=0.5
-        zcorn(6)=0.5
-        zcorn(7)=0.5
-        zcorn(8)=0.5
+        xcorn_ps(1)=-0.5
+        xcorn_ps(2)=0.5
+        xcorn_ps(3)=0.5
+        xcorn_ps(4)=-0.5
+        xcorn_ps(5)=-0.5
+        xcorn_ps(6)=0.5
+        xcorn_ps(7)=0.5
+        xcorn_ps(8)=-0.5
+        ycorn_ps(1)=-0.5
+        ycorn_ps(2)=-0.5
+        ycorn_ps(3)=0.5
+        ycorn_ps(4)=0.5
+        ycorn_ps(5)=-0.5
+        ycorn_ps(6)=-0.5
+        ycorn_ps(7)=0.5
+        ycorn_ps(8)=0.5
+        zcorn_ps(1)=-0.5
+        zcorn_ps(2)=-0.5
+        zcorn_ps(3)=-0.5
+        zcorn_ps(4)=-0.5
+        zcorn_ps(5)=0.5
+        zcorn_ps(6)=0.5
+        zcorn_ps(7)=0.5
+        zcorn_ps(8)=0.5
       else
-        xcorn(1)=-0.625
-        xcorn(2)=0.625
-        xcorn(3)=0.625
-        xcorn(4)=-0.625
-        xcorn(5)=-0.625
-        xcorn(6)=0.625
-        xcorn(7)=0.625
-        xcorn(8)=-0.625
-        ycorn(1)=-0.625
-        ycorn(2)=-0.625
-        ycorn(3)=0.625
-        ycorn(4)=0.625
-        ycorn(5)=-0.625
-        ycorn(6)=-0.625
-        ycorn(7)=0.625
-        ycorn(8)=0.625
-        zcorn(1)=-0.625
-        zcorn(2)=-0.625
-        zcorn(3)=-0.625
-        zcorn(4)=-0.625
-        zcorn(5)=0.625
-        zcorn(6)=0.625
-        zcorn(7)=0.625
-        zcorn(8)=0.625
+        xcorn_ps(1)=-0.625
+        xcorn_ps(2)=0.625
+        xcorn_ps(3)=0.625
+        xcorn_ps(4)=-0.625
+        xcorn_ps(5)=-0.625
+        xcorn_ps(6)=0.625
+        xcorn_ps(7)=0.625
+        xcorn_ps(8)=-0.625
+        ycorn_ps(1)=-0.625
+        ycorn_ps(2)=-0.625
+        ycorn_ps(3)=0.625
+        ycorn_ps(4)=0.625
+        ycorn_ps(5)=-0.625
+        ycorn_ps(6)=-0.625
+        ycorn_ps(7)=0.625
+        ycorn_ps(8)=0.625
+        zcorn_ps(1)=-0.625
+        zcorn_ps(2)=-0.625
+        zcorn_ps(3)=-0.625
+        zcorn_ps(4)=-0.625
+        zcorn_ps(5)=0.625
+        zcorn_ps(6)=0.625
+        zcorn_ps(7)=0.625
+        zcorn_ps(8)=0.625
       endif
 
       xtitd=xtit
@@ -203,7 +226,7 @@
       ilinestyleo=ilinestyle_ps
       call mshplt_get_line_color(ilinecoloro,kredo,kblueo,kgreeno)
 
-      call mshplt_3dto2d(8,xcorn,ycorn,zcorn,xpcorn_ps,ypcorn_ps)
+      call mshplt_3dto2d(8,xcorn_ps,ycorn_ps,zcorn_ps,xpcorn_ps,ypcorn_ps)
 
       wxmin_ps=min(xpcorn_ps(1),xpcorn_ps(2),xpcorn_ps(3),xpcorn_ps(4),
      &  xpcorn_ps(5),xpcorn_ps(6),xpcorn_ps(7),xpcorn_ps(8))
@@ -217,6 +240,13 @@
 
       scalex_ps=xsiz_ps/(wxmax_ps-wxmin_ps)
       scaley_ps=ysiz_ps/(wymax_ps-wymin_ps)
+
+      xcornmin_ps=minval(xcorn_ps)
+      dxcorn_ps=maxval(xcorn_ps)-xcornmin_ps
+      ycornmin_ps=minval(ycorn_ps)
+      dycorn_ps=maxval(ycorn_ps)-ycornmin_ps
+      zcornmin_ps=minval(zcorn_ps)
+      dzcorn_ps=maxval(zcorn_ps)-zcornmin_ps
 
       if (log10x_ps.eq.0) then
         xmin3d_ps=xmin
@@ -248,7 +278,11 @@
         zmax3d_ps=alog10(zmax)
       endif
 
-      call mshplt_set_line_style(1)
+      call mshplt_get_line_color(ic,ir,ig,ib)
+      call mshplt_get_color(kc,kr,kg,kb)
+      if (ic.ne.kc.or.ir.ne.kr.or.kg.ne.ig.or.ib.ne.kb) then
+        call mshplt_set_line_color(ic,ir,ig,ib)
+      endif
 
       if (iaxis.eq.1) then
 
@@ -962,6 +996,9 @@
       endif
 
       write(lun_ps,'(a)')'% end of mshplt_frame3d'
+
+      call mshplt_set_line_width(rlinewido)
+      call mshplt_set_line_color(kcoloro,kgreeno,kredo,kblueo)
 
       return
       end
