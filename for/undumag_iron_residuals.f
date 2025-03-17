@@ -1,3 +1,4 @@
+*CMZ :          15/03/2025  16.36.54  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/00 21/10/2020  09.46.44  by  Michael Scheer
 *CMZ :  2.00/01 12/04/2018  12.32.47  by  Michael Scheer
@@ -40,7 +41,8 @@
 
         if (ifail.ne.0) then
           write(lun6,*)
-          write(lun6,*)"*** Warning in undumag_residuals_iron: Bad return from undumag_bpolyeder_matrix during calculations of residiuals ***"
+          write(lun6,*)
+     &      "*** Warning in undumag_residuals_iron: Bad return from undumag_bpolyeder_matrix during calculations of residiuals ***"
           write(lun6,*)
         endif
 
@@ -51,7 +53,8 @@
           call util_interpol_linear(nhz,feh1,fem1,h3n,femag,ifail)
           if (ifail.ne.0) then
             write(lun6,*)
-            write(lun6,*)"*** Warning in undumag_residuals_iron: Bad return from util_interpol_linear during calculations of residuals ***"
+            write(lun6,*)
+     &        "*** Warning in undumag_residuals_iron: Bad return from util_interpol_linear during calculations of residuals ***"
             write(lun6,*)
           endif
         else

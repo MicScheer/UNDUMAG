@@ -1,4 +1,5 @@
-*CMZ :          25/06/2024  08.45.36  by  Michael Scheer
+*CMZ :          15/03/2025  16.35.48  by  Michael Scheer
+*CMZ :  2.05/05 25/06/2024  08.45.36  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.14.41  by  Michael Scheer
 *CMZ :  2.02/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.01/03 15/07/2019  11.55.46  by  Michael Scheer
@@ -48,15 +49,9 @@ c                          determinant is -1, which yields to errors??.
       implicit none
 
 *KEEP,seqdebug.
-      integer iseqdebug
-      common/seqdebugc/iseqdebug
+      include 'seqdebug.cmn'
 *KEEP,debugutil,T=F77.
-      double precision x_debug,y_debug,z_debug,a_debug(100)
-      integer i_debug,k_debug
-      character(64) c64_debug
-
-      common/c_debug/x_debug,y_debug,z_debug,a_debug,i_debug,k_debug,
-     &  c64_debug
+      include 'debugutil.cmn'
 *KEND.
 
       double precision xin,yin,zin,bxout,byout,bzout
@@ -133,7 +128,9 @@ c      write(lun6,*)"eder",ical,nmaxth
 
       iseqdebug=0
 
-!$OMP PARALLEL NUM_THREADS(nmaxth) DEFAULT(PRIVATE) SHARED(kfail,iseqdebug,kinsidelocal,ical,bpetm,window,bpebc,bpemag,ibpeplan,ibpecorn,bperot,bo,iwarnbound,nwarnbound) FIRSTPRIVATE(nmag,itiny,jtiny,iwtiny,tiny,xx,yy,zz)
+!$OMP PARALLEL NUM_THREADS(nmaxth) DEFAULT(PRIVATE)
+!$OMP& SHARED(kfail,iseqdebug,kinsidelocal,ical,bpetm,window,bpebc,bpemag,ibpeplan,ibpecorn,bperot,bo,iwarnbound,nwarnbound)
+!$OMP& FIRSTPRIVATE(nmag,itiny,jtiny,iwtiny,tiny,xx,yy,zz)
 c      if (ical.eq.4) stop
       ith=OMP_GET_THREAD_NUM()+1
       bo(1:3,ith)=0.0d0

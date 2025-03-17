@@ -1,4 +1,5 @@
-*CMZ :          29/02/2024  16.00.13  by  Michael Scheer
+*CMZ :          16/03/2025  22.55.58  by  Michael Scheer
+*CMZ :  2.05/05 29/02/2024  16.00.13  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/08 10/08/2023  09.28.20  by  Michael Scheer
 *CMZ :  2.04/06 22/05/2023  15.36.58  by  Michael Scheer
@@ -1402,6 +1403,7 @@ c      deallocate(bcc)
       xin(1)=0.0d0
       xin(2)=1.0d0
       xin(3)=2.0d0
+
       do kiter=1,maxiter
 
         if (niron.gt.0) then
@@ -1453,7 +1455,9 @@ c        write(lun6,*)"proc: kiter,h:",kiter,h
           call undumag_residuals_iron
 
           if (niron.gt.0.and.kresiron.ne.0) then
-            if (kresiron.eq.1.and.hresidiron.le.resiron) goto 9999
+            if (kresiron.eq.1.and.hresidiron.le.resiron) then
+              goto 9999
+            endif
           endif
 
           if (hconvr.lt.hconva) then
@@ -1601,6 +1605,7 @@ c      deallocate(bc00)
       write(lun6,*)"------------------------------------------------------------"
 
       deallocate(bciron)
+
 
       return
       end

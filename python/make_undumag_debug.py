@@ -129,10 +129,10 @@ if nargs > 2: Idebug = int(args[2])
 
 global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Tlibm,Scomp_nowarn
 
-Scomp = "gfortran -std=legacy -c -g -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_nowarn = "gfortran -w -std=legacy -c -g -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_all = "gfortran -std=legacy -c -g -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_omp = "gfortran -std=legacy -c -g -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
+Scomp = "gfortran -std=legacy -c -g -O0 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_nowarn = "gfortran -w -std=legacy -c -g -O0 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_all = "gfortran -std=legacy -c -g -O0 -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
+Scomp_omp = "gfortran -std=legacy -c -g -O0 -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
 
 def get_undu_tree():
 
@@ -313,11 +313,11 @@ def undu_update():
 
       scom = scompmod + "-o " + fo + " " + ff
       if Iverbose > 0: print("\n",scom,"\n")
-      if Idry == 0: os.system(scom)
+      if Idry == 0: forcomp(scom)
 
       scom = Move + dsm + m + ".mod " + dd
       if Iverbose > 0: print("\n",scom,"\n")
-      if Idry == 0: os.system(scom)
+      if Idry == 0: forcomp(scom)
 
       slibm += " " + dsm + fo
       ranlm = 1
@@ -344,7 +344,7 @@ def undu_update():
               if sl[1].lower() == m:
                 scom = touch(ds+f)
 #                if Iverbose > 0: print("\n",scom,"\n")
-#                if Idry == 0: os.system(scom)
+#                if Idry == 0: forcomp(scom)
                 break
               #endif
             #endif
@@ -376,7 +376,7 @@ def undu_update():
               if sl[1].lower() == m:
                 scom = touch(ds+f)
 #                if Iverbose > 0: print("\n",scom,"\n")
-#                if Idry == 0: os.system(scom)
+#                if Idry == 0: forcomp(scom)
                 break
               #endif
             #endif
@@ -391,10 +391,10 @@ def undu_update():
     if ranlm:
       scom = 'ar rc ' + libm + " " + slibm
       if Iverbose > 0: print("\n",scom,"\n")
-      if Idry == 0: os.system(scom)
+      if Idry == 0: forcomp(scom)
       scom = 'ranlib ' + libm
       if Iverbose > 0: print("\n",scom,"\n")
-      if Idry == 0: os.system(scom)
+      if Idry == 0: forcomp(scom)
       ranlm = 0
       slibm = ''
       kmain = 1
@@ -427,7 +427,7 @@ def undu_update():
             if sl[1].lower() == "'" + fcmn + "'" or sl[1].lower() == '"' + fcmn + '"':
               scom = touch(ds+fft[0])
 #              if Iverbose > 0: print("\n",scom,"\n")
-#              if Idry == 0: os.system(scom)
+#              if Idry == 0: forcomp(scom)
               break
             #endif
           #endif
@@ -460,7 +460,7 @@ def undu_update():
 
       scom = scomp + "-o " + fo + " " + f
       if Iverbose > 0: print("\n",scom,"\n")
-      if Idry == 0: os.system(scom)
+      if Idry == 0: forcomp(scom)
 
       slib += " " + ds + fo
       ranl = 1
@@ -470,10 +470,10 @@ def undu_update():
     if ranl:
       scom = 'ar rc ' + lib + " " + slib
       if Iverbose > 0: print("\n",scom,"\n")
-      if Idry == 0: os.system(scom)
+      if Idry == 0: forcomp(scom)
       scom = 'ranlib ' + lib
       if Iverbose > 0: print("\n",scom,"\n")
-      if Idry == 0: os.system(scom)
+      if Idry == 0: forcomp(scom)
       kmain = 1
       ranl = 0
       slib = ''
@@ -504,15 +504,15 @@ def undu_update():
           print('*** Failed to execute ',scom)
         #endtry
     #endfor
-    sgfor = "gfortran -g -cpp -fd-lines-as-comments -Wno-align-commons -fopenmp -fcheck=bounds -ffixed-line-length-none -finit-local-zero  -funroll-loops -o " + UI + "bin" + Sepp + "undumag_debug.exe " + UI + "main" + Sepp + "undumag_main.f"
+    sgfor = "gfortran -g -O0 -cpp -fd-lines-as-comments -Wno-align-commons -fopenmp -fcheck=bounds -ffixed-line-length-none -finit-local-zero -funroll-loops -o " + UI + "bin" + Sepp + "undumag_debug.exe " + UI + "main" + Sepp + "undumag_main.f"
     slink = ' '
-    for flib in ['libundu_debug.a','libundu_modules_debug.a','liburad_debug.a','libutil_debug.a','libmshcern_debug.a','libmshplt_debug.a']:
+    for flib in ['libundu_debug.a','libundu_modules_debug.a','liburad_debug.a','libutil_debug.a','libmshcern_debug.a','libmshplt_debug.a','libmshplt_modules_debug.a']:
       slink += UI + "lib" + Sepp + flib + ' '
     #endfor
     #reakpoint()
     scom = sgfor + slink
     if Iverbose > 0: print("\n",scom,"\n")
-    if Idry == 0: os.system(scom)
+    if Idry == 0: forcomp(scom)
     if Iverbose >=0: print("\n--- " + UI  + "bin"+Sepp+"undumag_debug.exe updated ---\n")
   else:
     if Iverbose >=0: print("\n--- No need to update " + UI  + "bin"+Sepp+"undumag_debug.exe ---\n")

@@ -30,14 +30,8 @@
 
       Type(T_Magnet) tmag
 
-*KEEP,GRARAD.
-c-----------------------------------------------------------------------
-c     grarad.cmn
-c-----------------------------------------------------------------------
-      double precision, parameter ::
-     &  PI1=3.141592653589793D0,
-     &  TWOPI1=2.0D0*PI1,HALFPI1=PI1/2.0D0,
-     &  GRARAD1=PI1/180.0d0,RADGRA1=180.0d0/PI1
+*KEEP,grarad.
+      include 'grarad.cmn'
 *KEND.
 
       character(2048) cline,cbuff(5),cfile,cline1
@@ -58,8 +52,7 @@ c-----------------------------------------------------------------------
      &  nxdiv,nydiv,nzdiv,nhull,nface,nedge,kfacelast,kblockch
 
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface,nverhullmax
-      common/uhullc/lenhull,lenedge,lenface,nverhullmax
+      include 'hulldim.cmn'
 *KEND.
 
       integer ipos(2,1000),jpos(2,1000),nwords,istat,ibrn,ifound

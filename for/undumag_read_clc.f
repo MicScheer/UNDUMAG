@@ -1,3 +1,4 @@
+*CMZ :          15/03/2025  16.23.08  by  Michael Scheer
 *CMZ :  2.05/02 03/11/2023  20.41.17  by  Michael Scheer
 *CMZ :  2.05/01 02/10/2023  16.19.49  by  Michael Scheer
 *CMZ :  2.04/25 28/09/2023  07.22.52  by  Michael Scheer
@@ -262,7 +263,8 @@
           else if (cline(ipos(1,2):ipos(2,2)).eq.'Translate') then
             ntransrotcop=ntransrotcop+1
             if (ntransrotcop.gt.ntransrotcop_p) then
-              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations changes, check parameter ntransrotcop_p ***"
+              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations "
+     &          //"changes, check parameter ntransrotcop_p ***"
             endif
             i=i+1
             if (kechocalc.ne.0) print*,trim(clcbuff(i))
@@ -275,7 +277,8 @@
           else if (cline(ipos(1,2):ipos(2,2)).eq.'Remanence') then
             ntransrotcop=ntransrotcop+1
             if (ntransrotcop.gt.ntransrotcop_p) then
-              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations changes, check parameter ntransrotcop_p ***"
+              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations "
+     &          //"changes, check parameter ntransrotcop_p ***"
             endif
             transrotcop(8,ntransrotcop)=3.0d0
             i=i+1
@@ -292,7 +295,8 @@
             clccop(nclccop_t)=trim(clcbuff(i))
             ntransrotcop=ntransrotcop+1
             if (ntransrotcop.gt.ntransrotcop_p) then
-              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations changes, check parameter ntransrotcop_p ***"
+              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations "
+     &          //"changes, check parameter ntransrotcop_p ***"
             endif
             transrotcop(8,ntransrotcop)=-dble(nclccop_t)
             if (kechocalc.ne.0) print*,trim(clcbuff(i))
@@ -310,7 +314,8 @@
               transrotcop(8,ntransrotcop)=2.0d0
             endif
             if (ntransrotcop.gt.ntransrotcop_p) then
-              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations changes, check parameter ntransrotcop_p ***"
+              stop "*** Error in undumag_read_clc: Too many remanence, translations, rotations "
+     &          //"changes, check parameter ntransrotcop_p ***"
             endif
             i=i+1
             if (kechocalc.ne.0) print*,trim(clcbuff(i))

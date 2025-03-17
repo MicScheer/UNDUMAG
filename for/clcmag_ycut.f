@@ -1,4 +1,4 @@
-*CMZ :          17/12/2024  12.24.21  by  Michael Scheer
+*CMZ :          15/03/2025  16.28.47  by  Michael Scheer
 *CMZ :  2.05/05 27/02/2024  21.58.56  by  Michael Scheer
 *CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.32.07  by  Michael Scheer
@@ -40,8 +40,7 @@
       integer, dimension (:,:), allocatable :: kedge
       integer, dimension (:), allocatable :: khull,kface
 *KEEP,hulldim.
-      integer lenhull,lenedge,lenface,nverhullmax
-      common/uhullc/lenhull,lenedge,lenface,nverhullmax
+      include 'hulldim.cmn'
 *KEND.
       character(128) ctype
 
@@ -244,7 +243,8 @@
               endif
 
               if (ifail.ne.0) then
-                write(lun6,*)"*** Error in clcmag_ycuts: Bad return from undumag_cut_magnet, magnet, ifail, mag, ixdiv, iydiv, ydiv:",
+                write(lun6,*)"*** Error in clcmag_ycuts: Bad return from undumag_cut_magnet, "
+     &            //"magnet, ifail, mag, ixdiv, iydiv, ydiv:",
      &            trim(t_magnets(imag)%cnam),ifail,imag,ix,iy,ydiv
                 stop
               endif

@@ -120,7 +120,7 @@ if nargs > 1:
     n = '\n'
     print(n)
     print("Usage: python3 " + UI + args[0] + " [verbose level]",n)
-    print("To force total recompilation delete ",n,UI + Sepp + "bin"+Sepp+"undumag.exe",n)
+    print("To force total recompilation delete ",n,UI + Sepp + "bin"+Sepp+"undumag_debug.exe",n)
     Quit()
   #end try
 #endif
@@ -129,17 +129,17 @@ if nargs > 2: Idebug = int(args[2])
 
 global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Tlibm,Scomp_nowarn
 
-Scomp = "gfortran -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_nowarn = "gfortran -w -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_all = "gfortran -std=legacy -c -O2 -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_omp = "gfortran -std=legacy -c -O2 -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
+Scomp = "ifx -save -fpp  -c -g -O0 -traceback -vms -nod-lines  -zero -132 -funroll-loops "
+Scomp_nowarn = "ifx -save -fpp -w  -c -g -O0 -traceback -vms -nod-lines  -zero -132 -funroll-loops "
+Scomp_all = "ifx -save -fpp  -c -g -O0  -traceback -vms -nod-lines  -zero -132 -funroll-loops "
+Scomp_omp = "ifx -fpp  -c -g -O0 -zero -132  -fopenmp -traceback -vms -nod-lines   -funroll-loops "
 
 def get_undu_tree():
 
   global UI,Undu_tree,Iverbose,Idry,Idebug,Texe,Tlib,Tlibm
 
   try:
-    Texe = os.stat(UI + Sepp + 'bin' + Sepp + 'undumag.exe').st_mtime_ns
+    Texe = os.stat(UI + Sepp + 'bin' + Sepp + 'undumag_debug.exe').st_mtime_ns
   except:
     Texe = 0
   #endtry
@@ -237,26 +237,26 @@ def undu_update():
     #reakpoint()
 
     if ddd == 'mshcern':
-      lib = UI + 'lib'+Sepp+'libmshcern.a'
-      libm = UI + 'lib'+Sepp+'libmshcern_module.a'
+      lib = UI + 'lib'+Sepp+'libmshcern_debug.a'
+      libm = UI + 'lib'+Sepp+'libmshcern_module_debug.a'
       scomp = Scomp_nowarn
     elif ddd == 'mshplt':
-      lib = UI + 'lib'+Sepp+'libmshplt.a'
-      libm = UI + 'lib'+Sepp+'libmshplt_modules.a'
+      #reakpoint()
+      lib = UI + 'lib'+Sepp+'libmshplt_debug.a'
+      libm = UI + 'lib'+Sepp+'libmshplt_modules_debug.a'
     elif ddd == 'for':
-      lib = UI + 'lib'+Sepp+'libundu.a'
-      libm = UI + 'lib'+Sepp+'libundu_modules.a'
+      lib = UI + 'lib'+Sepp+'libundu_debug.a'
+      libm = UI + 'lib'+Sepp+'libundu_modules_debug.a'
       scomp = Scomp_omp
     elif ddd == 'urad':
-      lib = UI + 'lib'+Sepp+'liburad.a'
-      libm = UI + 'lib'+Sepp+'liburad_module.a'
+      lib = UI + 'lib'+Sepp+'liburad_debug.a'
+      libm = UI + 'lib'+Sepp+'liburad_module_debug.a'
       scomp = Scomp_all  # uradcfft does boundary tricks
     elif ddd == 'util':
-      lib = UI + 'lib'+Sepp+'libutil.a'
-      libm = UI + 'lib'+Sepp+'libutil_module.a'
+      lib = UI + 'lib'+Sepp+'libutil_debug.a'
+      libm = UI + 'lib'+Sepp+'libutil_module_debug.a'
       scomp = Scomp_all
     #endif
-
 
     Tlib = 0
     Tlibm = 0
@@ -307,7 +307,7 @@ def undu_update():
         #endif
       #end while
       Flines.close()
-      #breakpoint()
+
       if Iverbose > 0: print("\nModule:",m)
 
       #if m == 'displacement': #reakpoint()
@@ -505,18 +505,19 @@ def undu_update():
           print('*** Failed to execute ',scom)
         #endtry
     #endfor
-    sgfor = "gfortran -O2 -cpp -fd-lines-as-comments -Wno-align-commons -fopenmp  -ffixed-line-length-none -finit-local-zero  -funroll-loops -o " + UI + "bin" + Sepp + "undumag.exe " + UI + "main" + Sepp + "undumag_main.f"
+    sgfor = "ifx -fpp -g -O0 -fopenmp -traceback -vms -nod-lines -zero -132 -funroll-loops -o " \
+    + UI + "bin" + Sepp + "undumag_debug.exe " + UI + "main" + Sepp + "undumag_main.f"
     slink = ' '
-    for flib in ['libundu.a','libundu_modules.a','liburad.a','libutil.a','libmshcern.a','libmshplt.a','libmshplt_modules.a']:
+    for flib in ['libundu_debug.a','libundu_modules_debug.a','liburad_debug.a','libutil_debug.a','libmshcern_debug.a','libmshplt_debug.a','libmshplt_modules_debug.a']:
       slink += UI + "lib" + Sepp + flib + ' '
     #endfor
     #reakpoint()
     scom = sgfor + slink
     if Iverbose > 0: print("\n",scom,"\n")
     if Idry == 0: forcomp(scom)
-    if Iverbose >=0: print("\n--- " + UI  + "bin"+Sepp+"undumag.exe updated ---\n")
+    if Iverbose >=0: print("\n--- " + UI  + "bin"+Sepp+"undumag_debug.exe updated ---\n")
   else:
-    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin"+Sepp+"undumag.exe ---\n")
+    if Iverbose >=0: print("\n--- No need to update " + UI  + "bin"+Sepp+"undumag_debug.exe ---\n")
   #endif
 
 #enddef undu_update

@@ -1,4 +1,4 @@
-*CMZ :          17/12/2024  12.33.21  by  Michael Scheer
+*CMZ :          15/03/2025  16.14.10  by  Michael Scheer
 *CMZ :  2.05/05 27/02/2024  16.53.50  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.31.14  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
@@ -40,9 +40,8 @@
 
       integer, dimension (:,:), allocatable :: kedge
       integer, dimension (:), allocatable :: khull,kface
-*KEEP,HULLDIM.
-      integer lenhull,lenedge,lenface,nverhullmax
-      common/uhullc/lenhull,lenedge,lenface,nverhullmax
+*KEEP,hulldim.
+      include 'hulldim.cmn'
 *KEND.
       type(T_Magnet) :: tmag
       type(T_Voxel) :: tvox
@@ -323,7 +322,8 @@
      &            ,3,zdiv,hulltiny,ifail)
 
                 if (ifail.ne.0) then
-                  write(lun6,*)"*** Error in clcmag_zcut: Bad return from undumag_cut_magnet, magnet, ifail, mag, ixdiv, iydiv, izdiv, zdiv:",
+                  write(lun6,*)"*** Error in clcmag_zcut: Bad return from undumag_cut_magnet, "
+     &              //"magnet, ifail, mag, ixdiv, iydiv, izdiv, zdiv:",
      &              trim(t_magnets(imag)%cnam),ifail,imag,ix,iy," 1 ",zdiv
                   stop
                 endif
@@ -507,7 +507,8 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
               call util_volume(nhull,tvox%xhull,tvox%yhull,tvox%zhull,hulltiny,
      &          vol,ifail)
               if (ifail.ne.0) then
-                write(lun6,*)"*** Error in clcmag_ycut: Bad return from util_volume, magnet, magnet number, ix,iy:",
+                write(lun6,*)"*** Error in clcmag_ycut: Bad return from util_volume, magnet, "
+     &            //"magnet number, ix,iy:",
      &            trim(tmag%cnam),imag,ix,iy
                 stop
               endif
@@ -523,7 +524,8 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
      &      t_magnets(imag)%t_xycuts(ix,iy)%volume
 
           if (abs(vol).gt.1.0d-9) then
-            write(lun6,*)"*** Warning in clcmag_zcut: Sum of xyz-cut volumes differs from xy-cuts by (rel.):",vol
+            write(lun6,*)"*** Warning in clcmag_zcut: Sum of xyz-cut volumes differs from "
+     &        //"xy-cuts by (rel.):",vol
             write(lun6,*)"*** magnet, ixdiv, iydiv: ",trim(tmag%cnam),ix,iy
             write(lun6,*)"Maybe you should try MODSIMPHULL=1 in undumag.nam"
           endif
@@ -573,7 +575,8 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
       vol=(volmag-t_magnets(imag)%volume)/t_magnets(imag)%volume
 
       if (abs(vol).gt.1.0d-9) then
-        write(lun6,*)"*** Warning in clcmag_zcut: Sum of xyz-cut volumes differs from magnet volume by (rel.): ",vol
+        write(lun6,*)"*** Warning in clcmag_zcut: Sum of xyz-cut volumes differs from magnet "
+     &    //"volume by (rel.): ",vol
         write(lun6,*)"*** magnet :",trim(tmag%cnam),imag
         write(lun6,*)"Maybe you should try MODSIMPHULL=1 in undumag.nam"
       endif

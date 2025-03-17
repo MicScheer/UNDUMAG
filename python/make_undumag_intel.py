@@ -129,10 +129,10 @@ if nargs > 2: Idebug = int(args[2])
 
 global Undu_tree,Scomp_all,Scomp_omp,Scomp,Texe,Tlib,Tlibm,Scomp_nowarn
 
-Scomp = "gfortran -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_nowarn = "gfortran -w -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_all = "gfortran -std=legacy -c -O2 -cpp -fcheck=all -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops "
-Scomp_omp = "gfortran -std=legacy -c -O2 -cpp -finit-local-zero -fcheck=all -fopenmp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -ffixed-line-length-none -funroll-loops "
+Scomp = "ifx -save -fpp -c -O2 -traceback -vms -nod-lines -zero -132 -funroll-loops "
+Scomp_nowarn = "ifx -save -fpp -w -c -O2 -traceback -vms -nod-lines -zero -132 -funroll-loops "
+Scomp_all = "ifx -save -fpp -c -O2 -traceback -vms -nod-lines -zero -132 -funroll-loops "
+Scomp_omp = "ifx -fpp -c -O2 -zero -132 -fopenmp -traceback -vms -nod-lines  -funroll-loops "
 
 def get_undu_tree():
 
@@ -241,6 +241,7 @@ def undu_update():
       libm = UI + 'lib'+Sepp+'libmshcern_module.a'
       scomp = Scomp_nowarn
     elif ddd == 'mshplt':
+      #reakpoint()
       lib = UI + 'lib'+Sepp+'libmshplt.a'
       libm = UI + 'lib'+Sepp+'libmshplt_modules.a'
     elif ddd == 'for':
@@ -256,7 +257,6 @@ def undu_update():
       libm = UI + 'lib'+Sepp+'libutil_module.a'
       scomp = Scomp_all
     #endif
-
 
     Tlib = 0
     Tlibm = 0
@@ -307,7 +307,7 @@ def undu_update():
         #endif
       #end while
       Flines.close()
-      #breakpoint()
+
       if Iverbose > 0: print("\nModule:",m)
 
       #if m == 'displacement': #reakpoint()
@@ -505,7 +505,8 @@ def undu_update():
           print('*** Failed to execute ',scom)
         #endtry
     #endfor
-    sgfor = "gfortran -O2 -cpp -fd-lines-as-comments -Wno-align-commons -fopenmp  -ffixed-line-length-none -finit-local-zero  -funroll-loops -o " + UI + "bin" + Sepp + "undumag.exe " + UI + "main" + Sepp + "undumag_main.f"
+    sgfor = "ifx -fpp -O2 -fopenmp -traceback -vms -nod-lines -zero -132 -funroll-loops -o " \
+    + UI + "bin" + Sepp + "undumag.exe " + UI + "main" + Sepp + "undumag_main.f"
     slink = ' '
     for flib in ['libundu.a','libundu_modules.a','liburad.a','libutil.a','libmshcern.a','libmshplt.a','libmshplt_modules.a']:
       slink += UI + "lib" + Sepp + flib + ' '

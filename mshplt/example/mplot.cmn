@@ -1,0 +1,12 @@
+*KEEP,mplot.
+
+      real rescale_mshplt
+
+      character(2048)
+     &  fileeps_mshplt,
+     &  viewer_mshplt,viewer_kill_mshplt
+
+      common/mplotc/
+     &  rescale_mshplt,
+     &  fileeps_mshplt,
+     &  viewer_mshplt,viewer_kill_mshplt

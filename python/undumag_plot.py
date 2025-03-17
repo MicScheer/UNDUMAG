@@ -1903,6 +1903,8 @@ global Legend
 Legend = []
 # end of sequence mshimports
 
+def abs(x): return np.abs()
+
 #+seq,plotglobal.
 #CMap = 'rainbow'
 #HistEdgeColor = 'blue'
@@ -24047,6 +24049,8 @@ def vfit(fitfun, x, y, ey = '', absolute_sigma='default', parstart=None,
 
   if not bounds: bounds = (-np.inf,np.inf)
 
+  #reakpoint()
+
   iey = 1
 
   if not len(ey) or ey.abs().max() == 0.0:
@@ -24179,6 +24183,172 @@ def vfit(fitfun, x, y, ey = '', absolute_sigma='default', parstart=None,
   else: return
 
 #enddef vfit(fitfun,x,y, ey = None, parstart=None, bounds=None, method=None,isilent=0)
+
+#def fringefun(xin,fint,gap,xcen):
+def fringefun(xin,fint,gap):
+
+  global dipstrength,fringemod
+
+  try:
+    len(xin)
+    x = xin
+  except:
+    x = []
+    x.append(xin)
+    x = np.array(x)
+  #endif
+
+  byout = deepcopy(x)
+
+  xcen = 0.0
+
+  if fringemod == 'quintic-spline':
+
+    fringe=231.0*fint*gap/25.0
+    fringe2=fringe*fringe
+    fringe3=fringe2*fringe
+    fringe4=fringe2*fringe2
+    fringe5=fringe3*fringe2
+
+    fa=10.0/fringe3
+    fb=-15.0/fringe4
+    fc=6.0/fringe5
+
+  elif fringemod == 'linear':
+
+    fringe=6.0*fint*gap
+    fa=1.0/fringe
+
+  #endif
+
+  xc=x-xcen
+  xmin = xc.min()
+  xmax = xc.max()
+
+  for i in range(len(x)):
+
+    xc=x[i]-xcen
+
+    if xc > xmin + fringe and xc < xmax - fringe:
+      byout[i] = dipstrength
+      continue
+    #endif
+
+    if xc < xmin + fint:xc -= xmin
+    else: xc = xmax - xc
+
+    if fringemod == 'quintic-spline':
+
+      x2=xc*xc
+      x3=x2*xc
+      x4=x3*xc
+      x5=x4*xc
+
+      #  y2=y*y
+      #  y3=y2*y
+      #bxout=y*(3.00*Fa*x2+4.00*fb*x3+5.00*fc*x4)
+      #&      +y3*(-fa-4.00*fb*xc-10.00*fc*x2) !This term is not Maxwell conform
+      #byout=(fa*x3+fb*x4+fc*x5)+y2*xc*(3.00*fa+6.00*fb*xc+10.00*fc*x2) ! The sign seems to be wrong in the manual
+
+      # y=0, byout=(fa*x3+fb*x4+fc*x5)-y2*xc*(3.00*fa+6.00*fb*xc+10.00*fc*x2)
+      byout[i] = (fa*x3+fb*x4+fc*x5)*dipstrength
+
+    elif fringemod == 'linear':
+
+      #bxout=y*fa
+      byout[i] = xc*fa*dipstrength
+    #endif
+
+  #endfor x
+
+  return byout
+
+#enddef fringefun(x,fint,gap)
+
+def vfitdipole(x,y, ey = '', fringemodel='quintic-spline',absolute_sigma='default', parstart=None,
+            bounds=None, method=None,isilent=0,ninter=101, iretval=1,
+            kweedzero=1):
+  # See also vfit(...)
+#+seq,mshimportsind.
+# +PATCH,//WAVES/PYTHON
+# +KEEP,statusglobind,T=PYTHON.
+  global Istatus, WarningText, ErrorText, Gdebug
+
+  # Histograms and Ntuples
+  global H1h, H1hh, H2h, H2hh, H1, H2, H1head, H2head, H1HLast, Nhead, Ntup, \
+  Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
+  H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
+  Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
+  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
+  FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
+#+KEEP,plotglobind,T=PYTHON.
+#*CMZ :          28/09/2019  14.39.13  by  Michael Scheer
+  global MPLmain, MPLmaster, Nfigs,Figgeom, Figgeom2, FiggeomR, FiggeomL, XtermGeo, Figs,Fig,Ax,\
+  Fig1,Ax1,Fig6,Ax6,Fig2,Ax2,Fig7,Ax7,Fig3,Ax3,Fig8,Ax8, Figgeoms, \
+  Fig4,Ax4,Fig9,Ax9,Fig5,Ax5,Fig10,Ax10,\
+  Screewidth, Screenheight, ScaleSizeX, ScaleSizeY, \
+  FirstConsole, Console, Igetconsole,Klegend, Fwidth, Fheight, Fxoff, Fyoff, \
+  Kfig, Kax, Ihist,Iprof, Imarker, Ierr, Isurf, Iinter, Isame, Itight, IsameGlobal, Iline, CMap, Cmap, Tcmap, Surfcolor, Cmaps, \
+  Iplotopt, Ispline, Kecho, Kdump,Kpdf, Ndump,Npdf, Legend, \
+  Kplots,Nwins, Zones, Kzone, Nxzone, Nyzone, Zone, Axes, Icmap, \
+  Mode3d,Mode3D, Mode2d,Mode2D, CanButId, CanButIds, \
+  MarkerSize, MarkerType, MarkerColor, \
+  Markersize, Markertype, Markercolor, \
+  Fillstyle, FillStyle, \
+  Textcolor, WaveFilePrefix,WaveDump, \
+  LineStyle, LineWidth, LineColor, \
+  Linestyle, Linewidth, Linecolor, \
+  Author, \
+  Tightpad, Xtightpad,Ytightpad, ColorbarPad,\
+  LeftMargin,RightMargin,TopMargin,BottomMargin, Xspace, Yspace, \
+  Histcolor, Histedgecolor, Histbarwidth, Kdate, Kfit, Kstat, YTitle, YGTitle,x_of_xlab,y_of_xlab,x_of_ylab,y_of_ylab, Ygtitle, \
+  Icont3d, Iboxes, Inoempty, Iclosed,Itrisurf, Iscatter, Iscat3d, Ifill1d, TitPad, Xtitle, Ytitle, \
+  Gtit,Xtit,Ytit,Ztit,Ttit,Ptit,Colors, Surfcolors,Linestyles, Markertypes, \
+  LexpX,LexpY,LexpRot,LexpPow,\
+  GtitFontSize,Titfontsize,Atitfontsize,Axislabelsize,Textfontsize,Datefontsize,\
+  Statfontsize, Axislabeldist, Axislabeldist3d, Axisdist, Axisdist3d, \
+  XFit, YFit, Xfit, Yfit,Ystat, YStat, \
+  GtitFontSize,TitFontSize,AtitFontSize,AxisLabelSize,TextFontSize,DateFontSize,\
+  StatFontSize, AxisLabelDist, AxisLabelDist3d, AxisTitleDist, AxisTitleDist3d, \
+  AtitFontSize3d, Atitfontsize3d, NXtick,NXtick3d, Nxtick,Nxtick3d, Ktitles,  Dummy,\
+  ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax,ZoomZmin,ZoomZmax,\
+  Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
+  LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
+  Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
+  FillColor,WisLinux,Ishow,Sepp,Backslash
+#+PATCH,//WAVES/PYTHON
+#+KEEP,vecglobind,T=PYTHON.
+
+  global VsortX, VsortY, VoptX, VoptY, VsplX, VsplY, Vspl1, Vspl2, VsplI, \
+  VsplCoef, Nspline,Ninter, Nfitxy, Nfitint, Vxint, Vyint, SplineMode, \
+  VxyzX,VxyzY,VxyzZ,Tnpa,Tnone,VxyzE
+
+#+KEEP,nxyzglobind,T=PYTHON.
+#*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
+  global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
+
+  from scipy.optimize import curve_fit
+
+  global dipstrength,fringemod
+
+  if not fringemodel in ['linear','quintic-spline']:
+    print("\n","*** Error in vfitdipole: Unknown fringe model",fringemodel,"***\n")
+    print("*** Asuming quintic-spline!\n")
+    fringemodel='quintic-spline'
+  #endif
+
+  dipstrength = y.max()
+  fringemod = fringemodel
+
+  par, sigma, chi2ndf, f = vfit(fringefun,x,y,ey,'default',parstart, bounds,                                  method,isilent,ninter,kweedzero)
+
+#  if not isilent: print("\nfint, gap, xcen:",par[0],par[1],par[2],"\n")
+  if not isilent: print("\nfint, gap:",par[0],par[1],"\n")
+
+  return  par, sigma, chi2ndf, f
+
+#enddef vfitdipole(x,y, ey = '', absolute_sigma='default', parstart=None, bounds=None, method=None,isilent=0)
 
 def vfitexp(x,y, ey = '', absolute_sigma='default', parstart=None,
             bounds=None, method=None,isilent=0,ninter=101, iretval=1,
@@ -25656,6 +25826,7 @@ def setcolormap(cmap='jet'):
   global CMap, Cmap
   if cmap == '!': CMap = cmap
   Cmap = CMap
+  mpl.rc('image', cmap=cmap)
 #enddef
 
 def setcolorbarpad(pad='!'):
@@ -26473,6 +26644,49 @@ def set_Imarker(i):
 def set_Iline(i):
   global Iline
   Iline = i
+
+def print_cmap(cnam='',m=-1,cfile='',ifortran=1):
+
+# Write colormap to file
+
+  global Cmaps,CMap
+
+  if cnam != '':
+    mpl.rc('image', cmap=cnam)
+  elif m >= 0:
+    mpl.rc('image', cmap=Cmaps[m])
+  elif cnam == '':
+    cnam = plt.get_cmap().name
+  #endif
+
+  cma = plt.get_cmap()
+  cfile = 'colormap_' + cma.name + '.dat'
+
+  F = open(cfile,'w')
+
+  if ifortran:
+    F.write('      real :: cmap(3,256), cmap256(768) = [\n')
+  #endif
+
+  for i in range(256):
+    c = cma(i/255.)
+    print(i,i/255.,c)
+    if ifortran:
+      if i == 255: break
+      F.write('     & ' + str(c[0]) + ', ' + str(c[1]) + ' ,' + str(c[2]) + ',\n')
+    else:
+      F.write(str(c[0]) + ' ' + str(c[1]) + ' ' + str(c[2]) + '\n')
+    #endif
+  #endfor
+
+  if ifortran:
+    F.write('     & ' + str(c[0]) + ', ' + str(c[1]) + ' ,' + str(c[2]) + ']\n')
+    F.write('      equivalence(cmap,cmap256) \n')
+  #endif
+
+  F.close()
+
+#enddef print_cmap
 
 
 # +PATCH,//NTUPPLOT/PYTHON

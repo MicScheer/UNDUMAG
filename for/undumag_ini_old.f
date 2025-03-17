@@ -1,3 +1,4 @@
+*CMZ :          15/03/2025  16.20.09  by  Michael Scheer
 *CMZ :  2.04/06 23/10/2023  14.26.43  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  14.44.40  by  Michael Scheer
 *CMZ :  2.04/00 05/12/2022  15.18.35  by  Michael Scheer
@@ -264,7 +265,6 @@
 
       modegui=0
 
-      print*,"-trace-: undumag_ini_old entered"
 
       open(newunit=lun,file="undumag.stat")
       write(lun,*)"1"
@@ -375,7 +375,6 @@ cdebug
       iysymo=iysym
       izsymo=izsym
 
-      print*,"-trace-: Mark 1"
       if (irnmode.eq.1.or.irnmode.eq.2) then
         kundurun=0
         open(newunit=lundum,file="undumag.run",form='formatted',recl=512)
@@ -396,7 +395,6 @@ cdebug
         call util_random_init(irnsize,irnseed)
       endif
 
-      print*,"-trace-: Mark 2"
       ndisp=0
       if (kdisplace.ne.0) then
         if (ixsym.gt.0.or.iysym.gt.0.or.izsym.gt.0) then
@@ -429,7 +427,6 @@ cdebug
         enddo
         close(lun)
       endif
-      print*,"-trace-: Mark 3"
 
       if (nchiiron.le.0) nchiiron=1
       nchimax=0
@@ -470,12 +467,10 @@ cdebug
 
       if (ireallo.ne.0) close(lunconv)
       if(kdumpconv.ne.0) open(newunit=lunconv,file="undumag.cnv")
-      print*,"-trace-: Mark 4"
 
       if (ireallo.eq.0.and.kcalcvars.ne.0) then
         call undumag_calc(kechocalc,kcalcvars)
       endif
-      print*,"-trace-: Mark 5"
 
       if (ireallo.eq.0) then
         c128="izsym"
@@ -518,8 +513,10 @@ cdebug
           endif
           if (istat.ne.0) then
             write(lun6,*)
-            write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_parameter for PerLen ***"
-            write(lun6,*)"Make sure, that " // trim(Fclc) // " contains parameter or variable PerLen!"
+            write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_parameter for "
+     &        //"PerLen ***"
+            write(lun6,*)"Make sure, that " // trim(Fclc) // " contains parameter or variable "
+     &        //"PerLen!"
             write(lun6,*)
             stop
           else
@@ -536,7 +533,6 @@ cdebug
           endif
         endif
       endif
-      print*,"-trace-: Mark 6"
 
       if (dedgefb.eq.0.0d0) dedgefb=0.02d0
 
@@ -551,9 +547,7 @@ cdebug
       ubflenz=ubflenz+2.0d0*dedgefb
 
       if (iforce.lt.0) then
-        print*,"-trace-: Calling undumag_force_parameters"
         call undumag_force_parameters
-        print*,"-trace-: Passed undumag_force_parameters"
       endif
 
       if (iforce.ne.9999) then
@@ -613,7 +607,6 @@ cdebug
       tiny=corrtiny
       tiny2=tiny*tiny
 
-      print*,"-trace-: Mark 6"
       scalcur=1.0d0
 
       TWOPI=2.0D0*PI1
@@ -627,12 +620,9 @@ cdebug
       pphi=unduplot_phi   !plotting angle
 
       lunbpe=98
-      print*,"-trace-: Mark 7"
       close(lunbpe)
 
-      print*,"-trace-: Calling undumag_drop_zero_magnets"
       call undumag_drop_zero_magnets(kfoundplanes,kechocalc,hulltiny)
-      print*,"-trace-: Passed undumag_drop_zero_magnets"
 
       open(unit=lunbpe,file=filebpe,form='formatted',status='old')
 
@@ -909,7 +899,6 @@ cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
         call util_convex_hull_3d(npoi,xhull,yhull,zhull,khull,kedge,kface,
      &    nhull,nedge,nface,kfacelast,hulltiny,ifailhull)
-        print*,"-trace-: Passed util_convex_hull_3d"
 
         if (ifailhull.ne.0.or.nhull.lt.4) then
           write(lun6,*)"*** Error in undumag_ini_old: Subroutine util_convex_hull_3d failed for ",
@@ -1536,7 +1525,6 @@ c        khull(1:kfacelast)=kface(1:kfacelast)
         backspace(lunbpe)
       endif
 
-      print*,"-trace-: Going to material files"
 
       read(lunbpe,*)nmatfiles
 
@@ -2182,7 +2170,8 @@ c                write(lun6,*)nmagmax,iplan,icorn,corn1(1:3,icorn,iplan)
      &        nplan,ncorn1,corn1,corn2,tiny2,ifail)
 
             if (ifail.ne.0) then
-              write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_sortcorn for magnet ",nmagmax
+              write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_sortcorn for "
+     &          //"magnet ",nmagmax
               stop
             else
               do iplan=1,nplan
@@ -2263,7 +2252,8 @@ cdebug ixdiv 1
      &        ncorn1,corn1,ncorn2,corn2
      &        ,1,xdiv,hulltiny,ifail)
             if (ifail.ne.0) then
-              write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, ifail, mag, ixdiv, xdiv:",
+              write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, "
+     &          //"ifail, mag, ixdiv, xdiv:",
      &          ifail,nmagmax,ixdiv,xdiv
               stop
             endif
@@ -2593,7 +2583,8 @@ c              if (ireallo.eq.4.and.kdmag.eq.4) then
      &          ,2,ydiv,hulltiny,ifail)
 
               if (ifail.ne.0) then
-                write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, ifail, mag, iydiv, ydiv:",
+                write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, "
+     &            //"ifail, mag, iydiv, ydiv:",
      &            ifail,kdmag,iydiv,ydiv
                 stop
               endif
@@ -2936,7 +2927,8 @@ cdebug izdiv 1
      &          ,3,zdiv,hulltiny,ifail)
 
               if (ifail.ne.0) then
-                write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, ifail, mag, ixdiv, iydiv, izdiv, zdiv:",
+                write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, "
+     &            //"ifail, mag, ixdiv, iydiv, izdiv, zdiv:",
      &            ifail,kdmag,ixdiv,iydiv,izdiv
                 stop
               endif
@@ -4308,7 +4300,8 @@ c          read(lunbpe,*)nplan,ncol,nxdiv,nydiv,nzdiv,yfacdiv
      &        nplan,ncorn1,corn1,corn2,tiny,ifail)
 
             if (ifail.ne.0) then
-              write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_sortcorn for magnet ",nmagmax
+              write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_sortcorn for "
+     &          //"magnet ",nmagmax
               stop
             else
               do iplan=1,nplan
@@ -4566,7 +4559,8 @@ cdebug ixdiv 3
      &        ncorn1,corn1,ncorn2,corn2
      &        ,1,xdiv,hulltiny,ifail)
             if (ifail.ne.0) then
-              write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, ifail, mag, ixdiv, xdiv:",
+              write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, "
+     &          //"ifail, mag, ixdiv, xdiv:",
      &          ifail, nmagmax,ixdiv,xdiv
               stop
             endif
@@ -4875,7 +4869,8 @@ c              ydiv=ydiv-dydiv
      &          ncorn1,corn1,ncorn2,corn2
      &          ,2,ydiv,hulltiny,ifail)
               if (ifail.ne.0) then
-                write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, ifail, mag, iydiv, ydiv:",
+                write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, "
+     &            //"ifail, mag, iydiv, ydiv:",
      &            ifail, kdmag,iydiv,ydiv
                 stop
               endif
@@ -5199,7 +5194,8 @@ c              write(lun6,*)"Vorher:",kdmag1,kdmag,nmagmax,x02,y02,z02
      &          ncorn1,corn1,ncorn2,corn2
      &          ,3,zdiv,hulltiny,ifail)
               if (ifail.ne.0) then
-                write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, ifail, mag, izdiv, zdiv:",
+                write(lun6,*)"*** Error in undumag_ini_old: Bad return from undumag_cut_magnet, "
+     &            //"ifail, mag, izdiv, zdiv:",
      &            ifail,kdmag,izdiv,zdiv
               endif
 c              write(lun6,*)"Nachher:",z02
@@ -9226,7 +9222,6 @@ c            write(33,*),ipre,iplan,bcpre(1:6,iplan,ipre)
       endif !(iundugeo.ne.0) then
 
       if (kseg.eq.1) then
-      print*,"-trace-: Leaving undumag_ini_old "
         return
       endif
 
@@ -9913,7 +9908,7 @@ c          write(lun6,*)"4 Info:",ncount,chmoth1,gcen
 9999  deallocate(bpebc0,mothdiv,ncolmoth,
      &  xmoth,ymoth,zmoth,
      &  xmothm,ymothm,zmothm,
-     &  xmothi,ymothi,zmothi,chmagsi,chmagsm,chmothsi,chmothsm,
+     &  xmothi,ymothi,zmothi,chmagsi,chmagsm,chmothsi,chmothsm
      &  )
 
       if (nrec.eq.0) maxiterrec=1
@@ -9940,5 +9935,4 @@ c          write(lun6,*)"4 Info:",ncount,chmoth1,gcen
         stop "--- Programm UNDUMAG terminated due to iunduplot < 0 ---"
       endif
 
-      print*,"-trace-: Leaving undumag_ini_old "
       end
