@@ -180,7 +180,7 @@ def set_console_title(console='Python'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -582,7 +582,7 @@ def util_spline_coef(x,y,yp1=9999.,ypn=9999.):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -1122,11 +1122,13 @@ global H1h, H1hh, H2h, H2hh, H1, H2, H1head, H2head, H1HLast, Nhead, Ntup, \
 Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
 H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
 Nmin, Nmax, Nmean, Nrms, Nsum, Nxopt, Nyopt, Nlook, \
-Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
 H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
 FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 
 Tdf = type(pd.DataFrame())
+nt = pd.DataFrame([],columns=['x'])
+exec("global TpdS; TpdS = type(nt.x)")
 
 Tfig = None
 Figman = None
@@ -1264,6 +1266,7 @@ Fyoff = 10
 
 Kdate = False
 Kstat = False
+Kfit = False
 
 Ktitles = 1
 Kecho = 1

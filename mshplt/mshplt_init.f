@@ -1,4 +1,4 @@
-*CMZ :          14/02/2025  14.22.11  by  Michael Scheer
+*CMZ :          20/03/2025  10.24.20  by  Michael Scheer
 *CMZ :  1.04/00 13/02/2025  10.50.27  by  Michael Scheer
 *CMZ :  1.03/03 04/02/2025  11.45.06  by  Michael Scheer
 *CMZ :  1.03/02 22/09/2016  17.00.47  by  Michael Scheer
@@ -30,9 +30,9 @@
       integer lun,i,ierr,ibxl,ibxr,ibyb,ibyt,idev
       character(*) file,viewer,viewerkill
 
-*KEEP,MSHPLTINCL.
+*KEEP,mshpltincl.
       include 'mshplt.cmn'
-*KEEP,MPLOT.
+*KEEP,mplot.
 
       real rescale_mshplt
 

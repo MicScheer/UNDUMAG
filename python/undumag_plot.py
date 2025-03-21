@@ -140,7 +140,7 @@ def set_console_title(console='Python'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -542,7 +542,7 @@ def util_spline_coef(x,y,yp1=9999.,ypn=9999.):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -1078,11 +1078,13 @@ global H1h, H1hh, H2h, H2hh, H1, H2, H1head, H2head, H1HLast, Nhead, Ntup, \
 Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
 H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
 Nmin, Nmax, Nmean, Nrms, Nsum, Nxopt, Nyopt, Nlook, \
-Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
 H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
 FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 
 Tdf = type(pd.DataFrame())
+nt = pd.DataFrame([],columns=['x'])
+exec("global TpdS; TpdS = type(nt.x)")
 
 Tfig = None
 Figman = None
@@ -1252,6 +1254,7 @@ Fyoff = 10
 
 Kdate = False
 Kstat = False
+Kfit = False
 
 Ktitles = 1
 Kecho = 1
@@ -1903,7 +1906,13 @@ global Legend
 Legend = []
 # end of sequence mshimports
 
-def abs(x): return np.abs()
+def abs(x):
+  global TpdS
+  #reakpoint()
+  if (type(x) == TpdS):
+    return pd.Series.abs(x)
+  else: return np.abs(x)
+#enddef abs
 
 #+seq,plotglobal.
 #CMap = 'rainbow'
@@ -4412,7 +4421,7 @@ def hdump(hist='?',filh='hdump.dat'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -4499,7 +4508,7 @@ def hprint(hist='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -4575,7 +4584,7 @@ def hfun(hist='?',fun='x', nx=101, xmin=-0.5, xmax=100.5):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -4685,7 +4694,7 @@ def h1header_update(hist='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -4854,7 +4863,7 @@ def h1reset(h):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -4932,7 +4941,7 @@ def hdelete(h='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -5016,7 +5025,7 @@ def hmin(h='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -5098,7 +5107,7 @@ def hmax(h='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -5436,7 +5445,7 @@ def mhb_mkdir(chdir='!'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -5540,7 +5549,7 @@ def mhb_ldir():
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -5614,7 +5623,7 @@ def mhb_pwd(isilent=0,iretval=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -5683,7 +5692,7 @@ def mhb_cd(cdir='!'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -6034,7 +6043,7 @@ def h1pack(idh='?', data=None):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -6115,7 +6124,7 @@ def hcopn(idh='?', nt='', varlis='x:y:ey', ntit='!',kweedzero=1):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -6251,7 +6260,7 @@ def nrandom(nt='?',varlis='', n=100, modu='u', iplot=0, modus='new'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -6354,7 +6363,7 @@ def nhull2d(nt='?',varlis='',select='', iplot=1, iretval=1):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -6563,7 +6572,7 @@ def vhull2d(vx,vy,varlis='',iplot=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -6867,7 +6876,7 @@ def nhull3dbad(nt='?',varlis='',select='', plopt='',iplot=1, iretval=0,color='!'
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -7283,7 +7292,7 @@ def nappend(nt='?', nt2=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -7370,7 +7379,7 @@ def nfill(nt='?', data=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -7496,7 +7505,7 @@ def npeaksabs(nt='?', varlis='', select='', pkmin=0.5,nsmooth=0,isilent=0,iretva
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -7623,7 +7632,7 @@ def hpeaks(h='?', select='', pkmin=0.5,nsmooth=0,isilent=0,iretval=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -7701,7 +7710,7 @@ def npeaks(nt='?', varlis='', select='', pkmin=0.5,nsmooth=0,isilent=0,iretval=0
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -7823,7 +7832,7 @@ def nstat(nt='?',var='',select='', iretval=1, isilent=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -8009,7 +8018,7 @@ def nsum(nt='?',var='',select='', iretval=1, isilent=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -8116,7 +8125,7 @@ def nmax(nt='?',var='',select='',iretval=1):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -8226,7 +8235,7 @@ def nmin(nt='?',var='',select='', iretval=1):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -8336,7 +8345,7 @@ def nminmax(nt='?',var='',select='',iretval=1):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -8664,7 +8673,7 @@ def nrenvars(nt,varlis):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -8752,7 +8761,7 @@ def nparse(nt,varlis):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -8942,7 +8951,7 @@ def set_linecolor(lcol='r'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -9009,7 +9018,7 @@ def h2fill(idh='?', x=1.e30, y=1.e30, w=1.):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -9226,7 +9235,7 @@ def h1fill(idh=-1, x=1.e30, wei=1.):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -9385,7 +9394,7 @@ def hbook2(idh=-1, tit='Histogram2D',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -9559,7 +9568,7 @@ def h2reset(idh):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -9697,7 +9706,7 @@ def hbook1(idh=-1, tit='Histogram1D', nx=10, xmin=0., xmax=1., overwrite=False):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -9828,7 +9837,7 @@ def nscan(nt='?',varlis='',select='',isilent=0,ifirst=0,ilast=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -9960,7 +9969,7 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -10014,7 +10023,7 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 
@@ -10080,14 +10089,16 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
   #endif Ncolon == 1
 
   N.columns = ['x','y','ey']
-  Nlines = len(N)
-  N.index = range(Nlines)
 
   if Ncolon == 1:
     ey = ''
   else:
     ey = N.ey
   #endif
+
+  N = N.drop_duplicates()
+  Nlines = len(N)
+  N.index = range(Nlines)
 
   igauss = 0
 
@@ -10145,12 +10156,9 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
   Nfitxy.ey = ey
   Nfitxy.f = f
 
-  nw = Nfitxy.drop_duplicates()
-
-  Nfitxy.x = nw.x
-  Nfitxy.y = nw.y
-  Nfitxy.ey = nw.ey
-  Nfitxy.f = nw.f
+#  Fout = open('ndump.dat','w')
+#  Nfitxy.to_csv(Fout,header=False,index=False,sep=' ')
+#  Fout.close()
 
   nupdate_header(Nfitxy)
 
@@ -10158,9 +10166,7 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
 
     if fitcol == '!': fitcol = 'black'
 
-#    Kold = Kstat
-#    if Kstat: Kstat = False
-
+    #reakpoint()
     npl(Nfitxy,"x:y")
 
     if Nfitxy.ey.abs().max() > 0:
@@ -10170,6 +10176,9 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
       mec=lcol, ms=Markersize, mew=1, c=lcol)
     #endif
 
+    Kold = Kstat
+    if Kstat: Kstat = False
+
     x = Nfitxy.x.drop_duplicates()
     if len(x) == len(Nfitxy.x):
       vplxy(x,Nfitxy.f[:len(x)],"samespline",color=fitcol)
@@ -10177,7 +10186,7 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
       vplxy(x,Nfitxy.f[:len(x)],"sameline",color=fitcol)
     #endif
 
-#    Kstat = Kold
+    Kstat = Kold
 
     if Kfit:
       if StatFontSize < 0:
@@ -10203,8 +10212,8 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
         #endfor
       #endif
 
-      tex += Tex_chi2ndf + " = " + '{:.4g}'.format(chi2ndf) + "\n"
-      tex += Tex_chi2prob + " = " + '{:.4g}'.format(FitChi2Prob) + "\n"
+      tex += TeX_chi2ndf + " = " + '{:.4g}'.format(chi2ndf) + "\n"
+      tex += TeX_chi2prob + " = " + '{:.4g}'.format(FitChi2Prob) + "\n"
       text(Xstat,Ystat,tex,halign='left')
 
     #endif Kstat
@@ -10255,7 +10264,7 @@ def nintern(nt='?',varlis='',select='',xint='!'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -10372,7 +10381,7 @@ def ninter(nt='?',varlis='',select='',xint='!'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -10543,7 +10552,7 @@ def nspline(nt='?',varlis='',select='',xspl='!',periodic=False):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -10676,7 +10685,7 @@ def nsolve(nt='?',varlis='',select='',val=0.0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -10799,7 +10808,7 @@ def ndump(nt='',varlis='',select='',fout='ndump.dat', sep=' ',floatform='%.5e',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -10957,7 +10966,7 @@ def nreset(nt='?', varlis=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -11066,7 +11075,7 @@ def ndelete(nt='?',isilent=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -11162,7 +11171,7 @@ def ncre(ntname='', nttit='', varlis='', ioverwrite=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -11312,7 +11321,7 @@ def GetIndexH2(idh='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -11413,7 +11422,7 @@ def GetIndexN(nt='?', isilent=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -11532,7 +11541,7 @@ def GetIndexNct(idh='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -11615,7 +11624,7 @@ def GetIndexH1(idh='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -11719,7 +11728,7 @@ def GetIndex(idh='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -11820,7 +11829,7 @@ def h1opt(idh):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -11947,7 +11956,7 @@ def voptpar(vx,vy):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12062,7 +12071,7 @@ def h1print(idh='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12141,7 +12150,7 @@ def H1Info(idh='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12242,7 +12251,7 @@ def H2Info(idh='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12364,7 +12373,7 @@ def hstat2d(idh='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12437,7 +12446,7 @@ def H1List():
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12501,7 +12510,7 @@ def H2List():
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
   print("\n Index in H2, ID, Title  Nxbins Xmin Xmax, Nybins Ymin, Ymax, ContMin, ContMax, Status")
@@ -12610,7 +12619,7 @@ def nentry(nt='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12691,7 +12700,7 @@ def ninfo(nt='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12792,7 +12801,7 @@ def nlist():
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12861,7 +12870,7 @@ def NctList():
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -12929,7 +12938,7 @@ def ncolumns(fname='ntuple.dat', skiphead=-1, sep=' '):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -13034,7 +13043,7 @@ def ncolumnsguess(fname='ntuple.dat'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -13150,7 +13159,7 @@ silent=0, comment='*', sep=' ',iguessncols=1, iplot=1):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -13236,7 +13245,7 @@ silent=0, comment='*', sep=' ', iguessncols=1, iplot=1):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -13319,7 +13328,7 @@ comment='*', sep=' '):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -13479,7 +13488,7 @@ comment='*', sep=' ',iguessncols=1, ioverwrite=1):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -13643,7 +13652,7 @@ def nproj2(nt='?', xy='', weight=1., select='',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -14008,7 +14017,7 @@ def nproj2n(nt='?', xy='', weight=1., select='',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -14349,7 +14358,7 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -14657,7 +14666,7 @@ def nproj1n(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -14974,7 +14983,7 @@ def hstat1d(idh='?'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -15132,7 +15141,7 @@ def vstat(x='?',y=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -15281,7 +15290,7 @@ def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -15747,7 +15756,7 @@ def hplot(idh, plopt='!', Tit='!', xTit='', yTit='', zTit = '', legend='', block
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -15824,7 +15833,7 @@ def hplave(idh, plopt='!', Tit='!', xTit='', yTit='', zTit = '', legend='', bloc
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -16324,7 +16333,7 @@ def showplot(visible=True,kpdf=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -16507,7 +16516,7 @@ def hplot2d(idh, plopt='!', block=False, scalex=1., scaley=1., scalez=1.,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -17281,7 +17290,7 @@ def set_title(title='Title',tfs=-9.,titx=-9.,tity=-9):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -17356,7 +17365,7 @@ def set_x_title(xtit='xTit',pos=0.5):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -17422,7 +17431,7 @@ def set_z_title(ztit='zTit',pos=0.5):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -17490,7 +17499,7 @@ def set_titles(gtit='',pltit='Title',xtit='xTit', ytit='yTit', ztit=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -17560,7 +17569,7 @@ def set_global_title(gtit='', fontsize='!'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -17639,7 +17648,7 @@ def txyz(pltit='Title',xtit='', ytit='', ztit='', tfs=-9., xyzfs=-9,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -18487,7 +18496,7 @@ def hcopy1d(idh,idnew,tit='',scalex=1.,scaley=1., reset=0, overwrite=True):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -18601,7 +18610,7 @@ def hcopy2d(idh,idnew,tit='',scalex=1.,scaley=1., scalez=1., reset=0, overwrite=
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -19149,7 +19158,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -19704,7 +19713,7 @@ def vprint(v):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -19770,7 +19779,7 @@ def vprintxy(x,y):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -19848,7 +19857,7 @@ def vplxy(x='!',y='!',plopt='',label='',color='!',fillcolor='none'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -20023,12 +20032,12 @@ def vplxy(x='!',y='!',plopt='',label='',color='!',fillcolor='none'):
 
     tex = \
     "N, Sum: " + str(int(len(x))) + ", " + '{:.4g}'.format(y.sum()) + \
-    "\nMean: " + '{:.4g}'.format(xmean) + \
-    "\nRMS: " + '{:.4g}'.format(xrms)
+    "\n \n Mean: " + '{:.4g}'.format(xmean) + \
+    "\n \n RMS: " + '{:.4g}'.format(xrms)
 
     if xopt != None and yopt != None:
-      tex += "\nxOpt: " + '{:.4g}'.format(xopt) + \
-      "\nyOpt: " + '{:.4g}'.format(yopt)
+      tex += " \n \n xOpt: " + '{:.4g}'.format(xopt) + \
+      "\n\nyOpt: " + '{:.4g}'.format(yopt)
     #endif
 
     text(Xstat,Ystat,tex,halign='left')
@@ -20095,7 +20104,7 @@ def vplxyey(x,y,ey='',plopt='o',label='',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -20175,7 +20184,7 @@ def vplxyerr(x,y,ey='',ex='',plopt='o',label='',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -20257,7 +20266,7 @@ def vinter(x,y,xint='!'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -20364,7 +20373,7 @@ def vintern(x,y,xint='!'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -20537,7 +20546,7 @@ def vspline_index(x,y,nspl=1001, periodic=False, ypp1=0.0, yppn=0.0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -20656,7 +20665,7 @@ def vspline(x,y,xspl='!', periodic=False, ypp1=0.0, yppn=0.0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -20827,7 +20836,7 @@ def vspline_old(x,y,xspl='!', periodic=False):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -21043,7 +21052,7 @@ def nupdate_header(nt,reindex=1):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -21199,7 +21208,7 @@ def vsolve(x,y,val=0.0,xmin=-1.0e30,xmax=1.0e30):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -21324,7 +21333,7 @@ def vsolvelin(x,y,val=0.0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -21393,7 +21402,7 @@ def voptspl(x,y):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -21497,7 +21506,7 @@ def ncopn(nt,ncnam,varlis='',select='',ioverwrite=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -21603,7 +21612,7 @@ def ncopv(nt,varlis,select=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -21733,7 +21742,7 @@ def nclone(nt,ncnam,nctit='',ioverwrite=0):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -22645,7 +22654,7 @@ def getzone(projection=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -22799,7 +22808,7 @@ def set_console_title(console='Python'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -22871,7 +22880,7 @@ def get_console(console=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -22950,7 +22959,7 @@ def getax(visible=True):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -23022,7 +23031,7 @@ def vplbxy(x,y,u,v,scale=-9999.0,plopt='',tit='',xtit='',ytit='',ztit='',label='
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -23121,7 +23130,7 @@ def vplbxyz(x,y,z,u,v,w,scale,plopt='',tit='',xtit='',ytit='',ztit='',label='',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -23201,7 +23210,7 @@ def vplxyz(x,y,z,plopt='',tit='',xtit='',ytit='',ztit='',label='',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -23348,7 +23357,7 @@ def vplxyzt(x,y,z,t,plopt='',tit='',xtit='',ytit='',ztit='', label='',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -23503,7 +23512,7 @@ def vfitpoly(nord,x,y, ey='', cov='default', isilent=0, ninter=101, iretval=1,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -23839,7 +23848,7 @@ def hfit(idh, fitfun, select='',absolute_sigma='default', parstart=None,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -23893,7 +23902,7 @@ def hfit(idh, fitfun, select='',absolute_sigma='default', parstart=None,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 
@@ -23949,8 +23958,8 @@ def hfit(idh, fitfun, select='',absolute_sigma='default', parstart=None,
         #endfor
       #endif
 
-      tex += Tex_chi2ndf + " = " + '{:.4g}'.format(chi2ndf) + "\n"
-      tex += Tex_chi2prob + " = " + '{:.4g}'.format(FitChi2Prob) + "\n"
+      tex += TeX_chi2ndf + " = " + '{:.4g}'.format(chi2ndf) + "\n"
+      tex += TeX_chi2prob + " = " + '{:.4g}'.format(FitChi2Prob) + "\n"
       text(Xfit,Yfit,tex,halign='left')
 
     #endif Kstat
@@ -23987,7 +23996,7 @@ def vfit(fitfun, x, y, ey = '', absolute_sigma='default', parstart=None,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -24041,7 +24050,7 @@ def vfit(fitfun, x, y, ey = '', absolute_sigma='default', parstart=None,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 
@@ -24279,7 +24288,7 @@ def vfitdipole(x,y, ey = '', fringemodel='quintic-spline',absolute_sigma='defaul
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -24364,7 +24373,7 @@ def vfitexp(x,y, ey = '', absolute_sigma='default', parstart=None,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -24437,7 +24446,7 @@ def vfitexp2(x,y, ey = '', absolute_sigma='default', parstart=None,
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -24516,7 +24525,7 @@ def vfitgauss(x,y, ey = '', absolute_sigma='default',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -24587,7 +24596,7 @@ def vfitcosh(x,y, ey = '', absolute_sigma='default',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -24658,7 +24667,7 @@ def vfitcos(x,y, ey = '', absolute_sigma='default',
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -24726,7 +24735,7 @@ def hget(idh=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -24803,7 +24812,7 @@ def nget(idn=''):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -25733,7 +25742,7 @@ def set_y_title_abs(ytit='yTit', pos=0.5):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -26208,6 +26217,7 @@ read_facets = read_faces
 nex = nextzone
 gtit = set_global_title
 setgeo = window_geometry
+setfit = optfit
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -26687,6 +26697,11 @@ def print_cmap(cnam='',m=-1,cfile='',ifortran=1):
   F.close()
 
 #enddef print_cmap
+
+def set_statfontsize(s):
+  global StatFontSize
+  StatFontSize = s
+#enddef set_statfontsize(s):
 
 
 # +PATCH,//NTUPPLOT/PYTHON
@@ -28856,7 +28871,7 @@ def undu_read_mat():
 #enddef
 
 def undu_mat_mh(mat=12):
-  global TeX_mu0eq,TeX_mu0,TeX_mueq,TeX_muplus,TeX_mu,TeX_mum
+  global TeX_mu0eq,TeX_mu0,TeX_mueq,TeX_muplus,TeX_mu,TeX_mum,TeX_murad
   global TeX_chi2ndf,TeX_chi2prob,TeX_beta,TeX_gamma,TeX_egammaev,TeX_foregammaeq
   global TeX_pow,TeX_rKauf,TeX_rKzu,TeX_eKauf,TeX_eKzu,TeX_plus,TeX_mul,TeX_slash,Tex_blank
 
@@ -29343,7 +29358,7 @@ def undu_b():
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -32402,7 +32417,7 @@ def undu_geo(plopt='sameline',alpha=0.3):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -32597,7 +32612,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -32751,7 +32766,7 @@ def undu_mags(plopt='sameline'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -37098,7 +37113,7 @@ def undu_geo(plopt='sameline',alpha=0.3):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -37293,7 +37308,7 @@ def undu_plot_mag(select='yc<0 and zc<0',plopt='sameline'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.
@@ -37447,7 +37462,7 @@ def undu_mags(plopt='sameline'):
   Nctup, Nh1, Nh2, Nntup, Nnctup, Hdir, Ndir, Kdir, Cdir, Fdir, \
   H1Last, H2Last, NLast, H1h, H2h, N, Nct, Ind, IndLast, \
   Nmin, Nmax, Nmean, Nrms, Nxopt, Nyopt, Nlook, Nsum, \
-  Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
+  TpdS, Tdf, Tfig, Tax, Tax3d, Tax2d , H1ind, H2ind, Ncind, \
   H1ILast, NiLast, H1I, H2I, H2ILast, Ni, NctI, Nind, Nsel, Nlines, Ncolon, \
   FitPar, FitFit, FitSig, FitChi2ndf, FitNdf, FitChi2Prob,Figman,TnpFloat64,Tnpcmpl128
 #+KEEP,plotglobind,T=PYTHON.

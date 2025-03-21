@@ -1,4 +1,5 @@
-*CMZ :          02/08/2018  18.13.30  by  Michael Scheer
+*CMZ :          20/03/2025  10.27.43  by  Michael Scheer
+*CMZ :  1.03/03 05/02/2025  20.13.15  by  Michael Scheer
 *CMZ :  1.03/02 23/09/2016  13.46.02  by  Michael Scheer
 *CMZ :  1.02/00 01/10/2014  14.43.01  by  Michael Scheer
 *CMZ :  1.01/02 27/09/2014  14.55.40  by  Michael Scheer
@@ -29,7 +30,7 @@
       integer :: ical=0
 
       integer nlab,ntic,i,nbig,ic,ifirst,nexp,iprimitiv,k,nskip,iexpmode,
-     &  nexpmax,kbig(100),ndig,nticmax,inv
+     &  nexpmax,kbig(100),ndig,nticmax,inv,kinter
 
       real xmin,xmax,ymin,ymax,axang,x(2),y(2),ango,chheo,
      &  rlabsiz(*),xlabrel(*),ylaboff(*),xoffexp,yoffexp,rlabangrel(*),axlen,
@@ -39,7 +40,7 @@
      &  ,ticsizo,dxabs,xlabinv(100)
 
       character(*) chtit,chlab(*)
-      character(12) chreal
+      character(12) chreal,clab
       character(3) chexp
 
       ical=ical+1
@@ -47,7 +48,7 @@
       ndig=100
 
       if (ymax.eq.ymin.and.xmax.eq.xmin) then
-        print*,'*** Error in mshplt_axis_taylor: Zero length axis ***'
+c        print*,'*** Error in mshplt_axis_taylor: Zero length axis ***'
         return
       endif
 
@@ -96,7 +97,7 @@ c Most values are overwritten and returned, so they must not be constants.
           goto 9999
         endif
 
-        nticmax=max(3,int(axlen))
+        nticmax=max(4,int(axlen))
 
 c111     continue
         iprimitiv=1
@@ -151,6 +152,7 @@ c Problems with negative axis
           else
             write(chlab(i),'(1pe12.5)')xlab(i)
           endif
+          clab=chlab(i)
         enddo
 
         if (nlab.ge.2) then
@@ -191,43 +193,59 @@ c          write(chlab(i),'(g12.3)')xlab(i)
 
 c        else
 
-          do i=1,ntic
+        kinter=0
 
-            if (xlab(i).eq.0.0) then
+        do i=1,ntic
+          if (xlab(i).ne.0.0.and.xlab(i)-int(xlab(i)).eq.0.0) then
+            kinter=1
+            exit
+          endif
+        enddo
+
+        do i=1,ntic
+
+          if (xlab(i).eq.0.0) then
+            if (kinter.eq.0) then
               chlab(i)='0.0'
-              cycle
+            else
+              chlab(i)='0'
             endif
+            clab=chlab(i)
+            cycle
+          endif
 
-            write(chlab(i),'(f12.4)')xlab(i)/10.**nexpmax
+          write(chlab(i),'(f12.4)')xlab(i)/10.**nexpmax
 
-            read(chlab(i)(1:8),*)rmanti
-            nexp=0
+          read(chlab(i)(1:8),*)rmanti
+          nexp=0
 
-            ifirst=0
-            do ic=1,len_trim(chlab(i))
-              if (chlab(i)(ic:ic).ne.' '.and.ifirst.eq.0) then
-                ifirst=ic
-                goto 123
-              endif
-            enddo
-123         continue
+          ifirst=0
+          do ic=1,len_trim(chlab(i))
+            if (chlab(i)(ic:ic).ne.' '.and.ifirst.eq.0) then
+              ifirst=ic
+              goto 123
+            endif
+          enddo
+123       continue
 
-            chlab(i)=chlab(i)(ifirst:len_trim(chlab(i)))
+          chlab(i)=chlab(i)(ifirst:len_trim(chlab(i)))
+          clab=chlab(i)
 
-            do ic=len_trim(chlab(i)),1,-1
-              if (chlab(i)(ic:ic).eq.'0') then
-                chlab(i)(ic:ic)=''
-              else
-                goto 124
-              endif
-            enddo
+          do ic=len_trim(chlab(i)),1,-1
+            if (chlab(i)(ic:ic).eq.'0') then
+              chlab(i)(ic:ic)=''
+            else
+              goto 124
+            endif
+          enddo
 
-124         continue
+124       continue
 
-            if(chlab(i)(len_trim(chlab(i)):len_trim(chlab(i))).eq.'.')
-     &        chlab(i)(len_trim(chlab(i)):len_trim(chlab(i)))=''
+          if(chlab(i)(len_trim(chlab(i)):len_trim(chlab(i))).eq.'.')
+     &      chlab(i)(len_trim(chlab(i)):len_trim(chlab(i)))=''
+          clab=chlab(i)
 
-          enddo ! labels
+        enddo ! labels
 
 c        endif !iprimitiv
       endif !nlab.lt.0, i.e. automatic mode
@@ -252,7 +270,9 @@ c20160923        endif
       enddo
 
       rtotlabx=0.
+      rtotlaby=0.
       do i=1,ntic
+        clab=chlab(i)
         if (len_trim(chlab(i)).ne.0) then
           coslabang=cos((rlabangrel(i)+axang)*1.745329251994e-2)
           sinlabang=sin((rlabangrel(i)+axang)*1.745329251994e-2)
@@ -286,6 +306,7 @@ c        goto 111
           else
             do i=2,ntic-1
               if (i.ne.ntic/2+1) chlab(i)=''
+              !print*,i,clab
             enddo
           endif
         endif !nbig
@@ -305,6 +326,8 @@ c        goto 111
 
           call mshplt_view_to_world(x(1),y(1),x(1),y(1))
 
+          if (len_trim(chlab(i)).gt.3) ylaboff(i)=2.0*ylaboff(i)
+
           x(1)=x(1)+ylaboff(i)*sinang
      &      -len_trim(chlab(i))*rlabsiz(i)/4.*coslabang
 
@@ -321,6 +344,8 @@ c20170602??          if (i.eq.nlab.and.iprimitiv.eq.0.and.iexpmode.ne.0) then
             y(1)=ymax
 
             call mshplt_view_to_world(x(1),y(1),x(1),y(1))
+
+            if (len_trim(chlab(i)).gt.3) ylaboff(i)=2.0*ylaboff(i)
 
             if (ylaboff(i).gt.0.) then
               x(1)=x(1)+xoffexp*cosang+yoffexp*sinang
