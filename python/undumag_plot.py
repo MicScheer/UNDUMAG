@@ -6249,7 +6249,7 @@ def hcopn(idh='?', nt='', varlis='x:y:ey', ntit='!',kweedzero=1):
 
 #enddef hcopn(idh='?', nt='', varlis='')
 
-def nrandom(nt='?',varlis='', n=100, modu='u', iplot=0, modus='new'):
+def nrandom(nt='?',varlis='', n=100, width=[1.], modu='u', iplot=0):
 #+seq,mshimportsind.
 # +PATCH,//WAVES/PYTHON
 # +KEEP,statusglobind,T=PYTHON.
@@ -6311,39 +6311,30 @@ def nrandom(nt='?',varlis='', n=100, modu='u', iplot=0, modus='new'):
 
 
   if type(nt) == str and nt == '?':
-    print("\nUsage: nt = nrandom(nt,varlis, n=100, modu='u', iplot=0)")
+    print("\nUsage: nt = nrandom(nt,varlis, n=100, width=[1.], modu='u', iplot=0)")
     return
-
-  varl = nlistcolon(varlis)
-  dim = Ncolon + 1
-
-  #reakpoint()
-  if modus != 'new':
-    if modu == 'u':
-      points = np.random.rand(n,dim)
-      name = nt + "_" + str(n) + "_uniform_" + str(dim)
-    else:
-      points = np.random.randn(n,dim)
-      name = nt + "_" + str(n) + "_normal_" + str(dim)
-    #endif modu == 'u'
-  else:
-    rng = np.random.default_rng()
-    points = []
-    for i in range(dim):
-      if modu == 'u':
-        p = rng.random(n)
-        name = nt + "_" + str(n) + "_uniform_" + str(dim)
-#        print(p)
-      else:
-        p = rng.standard_normal(n)
-        name = nt + "_" + str(n) + "_normal_" + str(dim)
-      #endif modu == 'u'
-      points.append(p)
-      #endfor
   #endif
 
-  nt = ncre(nt,name,varlis)
-  nt = nfill(nt,points)
+  varl = nlistcolon(varlis)
+  ndim = Ncolon + 1
+
+  #reakpoint()
+  nt = ncre(nt,nt,varlis,ioverwrite=1)
+
+  for i in range(ndim):
+    if modu == 'u':
+      try: w = width[i]
+      except: w = 1.0
+      r = np.random.uniform(-w/2./+w/2.,n)
+    else:
+      try: w = width[i]
+      except: w = 1.0
+      r = np.random.normal(0.0,w,n)
+    #endif
+    nt[varl[i]] = r
+  #endfor
+
+  nupdate_header(nt)
 
   if iplot and dim < 4:
     nplot(nt,varlis)
@@ -10207,7 +10198,7 @@ def nfitxy(nt='?',varlis='',select='',fitfun=None, absolute_sigma='default',
         tex = ""
         ip = 0
         for p in par:
-          tex += "P" + str(ip) + " = " + '{:.4g}'.format(p)  + '{:.4g}'.format(sig[ip]) + "\n"
+          tex += "P" + str(ip) + " = " + '{:.4g}'.format(p)   + " +/- " + '{:.4g}'.format(sig[ip]) + "\n"
           ip += 1
         #endfor
       #endif
@@ -20996,21 +20987,12 @@ def vspline_old(x,y,xspl='!', periodic=False):
 
 def vcopn(nt,varlis='x',x='',y='',z='',s='', t='',bx='',by='',bz=''):
 
-  idn = GetIndexN(nt,1)
   varlis = nlistcolon(varlis)
-
-  if idn == -1:
-    if type(nt) != str:
-      print("*** Error in vcopn: nt must be Ntuple or Ntuple name ***")
-      return -1
-    else:
-      nt = ncre(nt,nt,varlis)
-    #endif type(nt) != str
-  #if type(nt) != str
+  nt = ncre(nt,nt,varlis,ioverwrite=1)
 
   nvar = len(varlis)
-
   nt[varlis[0]] = x
+
   if nvar > 1: nt[varlis[1]] = y
   if nvar > 2: nt[varlis[2]] = z
   if nvar > 3: nt[varlis[3]] = s
@@ -21040,6 +21022,11 @@ def vcopn(nt,varlis='x',x='',y='',z='',s='', t='',bx='',by='',bz=''):
 
   return nt
 #def vcopn(nt,varlis='x:y:z:bx:by:bz',x,y='',z='',bx='',by='',bz='')
+
+def vplx(x,plopt='!'):
+  nv = vcopn('nv','x',x)
+  npl(nv,"x",plopt=plopt)
+#enddef vplx
 
 def nupdate_header(nt,reindex=1):
 #+seq,mshimportsind.
@@ -23935,6 +23922,7 @@ def hfit(idh, fitfun, select='',absolute_sigma='default', parstart=None,
     Kstat = Kold
 
     if Kstat:
+
       if StatFontSize < 0:
         dpi = Fig.dpi
         nxy = max(Nxzone,Nyzone)
@@ -26702,6 +26690,29 @@ def set_statfontsize(s):
   global StatFontSize
   StatFontSize = s
 #enddef set_statfontsize(s):
+
+def nphasespace_ellip(emit,beta0,s,npoi=1000):
+
+  sig = sqrt(emit*beta0)
+  sigp = sqrt(emit/beta0)
+
+  neli0 = nellipse("neli0",0.0,0.0,sig,sigp,0.0,npoi)
+  neli = nellipse("neli",0.0,0.0,sig,sigp,0.0,npoi)
+
+  neli0.columns=['x','xp','phi','area','path']
+  nupdate_header(neli0)
+
+  neli.columns=['x','xp','phi','area','path']
+
+  x=neli0.x+neli0.xp*s
+  xp=neli0.xp
+  neli.x=x
+  neli.xp=xp
+
+  nupdate_header(neli)
+
+  return neli
+#enddef
 
 
 # +PATCH,//NTUPPLOT/PYTHON

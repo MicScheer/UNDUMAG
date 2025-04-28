@@ -1,4 +1,5 @@
-*CMZ :          25/09/2016  11.32.32  by  Michael Scheer
+*CMZ :  1.04/00 11/02/2025  15.40.32  by  Michael Scheer
+*CMZ :  1.03/03 25/09/2016  11.32.32  by  Michael Scheer
 *CMZ :  1.03/01 08/10/2014  14.16.19  by  Michael Scheer
 *CMZ :  1.03/00 06/10/2014  16.06.01  by  Michael Scheer
 *CMZ :  1.02/01 05/10/2014  10.00.08  by  Michael Scheer
@@ -27,8 +28,7 @@ C YOU MUST PLOT YMAX-(Y-YMIN) INSTEAD OF Y DATA INTO THIS FRAME
 
 
       real xmin,xmax,ymin,ymax,zmin,zmax,
-     &  xminin,xmaxin,yminin,ymaxin,zminin,zmaxin,
-     &  xcorn(8),ycorn(8),zcorn(8),ang,xyplen,
+     &  xminin,xmaxin,yminin,ymaxin,zminin,zmaxin,ang,xyplen,
      &  ticheight,chhe,titang,rellabang
 
       integer ilinestyleo,ilinecoloro,iaxis,ibox,ic,iticside,ilabside
@@ -37,10 +37,6 @@ C YOU MUST PLOT YMAX-(Y-YMIN) INSTEAD OF Y DATA INTO THIS FRAME
 
       character(*) xtit,ytit,ztit,chopt
       character(2048) xtitd,ytitd,ztitd,choptd
-
-      data xcorn/-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5/
-      data ycorn/-0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5/
-      data zcorn/-0.5,-0.5,-0.5,-0.5,0.5,0.5,0.5,0.5/
 
       xmax=xmaxin
       xmin=xminin
@@ -132,55 +128,55 @@ C YOU MUST PLOT YMAX-(Y-YMIN) INSTEAD OF Y DATA INTO THIS FRAME
       call mshplt_set_frame_color(kcolor,kgreen,kred,kblue)
 
       if (nzone_ps.le.0) then
-        xcorn(1)=-0.5
-        xcorn(2)=0.5
-        xcorn(3)=0.5
-        xcorn(4)=-0.5
-        xcorn(5)=-0.5
-        xcorn(6)=0.5
-        xcorn(7)=0.5
-        xcorn(8)=-0.5
-        ycorn(1)=-0.5
-        ycorn(2)=-0.5
-        ycorn(3)=0.5
-        ycorn(4)=0.5
-        ycorn(5)=-0.5
-        ycorn(6)=-0.5
-        ycorn(7)=0.5
-        ycorn(8)=0.5
-        zcorn(1)=-0.5
-        zcorn(2)=-0.5
-        zcorn(3)=-0.5
-        zcorn(4)=-0.5
-        zcorn(5)=0.5
-        zcorn(6)=0.5
-        zcorn(7)=0.5
-        zcorn(8)=0.5
+        xcorn_ps(1)=-0.5
+        xcorn_ps(2)=0.5
+        xcorn_ps(3)=0.5
+        xcorn_ps(4)=-0.5
+        xcorn_ps(5)=-0.5
+        xcorn_ps(6)=0.5
+        xcorn_ps(7)=0.5
+        xcorn_ps(8)=-0.5
+        ycorn_ps(1)=-0.5
+        ycorn_ps(2)=-0.5
+        ycorn_ps(3)=0.5
+        ycorn_ps(4)=0.5
+        ycorn_ps(5)=-0.5
+        ycorn_ps(6)=-0.5
+        ycorn_ps(7)=0.5
+        ycorn_ps(8)=0.5
+        zcorn_ps(1)=-0.5
+        zcorn_ps(2)=-0.5
+        zcorn_ps(3)=-0.5
+        zcorn_ps(4)=-0.5
+        zcorn_ps(5)=0.5
+        zcorn_ps(6)=0.5
+        zcorn_ps(7)=0.5
+        zcorn_ps(8)=0.5
       else
-        xcorn(1)=-0.625
-        xcorn(2)=0.625
-        xcorn(3)=0.625
-        xcorn(4)=-0.625
-        xcorn(5)=-0.625
-        xcorn(6)=0.625
-        xcorn(7)=0.625
-        xcorn(8)=-0.625
-        ycorn(1)=-0.625
-        ycorn(2)=-0.625
-        ycorn(3)=0.625
-        ycorn(4)=0.625
-        ycorn(5)=-0.625
-        ycorn(6)=-0.625
-        ycorn(7)=0.625
-        ycorn(8)=0.625
-        zcorn(1)=-0.625
-        zcorn(2)=-0.625
-        zcorn(3)=-0.625
-        zcorn(4)=-0.625
-        zcorn(5)=0.625
-        zcorn(6)=0.625
-        zcorn(7)=0.625
-        zcorn(8)=0.625
+        xcorn_ps(1)=-0.625
+        xcorn_ps(2)=0.625
+        xcorn_ps(3)=0.625
+        xcorn_ps(4)=-0.625
+        xcorn_ps(5)=-0.625
+        xcorn_ps(6)=0.625
+        xcorn_ps(7)=0.625
+        xcorn_ps(8)=-0.625
+        ycorn_ps(1)=-0.625
+        ycorn_ps(2)=-0.625
+        ycorn_ps(3)=0.625
+        ycorn_ps(4)=0.625
+        ycorn_ps(5)=-0.625
+        ycorn_ps(6)=-0.625
+        ycorn_ps(7)=0.625
+        ycorn_ps(8)=0.625
+        zcorn_ps(1)=-0.625
+        zcorn_ps(2)=-0.625
+        zcorn_ps(3)=-0.625
+        zcorn_ps(4)=-0.625
+        zcorn_ps(5)=0.625
+        zcorn_ps(6)=0.625
+        zcorn_ps(7)=0.625
+        zcorn_ps(8)=0.625
       endif
 
       xtitd=xtit
@@ -204,7 +200,7 @@ C YOU MUST PLOT YMAX-(Y-YMIN) INSTEAD OF Y DATA INTO THIS FRAME
       ilinestyleo=ilinestyle_ps
       call mshplt_get_line_color(ilinecoloro,kredo,kblueo,kgreeno)
 
-      call mshplt_3dto2d(8,xcorn,ycorn,zcorn,xpcorn_ps,ypcorn_ps)
+      call mshplt_3dto2d(8,xcorn_ps,ycorn_ps,zcorn_ps,xpcorn_ps,ypcorn_ps)
 
       wxmin_ps=min(xpcorn_ps(1),xpcorn_ps(2),xpcorn_ps(3),xpcorn_ps(4),
      &  xpcorn_ps(5),xpcorn_ps(6),xpcorn_ps(7),xpcorn_ps(8))
@@ -959,6 +955,13 @@ C YOU MUST PLOT YMAX-(Y-YMIN) INSTEAD OF Y DATA INTO THIS FRAME
         call mshplt_line_raw(xpcorn_ps(3),ypcorn_ps(3),xpcorn_ps(7),ypcorn_ps(7))
         call mshplt_pline_raw_closed(4,xpcorn_ps(5),ypcorn_ps(5))
       endif
+
+      xcornmin_ps=minval(xcorn_ps)
+      dxcorn_ps=maxval(xcorn_ps)-xcornmin_ps
+      ycornmin_ps=minval(ycorn_ps)
+      dycorn_ps=maxval(ycorn_ps)-ycornmin_ps
+      zcornmin_ps=minval(zcorn_ps)
+      dzcorn_ps=maxval(zcorn_ps)-zcornmin_ps
 
       call mshplt_get_line_color(ilinecoloro,kredo,kblueo,kgreeno)
       call mshplt_set_line_style(ilinestyleo)

@@ -1,3 +1,4 @@
+*CMZ :  1.03/03 06/02/2025  12.45.04  by  Michael Scheer
 *CMZ :  1.03/02 25/04/2016  15.48.20  by  Michael Scheer
 *CMZ :  1.03/01 10/10/2014  13.21.20  by  Michael Scheer
 *CMZ :  0.01/03 23/09/2014  12.06.56  by  Michael Scheer
@@ -21,10 +22,12 @@
 
       itouched_ps=1
 
-      if (icolor_ps.ne.kTextColor_ps) then
-        call mshplt_get_text_color(ic,ir,ig,ib)
-        call mshplt_set_text_color(ic,ir,ig,ib)
-      endif
+      call mshplt_set_character_height(chhe_ps)
+
+c      if (icolor_ps.ne.kTextColor_ps) then
+c        call mshplt_get_text_color(ic,ir,ig,ib)
+        call mshplt_set_text_color(kTextColor_ps,ir,ig,ib)
+c      endif
 
       x1=xleft_ps+x*xsiz_ps
       y1=ybottom_ps+y*ysiz_ps

@@ -1,3 +1,4 @@
+*CMZ :  1.04/00 11/02/2025  10.47.05  by  Michael Scheer
 *CMZ :  1.02/00 30/09/2014  21.25.28  by  Michael Scheer
 *CMZ :  1.01/02 25/09/2014  16.02.25  by  Michael Scheer
 *CMZ :  0.01/02 05/09/2014  15.41.43  by  Michael Scheer
@@ -13,7 +14,7 @@
       include 'mshplt.cmn'
 *KEND.
 
-      real x(*),y(*),z(*),xp(*),yp(*)
+      real x(n),y(n),z(n),xp(n),yp(n)
 
       real t(3,3),tx(3,3),tz(3,3),
      &  cosphi,sinphi,costhe,sinthe,phio,theo,phi,the

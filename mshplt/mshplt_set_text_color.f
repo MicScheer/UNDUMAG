@@ -1,3 +1,4 @@
+*CMZ :  1.03/03 02/02/2025  10.38.10  by  Michael Scheer
 *CMZ :  0.01/02 05/09/2014  16.58.57  by  Michael Scheer
 *CMZ :  0.00/06 19/08/2014  15.11.41  by  Michael Scheer
 *CMZ :  0.00/04 07/08/2014  15.52.16  by  Michael Scheer
@@ -16,46 +17,44 @@
 
       kTextColor_ps=icolor
 
-      if (icolor.gt.0) then
-        if (icolor.eq.1) then
-          kTextRed_ps=0
-          kTextGreen_ps=0
-          kTextBlue_ps=0
-        else if (icolor.eq.2) then
-          kTextRed_ps=1
-          kTextGreen_ps=0
-          kTextBlue_ps=0
-        else if (icolor.eq.3) then
-          kTextRed_ps=0
-          kTextGreen_ps=1
-          kTextBlue_ps=0
-        else if (icolor.eq.4) then
-          kTextRed_ps=0
-          kTextGreen_ps=0
-          kTextBlue_ps=1
-        else if (icolor.eq.5) then
-          kTextRed_ps=1
-          kTextGreen_ps=1
-          kTextBlue_ps=0
-        else if (icolor.eq.6) then
-          kTextRed_ps=1
-          kTextGreen_ps=0
-          kTextBlue_ps=1
-        else if (icolor.eq.7) then
-          kTextRed_ps=0
-          kTextGreen_ps=1
-          kTextBlue_ps=1
-        else if (icolor.eq.8) then
-          kTextRed_ps=35
-          kTextGreen_ps=85
-          kTextBlue_ps=33
-        endif
+      if (icolor.eq.-1) then
+        kTextRed_ps=0
+        kTextGreen_ps=0
+        kTextBlue_ps=0
+      else if (icolor.eq.-2) then
+        kTextRed_ps=1
+        kTextGreen_ps=0
+        kTextBlue_ps=0
+      else if (icolor.eq.-3) then
+        kTextRed_ps=0
+        kTextGreen_ps=1
+        kTextBlue_ps=0
+      else if (icolor.eq.-4) then
+        kTextRed_ps=0
+        kTextGreen_ps=0
+        kTextBlue_ps=1
+      else if (icolor.eq.-5) then
+        kTextRed_ps=1
+        kTextGreen_ps=1
+        kTextBlue_ps=0
+      else if (icolor.eq.-6) then
+        kTextRed_ps=1
+        kTextGreen_ps=0
+        kTextBlue_ps=1
+      else if (icolor.eq.-7) then
+        kTextRed_ps=0
+        kTextGreen_ps=1
+        kTextBlue_ps=1
+      else if (icolor.eq.-8) then
+        kTextRed_ps=35
+        kTextGreen_ps=85
+        kTextBlue_ps=33
       else
-        kTextColor_ps=-1
-        kTextRed_ps=ired
-        kTextGreen_ps=igreen
-        kTextBlue_ps=iblue
-      endif !icolor.gt.0
+        kTextColor_ps=-9
+        kTextRed_ps=0
+        kTextGreen_ps=0
+        kTextBlue_ps=0
+      endif
 
       cnText_ps=sqrt(float(kTextRed_ps**2+kTextGreen_ps**2+kTextBlue_ps**2))
       if (cnText_ps.le.0.) cnText_ps=1.

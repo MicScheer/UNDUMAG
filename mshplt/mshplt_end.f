@@ -1,4 +1,5 @@
-*CMZ :          01/08/2018  08.38.20  by  Michael Scheer
+*CMZ :          28/04/2025  10.24.26  by  Michael Scheer
+*CMZ :  1.03/03 01/08/2018  08.38.20  by  Michael Scheer
 *CMZ :  1.03/02 22/09/2016  13.19.58  by  Michael Scheer
 *CMZ :  1.02/00 03/10/2014  12.49.08  by  Michael Scheer
 *CMZ :  1.01/02 25/09/2014  09.32.57  by  Michael Scheer
@@ -19,18 +20,8 @@
 
 *KEEP,mshpltincl.
       include 'mshplt.cmn'
-*KEEP,mplot.
-
-      real rescale_mshplt
-
-      character(2048)
-     &  fileeps_mshplt,
-     &  viewer_mshplt,viewer_kill_mshplt
-
-      common/mplotc/
-     &  rescale_mshplt,
-     &  fileeps_mshplt,
-     &  viewer_mshplt,viewer_kill_mshplt
+*KEEP,mplotincl.
+      include 'mplot.cmn'
 *KEND.
 
       integer nitemp

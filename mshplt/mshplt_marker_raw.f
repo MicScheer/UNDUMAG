@@ -1,3 +1,4 @@
+*CMZ :  1.04/00 11/02/2025  16.21.37  by  Michael Scheer
 *CMZ :  1.00/01 23/09/2014  19.03.09  by  Michael Scheer
 *CMZ :  0.01/03 23/09/2014  09.38.20  by  Michael Scheer
 *CMZ :  0.01/02 05/09/2014  15.41.43  by  Michael Scheer
@@ -13,7 +14,7 @@
       include 'mshplt.cmn'
 *KEND.
 
-      real x(*),y(*),x1,y1,yoffset,r
+      real x(n),y(n),x1,y1,yoffset,r
       integer n,i,mtyp
       character(2048) cline
       character(4) chmark

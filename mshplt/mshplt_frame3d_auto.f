@@ -1,4 +1,4 @@
-*CMZ :          06/08/2018  15.36.01  by  Michael Scheer
+*CMZ :  1.03/03 06/08/2018  15.36.01  by  Michael Scheer
 *-- Author :    Michael Scheer   01/08/2018
       subroutine mshplt_frame3d_auto(n,x,y,z,
      &  xtit,ytit,ztit,chopt,istatus)

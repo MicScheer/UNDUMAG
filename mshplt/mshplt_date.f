@@ -1,3 +1,4 @@
+*CMZ :          14/02/2025  14.02.27  by  Michael Scheer
 *CMZ :  1.01/00 24/09/2014  14.08.29  by  Michael Scheer
 *CMZ :  0.01/03 22/09/2014  21.17.47  by  Michael Scheer
 *CMZ :  0.01/02 05/09/2014  15.41.43  by  Michael Scheer
@@ -24,8 +25,23 @@
 
       if (chdate.eq.'today') then
         call date_and_time(dtday,dttime,dtzone,idatetime)
-        write(cline_ps,*)dtday(1:4),'.',dtday(5:6),'.',dtday(7:8),'  ',
-     &    dttime(1:2),':',dttime(3:4)
+        if (dtday(5:5).eq.'0') then
+          if (dtday(7:7).eq.'0') then
+            write(cline_ps,*)dtday(8:8),'.',dtday(6:6),'.',dtday(1:4),'  ',
+     &        dttime(1:2),':',dttime(3:4)
+          else
+            write(cline_ps,*)dtday(7:8),'.',dtday(6:6),'.',dtday(1:4),'  ',
+     &        dttime(1:2),':',dttime(3:4)
+          endif
+        else
+          if (dtday(7:7).eq.'0') then
+            write(cline_ps,*)dtday(8:8),'.',dtday(5:6),'.',dtday(1:4),'  ',
+     &        dttime(1:2),':',dttime(3:4)
+          else
+            write(cline_ps,*)dtday(7:8),'.',dtday(5:6),'.',dtday(1:4),'  ',
+     &        dttime(1:2),':',dttime(3:4)
+          endif
+        endif
       else
         cline_ps=chdate(1:lendate)
       endif

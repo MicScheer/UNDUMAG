@@ -14,6 +14,7 @@
      &  ,offgtity_ps !offset of global title on pad
      &  ,offdatex_ps !offset of date on pad
      &  ,offdatey_ps !offset of date on pad
+     &  ,aDateHeight_ps !character height of date text
      &  ,aLabHeight_ps !character height of axis label
      &  ,xoffexp_ps !xoffset of power term
      &  ,yoffexp_ps !yoffset of power term
@@ -46,8 +47,11 @@
      &  ,coln_ps,cnLine_ps,cnFill_ps,cnMarker_ps,cnText_ps,cnFrame_ps !color norms
      &  ,clips_ps(2,1000) !clipping range
      &  ,radtodeg_ps
-     &  ,xpcorn_ps(8),ypcorn_ps(8) !3d frame box
-     &  ,ifbox_ps,xfb_ps(9),yfb_ps(9)
+     &  ,xcorn_ps(8),ycorn_ps(8),zcorn_ps(8),xpcorn_ps(8),ypcorn_ps(8) !3d frame box
+     &  ,xcornmin_ps,dxcorn_ps,ycornmin_ps,dycorn_ps,zcornmin_ps,dzcorn_ps
+     &  ,xfb_ps(9),yfb_ps(9)
+
+      integer ifbox_ps
 
       parameter(pttocm_ps=72/2.54,pttomm_ps=72/25.4)
 
@@ -123,6 +127,7 @@
      &  ,offgtity_ps !offset of global title on pad
      &  ,offdatex_ps !offset of date on pad
      &  ,offdatey_ps !offset of date on pad
+     &  ,aDateHeight_ps !character height of date text
      &  ,xmgl_ps,xmgr_ps,ymgu_ps,ymgl_ps !old hplot variables for margins
      &  ,xwin_ps,ywin_ps ! horizontal and vertical distance of pads
      &  ,xsizorig_ps,ysizorig_ps !size on pad of plotting canvas for paper scale
@@ -160,5 +165,6 @@
      &  ,isbox_ps,isdate_ps,isoffdate_ps
      &  ,xoffexp_ps !xoffset of power term
      &  ,yoffexp_ps !yoffset of power term
-     &  ,xpcorn_ps,ypcorn_ps
+     &  ,xcorn_ps,ycorn_ps,zcorn_ps,xpcorn_ps,ypcorn_ps
+     &  ,xcornmin_ps,dxcorn_ps,ycornmin_ps,dycorn_ps,zcornmin_ps,dzcorn_ps
      &  ,ifbox_ps,xfb_ps,yfb_ps

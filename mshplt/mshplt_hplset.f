@@ -1,3 +1,4 @@
+*CMZ :  1.03/03 04/02/2025  11.02.38  by  Michael Scheer
 *CMZ :  1.03/02 01/04/2016  12.31.53  by  Michael Scheer
 *CMZ :  0.01/02 05/09/2014  15.41.43  by  Michael Scheer
 *CMZ :  0.00/06 19/08/2014  13.50.41  by  Michael Scheer
@@ -30,7 +31,7 @@
         xmgr_ps=val
       else if (chopt.eq.'YWIN'.or.chopt.eq.'ywin') then
         ywin_ps=val
-      else if (chopt.eq.'YWIN'.or.chopt.eq.'xwin') then
+      else if (chopt.eq.'XWIN'.or.chopt.eq.'xwin') then
         xwin_ps=val
       else
         print*,'*** WARNING in mshplt_hplset: Option ',

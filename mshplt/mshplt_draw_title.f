@@ -1,3 +1,4 @@
+*CMZ :  1.03/03 02/02/2025  08.42.46  by  Michael Scheer
 *CMZ :  1.03/02 25/04/2016  12.25.01  by  Michael Scheer
 *CMZ :  1.03/01 10/10/2014  13.26.55  by  Michael Scheer
 *CMZ :  0.01/02 05/09/2014  15.41.43  by  Michael Scheer
@@ -35,6 +36,7 @@
 
       x=xleftorig_ps+xsizorig_ps/2.
      &  -gsiz_ps*lentit/5.*scaletxt_ps+offgtitx_ps*scaletxt_ps
+
       y=ybottomorig_ps+ysizorig_ps-offgtity_ps*scaletxt_ps
 
       if (ihigzmode_ps.eq.0) then

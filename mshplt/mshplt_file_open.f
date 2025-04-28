@@ -1,3 +1,5 @@
+*CMZ :          14/02/2025  14.20.43  by  Michael Scheer
+*CMZ :  1.04/00 13/02/2025  10.48.18  by  Michael Scheer
 *CMZ :  1.03/01 07/10/2014  15.16.02  by  Michael Scheer
 *CMZ :  1.02/00 02/10/2014  21.58.12  by  Michael Scheer
 *CMZ :  1.01/02 27/09/2014  16.14.01  by  Michael Scheer
@@ -20,7 +22,7 @@
       integer idatetime(8),lun,luni,ierr,ifound,lunmax,i
       integer lchopt,lfile,l1num,l2num,nlun
       character(*) file,chopt
-      character(2048) cline,cnum
+      character(2048) cline,cnum,cdate
 
       character(8192) fileeps
 
@@ -93,14 +95,32 @@
       write(lun_ps,'(a)')'%%Title: '//file_ps(1:len_trim(file_ps))
       write(lun_ps,'(a)')'%%Pages: (atend)'
 c      write(lun_ps,'(a)')'%%Creator: mshplt'
-*KEEP,MSHPLTVERSION.
-      write(lun_ps,'(a)') '%%Creator mshplt 1.03/02'
+*KEEP,mshpltversion.
+      write(lun_ps,'(a)') '%%Creator mshplt 1.04/00'
 *KEND.
-      write(cline,*)'%%CreationDate: ',
-     &  dtday(1:4),'.',dtday(5:6),'.',dtday(7:8),'   ',
-     &  dttime(1:2),':',dttime(3:4),':',dttime(5:6)
+
+      if (dtday(5:5).eq.'0') then
+        if (dtday(7:7).eq.'0') then
+          write(cline,*)'%%CreationDate: ',dtday(8:8),'.',dtday(6:6),'.',dtday(1:4),'  ',
+     &      dttime(1:2),':',dttime(3:4)
+        else
+          write(cline,*)'%%CreationDate: ',dtday(7:8),'.',dtday(6:6),'.',dtday(1:4),'  ',
+     &      dttime(1:2),':',dttime(3:4)
+        endif
+      else
+        if (dtday(7:7).eq.'0') then
+          write(cline,*)'%%CreationDate: ',dtday(8:8),'.',dtday(5:6),'.',dtday(1:4),'  ',
+     &      dttime(1:2),':',dttime(3:4)
+        else
+          write(cline,*)'%%CreationDate: ',dtday(7:8),'.',dtday(5:6),'.',dtday(1:4),'  ',
+     &      dttime(1:2),':',dttime(3:4)
+        endif
+      endif
+
       write(lun_ps,'(a)')cline(2:len_trim(cline))
       write(lun_ps,'(a)')'%%EndComments'
+
+      cdate=cline(17:len_trim(cline))
 
       write(lun_ps,*)scale_ps,scale_ps,' scale'
       write(lun_ps,*)rlinewidth_ps,' setlinewidth'
@@ -109,10 +129,10 @@ c      write(lun_ps,'(a)')'%%Creator: mshplt'
       call mshplt_draw_title
 
       if (ihigzmode_ps.ne.0) then
-        write(lun_ps,*)'/Helvetica findfont ',chhe_ps*scaletxt_ps*1.5,
+        write(lun_ps,*)'/Helvetica findfont ',adateheight_ps*scaletxt_ps*1.5,
      &    ' scalefont setfont'
       else
-        write(lun_ps,*)'/Helvetica findfont ',chhe_ps*scaletxt_ps,
+        write(lun_ps,*)'/Helvetica findfont ',adateheight_ps*scaletxt_ps,
      &    ' scalefont setfont'
       endif
 
@@ -131,9 +151,7 @@ c      write(lun_ps,'(a)')'%%Creator: mshplt'
           if (kDate_ps.gt.0) then
             write(lun_ps,*)xrightorig_ps+offdatex_ps*scaletxt_ps*1.5,
      &        ytoporig_ps+offdatey_ps*scaletxt_ps-1.25,
-     &        'moveto ( ',
-     &        dtday(1:4),'.',dtday(5:6),'.',dtday(7:8),'   ',
-     &        dttime(1:2),':',dttime(3:4),
+     &        'moveto ( ' // trim(cdate) //
      &        ') show'
           endif
 
@@ -142,15 +160,21 @@ c      write(lun_ps,'(a)')'%%Creator: mshplt'
           if (kDate_ps.gt.0) then
             write(lun_ps,*)xrightorig_ps+offdatex_ps,
      &        ytoporig_ps+offdatey_ps,
-     &        'moveto ( ',
-     &        dtday(1:4),'.',dtday(5:6),'.',dtday(7:8),'   ',
-     &        dttime(1:2),':',dttime(3:4),
+     &        'moveto ( ' // trim(cdate) //
      &        ') show'
           endif
 
         endif
 
         inewpage_ps=0
+      endif
+
+      if (ihigzmode_ps.ne.0) then
+        write(lun_ps,*)'/Helvetica findfont ',chhe_ps*scaletxt_ps*1.5,
+     &    ' scalefont setfont'
+      else
+        write(lun_ps,*)'/Helvetica findfont ',chhe_ps*scaletxt_ps,
+     &    ' scalefont setfont'
       endif
 
       write(lun_ps,*)xleftorig_ps,ybottomorig_ps,' moveto %goto origin'

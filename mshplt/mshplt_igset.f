@@ -10,7 +10,7 @@
 
       implicit none
 
-*KEEP,MSHPLTINCL.
+*KEEP,mshpltincl.
       include 'mshplt.cmn'
 *KEND.
 

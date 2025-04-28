@@ -1,4 +1,4 @@
-*CMZ :          20/03/2025  10.24.20  by  Michael Scheer
+*CMZ :          28/04/2025  10.24.26  by  Michael Scheer
 *CMZ :  1.04/00 13/02/2025  10.50.27  by  Michael Scheer
 *CMZ :  1.03/03 04/02/2025  11.45.06  by  Michael Scheer
 *CMZ :  1.03/02 22/09/2016  17.00.47  by  Michael Scheer
@@ -32,18 +32,8 @@
 
 *KEEP,mshpltincl.
       include 'mshplt.cmn'
-*KEEP,mplot.
-
-      real rescale_mshplt
-
-      character(2048)
-     &  fileeps_mshplt,
-     &  viewer_mshplt,viewer_kill_mshplt
-
-      common/mplotc/
-     &  rescale_mshplt,
-     &  fileeps_mshplt,
-     &  viewer_mshplt,viewer_kill_mshplt
+*KEEP,mplotincl.
+      include 'mplot.cmn'
 *KEND.
 
       logical lisopen
@@ -150,6 +140,10 @@
       ang_ps=0. !degree
       tang_ps=0. !degree
       pi_ps=4.*atan(1.)
+
+      log10x_ps=0
+      log10y_ps=0
+      log10z_ps=0
 
       wxmin_ps=0.
       wxmax_ps=xsiz_ps

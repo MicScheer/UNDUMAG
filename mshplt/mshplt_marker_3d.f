@@ -1,3 +1,4 @@
+*CMZ :  1.04/00 12/02/2025  14.57.24  by  Michael Scheer
 *CMZ :  1.02/00 30/09/2014  13.52.50  by  Michael Scheer
 *CMZ :  1.01/01 25/09/2014  09.16.46  by  Michael Scheer
 *CMZ :  1.01/00 24/09/2014  14.46.38  by  Michael Scheer
@@ -14,42 +15,33 @@
       include 'mshplt.cmn'
 *KEND.
 
-      real x(*),y(*),z(*)
-      real, dimension(:), allocatable :: xn,yn,zn,xx,yy
-      integer n,i
-
-      allocate(xn(n))
-      allocate(yn(n))
-      allocate(zn(n))
-      allocate(xx(n))
-      allocate(yy(n))
+      real x(n),y(n),z(n),xn(n),yn(n),zn(n),xx(n),yy(n)
+      integer n,i,ic,ir,ig,ib
 
       do i=1,n
         if (log10x_ps.eq.0) then
-          xn(i)=-0.5+(x(i)-xmin3d_ps)/(xmax3d_ps-xmin3d_ps)
+          xn(i)=xcornmin_ps+(x(i)-xmin3d_ps)/(xmax3d_ps-xmin3d_ps)*dxcorn_ps
         else
-          xn(i)=-0.5+(alog10(x(i))-xmin3d_ps)/(xmax3d_ps-xmin3d_ps)
+          xn(i)=xcornmin_ps+(alog10(x(i))-xmin3d_ps)/(xmax3d_ps-xmin3d_ps)*dxcorn_ps
         endif
         if (log10y_ps.eq.0) then
-          yn(i)=-0.5+(y(i)-ymin3d_ps)/(ymax3d_ps-ymin3d_ps)
+          yn(i)=ycornmin_ps+(y(i)-ymin3d_ps)/(ymax3d_ps-ymin3d_ps)*dycorn_ps
         else
-          yn(i)=-0.5+(alog10(y(i))-ymin3d_ps)/(ymax3d_ps-ymin3d_ps)
+          yn(i)=ycornmin_ps+(alog10(y(i))-ymin3d_ps)/(ymax3d_ps-ymin3d_ps)*dycorn_ps
         endif
         if (log10z_ps.eq.0) then
-          zn(i)=-0.5+(z(i)-zmin3d_ps)/(zmax3d_ps-zmin3d_ps)
+          zn(i)=zcornmin_ps+(z(i)-zmin3d_ps)/(zmax3d_ps-zmin3d_ps)*dzcorn_ps
         else
-          zn(i)=-0.5+(alog10(z(i))-zmin3d_ps)/(zmax3d_ps-zmin3d_ps)
+          zn(i)=zcornmin_ps+(alog10(z(i))-zmin3d_ps)/(zmax3d_ps-zmin3d_ps)*dzcorn_ps
         endif
       enddo
 
       call mshplt_3dto2d(n,xn,yn,zn,xx,yy)
-      call mshplt_marker_raw(n,xx,yy)
 
-      deallocate(xn)
-      deallocate(yn)
-      deallocate(zn)
-      deallocate(xx)
-      deallocate(yy)
+      call mshplt_get_marker_color(ic,ir,ig,ib)
+      call mshplt_set_marker_color(ic,ir,ig,ib)
+
+      call mshplt_marker_raw(n,xx,yy)
 
       return
       end

@@ -1,3 +1,4 @@
+*CMZ :  1.04/00 07/02/2025  14.11.43  by  Michael Scheer
 *CMZ :  1.03/01 09/10/2014  14.41.17  by  Michael Scheer
 *CMZ :  1.00/01 23/09/2014  19.03.09  by  Michael Scheer
 *CMZ :  0.01/03 23/09/2014  09.38.20  by  Michael Scheer
@@ -16,10 +17,17 @@
 
       real x(*),y(*),x1,y1,yoffset,r
       integer n,i,mtyp
+      integer ic,ir,ig,ib,kc,kr,kg,kb
       character(2048) cline
       character(4) chmark
 
       if (mtyp_ps.eq.-9999) return
+
+      call mshplt_get_marker_color(ic,ir,ig,ib)
+      call mshplt_get_color(kc,kr,kg,kb)
+      if (ic.ne.kc.or.ir.ne.kr.or.kg.ne.ig.or.ib.ne.kb) then
+        call mshplt_set_marker_color(ic,ir,ig,ib)
+      endif
 
       itouched_ps=1
 
