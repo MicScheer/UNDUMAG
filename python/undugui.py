@@ -49096,6 +49096,7 @@ def _clWaddPol(key):
   update_magnets()
 
   WaddPol.destroy()
+
 #enddef _clWaddPol()
 
 def _clWaddMag(key):
