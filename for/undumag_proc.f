@@ -1,4 +1,4 @@
-*CMZ :          16/03/2025  22.55.58  by  Michael Scheer
+*CMZ :          29/04/2025  10.58.31  by  Michael Scheer
 *CMZ :  2.05/05 29/02/2024  16.00.13  by  Michael Scheer
 *CMZ :  2.04/09 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/08 10/08/2023  09.28.20  by  Michael Scheer
@@ -91,9 +91,9 @@
 
       real g(3),xm,ym,zm
 
-      integer imag,jc,iterold,ifail,nmatsiz,idx,nmaxth,mag,lun,nplan,
+      integer imag,iterold,ifail,nmatsiz,idx,nmaxth,mag,lun,nplan,
      &  krunmatrix,mmag,i,k,m,iplan,lunst,ith,iprint,istat,magbmax,imat
-      integer :: nconv=0,mark=0
+      integer :: nconv=0,mark=0,ic,jc
 
       integer, dimension (:), allocatable :: irecover
       integer*8 nmagnmag,mat,mapmode
@@ -1366,6 +1366,20 @@ c          bpebc(4:6,imag)=bci
 
       endif !matrix.ne.0
 
+      do mag=1,nrec+niron
+        do imag=1,nrec+niron
+          do ic=1,3
+            do jc=1,3
+              if (wwmatrix4(ic,jc,mag,imag).ne.wwmatrix4(ic,jc,mag,imag)) then
+                print*,'*** Warning in undumag_proc: Bad element in interaction matrix(ic,jc,mag,imag):',ic,jc,mag,imag
+                print*,'*** Element set zero'
+                wwmatrix4(:,:,mag,imag)=0.0d0
+              endif
+            enddo
+          enddo
+        enddo
+      enddo
+
       do imag=1,nmag
         bn=bc0(10,imag)
         bpebc(4:6,imag)=bc0(7:9,imag)*bn
@@ -1605,7 +1619,6 @@ c      deallocate(bc00)
       write(lun6,*)"------------------------------------------------------------"
 
       deallocate(bciron)
-
 
       return
       end

@@ -1,3 +1,4 @@
+*CMZ :          30/04/2025  07.10.49  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/02 20/02/2022  16.26.00  by  Michael Scheer
 *CMZ :  2.02/01 08/01/2022  16.53.06  by  Michael Scheer
@@ -116,11 +117,6 @@
             if (mapmode.eq.0
      &          .or.mapmode.eq.2
      &          .or.mapmode.eq.3
-     &          .or.mapmode.eq.4
-     &          .or.mapmode.eq.5
-     &          .or.mapmode.eq.6
-     &          .or.mapmode.eq.7
-     &          .or.mapmode.eq.8
      &          ) then
               read(lunmat,*)hmat,bcm
             else
@@ -134,15 +130,7 @@ c            if (bcm.ne.bcmo.or.hmato.ne.hmat) then
             bcmat(1,nmatpoi,kmat)=hmat
             bcmat(2,nmatpoi,kmat)=bcm
             bcmat(3,nmatpoi,kmat)=perksi
-            if (
-     &          mapmode.eq.2
-     &          .or.mapmode.eq.3
-     &          .or.mapmode.eq.4
-     &          .or.mapmode.eq.5
-     &          .or.mapmode.eq.6
-     &          .or.mapmode.eq.7
-     &          .or.mapmode.eq.8
-     &          ) then
+            if (mapmode.ne.1) then
               if (mapmode.eq.3.and.hmat.eq.0.0d0) hmat=1.0d-30
               if (mapmode.eq.3.and.bcm.eq.0.0d0) bcm=1.0d-30
               feh1(nmatpoi)=hmat

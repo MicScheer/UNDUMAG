@@ -1,4 +1,4 @@
-*CMZ :          28/04/2025  10.30.08  by  Michael Scheer
+*CMZ :          29/04/2025  16.08.45  by  Michael Scheer
 *CMZ :  2.05/07 25/10/2024  11.42.23  by  Michael Scheer
 *CMZ :  2.05/06 10/10/2024  11.18.39  by  Michael Scheer
 *CMZ :  2.05/05 25/06/2024  10.28.04  by  Michael Scheer
@@ -77,7 +77,7 @@
 
       implicit none
 
-*KEEP,mshpltincl.
+*KEEP,MSHPLTINCL.
       include 'mshplt.cmn'
 *KEND.
 
@@ -441,7 +441,6 @@ c--- 3D, top and side views {
           call mplfra(0.,10.,0.,10.,'AB')
         endif
 
-        call util_break
         call muwk(0,0)
         call mgset('CHHE',0.5)
         call mtx(4.1,4.1,'upper magnets')

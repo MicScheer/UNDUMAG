@@ -1,3 +1,4 @@
+*CMZ :          30/04/2025  08.26.04  by  Michael Scheer
 *CMZ :  2.02/01 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/00 21/10/2020  09.46.44  by  Michael Scheer
 *CMZ :  2.00/03 24/04/2018  13.03.29  by  Michael Scheer
@@ -66,6 +67,13 @@
         do imag=nrec+1,nmag
           if (imag.eq.-kimag) cycle
           bci=bpebc(4:6,imag)
+          if (1.0d0/bci(1).eq.0.0d0.or.1.0d0/bci(2).eq.0.0d0.or.1.0d0/bci(3).eq.0.0d0) then
+            write(lun6,*)"*** Warning in undumag_bpolyeder_matrix: Magnetization is infinit ***"
+            write(lun6,*)"imag:",imag
+            write(lun6,*)"Magnet is ignored!"
+c            stop
+            cycle
+          endif
           if (bci(1).ne.bci(1).or.bci(2).ne.bci(2).or.bci(3).ne.bci(3)) then
             write(lun6,*)"*** Warning in undumag_bpolyeder_matrix: Magnetization is not a number (NaN) ***"
             write(lun6,*)"imag:",imag
@@ -73,10 +81,40 @@
             cycle
           endif
           db=bci(1)*wwmatrix4(1:3,1,imag,kmag)
+c          if (db(1).ne.db(1).or.db(2).ne.db(2).or.db(3).ne.db(3)) then
+c            write(lun6,*)"*** Warning in undumag_bpolyeder_matrix: (NaN) occurred for bci(1)*wwmatrix4(1:3,1,imag,kmag) ***"
+c            write(lun6,*)"imag:",imag,kmag
+c            write(lun6,*)"bci:",bci
+c            write(lun6,*)"wwmatrix4(1:3,1,imag,kmag):"
+c            write(lun6,*)wwmatrix4(1:3,1,imag,kmag)
+c            write(lun6,*)"Magnet is ignored!"
+c            stop
+c            cycle
+c          endif
           bo=bo+db
           db=bci(2)*wwmatrix4(1:3,2,imag,kmag)
+c          if (db(1).ne.db(1).or.db(2).ne.db(2).or.db(3).ne.db(3)) then
+c            write(lun6,*)"*** Warning in undumag_bpolyeder_matrix: (NaN) occurred for bci(2)*wwmatrix4(1:3,2,imag,kmag) ***"
+c            write(lun6,*)"imag:",imag,kmag
+c            write(lun6,*)"bci:",bci
+c            write(lun6,*)"wwmatrix4(1:3,2,imag,kmag):"
+c            write(lun6,*)wwmatrix4(1:3,2,imag,kmag)
+c            write(lun6,*)"Magnet is ignored!"
+c            stop
+c            cycle
+c          endif
           bo=bo+db
           db=bci(3)*wwmatrix4(1:3,3,imag,kmag)
+c          if (db(1).ne.db(1).or.db(2).ne.db(2).or.db(3).ne.db(3)) then
+c            write(lun6,*)"*** Warning in undumag_bpolyeder_matrix: (NaN) occurred for bci(3)*wwmatrix4(1:3,3,imag,kmag) ***"
+c            write(lun6,*)"imag:",imag,kmag
+c            write(lun6,*)"Magnet is ignored!"
+c            write(lun6,*)"bci:",bci
+c            write(lun6,*)"wwmatrix4(1:3,3,imag,kmag):"
+c            write(lun6,*)wwmatrix4(1:3,3,imag,kmag)
+c            stop
+c            cycle
+c          endif
           bo=bo+db
         enddo !imag=1,nmag
       endif

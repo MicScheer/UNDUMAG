@@ -1,3 +1,4 @@
+*CMZ :          30/04/2025  08.13.21  by  Michael Scheer
 *CMZ :  2.04/06 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/03 04/03/2023  20.27.45  by  Michael Scheer
 *CMZ :  2.02/00 21/10/2020  09.46.44  by  Michael Scheer
@@ -66,19 +67,19 @@
      &  fesat,htesto,chi,bcvox(3),ftol,dhth,dhtho,dum1,dum2,
      &  dumv1(3),dumv2(3),fm0,fm1,h0,ddhth,chio
 
-      double precision vnor,vx,vy,vz
+c      double precision vnor,vx,vy,vz
 
 *KEEP,bcbuff.
       include 'bcbuff.cmn'
 *KEND.
 
-      integer kfail,ifail,imoth,lmag,kmag,imag,iter,k,i,iron1,iron2,
+      integer :: kfail,ifail,imoth,lmag,kmag,imag,iter,k,i,iron1,iron2,
      &  iplan,ih,il,
-     &  nhz,mat,mapmode,ichi,kdump8,i1,i2
+     &  nhz,mat,mato=0,mapmode,ichi,kdump8,i1,i2
 
-      save hold,ishuffle,rshuffle,iwarn
+      save hold,ishuffle,rshuffle,iwarn,mato
 
-      vnor(vx,vy,vz)=sqrt(vx**2+vy**2+vz**2) !inline code
+c      vnor(vx,vy,vz)=sqrt(vx**2+vy**2+vz**2) !inline code
 
       iron1=nrec+1
       iron2=nmag
@@ -173,6 +174,7 @@
           imag=ishuffle(lmag)
 
           mat=nint(bpebc(9,imag))
+
           mapmode=matmaps(3,mat)
           bco=bc0(4:6,imag)
 
@@ -187,10 +189,12 @@
             endif
 
             h3e=h3t-h3
-            he=sqrt(h3e(1)**2+h3e(2)**2+h3e(3)**2)
+c            he=sqrt(h3e(1)**2+h3e(2)**2+h3e(3)**2)
+            he=norm2(h3e)
 
             bc3=-h3e/bc00(1:3,imag)
-            bn=vnor(bc3(1),bc3(2),bc3(3))
+c            bn=vnor(bc3(1),bc3(2),bc3(3))
+            bn=norm2(bc3)
             femag=bn
 
             fesat=bcmat(2,1,mat)
@@ -217,6 +221,12 @@
           else if (mapmode.eq.2) then
 
             nhz=matmaps(4,mat)
+
+            if (mat.ne.mato) then
+              feh1(1:nhz)=bcmat(1,1:nhz,mat)
+              fem1(1:nhz)=bcmat(2,1:nhz,mat)
+            endif
+
             fesat=bcmat(2,nhz,mat)
 
             if (kiter.eq.1.and.iter.eq.1.and.isplinefm.ne.0) then
@@ -237,9 +247,9 @@
               h3=bc00(1:3,imag)*bco
             endif
 
-            ht=sqrt(h3t(1)**2+h3t(2)**2+h3t(3)**2)
+            ht=norm2(h3t)
             h3e=h3t-h3
-            he=sqrt(h3e(1)**2+h3e(2)**2+h3e(3)**2)
+            he=norm2(h3e)
             h3=h3t
             h=ht
 
@@ -261,7 +271,7 @@
               endif
               if (ifail.ne.0) then
                 write(lun6,*)"*** Error in undumag_relax_iron: H is out of range for material or bad interpolation",mat
-                write(lun6,*)"iter, mag, Hmin, Hmax, H:", iter,imag, hmin,hmax,h
+                write(lun6,*)"kiter, iter, mag, Hmin, Hmax, H:", kiter, iter,imag, hmin,hmax,h
                 stop
               endif
             endif
@@ -278,7 +288,7 @@
                 exit
               endif
               h3(1:3)=h3e(1:3)/(1.0d0-bc00(1:3,imag)*chi)
-              h=sqrt(h3(1)**2+h3(2)**2+h3(3)**2)
+              h=norm2(h3)
               if (nhz.eq.3) then
                 ifail=0
                 if (h.lt.feh1(2)) then
@@ -350,7 +360,7 @@
             endif
 
             h3e=h3t-h3
-            he=sqrt(h3e(1)**2+h3e(2)**2+h3e(3)**2)
+            he=norm2(h3e)
             h3=h3e
             h=he
 
@@ -364,7 +374,7 @@
 
             bc3=h3e/(h/femag-bc00(1:3,imag))
             h3t=h3e+bc00(1:3,imag)*bc3
-            ht=vnor(h3t(1),h3t(2),h3t(3))
+            ht=norm2(h3t)
 
             dhth=ht-h
 
@@ -376,7 +386,7 @@
 
             bc3=h3e/(h/femag-bc00(1:3,imag))
             h3t=h3e+bc00(1:3,imag)*bc3
-            ht=vnor(h3t(1),h3t(2),h3t(3))
+            ht=norm2(h3t)
 
             dhth=ht-h
 
@@ -395,7 +405,7 @@
 
               bc3=h3e/(h/femag-bc00(1:3,imag))
               h3t=h3e+bc00(1:3,imag)*bc3
-              ht=vnor(h3t(1),h3t(2),h3t(3))
+              ht=norm2(h3t)
               dhth=ht-h
 
               hhbuff(3)=dhth
@@ -452,7 +462,7 @@
 
               bc3=h3e/(h/fm1-bc00(1:3,imag))
               h3t=h3e+bc00(1:3,imag)*bc3
-              ht=vnor(h3t(1),h3t(2),h3t(3))
+              ht=norm2(h3t)
               dhtho=dhth
               dhth=ht-h
               femag=fm1
@@ -504,6 +514,7 @@
             stop
           endif !mapmode
 
+          mato=mat
         enddo !niron
 
         if (ibulk.ne.0) then
