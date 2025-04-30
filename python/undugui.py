@@ -1905,6 +1905,14 @@ fwhmgauss1=np.sqrt(2.0*np.log(2))*2.0
 fwhmsinxx21=2.783115
 rmssinxx21=1.05244
 
+global \
+sclight1,secharge1,shbarev1
+
+sclight1 = str(clight1)
+secharge1 = str(echarge1)
+shbarev1 = str(hbarev1)
+
+
 global Ftyp,Ftype
 Ff = open("ftypedum","w")
 Ftyp = type(Ff)
@@ -2846,6 +2854,8 @@ def set_y_stat(y='!'):
       if Nyzone > 1:y = 0.8 - (Nyzone-1)*0.15
   elif y == '+':
     y = YStat + 0.2
+  elif y == '-':
+    y = YStat - 0.2
   #endif
   Ystat = y
   YStat = y
@@ -9889,7 +9899,7 @@ def nscan(nt='?',varlis='',select='',isilent=0,ifirst=0,ilast=0):
 
 
   if type(nt) == str and nt == '?':
-    print("\nUsage: nscan(nt,varlis,select)")
+    print("\nUsage: nscan(nt,varlis,select='',isilent=0,ifirst=0,ilast=0))")
     return
   #if type(nt) == str and nt == '?'
 
@@ -13379,7 +13389,7 @@ comment='*', sep=' '):
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
 
-  if len(nt) == 0:
+  if type(nt) == str() and len(nt) == 0:
     print("nt = nread(nt, file='ntuple.dat',header=None, skiphead=-1, skipfoot=0, silent=0, comment='*', sep=' ')")
     return None
   #endif
@@ -15273,9 +15283,18 @@ def vmean(x='?',y=''):
   return res[2]
 #enddef
 
-def vrms(x='?',y=''):
-  res = vstat(x,y)
-  return res[3]
+def vcovcorr(x,y,a=1.,b=1.):
+  n=len(x)
+  rmsx=x.std()
+  varx=rmsx**2*n
+  rmsy=y.std()
+  vary=rmsy**2*n
+  xy=x*y
+  sumxy=xy.sum()
+  cov=sumxy/n
+  rmsxy=np.sqrt((a**2*varx+2.0*a*b*sumxy+b**2*vary)/n)
+  corr=cov/rmsx/rmsy
+  return rmsx,rmsy,rmsxy,cov,corr
 #enddef
 
 def hplot1d(idh='?', plopt='2d', Tit='!', xTit='', yTit='', legend='',
@@ -15992,7 +16011,7 @@ def window_geometry(geom='', fig=-1, set=True):
     Figman =  plt.get_current_fig_manager()
   #endif type(fig) == int and fig == -1
 
-  print("geom:",geom)
+  #print("geom:",geom)
 
   if set:
     fig.canvas.manager.window.wm_geometry(geom)
@@ -19209,6 +19228,8 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
 
+  #reakpoint()
+
   NxBinMax = 0
   nto = nt
 
@@ -19400,8 +19421,11 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
           sopt = ", c='" + lcol + "',ls='" + Linestyle + "',lw=" + str(Linewidth)
 
           if isort:
-
-            scom = "global VsortX, VsortY; VsortX, VsortY = vsortxy(" + sx + "," + sy + ")"
+            if type(sx) == str: sx = eval(sx)
+            if type(sy) == str: sy = eval(sy)
+            scom = "global VsortX, VsortY; VsortX, VsortY = vsortxy(sx,sy)"
+#            Quit(scom)
+#            scom = "global VsortX, VsortY; VsortX, VsortY = vsortxy(" + sx + "," + sy + ")"
             exec(scom)
             if Iclosed:
               sx = list(VsortX)
@@ -19459,7 +19483,9 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
         Ndump += 1
         fout = WaveFilePrefix + str(Ndump) + ".dat"
         #eval("vwritexy(" + sx + "," + sy + ",'" + fout + "')")
-        eval("vwritexy(sx,sy,'" + fout + "')")
+        if type(sx) == str: sx = eval(sx)
+        if type(sy) == str: sy = eval(sy)
+        exec("vwritexy(sx,sy,'" + fout + "')")
         print("\nData written to ",fout)
         WaveDump = fout
       #endif
@@ -19575,7 +19601,11 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
     if Kdump:
       Ndump += 1
       fout = WaveFilePrefix + str(Ndump) + ".dat"
-      eval("vwritexyz(" + sx + "," + sy + "," + sz + ",'" + fout + "')")
+      if type(sx) == str: sx = eval(sx)
+      if type(sy) == str: sy = eval(sy)
+      if type(sz) == str: sz = eval(sz)
+#      eval("vwritexyz(" + sx + "," + sy + "," + sz + ",'" + fout + "')")
+      eval("vwritexyz(sx,sy,sz,'" + fout + "')")
       print("\nData written to ",fout)
       WaveDump = fout
     #endif Kdump
@@ -20727,7 +20757,6 @@ def vspline(x,y,xspl='!', periodic=False, ypp1=0.0, yppn=0.0):
 
   import numpy as np
 
-  #nreakpoint()
   n = len(x)
 
   if n < 2:
@@ -21869,6 +21898,7 @@ def vsortxy(x,y):
 
   nt = make_dataframe('x:y',x,y)
   nt = nt.sort_values(by='x')
+  nt = nt.drop_duplicates()
   nt.index = range(len(nt))
 
   return nt.x, nt.y
@@ -23482,6 +23512,13 @@ def seed(iseed=0, plopt=''):
 
   from pickle import dump
   import numpy as np
+
+  if type(iseed) == str:
+    os.system("shuf -i 0-100000 -n1 > .iseed")
+    F = open(".iseed",'r')
+    iseed = int(F.readline().strip())
+    F.close()
+  #endif
 
   if iseed >= 0: np.random.seed(iseed)
 
@@ -25308,7 +25345,8 @@ def settextcolor(tc='black'):
 def gettextcolor(): return Textcolor
 
 def setlinecolor(lc='red'):
-  global Linecolor
+  global Linecolor,Colors
+  if type(lc) == int: lc = Colors[lc-1]
   mpl.rcParams['lines.color'] = lc
   Linecolor = lc
 
@@ -26723,6 +26761,8 @@ def nphasespace_ellip(emit,beta0,s,npoi=1000):
 
   return neli
 #enddef
+
+def nl(): print('\n')
 
 
 # +PATCH,//NTUPPLOT/PYTHON
@@ -38671,6 +38711,7 @@ def undu_geo(plopt='sameline',alpha=0.3):
   #endif
 
   ninfo(ngeo)
+  #reakpoint()
 
   xmin = ngeo.x.min()
   ymin = ngeo.y.min()
@@ -47053,7 +47094,9 @@ def read_cornfile(cornfile):
     Fcorn = open(cornfile,'r')
     lines = Fcorn.readlines()
     Fcorn.close()
-  except:  pass
+  except:
+    wError("Error reading File " + cornfile + "!")
+    return corns
   #endtry
 
   for line in lines:
@@ -47817,7 +47860,7 @@ def default_mag(key):
         S_Xcen.set(xcen)
         S_Ycen.set(ycen)
         S_Zcen.set(zcen)
-        S_CornFile.set("")
+        S_CornFile.set("corners.dat")
         S_nXdiv.set(str(int(nxdiv)))
         S_nYdiv.set(str(int(nydiv)))
         S_nZdiv.set(str(int(nzdiv)))
@@ -47835,7 +47878,7 @@ def default_mag(key):
       S_Xcen.set("-20.0")
       S_Ycen.set("-25.0")
       S_Zcen.set("0.0")
-      S_CornFile.set("")
+      S_CornFile.set("corners.dat")
       S_nXdiv.set("1")
       S_nYdiv.set("1")
       S_nZdiv.set("1")
@@ -48087,7 +48130,7 @@ def default_pol(key):
         S_Iron_Xcen.set(xcen)
         S_Iron_Ycen.set(ycen)
         S_Iron_Zcen.set(zcen)
-        S_Iron_CornFile.set("")
+        S_Iron_CornFile.set("corners.dat")
         S_Iron_nXdiv.set(str(int(nxdiv)))
         S_Iron_nYdiv.set(str(int(nydiv)))
         S_Iron_nZdiv.set(str(int(nzdiv)))
@@ -48102,7 +48145,7 @@ def default_pol(key):
       S_Iron_Xcen.set("-20.0")
       S_Iron_Ycen.set("-25.0")
       S_Iron_Zcen.set("0.0")
-      S_Iron_CornFile.set("")
+      S_Iron_CornFile.set("corners.dat")
       S_Iron_nXdiv.set("1")
       S_Iron_nYdiv.set("1")
       S_Iron_nZdiv.set("1")
@@ -48403,7 +48446,7 @@ def _WaddMag(key):
     fcfil = Frame(WaddMag)
     tcfil = 'Filename'
     lcfil = Label(fcfil,text=tcfil,font=MyFont)
-    ecfil = Entry(fcfil,text=S_CornFile.get(),justify=CENTER,font=MyFont,width=ewid)
+    ecfil = Entry(fcfil,text=S_CornFile,justify=CENTER,font=MyFont,width=ewid)
     lcfil.pack(side=LEFT,fill=X)
     ecfil.pack(side=RIGHT,fill=X)
     fcfil.pack(fill=X)
@@ -48748,7 +48791,7 @@ def _WaddPol(key):
     fcfil = Frame(WaddPol)
     tcfil = 'Filename'
     lcfil = Label(fcfil,text=tcfil,font=MyFont)
-    ecfil = Entry(fcfil,text=S_Iron_CornFile.get(),justify=CENTER,font=MyFont,width=ewid)
+    ecfil = Entry(fcfil,text=S_Iron_CornFile,justify=CENTER,font=MyFont,width=ewid)
     lcfil.pack(side=LEFT,fill=X)
     ecfil.pack(side=RIGHT,fill=X)
     fcfil.pack(fill=X)
@@ -49018,15 +49061,15 @@ def _clWaddPol(key):
 
   elif key == 'File':
     cfile = S_Iron_CornFile.get().strip()
+#    print("S_Iron_CornFile:",cfile)
     if cfile == "": wError("Filename must be given!")
     corns = read_cornfile(cfile)
     if corns == []:
       wError("Problems with " + cfile)
       return
     #endif corns == []
-    mp.append(corns)
 
-  #endif key == 'RECBlock'
+  #endif key
 
   snxdiv = S_Iron_nXdiv.get().strip()
   if try_calc_var(snxdiv) != 'ok': return
@@ -49040,6 +49083,8 @@ def _clWaddPol(key):
   if try_calc_var(sfracdivz) != 'ok': return
 
   mp.append([snxdiv,snydiv,snzdiv,sfracdivy,sfracdivz])
+
+  if key == 'File': mp.append(corns)
 
   xloc=None
   yloc = None
@@ -49282,7 +49327,6 @@ def _clWaddMag(key):
       wError("Problems with " + cfile)
       return
     #endif corns == []
-    mp.append(corns)
 
   #endif key == 'Block'
 
@@ -49298,6 +49342,10 @@ def _clWaddMag(key):
   if try_calc_var(sfracdivz) != 'ok': return
 
   mp.append([snxdiv,snydiv,snzdiv,sfracdivy,sfracdivz])
+
+  if mp[3] == 'File':
+    mp.append(corns)
+  #endif
 
   xloc=None
   yloc = None
