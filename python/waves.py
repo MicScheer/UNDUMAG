@@ -165,7 +165,7 @@ def readint(s,default=-9999):
   else: return int(float(ans))
 #enddef
 
-def printnl(line):
+def printnl(line=''):
   print("\n",line,"\n")
 #enddef printnl()
 

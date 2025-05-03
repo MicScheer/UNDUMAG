@@ -125,7 +125,7 @@ def readint(s,default=-9999):
   else: return int(float(ans))
 #enddef
 
-def printnl(line):
+def printnl(line=''):
   print("\n",line,"\n")
 #enddef printnl()
 
@@ -1695,6 +1695,8 @@ Gdebug = 0
 global TransRotCop, EchoCLC,DictTransRotCop
 global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
 global Inhom,DictInhom
+global Caller
+
 global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
 Magnets, Pols, SpecMags, SpecPols, NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
 NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -1731,7 +1733,8 @@ S_DeadCoat_AppleII, S_AirGap_AppleII, S_Br_AppleII, S_Mu_AppleII, S_KsiPerp_Appl
 S_HorSlit_AppleII, S_S2Shift_AppleII, S_S3Shift_AppleII, \
 S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
 
-global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+S_CornFile, S_CornFileEdi, \
 S_nXdiv, S_nYdiv, S_nZdiv, S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
 S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color
 
@@ -1754,7 +1757,8 @@ global V_CmagOld, V_CmothOld, V_XcenOld, V_YcenOld, V_ZcenOld, V_cornsOld, V_Nco
 V_nXdivOld, V_nYdivOld, V_nZdivOld, V_FracDivYOld, V_FracDivZOld, V_XlenOld, V_YlenOld, V_ZlenOld, V_KeyOld, V_MatTypeOld, V_MatOld, \
 V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
-global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
+global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, \
+S_CornFileOld, S_CornFileEdi, \
 S_nXdivOld, S_nYdivOld, S_nZdivOld, S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
 S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -30161,6 +30165,8 @@ def undu_plot_mag_3d(cnams='',alpha=1.0):
 global TransRotCop, EchoCLC,DictTransRotCop
 global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
 global Inhom,DictInhom
+global Caller
+
 global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
 Magnets, Pols, SpecMags, SpecPols, NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
 NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
@@ -30197,7 +30203,8 @@ S_DeadCoat_AppleII, S_AirGap_AppleII, S_Br_AppleII, S_Mu_AppleII, S_KsiPerp_Appl
 S_HorSlit_AppleII, S_S2Shift_AppleII, S_S3Shift_AppleII, \
 S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
 
-global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+S_CornFile, S_CornFileEdi, \
 S_nXdiv, S_nYdiv, S_nZdiv, S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
 S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color
 
@@ -30220,7 +30227,8 @@ global V_CmagOld, V_CmothOld, V_XcenOld, V_YcenOld, V_ZcenOld, V_cornsOld, V_Nco
 V_nXdivOld, V_nYdivOld, V_nZdivOld, V_FracDivYOld, V_FracDivZOld, V_XlenOld, V_YlenOld, V_ZlenOld, V_KeyOld, V_MatTypeOld, V_MatOld, \
 V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
-global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
+global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, \
+S_CornFileOld, S_CornFileEdi, \
 S_nXdivOld, S_nYdivOld, S_nZdivOld, S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
 S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -30255,6 +30263,7 @@ def utransrotcop():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -30287,7 +30296,7 @@ def utransrotcop():
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -30298,7 +30307,8 @@ def utransrotcop():
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -30337,8 +30347,16 @@ def utransrotcop():
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  #print("utransrotcop:")
+  #reakpoint()
+
   for trc in TransRotCop:
+
     key = trc[0]
+#    printnl()
+#    print(trc)
+#    printnl()
+
     if key == 'Copy':
       w = trc[1].split()
       source = w[0]
@@ -30352,7 +30370,7 @@ def utransrotcop():
         NMagPolTot += 1
         MagPolsTot.append(mag)
       except:
-        print(NL,"*** Error for key Copy: Magnet not found for:")
+        print(NL,"*** Error in utransrotcop for key Copy: Magnet not found for:")
         print("Copy", source, tarmag, tarmoth,NL)
       #endtry
 
@@ -30385,13 +30403,18 @@ def utransrotcop():
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
+          #breakpoint()
+          #print(mp)
+          #print(DictMagPolsTot)
         except:
-          print(NL,"*** Error for key Translate: Magnet or mother not found for:")
+          print(NL,"*** Error in utransrotcop for key Translate: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
         #endtry
       #endtry
 
     elif key == 'Rotate' or key == 'Rotate_Shape':
+
+      #reakpoint()
 
       mp = trc[1]
       tr = trc[2].split()
@@ -30439,9 +30462,9 @@ def utransrotcop():
           corns = mag[7]
           cc = []
           for corn in corns:
-            c1 = corn[0] + calc_var(tr[0]) + xc
-            c2 = corn[1] + calc_var(tr[1]) + yc
-            c3 = corn[2] + calc_var(tr[2]) + zc
+            c1 = float(corn[0]) + calc_var(tr[0]) + xc
+            c2 = float(corn[1]) + calc_var(tr[1]) + yc
+            c3 = float(corn[2]) + calc_var(tr[2]) + zc
             istat, crot, rm = util_rotate([xr,yr,zr],[vrx,vry,vrz],phi,[c1,c2,c3])
             cc.append([crot[0]-xcr,crot[1]-ycr,crot[2]-zcr])
           #endfor
@@ -30460,7 +30483,9 @@ def utransrotcop():
           #endif key == 'Rotate'
 
         #endfor
+
       except:
+
         try:
 
           kmag = DictMagPolsTot[mp]
@@ -30498,10 +30523,11 @@ def utransrotcop():
 
           corns = mag[7]
           cc = []
+          #reakpoint()
           for corn in corns:
-            c1 = corn[0] + calc_var(tr[0]) + xc
-            c2 = corn[1] + calc_var(tr[1]) + yc
-            c3 = corn[2] + calc_var(tr[2]) + zc
+            c1 = float(corn[0]) + calc_var(tr[0]) + xc
+            c2 = float(corn[1]) + calc_var(tr[1]) + yc
+            c3 = float(corn[2]) + calc_var(tr[2]) + zc
             istat, crot, rm = util_rotate([xr,yr,zr],[vrx,vry,vrz],phi,[c1,c2,c3])
             cc.append([crot[0]-xcr,crot[1]-ycr,crot[2]-zcr])
           #endfor
@@ -30520,7 +30546,7 @@ def utransrotcop():
           #endif key == 'Rotate'
 
         except:
-          print(NL,"*** Error for key Rotation: Magnet or mother not found for:")
+          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
         #endtry
       #endtry
@@ -30543,7 +30569,7 @@ def utransrotcop():
           mag = MagPolsTot[kmag]
           mag[5] = vmat
         except:
-          print(NL,"*** Error for key Rotation: Magnet or mother not found for:")
+          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
         #endtry
       #endtry
@@ -30609,6 +30635,7 @@ def checktransrotcop():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -30641,7 +30668,7 @@ def checktransrotcop():
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -30652,7 +30679,8 @@ def checktransrotcop():
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -30708,19 +30736,19 @@ def checktransrotcop():
         try:
           kmag = DictMagPolsTot[source]
         except:
-          print(NL,"*** Error for key Copy: Magnet or mother not found for:")
+          print(NL,"*** Error in checktransrotcop for key Copy: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
         #endtry
       #endtry
 
       try:
         kmoth = DictMoths[tarmoth]
-        print(NL,"*** Error for key Copy: Target mother exists already ***")
+        print(NL,"*** Error in checktransrotcop for key Copy: Target mother exists already ***")
         print("Copy", source, tarmag, tarmoth,NL)
       except:
         try:
           kmag = DictMagPolsTot[tarmag]
-          print(NL,"*** Error for key Copy: Target magnet exists already ***")
+          print(NL,"*** Error in checktransrotcop for key Copy: Target magnet exists already ***")
           print("Copy", source, tarmag,NL)
         except:
           pass
@@ -30760,7 +30788,7 @@ def checktransrotcop():
 #            continue
 #          #endif
         except:
-          print(NL,"*** Error for key",key,": Magnet or mother not found for:")
+          print(NL,"*** Error in cecktransrotcop for key",key,": Magnet or mother not found for:")
           print(key,mp,NL)
         #endtry
       #endtry
@@ -31182,6 +31210,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -31214,7 +31243,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -31225,7 +31254,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -31379,6 +31409,7 @@ def ureadclc(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -31411,7 +31442,7 @@ def ureadclc(callkey=''):
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -31422,7 +31453,8 @@ def ureadclc(callkey=''):
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -31464,7 +31496,6 @@ def ureadclc(callkey=''):
   NL = "\n"
 
 
-  #reakpoint()
   undugui_clean(callkey)
 
   if not os.path.exists(FileCLC):
@@ -31505,7 +31536,7 @@ def ureadclc(callkey=''):
   AppleII_Mode = 0
   Hybrid_Mode = 0
 
-  if EchoCLC: print("\nundumag.clc:\n")
+  if EchoCLC: print("\n" + FileCLC + ":\n")
 
   while iline < nlines - 1:
 
@@ -31644,7 +31675,7 @@ def ureadclc(callkey=''):
 
           iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
           if not len(cline): break
-          sncorn = cline
+          sncorn = cline.split()[0]
           ncorn = eval(sncorn)
 
           for i in range(ncorn):
@@ -31712,6 +31743,7 @@ def ureadclc(callkey=''):
               Quit()
           #endfor
 
+          #reakpoint()
           if ispec:
             SpecMagPols.append([cname,None,ispec,key,cen,vmat,sncorn,corns,div])
           else:
@@ -32110,6 +32142,10 @@ def ureadclc(callkey=''):
 
     MagPolsTot[m].append([x,y,z])
 
+    if typ.upper() == 'FILE':
+      MagPolsTot[m].append(DictCornFiles[cnam])
+    #endif
+
     verts,ifaces,faces,bounds = hull3d(corns)
     if type(verts) != Tdf:
       hull = pd.DataFrame(verts)
@@ -32307,10 +32343,14 @@ def ureadclc(callkey=''):
   NCoil = len(Coils)
   if NCoil: undu_coils_to_filaments()
 
-  #if len(TransRotCop): utransrotcop()
-  if len(TransRotCop): checktransrotcop()
+  if len(TransRotCop):
+    utransrotcop()
+    #checktransrotcop()
+  #endif
 
   #debug("debug: Ende von ureadclc")
+
+#  MagPolsTot[0]=[['mag1', 'Moth1'], 'REC', 1, 'File']
 
 #enddef ureadclc()
 
@@ -33244,6 +33284,7 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33276,7 +33317,7 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -33287,7 +33328,8 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -33766,6 +33808,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33798,7 +33841,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -33809,7 +33852,8 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -34380,6 +34424,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -34412,7 +34457,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -34423,7 +34468,8 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -34612,6 +34658,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -34644,7 +34691,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -34655,7 +34702,8 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -34952,6 +35000,7 @@ def utransrotcop():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -34984,7 +35033,7 @@ def utransrotcop():
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -34995,7 +35044,8 @@ def utransrotcop():
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -35034,8 +35084,16 @@ def utransrotcop():
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  #print("utransrotcop:")
+  #reakpoint()
+
   for trc in TransRotCop:
+
     key = trc[0]
+#    printnl()
+#    print(trc)
+#    printnl()
+
     if key == 'Copy':
       w = trc[1].split()
       source = w[0]
@@ -35049,7 +35107,7 @@ def utransrotcop():
         NMagPolTot += 1
         MagPolsTot.append(mag)
       except:
-        print(NL,"*** Error for key Copy: Magnet not found for:")
+        print(NL,"*** Error in utransrotcop for key Copy: Magnet not found for:")
         print("Copy", source, tarmag, tarmoth,NL)
       #endtry
 
@@ -35082,13 +35140,18 @@ def utransrotcop():
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
+          #breakpoint()
+          #print(mp)
+          #print(DictMagPolsTot)
         except:
-          print(NL,"*** Error for key Translate: Magnet or mother not found for:")
+          print(NL,"*** Error in utransrotcop for key Translate: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
         #endtry
       #endtry
 
     elif key == 'Rotate' or key == 'Rotate_Shape':
+
+      #reakpoint()
 
       mp = trc[1]
       tr = trc[2].split()
@@ -35136,9 +35199,9 @@ def utransrotcop():
           corns = mag[7]
           cc = []
           for corn in corns:
-            c1 = corn[0] + calc_var(tr[0]) + xc
-            c2 = corn[1] + calc_var(tr[1]) + yc
-            c3 = corn[2] + calc_var(tr[2]) + zc
+            c1 = float(corn[0]) + calc_var(tr[0]) + xc
+            c2 = float(corn[1]) + calc_var(tr[1]) + yc
+            c3 = float(corn[2]) + calc_var(tr[2]) + zc
             istat, crot, rm = util_rotate([xr,yr,zr],[vrx,vry,vrz],phi,[c1,c2,c3])
             cc.append([crot[0]-xcr,crot[1]-ycr,crot[2]-zcr])
           #endfor
@@ -35157,7 +35220,9 @@ def utransrotcop():
           #endif key == 'Rotate'
 
         #endfor
+
       except:
+
         try:
 
           kmag = DictMagPolsTot[mp]
@@ -35195,10 +35260,11 @@ def utransrotcop():
 
           corns = mag[7]
           cc = []
+          #reakpoint()
           for corn in corns:
-            c1 = corn[0] + calc_var(tr[0]) + xc
-            c2 = corn[1] + calc_var(tr[1]) + yc
-            c3 = corn[2] + calc_var(tr[2]) + zc
+            c1 = float(corn[0]) + calc_var(tr[0]) + xc
+            c2 = float(corn[1]) + calc_var(tr[1]) + yc
+            c3 = float(corn[2]) + calc_var(tr[2]) + zc
             istat, crot, rm = util_rotate([xr,yr,zr],[vrx,vry,vrz],phi,[c1,c2,c3])
             cc.append([crot[0]-xcr,crot[1]-ycr,crot[2]-zcr])
           #endfor
@@ -35217,7 +35283,7 @@ def utransrotcop():
           #endif key == 'Rotate'
 
         except:
-          print(NL,"*** Error for key Rotation: Magnet or mother not found for:")
+          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
         #endtry
       #endtry
@@ -35240,7 +35306,7 @@ def utransrotcop():
           mag = MagPolsTot[kmag]
           mag[5] = vmat
         except:
-          print(NL,"*** Error for key Rotation: Magnet or mother not found for:")
+          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
         #endtry
       #endtry
@@ -35306,6 +35372,7 @@ def checktransrotcop():
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -35338,7 +35405,7 @@ def checktransrotcop():
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -35349,7 +35416,8 @@ def checktransrotcop():
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -35405,19 +35473,19 @@ def checktransrotcop():
         try:
           kmag = DictMagPolsTot[source]
         except:
-          print(NL,"*** Error for key Copy: Magnet or mother not found for:")
+          print(NL,"*** Error in checktransrotcop for key Copy: Magnet or mother not found for:")
           print("Copy", source, tarmag, tarmoth,NL)
         #endtry
       #endtry
 
       try:
         kmoth = DictMoths[tarmoth]
-        print(NL,"*** Error for key Copy: Target mother exists already ***")
+        print(NL,"*** Error in checktransrotcop for key Copy: Target mother exists already ***")
         print("Copy", source, tarmag, tarmoth,NL)
       except:
         try:
           kmag = DictMagPolsTot[tarmag]
-          print(NL,"*** Error for key Copy: Target magnet exists already ***")
+          print(NL,"*** Error in checktransrotcop for key Copy: Target magnet exists already ***")
           print("Copy", source, tarmag,NL)
         except:
           pass
@@ -35457,7 +35525,7 @@ def checktransrotcop():
 #            continue
 #          #endif
         except:
-          print(NL,"*** Error for key",key,": Magnet or mother not found for:")
+          print(NL,"*** Error in cecktransrotcop for key",key,": Magnet or mother not found for:")
           print(key,mp,NL)
         #endtry
       #endtry
@@ -35879,6 +35947,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -35911,7 +35980,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -35922,7 +35991,8 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -36076,6 +36146,7 @@ def ureadclc(callkey=''):
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -36108,7 +36179,7 @@ def ureadclc(callkey=''):
   V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
 
   global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
-  S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
   S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
   S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
 
@@ -36119,7 +36190,8 @@ def ureadclc(callkey=''):
   V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
   V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
 
-  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, S_CornFile, \
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
   S_nXdiv, S_nYdiv, S_nZdiv, \
   S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
   S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
@@ -36161,7 +36233,6 @@ def ureadclc(callkey=''):
   NL = "\n"
 
 
-  #reakpoint()
   undugui_clean(callkey)
 
   if not os.path.exists(FileCLC):
@@ -36202,7 +36273,7 @@ def ureadclc(callkey=''):
   AppleII_Mode = 0
   Hybrid_Mode = 0
 
-  if EchoCLC: print("\nundumag.clc:\n")
+  if EchoCLC: print("\n" + FileCLC + ":\n")
 
   while iline < nlines - 1:
 
@@ -36341,7 +36412,7 @@ def ureadclc(callkey=''):
 
           iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
           if not len(cline): break
-          sncorn = cline
+          sncorn = cline.split()[0]
           ncorn = eval(sncorn)
 
           for i in range(ncorn):
@@ -36409,6 +36480,7 @@ def ureadclc(callkey=''):
               Quit()
           #endfor
 
+          #reakpoint()
           if ispec:
             SpecMagPols.append([cname,None,ispec,key,cen,vmat,sncorn,corns,div])
           else:
@@ -36807,6 +36879,10 @@ def ureadclc(callkey=''):
 
     MagPolsTot[m].append([x,y,z])
 
+    if typ.upper() == 'FILE':
+      MagPolsTot[m].append(DictCornFiles[cnam])
+    #endif
+
     verts,ifaces,faces,bounds = hull3d(corns)
     if type(verts) != Tdf:
       hull = pd.DataFrame(verts)
@@ -37004,10 +37080,14 @@ def ureadclc(callkey=''):
   NCoil = len(Coils)
   if NCoil: undu_coils_to_filaments()
 
-  #if len(TransRotCop): utransrotcop()
-  if len(TransRotCop): checktransrotcop()
+  if len(TransRotCop):
+    utransrotcop()
+    #checktransrotcop()
+  #endif
 
   #debug("debug: Ende von ureadclc")
+
+#  MagPolsTot[0]=[['mag1', 'Moth1'], 'REC', 1, 'File']
 
 #enddef ureadclc()
 

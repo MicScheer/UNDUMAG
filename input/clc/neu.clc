@@ -1,7 +1,7 @@
 
 * Example for UNDUMAG
 
-$PerLen = 50. ! Dummy
+$PerLen=50. ! Dummy
 
 $ixsym=0
 $izsym=0
@@ -24,7 +24,7 @@ $lxmag=5.272
 $lymag=34.972
 $lzmagfull=49.972
 
-$idiv1=1
+$iDiv1=1
 
 $nmagdivx=2
 $nmagdivy=2
@@ -34,39 +34,50 @@ $npoldivx=5
 $npoldivy=7
 $npoldivz=5
 
-$mmagdivx = $nmagdivx * ( $idiv1 - 1 + $idiv1)
-$mmagdivy = $nmagdivy * ( $idiv1 - 1 + $idiv1)
-$mmagdivz = $nmagdivz * ( $idiv1 - 1 + $idiv1)
+$mmagdivx=$nmagdivx * ( 1 - $iDiv1 ) + $iDiv1
+$mmagdivy=$nmagdivy * ( 1 - $iDiv1 ) + $iDiv1
+$mmagdivz=$nmagdivz * ( 1 - $iDiv1 ) + $iDiv1
 
-$mpoldivx = $npoldivx * ( $idiv1 - 1 + $idiv1)
-$mpoldivy = $npoldivy * ( $idiv1 - 1 + $idiv1)
-$mpoldivz = $npoldivz * ( $idiv1 - 1 + $idiv1)
+$mpoldivx=$npoldivx * ( 1 - $iDiv1 ) + $iDiv1
+$mpoldivy=$npoldivy * ( 1 - $iDiv1 ) + $iDiv1
+$mpoldivz=$npoldivz * ( 1 - $iDiv1 ) + $iDiv1
 
-$lxpol = $lxpolfull /2. * ( 2. - $ixsym )
-$lzpol = $lzpolfull /2. * ( 2. - $izsym )
-$lzmag = $lzmagfull /2. * ( 2. - $izsym )
+$lxpol=$lxpolfull /2. * ( 2. - $ixsym )
+$lzpol=$lzpolfull /2. * ( 2. - $izsym )
+$lzmag=$lzmagfull /2. * ( 2. - $izsym )
 
-$xpol = - $lxpol / 2.
-$ypol = -$fullgap / 2.  - $lypol / 2.
-$zpol = - $lzpol / 2.
+$xpol=- $lxpol / 2.
+$ypol=-$fullgap / 2.  - $lypol / 2.
+$zpol=- $lzpol / 2.
 
-$xmag= $xpol - $lxpol / 2. - $lxmag / 2.
+$xmag=$xpol - $lxpol / 2. - $lxmag / 2.
 $ymag1=-$fullgap / 2. - $lymag / 2.
 $ymag2=-$ymag1
-$zmag = - $lzmag / 2.
+$zmag=- $lzmag / 2.
+
+$sxmag=$xmag + 10.
+$szmag=$zmag + 30.
+
+$black = 1
+$red = 2
+$green = 3
+$blue = 4
+$yellow = 5
+$magenta = 6
+$lightblue = 7
 
 & User_Comment (one line)
 My Comment
 
 *& Magnet
-Block umag1 uMag1 2 ! key, name, mother, color
+Block umag1 uMag1 $red ! key, name, mother, color
 $xmag $ymag1 $zmag  ! position
 $Br $magx $magy $magz 1 !length bc and components of mag. vector, material index
 $lxmag $lymag $lzmag ! size
 $mmagdivx $mmagdivy $mmagdivz 1. 1. ! segmentation
 
 & Magnet
-Corners mtet1 mTet1 2 ! key, name, mother, color
+Corners mtet1 mTet1 $red ! key, name, mother, color
 $xmag $ymag1 $zmag  ! position
 $Br $magx $magy $magz 1 !length bc and components of mag. vector, material index
 $mmagdivx $mmagdivy $mmagdivz 1. 1. ! segmentation
@@ -78,17 +89,17 @@ $mmagdivx $mmagdivy $mmagdivz 1. 1. ! segmentation
 
 & Remanence
 mTet1
-1.38 1. 1. 0. 1 3 ! Magnet, Br, mag. vector, material index, color
+1.38 1. 1. 0. 1 $green ! Magnet, Br, mag. vector, material index, color
 
 *& Magnet
-File mfile1 mFile1 2 ! key, name, mother, color
+File mfile1 mFile1 $red ! key, name, mother, color
 $xmag $ymag1 $zmag  ! position
 $Br $magx $magy $magz 1 !length bc and components of mag. vector, material index
 $mmagdivx $mmagdivy $mmagdivz 1. 1. ! segmentation
 'corners.dat'
 
 *& Pole
-Block upol1 uPol1 2 ! key, name, mother, color
+Block upol1 uPol1 $blue ! key, name, mother, color
 $xpol $ypol $zpol  ! position
 2 ! material index
 $lxpol $lypol $lzpol ! size
@@ -97,9 +108,13 @@ $mpoldivx $mpoldivy $mpoldivz 1. 1. ! segmentation
 & Copy
 mtet1 cop1 Cop1
 
+& Remanence
+mTet1
+1.38 1. 1. 0. 1 $blue ! Magnet, Br, mag. vector, material index, color
+
 & Translate
-mtet1
-1. 2. 1
+cop1
+1. 10. 15.
 
 & Rotate_Shape ! Br is not rotated
 mtet1
@@ -113,7 +128,7 @@ mtet1
 
 ************
 & Module
- 0. 0. 0. 1 1 !offset of module, number and number of associated module
+ 0. 0. 0. !offset of module
 ****
 1 !number of arrays within module
 $PerLen 1. 0. 0. 0. !spacing and direction of arrangement, rotation angle
@@ -121,8 +136,8 @@ $PerLen 1. 0. 0. 0. !spacing and direction of arrangement, rotation angle
 ************
 
 & Special_Magnet
-Corners stet1 sTet1 2 ! key, name, mother, color
-$xmag $ymag1 $zmag  ! position
+Corners stet1 sTet1 $red ! key, name, mother, color
+$sxmag $ymag1 $szmag  ! position
 $Br $magx $magy $magz 1 !length bc and components of mag. vector, material index
 $mmagdivx $mmagdivy $mmagdivz 1. 1. ! segmentation
 4
