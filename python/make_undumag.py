@@ -91,7 +91,7 @@ else:
 
 
 UI = os.getcwd() + Sepp
-tree = ['bin','for','lib','main','mshcern','mshplt','python']
+tree = ['bin','for','lib','main','mshcern','mshplt','urad','util','python']
 
 for d in tree:
   if not os.path.exists(UI + d):
@@ -307,7 +307,7 @@ def undu_update():
         #endif
       #end while
       Flines.close()
-      #breakpoint()
+      #reakpoint()
       if Iverbose > 0: print("\nModule:",m)
 
       #if m == 'displacement': #reakpoint()
@@ -469,7 +469,8 @@ def undu_update():
     #endfor
 
     if ranl:
-      scom = 'ar rc ' + lib + " " + slib
+#      scom = 'ar rc ' + lib + " " + slib
+      scom = 'ar rc ' + lib + " " + ds + '*.o'
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0: forcomp(scom)
       scom = 'ranlib ' + lib

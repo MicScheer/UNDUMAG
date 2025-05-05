@@ -31338,7 +31338,7 @@ def ugui_get_clc_line_com(iline,nlines,icomm):
   return iline,cline,icomm,com
 #enddef
 
-def utransrotcop():
+def utransrotcop(caller=''):
 
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
@@ -31427,12 +31427,34 @@ def utransrotcop():
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  #print("utransrotcop:")
+  #print("utransrotcop:",caller)
   #reakpoint()
 
+  printnl()
+  itrc = -1
   for trc in TransRotCop:
 
+    kerror = 0
+
+    itrc += 1
+    trcstat = trc[-1]
+
+    calle = caller.split()
+
+    ktrc = -9999
+
+    if len(calle) > 1:
+      ktrc = int(calle[1]) - 10000
+      trc = TransRotCop[ktrc]
+      trcstat = 'new'
+    #endif
+
+    if trcstat == 'applied' or trcstat == 'out': continue
+
+    #print("Applying operation:",trc)
+
     key = trc[0]
+
 #    printnl()
 #    print(trc)
 #    printnl()
@@ -31450,8 +31472,9 @@ def utransrotcop():
         NMagPolTot += 1
         MagPolsTot.append(mag)
       except:
-        print(NL,"*** Error in utransrotcop for key Copy: Magnet not found for:")
-        print("Copy", source, tarmag, tarmoth,NL)
+        kerror = 1
+        print(NL,"*** Error in utransrotcop for key Copy:")
+        print(NL,"Operation:",trc,NL)
       #endtry
 
     elif key == 'Translate':
@@ -31487,8 +31510,9 @@ def utransrotcop():
           #print(mp)
           #print(DictMagPolsTot)
         except:
-          print(NL,"*** Error in utransrotcop for key Translate: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Translate:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
 
@@ -31512,6 +31536,7 @@ def utransrotcop():
 
           if ckey != 'File' and ckey != 'Corners':
             print("\n*** Error in utransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            kerror = 1
             continue
           #endif
 
@@ -31574,6 +31599,7 @@ def utransrotcop():
 
           if ckey != 'File' and ckey != 'Corners':
             print("\n*** Error in utransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            kerror = 1
             continue
           #endif
 
@@ -31626,8 +31652,9 @@ def utransrotcop():
           #endif key == 'Rotate'
 
         except:
-          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Rotation:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
 
@@ -31649,12 +31676,19 @@ def utransrotcop():
           mag = MagPolsTot[kmag]
           mag[5] = vmat
         except:
-          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Rotation:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
     #endif
-    update_magnets()
+
+    if (kerror == 0):
+      trc[-1] = 'applied'
+      update_magnets()
+    #endif
+
+    if ktrc != -9999: break
   #endfor
 
 #enddef utransrotcop()
@@ -31877,7 +31911,7 @@ def checktransrotcop():
 
   #endfor trc
 
-  TRCtoDTRC()
+  TRCtoDTRC('cecktransrotcop')
 
 #enddef checktransrotcop()
 
@@ -32930,6 +32964,7 @@ def ureadclc(callkey=''):
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Remanence":
         trc = [ckey]
@@ -32937,11 +32972,23 @@ def ureadclc(callkey=''):
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Copy":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        TransRotCop.append(trc)
+        trc.append('read')
+      elif ckey == "Rotate" or ckey == "Rotate_Shape":
+        trc = [ckey]
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Inhomogeneity":
         tinh = ['& ' + ckey]
@@ -32951,15 +32998,7 @@ def ureadclc(callkey=''):
           if cline[:5] == '& End': break
         #endif
         Inhom.append(tinh)
-      elif ckey == "Rotate" or ckey == "Rotate_Shape":
-        trc = [ckey]
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        TransRotCop.append(trc)
+      #endif
 
       elif ckey == "Module":
 
@@ -33424,10 +33463,11 @@ def ureadclc(callkey=''):
   if NCoil: undu_coils_to_filaments()
 
   if len(TransRotCop):
-    utransrotcop()
+    utransrotcop('ureadclc')
     #checktransrotcop()
   #endif
 
+  #Quit("Ende von ureadclc")
   #debug("debug: Ende von ureadclc")
 
 #  MagPolsTot[0]=[['mag1', 'Moth1'], 'REC', 1, 'File']
@@ -35857,7 +35897,34 @@ def uwriteclc(callkey=''):
 
     #endfor mp in MagPolsTot
 
-    #print("hallo 2")
+    #reakpoint()
+    if len(TransRotCop) > 0:
+      Fclc.write('\n')
+      for trc in TransRotCop:
+        trcstat = trc[-1]
+        if trcstat == 'out': amp = '&'
+        else: amp = '*&'
+        Fclc.write(amp + ' ' + trc[0] + '\n')
+        if trc[0] == 'Remanence':
+          Fclc.write(trc[1] + '\n')
+          Fclc.write(trc[2] + '        ! Br, mag. vector, material index, color\n')
+        elif trc[0] == 'Translate':
+          Fclc.write(trc[1] + '\n')
+          Fclc.write(trc[2] + '\n')
+        elif trc[0] == 'Rotate':
+          Fclc.write(trc[1] + '        ! Br is also rotated\n')
+          Fclc.write(trc[2] + '        ! center of rotation\n')
+          Fclc.write(trc[3] + '        ! rotation axis and angle [deg]\n')
+        elif trc[0] == 'Rotate_Shape':
+          Fclc.write(trc[1] + '       ! Br is not rotated\n')
+          Fclc.write(trc[2] + '       ! center of rotation\n')
+          Fclc.write(trc[3] + '       ! rotation axis and angle [deg]\n')
+        elif trc[0] == 'Copy':
+          Fclc.write(trc[1] + '       ! source, copy name, copy mother name\n')
+        #endif
+        Fclc.write('\n')
+      #endfor
+    #endif
 
     if len(Inhom) > 0:
       Fclc.write('\n')
@@ -35921,13 +35988,6 @@ def uwriteclc(callkey=''):
     Fclc.close()
 
   #endif int(AppleII_Mode) > 0
-
-  #print("hallo 6")
-  #print(TransRotCop)
-  #if len(TransRotCop) > 0:
-  #  uwritetrc(FileCLC)
-  #endif
-  #print("hallo 7")
 
 #enddef uwriteclc()
 
@@ -36503,7 +36563,7 @@ DictUnduColors = {}
 UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
 for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
-def utransrotcop():
+def utransrotcop(caller=''):
 
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
@@ -36592,12 +36652,34 @@ def utransrotcop():
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  #print("utransrotcop:")
+  #print("utransrotcop:",caller)
   #reakpoint()
 
+  printnl()
+  itrc = -1
   for trc in TransRotCop:
 
+    kerror = 0
+
+    itrc += 1
+    trcstat = trc[-1]
+
+    calle = caller.split()
+
+    ktrc = -9999
+
+    if len(calle) > 1:
+      ktrc = int(calle[1]) - 10000
+      trc = TransRotCop[ktrc]
+      trcstat = 'new'
+    #endif
+
+    if trcstat == 'applied' or trcstat == 'out': continue
+
+    #print("Applying operation:",trc)
+
     key = trc[0]
+
 #    printnl()
 #    print(trc)
 #    printnl()
@@ -36615,8 +36697,9 @@ def utransrotcop():
         NMagPolTot += 1
         MagPolsTot.append(mag)
       except:
-        print(NL,"*** Error in utransrotcop for key Copy: Magnet not found for:")
-        print("Copy", source, tarmag, tarmoth,NL)
+        kerror = 1
+        print(NL,"*** Error in utransrotcop for key Copy:")
+        print(NL,"Operation:",trc,NL)
       #endtry
 
     elif key == 'Translate':
@@ -36652,8 +36735,9 @@ def utransrotcop():
           #print(mp)
           #print(DictMagPolsTot)
         except:
-          print(NL,"*** Error in utransrotcop for key Translate: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Translate:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
 
@@ -36677,6 +36761,7 @@ def utransrotcop():
 
           if ckey != 'File' and ckey != 'Corners':
             print("\n*** Error in utransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            kerror = 1
             continue
           #endif
 
@@ -36739,6 +36824,7 @@ def utransrotcop():
 
           if ckey != 'File' and ckey != 'Corners':
             print("\n*** Error in utransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            kerror = 1
             continue
           #endif
 
@@ -36791,8 +36877,9 @@ def utransrotcop():
           #endif key == 'Rotate'
 
         except:
-          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Rotation:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
 
@@ -36814,12 +36901,19 @@ def utransrotcop():
           mag = MagPolsTot[kmag]
           mag[5] = vmat
         except:
-          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Rotation:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
     #endif
-    update_magnets()
+
+    if (kerror == 0):
+      trc[-1] = 'applied'
+      update_magnets()
+    #endif
+
+    if ktrc != -9999: break
   #endfor
 
 #enddef utransrotcop()
@@ -37042,7 +37136,7 @@ def checktransrotcop():
 
   #endfor trc
 
-  TRCtoDTRC()
+  TRCtoDTRC('cecktransrotcop')
 
 #enddef checktransrotcop()
 
@@ -38095,6 +38189,7 @@ def ureadclc(callkey=''):
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Remanence":
         trc = [ckey]
@@ -38102,11 +38197,23 @@ def ureadclc(callkey=''):
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Copy":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        TransRotCop.append(trc)
+        trc.append('read')
+      elif ckey == "Rotate" or ckey == "Rotate_Shape":
+        trc = [ckey]
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Inhomogeneity":
         tinh = ['& ' + ckey]
@@ -38116,15 +38223,7 @@ def ureadclc(callkey=''):
           if cline[:5] == '& End': break
         #endif
         Inhom.append(tinh)
-      elif ckey == "Rotate" or ckey == "Rotate_Shape":
-        trc = [ckey]
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        TransRotCop.append(trc)
+      #endif
 
       elif ckey == "Module":
 
@@ -38589,10 +38688,11 @@ def ureadclc(callkey=''):
   if NCoil: undu_coils_to_filaments()
 
   if len(TransRotCop):
-    utransrotcop()
+    utransrotcop('ureadclc')
     #checktransrotcop()
   #endif
 
+  #Quit("Ende von ureadclc")
   #debug("debug: Ende von ureadclc")
 
 #  MagPolsTot[0]=[['mag1', 'Moth1'], 'REC', 1, 'File']
@@ -43169,8 +43269,6 @@ def _clWfclc(key):
 
   elif key == 'WriteCLC':
 
-    uwriteclc('debug')
-    Quit("Debug: Ende nach uwriteclc")
     try:
       uwriteclc('_clWfclc')
       LastCLC = FileCLC
@@ -54067,6 +54165,7 @@ S_CT = StringVar()
 S_Tx = StringVar()
 S_Ty = StringVar()
 S_Tz = StringVar()
+s_TrcStat = StringVar()
 
 S_Rx = StringVar()
 S_Ry = StringVar()
@@ -54088,6 +54187,7 @@ S_AddTRCmag = StringVar()
 S_AddTx = StringVar()
 S_AddTy = StringVar()
 S_AddTz = StringVar()
+s_TrcStat = StringVar()
 
 S_AddCTmag = StringVar()
 S_AddCTmoth = StringVar()
@@ -54126,7 +54226,7 @@ def _clWlistTRC():
   WlistTRC.destroy()
 #enddef _clWediTRC()
 
-def _listTRC(key='list'):
+def _listTRC(key='list',caller=''):
 
   global TransRotCop
   global Umaster,WlistTRC, WediTRC
@@ -54149,7 +54249,7 @@ def _listTRC(key='list'):
   if sgeo == "": sgeo = '+' + str(x) + '+' + str(y)
 
   if key == 'refresh':
-    TRCtoDTRC()
+    TRCtoDTRC('listTRC:refresh')
     WlistTRC.destroy()
     WlistTRC = Toplevel()
     WlistTRC.title("List of Operations")
@@ -54170,15 +54270,21 @@ def _listTRC(key='list'):
 
   widlab = ltrc
 
+  #reakpoint()
+
   for it in range(len(TransRotCop)):
 
     trc = TransRotCop[it]
-    print(trc)
+    trcs = ' ' + trc[-1]
 
     ttrc = ''
-    for tt in trc:
+    for itt in range(len(trc)-1):
+      tt = trc[itt]
       ttrc = ttrc + tt + ' | '
     #endfor
+
+    if not trcs.strip(): ttrc += ' new'
+    else: ttrc += trcs
 
     ftrc = Frame(WlistTRC)
 
@@ -54187,9 +54293,11 @@ def _listTRC(key='list'):
 
     bdel = Button(ftrc,text='delete',command= lambda ied=-it-1: _EdiTRC(ied))
     bedi = Button(ftrc,text='edit',command= lambda ied=it: _EdiTRC(ied))
+    bapp = Button(ftrc,text='apply',command= lambda ied=10000+it: _EdiTRC(ied))
 
     bdel.pack(fill=X,side=RIGHT)
     bedi.pack(fill=X,side=RIGHT)
+    bapp.pack(fill=X,side=RIGHT)
 
     ftrc.pack()
 
@@ -54221,7 +54329,7 @@ def INHtoDINH():
   #endfor
 #enddef INHtoDINH
 
-def TRCtoDTRC():
+def TRCtoDTRC(caller=''):
   global TransRotCop,DictTransRotCop
   DictTransRotCop = {}
   for it in range(len(TransRotCop)):
@@ -54244,6 +54352,7 @@ def _EdiTRC(ied):
   global S_Tx,S_Ty,S_Tz
   global S_Rx,S_Ry,S_Rz,S_Romx,S_Romy,S_Romz,S_Rang
   global S_RSx,S_RSy,S_RSz,S_RSomx,S_RSomy,S_RSomz,S_RSang
+  global s_TrcStat
 
   if ied < 0:
     trc = deepcopy(TransRotCop)
@@ -54252,13 +54361,18 @@ def _EdiTRC(ied):
     for it in range(len(trc)):
       if it != ied: TransRotCop.append(trc[it])
     #endfor
-    TRCtoDTRC()
+    TRCtoDTRC('ediTRC:refresh')
     _listTRC('refresh')
+    return
+  elif ied >= 10000:
+    utransrotcop("apply " + str(ied))
     return
   #endif
 
   trc = TransRotCop[ied]
   key = trc[0]
+
+  s_TrcStat.set(trc[-1])
 
   WediTRC = Toplevel()
   WediTRC.title("Edit Operation on " + trc[1])
@@ -54348,6 +54462,13 @@ def _EdiTRC(ied):
     eta.pack(side=RIGHT)
     fta.pack()
 
+    ftrs = Frame(ftrc)
+    ltrs = Label(ftrs,width=widlab,text='Status',justify=LEFT,font=MyFont)
+    ltrs.pack(side=LEFT)
+    etrs = Entry(ftrs,text=s_TrcStat,justify=CENTER,font=MyFont)
+    etrs.pack(side=RIGHT)
+    ftrs.pack()
+
   elif key == 'Translate':
 
     strc2 = str(trc[2]).split()
@@ -54376,6 +54497,13 @@ def _EdiTRC(ied):
     etrz = Entry(ftrz,text=S_Tz,justify=CENTER,font=MyFont)
     etrz.pack(side=RIGHT)
     ftrz.pack()
+
+    ftrs = Frame(ftrc)
+    ltrs = Label(ftrs,width=widlab,text='Status',justify=LEFT,font=MyFont)
+    ltrs.pack(side=LEFT)
+    etrs = Entry(ftrs,text=s_TrcStat,justify=CENTER,font=MyFont)
+    etrs.pack(side=RIGHT)
+    ftrs.pack()
 
   elif key == 'Rotate_Shape':
 
@@ -54440,6 +54568,13 @@ def _EdiTRC(ied):
     eang.pack(side=RIGHT)
     fang.pack()
 
+    ftrs = Frame(ftrc)
+    ltrs = Label(ftrs,width=widlab,text='Status',justify=LEFT,font=MyFont)
+    ltrs.pack(side=LEFT)
+    etrs = Entry(ftrs,text=s_TrcStat,justify=CENTER,font=MyFont)
+    etrs.pack(side=RIGHT)
+    ftrs.pack()
+
   elif key == 'Rotate':
 
     strc2 = str(trc[2]).split()
@@ -54503,6 +54638,13 @@ def _EdiTRC(ied):
     eang.pack(side=RIGHT)
     fang.pack()
 
+    ftrs = Frame(ftrc)
+    ltrs = Label(ftrs,width=widlab,text='Status',justify=LEFT,font=MyFont)
+    ltrs.pack(side=LEFT)
+    etrs = Entry(ftrs,text=s_TrcStat,justify=CENTER,font=MyFont)
+    etrs.pack(side=RIGHT)
+    ftrs.pack()
+
   #endif key
 
   ftrc.pack()
@@ -54518,7 +54660,7 @@ def _clWediTRC(itrc):
   global TransRotCop
   global S_Remanence,S_BrX,S_BrY,S_BrZ,S_BrC,S_BrM
   global S_CS,S_CT
-  global S_Tx,S_Ty,S_Tz
+  global S_Tx,S_Ty,S_Tz,s_TrcStat
   global S_RSx,S_RSy,S_RSz,S_RSomx,S_RSomy,S_RSomz,S_RSang
   global S_Rx,S_Ry,S_Rz,S_Romx,S_Romy,S_Romz,S_Rang
 
@@ -54582,8 +54724,11 @@ def _AddTransRotCop(key=''):
     S_AddTx.set('0.0')
     S_AddTy.set('0.0')
     S_AddTz.set('0.0')
+    s_TrcStat.set('new')
     trc = ['Translate',S_AddTRCmag.get(),
            S_AddTx.get() + " " + S_AddTy.get() + " " + S_AddTz.get()]
+    trc.append('new')
+
     TransRotCop.append(trc)
 
     fmag = Frame(ftrc)
@@ -54614,6 +54759,13 @@ def _AddTransRotCop(key=''):
     etrz.pack(side=RIGHT)
     ftrz.pack()
 
+    ftrs = Frame(ftrc)
+    ltrs = Label(ftrs,width=widlab,text='Status',justify=LEFT,font=MyFont)
+    ltrs.pack(side=LEFT)
+    etrs = Entry(ftrs,text=s_TrcStat,justify=CENTER,font=MyFont)
+    etrs.pack(side=RIGHT)
+    ftrs.pack()
+
   elif key == 'rotate_shape':
 
     S_AddRSTx.set('0.0')
@@ -54631,7 +54783,7 @@ def _AddTransRotCop(key=''):
     + " " + S_AddRSomx.get() + " " + S_AddRSomy.get() + " " + S_AddRSomz.get() \
     + " " + S_AddRSang.get()]
 
-    TransRotCop.append(trc)
+    TransRotCop.append(trc.append('new'))
 
     fmag = Frame(ftrc)
     lmag = Label(fmag,width=widlab,text='Magnet',justify=LEFT,font=MyFont)
@@ -54706,7 +54858,7 @@ def _AddTransRotCop(key=''):
     S_AddRomx.get() + " " + S_AddRomy.get() + " " + S_AddRomz.get() \
     + " " + S_AddRang.get()]
 
-    TransRotCop.append(trc)
+    TransRotCop.append(trc.append('new'))
 
     fmag = Frame(ftrc)
     lmag = Label(fmag,width=widlab,text='Magnet',justify=LEFT,font=MyFont)
@@ -54770,7 +54922,7 @@ def _AddTransRotCop(key=''):
     S_AddCTmoth.set('Mother')
 
     trc = ['Copy',S_AddTRCmag.get() + " " + S_AddCTmag.get() + " " + S_AddCTmoth.get()]
-    TransRotCop.append(trc)
+    TransRotCop.append(trc.append('new'))
 
     fmag = Frame(ftrc)
     lmag = Label(fmag,width=widlab,text='Magnet to copy',justify=LEFT,font=MyFont)
