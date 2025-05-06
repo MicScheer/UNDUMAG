@@ -35902,7 +35902,7 @@ def uwriteclc(callkey=''):
       Fclc.write('\n')
       for trc in TransRotCop:
         trcstat = trc[-1]
-        if trcstat == 'out': amp = '&'
+        if trcstat != 'applied': amp = '&'
         else: amp = '*&'
         Fclc.write(amp + ' ' + trc[0] + '\n')
         if trc[0] == 'Remanence':

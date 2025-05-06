@@ -1,4 +1,4 @@
-*CMZ :          30/04/2025  07.10.49  by  Michael Scheer
+*CMZ :          06/05/2025  09.13.00  by  Michael Scheer
 *CMZ :  2.03/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.02/02 20/02/2022  16.26.00  by  Michael Scheer
 *CMZ :  2.02/01 08/01/2022  16.53.06  by  Michael Scheer
@@ -101,19 +101,26 @@
             bcmat(2,1,kmat)=bcmat(2,1,kmat)-1.0d0
 
           else if (mapmode.eq.2) then
+
             read(lunmat,*)hmat,bcm,perksi
+
+            nmatpoi=nmatpoi+1
+
             bcmat(1,nmatpoi,kmat)=hmat
             bcmat(2,nmatpoi,kmat)=bcm
             bcmat(3,nmatpoi,kmat)=perksi
             bcmo=bcm
             hmato=hmat
+
           else
             write(lun6,*)"*** Bad material mode found in input file ***"
             stop
           endif
+
           goto 115
-        else if (lmat.eq.2) then
-            ! lmat = 2: Isotropic material
+
+        else if (lmat.eq.2) then ! lmat = 2: Isotropic material
+
             if (mapmode.eq.0
      &          .or.mapmode.eq.2
      &          .or.mapmode.eq.3
@@ -127,6 +134,7 @@ c            if (bcm.ne.bcmo.or.hmato.ne.hmat) then
             if (bcm.ne.bcmo) then
               nmatpoi=nmatpoi+1
             endif
+
             bcmat(1,nmatpoi,kmat)=hmat
             bcmat(2,nmatpoi,kmat)=bcm
             bcmat(3,nmatpoi,kmat)=perksi
