@@ -91,7 +91,7 @@ else:
 
 
 UI = os.getcwd() + Sepp
-tree = ['bin','for','lib','main','mshcern','mshplt','python']
+tree = ['bin','for','lib','main','mshcern','mshplt','util','urad','python']
 
 for d in tree:
   if not os.path.exists(UI + d):
@@ -485,22 +485,22 @@ def undu_update():
   if kmain:
 #    scom = UI + "shell/compile_undumag_incl.sh"
     for frm in ['bpolyederf90m.mod','commandlinef90m.mod','undumagf90m.mod']:
-      scom = 'os.remove("' + UI + "main" + Sepp + frm + '")'
+      scom = 'os.remove("' + UI + 'main' + Sepp + frm + '")'
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0:
         try:
-          exec(scom)
+          os.remove(UI + "main" + Sepp + frm)
         except:
-          print('*** Failed to execute ',scom)
+          pass
+          #print('*** Failed to execute ',scom)
         #endtry
-      #reakpoint()
       src = UI + "for" + Sepp + frm
       dest = UI + "main" + Sepp + frm
       scom = 'shutil.copyfile("' + src + '","' + dest + '")'
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0:
         try:
-          exec(scom)
+          shutil.copyfile(src,dest)
         except:
           print('*** Failed to execute ',scom)
         #endtry

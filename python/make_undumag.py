@@ -460,6 +460,7 @@ def undu_update():
       fo = f[:-1] + "o"
 
       scom = scomp + "-o " + fo + " " + f
+
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0: forcomp(scom)
 
@@ -469,39 +470,49 @@ def undu_update():
     #endfor
 
     if ranl:
-#      scom = 'ar rc ' + lib + " " + slib
-      scom = 'ar rc ' + lib + " " + ds + '*.o'
+
+      if len(fort) <= 10:
+        scom = 'ar rc ' + lib + " " + slib
+      else:
+        scom = 'ar rc ' + lib + " " + ds + '*.o'
+      #endif
+
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0: forcomp(scom)
+
       scom = 'ranlib ' + lib
+
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0: forcomp(scom)
+
       kmain = 1
       ranl = 0
       slib = ''
+
     #endif
 
   #endfor dir
 
   if kmain:
 #    scom = UI + "shell/compile_undumag_incl.sh"
+    #reakpoint()
     for frm in ['bpolyederf90m.mod','commandlinef90m.mod','undumagf90m.mod']:
-      scom = 'os.remove("' + UI + "main" + Sepp + frm + '")'
+      scom = 'os.remove("' + UI + 'main' + Sepp + frm + '")'
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0:
         try:
-          exec(scom)
+          os.remove(UI + "main" + Sepp + frm)
         except:
-          print('*** Failed to execute ',scom)
+          pass
+          #print('*** Failed to execute ',scom)
         #endtry
-      #reakpoint()
       src = UI + "for" + Sepp + frm
       dest = UI + "main" + Sepp + frm
       scom = 'shutil.copyfile("' + src + '","' + dest + '")'
       if Iverbose > 0: print("\n",scom,"\n")
       if Idry == 0:
         try:
-          exec(scom)
+          shutil.copyfile(src,dest)
         except:
           print('*** Failed to execute ',scom)
         #endtry
