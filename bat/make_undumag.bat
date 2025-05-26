@@ -1,5 +1,8 @@
 
 
+del /P bin\undumag.exe
+del /P lib\*
+
 cd mshcern
 del *.o
 gfortran -w -std=legacy -c -O2 -cpp -fbacktrace -ffpe-summary=invalid,zero,overflow -fdec -fd-lines-as-comments -Wno-align-commons -fno-automatic -ffixed-line-length-none -finit-local-zero -funroll-loops *.f

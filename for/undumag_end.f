@@ -1,4 +1,4 @@
-*CMZ :          28/04/2025  10.30.08  by  Michael Scheer
+*CMZ :          26/05/2025  10.20.52  by  Michael Scheer
 *CMZ :  2.05/05 30/06/2024  16.08.56  by  Michael Scheer
 *CMZ :  2.05/04 06/02/2024  15.02.28  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.05.20  by  Michael Scheer
@@ -145,7 +145,10 @@
      &  bzplmin,bzplmax,bziplmin,bziplmax,bziiplmin,bziiplmax,
      &  byplmin,byplmax,byiplmin,byiplmax,byiiplmin,byiiplmax,
      &  s0min,s1min,s2min,s3min,s0,s1,s2,s3,
-     &  s0max,s1max,s2max,s3max,xlaboff,ylaboff,brn,
+     &  s0max,s1max,s2max,s3max,
+     &  xtitoff,xtitoffo,ytitoff,ytitoffo,
+     &  xlaboff,xlaboffo,ylaboff,ylaboffo,
+     &  brn,
      &  zppl(1000),bypl(1000),bzpl(1000),hbmatmin,hbmatmax,
      &  bcmaxrec,bcminrec,hmaxrec,hminrec,hmaxiron
 
@@ -1328,6 +1331,15 @@ c Calculate field map}
       call mshplt_init(20,15.,15.,25,25,600,600,
      &  'undumag_mh_rec.eps','','',0.)
 
+      !all util_break
+      call mshplt_get_axis_label_offset(xlaboffo,ylaboffo)
+      call mshplt_get_axis_title_offset(xtitoffo,ytitoffo)
+      call mshplt_set_axis_title_offset(xtitoffo*1.5,ytitoffo*1.75)
+      !call mshplt_get_axis_title_offset(xtitoff,ytitoff)
+      !print*,xtitoffo,ytitoffo
+      !print*,xtitoff,ytitoff
+      !call sleep(3)
+
       if (kdate.eq.0) then
         call mplopt('NDAT',1)
       else
@@ -1358,7 +1370,6 @@ c{ Plot Magnetization of magnets
         yplmax=yplmax+0.1*dypl
 
         call mshplt_frame(xplmin,xplmax,yplmin,yplmax,'H [T]','M [T]',' ')
-        call mshplt_set_marker_size(0.25)
 
         call mgset('PLCI',4.)
 
@@ -1384,6 +1395,11 @@ c{ Plot Magnetization of magnets
         call mgset('PLCI',2.)
 
         if (knomagmap.eq.0) then
+          if (nrec.le.10) then
+            call mshplt_set_marker_size(0.5)
+          else
+            call mshplt_set_marker_size(0.3)
+          endif
           do kmag=1,nrec
             xpl(1)=sngl(hmagvox(1,kmag))
             ypl(1)=sngl(hmagvox(2,kmag))
@@ -2123,6 +2139,15 @@ c      if (xbeff.eq.9999.0d0) xbeff=xconv(nxconv/2+1)
 
       halfperlen=perlen/2.0d0
       quadperlen=perlen/4.0d0
+
+      if (kbeffmode.eq.9999) then
+        if (nper.gt.0) then
+          kbeffmode=0
+        else
+          kbeffmode=1
+        endif
+      endif
+
       call undumag_beffy_beffz(
      &  byint1f,bzint1f,
      &  byint2f,bzint2f,
@@ -3200,6 +3225,7 @@ c{ Plot By, Bz
 
       write(lunmat,'(a)') '* ' // ctitle
 
+      !all util_break
       do mat=1,nmatfiles
         n=matmaps(4,mat)
         mtyp=matmaps(2,mat)
@@ -3218,13 +3244,15 @@ c{ Plot By, Bz
                 endif
               enddo
               if (kbrn.eq.0) then
-                write(lun6,*)
-                write(lun6,*)"*** Warning in undumag_end: Could not find REC material in list of Br ***"
-                write(lun6,*)"*** Be careful with plots of magnetisation ***"
+                continue
+c                write(lun6,*)
+c                write(lun6,*)"*** Warning in undumag_end: Could not find REC material in list of Br ***"
+c                write(lun6,*)"*** Be careful with plots of magnetisation ***"
+              else
+                brn=sngl(abs(brnmat(2,ibrn)))
+                hbmatmin=sngl(brn-bcmat(2,1,mat)*br)
+                hbmatmax=sngl(brn+bcmat(2,1,mat)*br)
               endif
-              brn=sngl(abs(brnmat(2,ibrn)))
-              hbmatmin=sngl(brn-bcmat(2,1,mat)*br)
-              hbmatmax=sngl(brn+bcmat(2,1,mat)*br)
             endif !newclc
             write(lunmat,*) mat,mtyp,matmaps(3,mat),sngl(-br),hbmatmin,sngl(bcmat(3,1,mat))
             write(lunmat,*) mat,mtyp,matmaps(3,mat),sngl(br),hbmatmax,sngl(bcmat(3,1,mat))

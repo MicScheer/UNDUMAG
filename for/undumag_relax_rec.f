@@ -1,3 +1,4 @@
+*CMZ :          26/05/2025  09.47.40  by  Michael Scheer
 *CMZ :  2.02/00 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.00/01 16/04/2018  08.59.21  by  Michael Scheer
 *CMZ :  1.23/02 31/08/2017  12.21.55  by  Michael Scheer
@@ -115,8 +116,9 @@
             hzmax=bcmat(1,nhz,mat)
             if (hpar.ge.hzmin.and.hpar.le.hzmax) then
               if (nhz.gt.1) then
-                ihz=int((hpar-hzmin)/((hzmax-hzmin)/(nhz-1)))+1
-                ihz=min(ihz,nhz-1)
+                call util_get_index_in_array(nhz,bcmat(1,1:nhz,mat),hpar,ihz)
+c                ihz=int((hpar-hzmin)/((hzmax-hzmin)/(nhz-1)))+1
+c                ihz=min(ihz,nhz-1)
                 if (ihz.lt.nhz) then
                   bc0(4:6,imag)=hrot*perksi+
      &              (bcmat(2,ihz,mat)+(bcmat(2,ihz+1,mat)-bcmat(2,ihz,mat))/
