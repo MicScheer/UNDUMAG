@@ -25336,6 +25336,12 @@ def settextcolor(tc='black'):
   global Textcolor
   Textcolor = tc
 
+def tred(): settextcolor('green')
+def tblue(): settextcolor('blue')
+def tgreen(): settextcolor('green')
+def tcyan(): settextcolor('cyan')
+def tmagenta(): settextcolor('magenta')
+
 def gettextcolor(): return Textcolor
 
 def setlinecolor(lc='red'):
@@ -26248,6 +26254,12 @@ nex = nextzone
 gtit = set_global_title
 setgeo = window_geometry
 setfit = optfit
+
+tgruen = tgreen
+trot = tred
+tblau = tblue
+tlila = tmagenta
+thellblau = tcyan
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -28919,7 +28931,7 @@ def undu_read_mat():
     lines = fmh.readlines()
     fmh.close()
     if len(lines) > 1:
-      nmh = ncread("nmh","mtyp:mmod:easyX:easyY:easyZ:h:m:mat:kbr","undumag.mh")
+      nmh = ncread("nmh","mtyp:mmod:easyX:easyY:easyZ:h:m:mat:kbr:mag:x:y:z","undumag.mh")
     #endif
   #endif
 
@@ -29590,7 +29602,7 @@ def nreloadupl():
     mh = fmh.readlines()
     fmh.close()
     if len(mh) > 1:
-      nmh = ncread("nmh","mtyp:mmod:easyX:easyY:easyZ:h:m:mat:kbr","undumag.mh")
+      nmh = ncread("nmh","mtyp:mmod:easyX:easyY:easyZ:h:m:mat:kbr:mag:x:y:z","undumag.mh")
     #endif
   #endif
 
@@ -30258,7 +30270,7 @@ DictUnduColors = {}
 UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
 for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
-def utransrotcop():
+def utransrotcop(caller=''):
 
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
@@ -30347,12 +30359,34 @@ def utransrotcop():
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  #print("utransrotcop:")
+  #print("utransrotcop:",caller)
   #reakpoint()
 
+  printnl()
+  itrc = -1
   for trc in TransRotCop:
 
+    kerror = 0
+
+    itrc += 1
+    trcstat = trc[-1]
+
+    calle = caller.split()
+
+    ktrc = -9999
+
+    if len(calle) > 1:
+      ktrc = int(calle[1]) - 10000
+      trc = TransRotCop[ktrc]
+      trcstat = 'new'
+    #endif
+
+    if trcstat == 'applied' or trcstat == 'out': continue
+
+    #print("Applying operation:",trc)
+
     key = trc[0]
+
 #    printnl()
 #    print(trc)
 #    printnl()
@@ -30370,8 +30404,9 @@ def utransrotcop():
         NMagPolTot += 1
         MagPolsTot.append(mag)
       except:
-        print(NL,"*** Error in utransrotcop for key Copy: Magnet not found for:")
-        print("Copy", source, tarmag, tarmoth,NL)
+        kerror = 1
+        print(NL,"*** Error in utransrotcop for key Copy:")
+        print(NL,"Operation:",trc,NL)
       #endtry
 
     elif key == 'Translate':
@@ -30407,8 +30442,9 @@ def utransrotcop():
           #print(mp)
           #print(DictMagPolsTot)
         except:
-          print(NL,"*** Error in utransrotcop for key Translate: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Translate:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
 
@@ -30432,6 +30468,7 @@ def utransrotcop():
 
           if ckey != 'File' and ckey != 'Corners':
             print("\n*** Error in utransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            kerror = 1
             continue
           #endif
 
@@ -30494,6 +30531,7 @@ def utransrotcop():
 
           if ckey != 'File' and ckey != 'Corners':
             print("\n*** Error in utransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            kerror = 1
             continue
           #endif
 
@@ -30546,8 +30584,9 @@ def utransrotcop():
           #endif key == 'Rotate'
 
         except:
-          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Rotation:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
 
@@ -30569,12 +30608,19 @@ def utransrotcop():
           mag = MagPolsTot[kmag]
           mag[5] = vmat
         except:
-          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Rotation:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
     #endif
-    update_magnets()
+
+    if (kerror == 0):
+      trc[-1] = 'applied'
+      update_magnets()
+    #endif
+
+    if ktrc != -9999: break
   #endfor
 
 #enddef utransrotcop()
@@ -30797,7 +30843,7 @@ def checktransrotcop():
 
   #endfor trc
 
-  TRCtoDTRC()
+  TRCtoDTRC('cecktransrotcop')
 
 #enddef checktransrotcop()
 
@@ -31850,6 +31896,7 @@ def ureadclc(callkey=''):
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Remanence":
         trc = [ckey]
@@ -31857,11 +31904,23 @@ def ureadclc(callkey=''):
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Copy":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        TransRotCop.append(trc)
+        trc.append('read')
+      elif ckey == "Rotate" or ckey == "Rotate_Shape":
+        trc = [ckey]
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Inhomogeneity":
         tinh = ['& ' + ckey]
@@ -31871,15 +31930,7 @@ def ureadclc(callkey=''):
           if cline[:5] == '& End': break
         #endif
         Inhom.append(tinh)
-      elif ckey == "Rotate" or ckey == "Rotate_Shape":
-        trc = [ckey]
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        TransRotCop.append(trc)
+      #endif
 
       elif ckey == "Module":
 
@@ -32344,10 +32395,11 @@ def ureadclc(callkey=''):
   if NCoil: undu_coils_to_filaments()
 
   if len(TransRotCop):
-    utransrotcop()
+    utransrotcop('ureadclc')
     #checktransrotcop()
   #endif
 
+  #Quit("Ende von ureadclc")
   #debug("debug: Ende von ureadclc")
 
 #  MagPolsTot[0]=[['mag1', 'Moth1'], 'REC', 1, 'File']
@@ -34995,7 +35047,7 @@ DictUnduColors = {}
 UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
 for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
-def utransrotcop():
+def utransrotcop(caller=''):
 
   global TransRotCop,EchoCLC,DictTransRotCop
   global Inhom,DictInhom
@@ -35084,12 +35136,34 @@ def utransrotcop():
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  #print("utransrotcop:")
+  #print("utransrotcop:",caller)
   #reakpoint()
 
+  printnl()
+  itrc = -1
   for trc in TransRotCop:
 
+    kerror = 0
+
+    itrc += 1
+    trcstat = trc[-1]
+
+    calle = caller.split()
+
+    ktrc = -9999
+
+    if len(calle) > 1:
+      ktrc = int(calle[1]) - 10000
+      trc = TransRotCop[ktrc]
+      trcstat = 'new'
+    #endif
+
+    if trcstat == 'applied' or trcstat == 'out': continue
+
+    #print("Applying operation:",trc)
+
     key = trc[0]
+
 #    printnl()
 #    print(trc)
 #    printnl()
@@ -35107,8 +35181,9 @@ def utransrotcop():
         NMagPolTot += 1
         MagPolsTot.append(mag)
       except:
-        print(NL,"*** Error in utransrotcop for key Copy: Magnet not found for:")
-        print("Copy", source, tarmag, tarmoth,NL)
+        kerror = 1
+        print(NL,"*** Error in utransrotcop for key Copy:")
+        print(NL,"Operation:",trc,NL)
       #endtry
 
     elif key == 'Translate':
@@ -35144,8 +35219,9 @@ def utransrotcop():
           #print(mp)
           #print(DictMagPolsTot)
         except:
-          print(NL,"*** Error in utransrotcop for key Translate: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Translate:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
 
@@ -35169,6 +35245,7 @@ def utransrotcop():
 
           if ckey != 'File' and ckey != 'Corners':
             print("\n*** Error in utransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            kerror = 1
             continue
           #endif
 
@@ -35231,6 +35308,7 @@ def utransrotcop():
 
           if ckey != 'File' and ckey != 'Corners':
             print("\n*** Error in utransrotcop: Rotation only allowed for magnets of type Corners or file***")
+            kerror = 1
             continue
           #endif
 
@@ -35283,8 +35361,9 @@ def utransrotcop():
           #endif key == 'Rotate'
 
         except:
-          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Rotation:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
 
@@ -35306,12 +35385,19 @@ def utransrotcop():
           mag = MagPolsTot[kmag]
           mag[5] = vmat
         except:
-          print(NL,"*** Error in utransrotcop for key Rotation: Magnet or mother not found for:")
-          print("Copy", source, tarmag, tarmoth,NL)
+          kerror = 1
+          print(NL,"*** Error in utransrotcop for key Rotation:")
+          print(NL,"Operation:",trc,NL)
         #endtry
       #endtry
     #endif
-    update_magnets()
+
+    if (kerror == 0):
+      trc[-1] = 'applied'
+      update_magnets()
+    #endif
+
+    if ktrc != -9999: break
   #endfor
 
 #enddef utransrotcop()
@@ -35534,7 +35620,7 @@ def checktransrotcop():
 
   #endfor trc
 
-  TRCtoDTRC()
+  TRCtoDTRC('cecktransrotcop')
 
 #enddef checktransrotcop()
 
@@ -36587,6 +36673,7 @@ def ureadclc(callkey=''):
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Remanence":
         trc = [ckey]
@@ -36594,11 +36681,23 @@ def ureadclc(callkey=''):
         trc.append(cline)
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Copy":
         trc = [ckey]
         iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
         trc.append(cline)
+        TransRotCop.append(trc)
+        trc.append('read')
+      elif ckey == "Rotate" or ckey == "Rotate_Shape":
+        trc = [ckey]
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
+        trc.append(cline)
+        trc.append('read')
         TransRotCop.append(trc)
       elif ckey == "Inhomogeneity":
         tinh = ['& ' + ckey]
@@ -36608,15 +36707,7 @@ def ureadclc(callkey=''):
           if cline[:5] == '& End': break
         #endif
         Inhom.append(tinh)
-      elif ckey == "Rotate" or ckey == "Rotate_Shape":
-        trc = [ckey]
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        iline, cline, icomm, com = ugui_get_clc_line_com(iline,nlines,icomm)
-        trc.append(cline)
-        TransRotCop.append(trc)
+      #endif
 
       elif ckey == "Module":
 
@@ -37081,10 +37172,11 @@ def ureadclc(callkey=''):
   if NCoil: undu_coils_to_filaments()
 
   if len(TransRotCop):
-    utransrotcop()
+    utransrotcop('ureadclc')
     #checktransrotcop()
   #endif
 
+  #Quit("Ende von ureadclc")
   #debug("debug: Ende von ureadclc")
 
 #  MagPolsTot[0]=[['mag1', 'Moth1'], 'REC', 1, 'File']

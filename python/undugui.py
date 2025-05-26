@@ -25346,6 +25346,12 @@ def settextcolor(tc='black'):
   global Textcolor
   Textcolor = tc
 
+def tred(): settextcolor('green')
+def tblue(): settextcolor('blue')
+def tgreen(): settextcolor('green')
+def tcyan(): settextcolor('cyan')
+def tmagenta(): settextcolor('magenta')
+
 def gettextcolor(): return Textcolor
 
 def setlinecolor(lc='red'):
@@ -26258,6 +26264,12 @@ nex = nextzone
 gtit = set_global_title
 setgeo = window_geometry
 setfit = optfit
+
+tgruen = tgreen
+trot = tred
+tblau = tblue
+tlila = tmagenta
+thellblau = tcyan
 #end of aliases in m_hbook
 
 #end of m_hbook
@@ -28929,7 +28941,7 @@ def undu_read_mat():
     lines = fmh.readlines()
     fmh.close()
     if len(lines) > 1:
-      nmh = ncread("nmh","mtyp:mmod:easyX:easyY:easyZ:h:m:mat:kbr","undumag.mh")
+      nmh = ncread("nmh","mtyp:mmod:easyX:easyY:easyZ:h:m:mat:kbr:mag:x:y:z","undumag.mh")
     #endif
   #endif
 
@@ -29600,7 +29612,7 @@ def nreloadupl():
     mh = fmh.readlines()
     fmh.close()
     if len(mh) > 1:
-      nmh = ncread("nmh","mtyp:mmod:easyX:easyY:easyZ:h:m:mat:kbr","undumag.mh")
+      nmh = ncread("nmh","mtyp:mmod:easyX:easyY:easyZ:h:m:mat:kbr:mag:x:y:z","undumag.mh")
     #endif
   #endif
 
@@ -36437,6 +36449,11 @@ def _runundumag(callkey='',modus=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+
+  if NMagPolTot <= 0 and NCoil <= 0:
+    wError("No magnetic items set-up so far...!")
+    return
+  #endif IUNDUMAGisRunning
 
   Rmodus = modus
   _undumag('_rundunmag')

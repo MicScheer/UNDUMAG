@@ -1,4 +1,4 @@
-*CMZ :          20/03/2025  10.27.43  by  Michael Scheer
+*CMZ :          26/05/2025  14.54.30  by  Michael Scheer
 *CMZ :  1.03/03 05/02/2025  20.13.15  by  Michael Scheer
 *CMZ :  1.03/02 23/09/2016  13.46.02  by  Michael Scheer
 *CMZ :  1.02/00 01/10/2014  14.43.01  by  Michael Scheer
@@ -15,7 +15,7 @@
 *CMZ :  0.00/02 09/07/2014  14.42.14  by  Michael Scheer
 *-- Author :    Michael Scheer   07/07/2014
       subroutine mshplt_axis_taylor(
-     &  xmin,xmax,ymin,ymax,smin,smax,
+     &  xmin,xmax,ymin,ymax,sminin,smaxin,
      &  nlab,chlab,rlabsiz,xlabrel,ylaboff,xoffexp,yoffexp,rlabangrel,
      &  ntic,ticsiz,ticposrel,ticangrel,
      &  titsiz,titposrel,titoff,titangrel,chtit
@@ -30,17 +30,19 @@
       integer :: ical=0
 
       integer nlab,ntic,i,nbig,ic,ifirst,nexp,iprimitiv,k,nskip,iexpmode,
-     &  nexpmax,kbig(100),ndig,nticmax,inv,kinter
+     &  nexpmax,kbig(100),ndig,nticmax,inv,kinter,isvert
 
       real xmin,xmax,ymin,ymax,axang,x(2),y(2),ango,chheo,
      &  rlabsiz(*),xlabrel(*),ylaboff(*),xoffexp,yoffexp,rlabangrel(*),axlen,
      &  titsiz,titangrel,ticsiz(*),ticposrel(*),ticangrel(*),cosang,sinang,
      &  titposrel,titoff,xlab(100),smin,smax,rmanti,rtotlabx,rtotlaby,
      &  costitang,sintitang,costicang,sinticang,coslabang,sinlabang
-     &  ,ticsizo,dxabs,xlabinv(100)
+     &  ,ticsizo,dxabs,xlabinv(100),xlabo,sminin,smaxin,soff,sfac
 
       character(*) chtit,chlab(*)
       character(12) chreal,clab
+      character(64) c64
+      character(2048) c2048
       character(3) chexp
 
       ical=ical+1
@@ -50,6 +52,22 @@
       if (ymax.eq.ymin.and.xmax.eq.xmin) then
 c        print*,'*** Error in mshplt_axis_taylor: Zero length axis ***'
         return
+      endif
+
+      smin=sminin
+      smax=smaxin
+      soff=0.0
+      sfac=0.0
+      isvert=0
+
+      if((xmax-xmin)/(ymax-ymin).lt.0.1) isvert=1
+      dxabs=abs((smax-smin)/(smax+smin))
+
+      if (dxabs.lt.0.001) then
+        smin=0.0
+        smax=smax/((smaxin-sminin)/(smaxin+sminin))
+        soff=sminin
+        sfac=dxabs
       endif
 
       call mshplt_flush_buff
@@ -119,10 +137,12 @@ c Problems with negative axis
 
         dxabs=abs(xlab(2)-xlab(1))
         iexpmode=0
+
         write(chlab(1),'(2pe12.3)')dxabs
         read(chlab(1),*)dxabs
         write(chlab(1),'(1pe12.5)')dxabs
         read(chlab(1)(10:12),'(i3)')nexpmax
+
         if (abs(xlab(nlab)-xlab(1)).gt.9999.
      &    .or.
      &    abs(xlab(nlab)-xlab(1)).lt.0.001) iexpmode=1
@@ -326,7 +346,7 @@ c        goto 111
 
           call mshplt_view_to_world(x(1),y(1),x(1),y(1))
 
-          if (len_trim(chlab(i)).gt.3) ylaboff(i)=2.0*ylaboff(i)
+          if (len_trim(chlab(i)).gt.3.and.isvert.eq.1) ylaboff(i)=2.0*ylaboff(i)
 
           x(1)=x(1)+ylaboff(i)*sinang
      &      -len_trim(chlab(i))*rlabsiz(i)/4.*coslabang
@@ -375,22 +395,26 @@ c20170602??          if (i.eq.nlab.and.iprimitiv.eq.0.and.iexpmode.ne.0) then
 
 c axis-title
 
-      if (titsiz.gt.0.0) then
-
-        costitang=cos((titangrel+axang)*1.745329251994e-2)
-        sintitang=sin((titangrel+axang)*1.745329251994e-2)
-        call mshplt_set_text_angle(titangrel+axang)
-        call mshplt_set_character_height(titsiz)
-        x(1)=xmin+titposrel*(xmax-xmin)
-        y(1)=ymin+titposrel*(ymax-ymin)
-        call mshplt_view_to_world(x(1),y(1),x(1),y(1))
-        x(1)=x(1)+titoff*sintitang
-     &  -len_trim(chtit)*titsiz/4.*costitang
-        y(1)=y(1)-titoff*costitang
-     &    -len_trim(chtit)*titsiz/4.*sintitang
-        call mshplt_world_to_view(x(1),y(1),x(1),y(1))
-        call mshplt_text_raw(x(1),y(1),chtit)
-
+      if (soff.ne.0.0) then
+        if (titsiz.gt.0.0) then
+          write(c64,*) sfac
+          c2048=trim(chtit) // '    / ' // trim(c64)
+          write(c64,*) soff
+          c2048=trim(c2048) // ' + ' // trim(c64)
+          costitang=cos((titangrel+axang)*1.745329251994e-2)
+          sintitang=sin((titangrel+axang)*1.745329251994e-2)
+          call mshplt_set_text_angle(titangrel+axang)
+          call mshplt_set_character_height(titsiz)
+          x(1)=xmin+titposrel*(xmax-xmin)
+          y(1)=ymin+titposrel*(ymax-ymin)
+          call mshplt_view_to_world(x(1),y(1),x(1),y(1))
+          x(1)=x(1)+titoff*sintitang
+     &      -len_trim(c2048)*titsiz/4.*costitang
+          y(1)=y(1)-titoff*costitang
+     &      -len_trim(c2048)*titsiz/4.*sintitang
+          call mshplt_world_to_view(x(1),y(1),x(1),y(1))
+          call mshplt_text_raw(x(1),y(1),trim(c2048))
+        endif
       endif
 
 9999  continue
