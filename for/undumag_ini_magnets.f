@@ -1,4 +1,4 @@
-*CMZ :          14/12/2024  13.29.44  by  Michael Scheer
+*CMZ :          26/05/2025  12.11.45  by  Michael Scheer
 *CMZ :  2.05/02 26/10/2023  11.07.25  by  Michael Scheer
 *CMZ :  2.05/01 02/10/2023  16.19.49  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  10.23.44  by  Michael Scheer
@@ -16,7 +16,7 @@
 
       implicit none
 
-      integer:: kseg,itrace=0
+      integer:: kseg,itrace=0,ifound,mat,m,kmag,ivox
 
 c      print*," "
 c      print*," "
@@ -95,6 +95,21 @@ c      print*,"bpebc(18:20),corrtiny, dedgefb, simpson-file, chicut und andere V
 
       call clcmag_ini_force
       if (itrace.ne.0) print*,"leaving undumag_ini_magnets"
+
+      do mat=1,nmatfiles
+        ifound=0
+        do ivox=1,nvoxcopy_t
+          kmag=t_voxcopy(ivox)%kmagnet
+          m=t_magcopy(kmag)%kproto
+          if (t_magnets(m)%imat.eq.mat) then
+            ifound=1
+            exit
+          endif
+        enddo
+        if (ifound.eq.0) then
+          matmaps(3,mat)=0
+        endif
+      enddo
 
       return
       end

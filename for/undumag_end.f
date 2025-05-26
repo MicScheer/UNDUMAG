@@ -1,4 +1,4 @@
-*CMZ :          26/05/2025  10.20.52  by  Michael Scheer
+*CMZ :          26/05/2025  16.30.34  by  Michael Scheer
 *CMZ :  2.05/05 30/06/2024  16.08.56  by  Michael Scheer
 *CMZ :  2.05/04 06/02/2024  15.02.28  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.05.20  by  Michael Scheer
@@ -181,7 +181,7 @@
       real hpaw(npawp)
       common/pawc/hpaw
 
-*KEEP,mshpltincl.
+*KEEP,MSHPLTINCL.
       include 'mshplt.cmn'
 *KEEP,phyconparam.
       include 'phyconparam.cmn'
@@ -1141,7 +1141,7 @@ c              write(lun6,*)"field:",ix,iy,iz
           h=(hx*easy(1)+hy*easy(2)+hz*easy(3))/easyn
           bc=(bcx*easy(1)+bcy*easy(2)+bcz*easy(3))/easyn
 
-          write(lunmag,'(a,I5,1p5e12.4,2I5)')"1 ",matmap3,easy,h,bc,mat,kbrn
+          write(lunmag,'(a,I5,1p5e12.4,3I5,1p3e15.6)')"1 ",matmap3,easy,h,bc,mat,kbrn,kmag,x,y,z
 
           hmagvox(1,kmag)=h
           hmagvox(2,kmag)=bc
@@ -1351,6 +1351,7 @@ c Calculate field map}
 
 c{ Plot Magnetization of magnets
 
+      !all util_break
       if (nmag.gt.0) then
 
         xplmin=hminrec
@@ -1379,17 +1380,19 @@ c{ Plot Magnetization of magnets
         do ibrn=1,nbrnmat
           mat=nint(brnmat(1,ibrn))
           brn=sngl(abs(brnmat(2,ibrn)))
-          matmap2=matmaps(2,mat)
-          if (matmap2.eq.1) then
+          if (matmaps(3,mat).eq.1) then
             ypl(1)=brn+sngl(bcmat(2,1,mat))*xpl(1)
             ypl(2)=brn+sngl(bcmat(2,1,mat))*xpl(2)
             call mpl(2,xpl,ypl)
-          else if (matmap2.eq.2) then
-            ypl(1)=brn+sngl(bcmat(3,1,mat))*xpl(1)
-            ypl(2)=brn+sngl(bcmat(3,1,mat))*xpl(2)
-            call mpl(2,xpl,ypl)
+          else
+            do i=2,matmaps(4,mat)
+              xpl(1)=sngl(bcmat(1,i-1,mat))
+              xpl(2)=sngl(bcmat(1,i,mat))
+              ypl(1)=sngl(bcmat(2,i-1,mat))
+              ypl(2)=sngl(bcmat(2,i,mat))
+              call mpl(2,xpl,ypl)
+            enddo
           endif
-
         enddo !nbrnmat
 
         call mgset('PLCI',2.)
@@ -3227,6 +3230,7 @@ c{ Plot By, Bz
 
       !all util_break
       do mat=1,nmatfiles
+        if (matmaps(3,mat).eq.0) cycle
         n=matmaps(4,mat)
         mtyp=matmaps(2,mat)
         if (mtyp.eq.1.and.nrec.gt.0) then
