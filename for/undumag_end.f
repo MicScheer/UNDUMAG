@@ -1,4 +1,4 @@
-*CMZ :          26/05/2025  16.30.34  by  Michael Scheer
+*CMZ :          27/05/2025  09.38.43  by  Michael Scheer
 *CMZ :  2.05/05 30/06/2024  16.08.56  by  Michael Scheer
 *CMZ :  2.05/04 06/02/2024  15.02.28  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.05.20  by  Michael Scheer
@@ -181,7 +181,7 @@
       real hpaw(npawp)
       common/pawc/hpaw
 
-*KEEP,MSHPLTINCL.
+*KEEP,mshpltincl.
       include 'mshplt.cmn'
 *KEEP,phyconparam.
       include 'phyconparam.cmn'
@@ -246,9 +246,6 @@
       nowarnugv=0
 
       call util_zeit_kommentar(lun6,"Writing undumag.mh")
-
-      open(newunit=lunmag,file="undumag.mh")
-      write(lunmag,'(a)') '* ' // ctitle
 
       if (maxiter.eq.0.and.kpreset.eq.0) goto 9999
 
@@ -1077,6 +1074,9 @@ c              write(lun6,*)"field:",ix,iy,iz
 
       endif !knomagmap
 
+      open(newunit=lunmag,file="undumag.mh")
+      write(lunmag,'(a)') '* ' // ctitle
+
       if (knomagmap.eq.0) then
 
         irecover=0
@@ -1486,17 +1486,22 @@ c{ Plot Magnetization of iron
 
         call mgset('PLCI',2.)
 
+      !all util_break
         if (knopolmap.eq.0) then
           do iron=1,niron
+            kmag=nrec+iron
+            x=bpebc(1,kmag) !mm
+            y=bpebc(2,kmag) !mm
+            z=bpebc(3,kmag) !mm
             mat=nint(bpebc(9,nrec+iron))
             matmap2=matmaps(2,mat)
             matmap3=matmaps(3,mat)
             easy=0.0
-            write(lunmag,'(a,i5,1p5e12.4,2I5)')
-     &        "2 ",matmap3,easy,xpl(1),ypl(1),mat, mat*0
             if (matmap3.eq.0) cycle
             xpl(1)=sngl(hmvoxel(1,iron))
             ypl(1)=sngl(hmvoxel(2,iron))
+            write(lunmag,'(a,i5,1p5e12.4,3I5,1p3e15.6)')
+     &        "2 ",matmap3,easy,xpl(1),ypl(1),mat, mat*0,kmag,x,y,z
 c            if (xpl(1).lt.0.01) then
               call mpm(1,xpl,ypl)
 c            else
