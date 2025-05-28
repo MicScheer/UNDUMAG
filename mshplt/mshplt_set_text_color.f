@@ -1,3 +1,4 @@
+*CMZ :          28/05/2025  10.00.35  by  Michael Scheer
 *CMZ :  1.03/03 02/02/2025  10.38.10  by  Michael Scheer
 *CMZ :  0.01/02 05/09/2014  16.58.57  by  Michael Scheer
 *CMZ :  0.00/06 19/08/2014  15.11.41  by  Michael Scheer
@@ -17,7 +18,11 @@
 
       kTextColor_ps=icolor
 
-      if (icolor.eq.-1) then
+      if (icolor.eq.0) then
+        kTextRed_ps=ired
+        kTextGreen_ps=igreen
+        kTextBlue_ps=iblue
+      elseif (icolor.eq.-1) then
         kTextRed_ps=0
         kTextGreen_ps=0
         kTextBlue_ps=0

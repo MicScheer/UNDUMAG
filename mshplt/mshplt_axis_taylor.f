@@ -1,4 +1,4 @@
-*CMZ :          26/05/2025  14.54.30  by  Michael Scheer
+*CMZ :          28/05/2025  09.44.36  by  Michael Scheer
 *CMZ :  1.03/03 05/02/2025  20.13.15  by  Michael Scheer
 *CMZ :  1.03/02 23/09/2016  13.46.02  by  Michael Scheer
 *CMZ :  1.02/00 01/10/2014  14.43.01  by  Michael Scheer
@@ -395,27 +395,39 @@ c20170602??          if (i.eq.nlab.and.iprimitiv.eq.0.and.iexpmode.ne.0) then
 
 c axis-title
 
-      if (soff.ne.0.0) then
-        if (titsiz.gt.0.0) then
-          write(c64,*) sfac
-          c2048=trim(chtit) // '    / ' // trim(c64)
-          write(c64,*) soff
-          c2048=trim(c2048) // ' + ' // trim(c64)
-          costitang=cos((titangrel+axang)*1.745329251994e-2)
-          sintitang=sin((titangrel+axang)*1.745329251994e-2)
-          call mshplt_set_text_angle(titangrel+axang)
-          call mshplt_set_character_height(titsiz)
-          x(1)=xmin+titposrel*(xmax-xmin)
-          y(1)=ymin+titposrel*(ymax-ymin)
-          call mshplt_view_to_world(x(1),y(1),x(1),y(1))
-          x(1)=x(1)+titoff*sintitang
-     &      -len_trim(c2048)*titsiz/4.*costitang
-          y(1)=y(1)-titoff*costitang
-     &      -len_trim(c2048)*titsiz/4.*sintitang
-          call mshplt_world_to_view(x(1),y(1),x(1),y(1))
-          call mshplt_text_raw(x(1),y(1),trim(c2048))
-        endif
+      if (titsiz.gt.0.0) then
+        c2048=trim(chtit)
+      else
+        c2048=''
       endif
+
+      if (soff.ne.0.0) then
+        write(c64,*) sfac
+        c2048=trim(c2048) // '    / ' // trim(c64)
+        write(c64,*) soff
+        c2048=trim(c2048) // ' + ' // trim(c64)
+      endif
+
+      if (len_trim(c2048).eq.0) goto 9999
+
+      costitang=cos((titangrel+axang)*1.745329251994e-2)
+      sintitang=sin((titangrel+axang)*1.745329251994e-2)
+
+      call mshplt_set_text_angle(titangrel+axang)
+      call mshplt_set_character_height(titsiz)
+
+      x(1)=xmin+titposrel*(xmax-xmin)
+      y(1)=ymin+titposrel*(ymax-ymin)
+
+      call mshplt_view_to_world(x(1),y(1),x(1),y(1))
+
+      x(1)=x(1)+titoff*sintitang
+     &  -len_trim(c2048)*titsiz/4.*costitang
+      y(1)=y(1)-titoff*costitang
+     &  -len_trim(c2048)*titsiz/4.*sintitang
+
+      call mshplt_world_to_view(x(1),y(1),x(1),y(1))
+      call mshplt_text_raw(x(1),y(1),trim(c2048))
 
 9999  continue
 
