@@ -1,4 +1,4 @@
-*CMZ :          27/05/2025  09.38.43  by  Michael Scheer
+*CMZ :          03/06/2025  07.25.46  by  Michael Scheer
 *CMZ :  2.05/05 30/06/2024  16.08.56  by  Michael Scheer
 *CMZ :  2.05/04 06/02/2024  15.02.28  by  Michael Scheer
 *CMZ :  2.05/02 02/11/2023  14.05.20  by  Michael Scheer
@@ -181,7 +181,7 @@
       real hpaw(npawp)
       common/pawc/hpaw
 
-*KEEP,mshpltincl.
+*KEEP,MSHPLTINCL.
       include 'mshplt.cmn'
 *KEEP,phyconparam.
       include 'phyconparam.cmn'
@@ -1916,6 +1916,7 @@ c        endif
 c        call mtx(xplmin-dxpl*0.15,yplmax-dypl*0.05,'B [T]')
         call mshplt_set_text_angle(0.)
         call mgset('CHHE',0.5)
+        !all util_break
         call mshplt_set_text_color(0,1,0,0)
         call mshplt_text_ndc(0.85,0.9,'By')
         call mshplt_set_text_color(0,0,0,1)

@@ -30438,7 +30438,7 @@ def utransrotcop(caller=''):
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
-          #breakpoint()
+          #reakpoint()
           #print(mp)
           #print(DictMagPolsTot)
         except:
@@ -31572,6 +31572,22 @@ def ureadclc(callkey=''):
   IclcRead = 1
 
   Fclc.close()
+
+  for lin in Uclcorig:
+    lin = lin.strip()
+    sw = lin.split('=')
+    print(sw)
+    if sw[0].strip() == '$PerLen':
+      try:
+        val = Variables.pop('$PerLen')
+        Nvar -= 1
+      except: pass
+    if sw[0].strip() == '$Mcoating':
+      try:
+        val = Variables.pop('$Mcoating')
+        Nvar -= 1
+      except: pass
+  #endfor
 
   iline = -1
   nlines = len(Uclcorig)
@@ -35215,7 +35231,7 @@ def utransrotcop(caller=''):
           y = str(calc_var(m4[1]))
           z = str(calc_var(m4[2]))
           mag[4] = [x,y,z]
-          #breakpoint()
+          #reakpoint()
           #print(mp)
           #print(DictMagPolsTot)
         except:
@@ -36349,6 +36365,22 @@ def ureadclc(callkey=''):
   IclcRead = 1
 
   Fclc.close()
+
+  for lin in Uclcorig:
+    lin = lin.strip()
+    sw = lin.split('=')
+    print(sw)
+    if sw[0].strip() == '$PerLen':
+      try:
+        val = Variables.pop('$PerLen')
+        Nvar -= 1
+      except: pass
+    if sw[0].strip() == '$Mcoating':
+      try:
+        val = Variables.pop('$Mcoating')
+        Nvar -= 1
+      except: pass
+  #endfor
 
   iline = -1
   nlines = len(Uclcorig)
