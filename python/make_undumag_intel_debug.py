@@ -91,7 +91,7 @@ else:
 
 
 UI = os.getcwd() + Sepp
-tree = ['bin','for','lib','main','mshcern','mshplt','python']
+tree = ['bin','for','main','mshcern','mshplt','python']
 
 for d in tree:
   if not os.path.exists(UI + d):
@@ -107,6 +107,8 @@ for d in tree:
     Quit('\n Bad directory structure, giving up!')
   #endif
 #endfor
+
+if not os.path.exists(UI + 'lib'): os.system('mkdir ' + UI + 'lib')
 
 
 Iverbose = 0
