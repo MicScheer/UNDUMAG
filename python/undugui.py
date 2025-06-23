@@ -30383,6 +30383,8 @@ def undugui_clean(key=''):
   global TeX_pow,TeX_rKauf,TeX_rKzu,TeX_eKauf,TeX_eKzu,TeX_plus,TeX_mul,TeX_slash,Tex_blank
 
 
+  #print("undugui_clean::key:",key)
+
   Ucomment = ""
 
   Inhom = []
@@ -30395,19 +30397,20 @@ def undugui_clean(key=''):
   Uclcorig = []
 
   Pars = {}
+
   DictPcomments = {}
 
-  Npar = 1
+#  Npar = 1
   PerLen = 100.0
-  Parameters = [['$PerLen',str(PerLen),'']]
+#  Parameters = [['$PerLen',str(PerLen),'']]
 
-  Pars['$PerLen'] = PerLen
+#  Pars['$PerLen'] = PerLen
   DictPcomments['$PerLen'] = "Period length [mm]"
 
-  Npar += 1
+#  Npar += 1
   Coating = 0.0
-  Parameters.append(['$Mcoating','0.0',''])
-  Pars['$Mcoating'] = 0.0
+#  Parameters.append(['$Mcoating','0.0',''])
+#  Pars['$Mcoating'] = 0.0
   DictPcomments['$Mcoating'] = "Coating of REC-Magnets"
 
   Variables = {}
@@ -30415,12 +30418,12 @@ def undugui_clean(key=''):
 
   key = '$PerLen'
   Nvar = 1
-  Variables[key] = Pars[key]
+  Variables[key] = PerLen
   DictVcomments[key] = DictPcomments[key]
 
   key = '$Mcoating'
   Nvar += 1
-  Variables[key] = Pars[key]
+  Variables[key] = Coating
   DictVcomments[key] = DictPcomments[key]
 
   Ncalc = 0
@@ -30500,6 +30503,7 @@ def undugui_clean(key=''):
 
 #enddef undugui_clean()
 
+#reakpoint()
 undugui_clean('init')
 
 def calc_var(svar):
@@ -30938,9 +30942,16 @@ def ugui_calc():
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
+  #print("ugui_calc!")
+  #reakpoint()
+
   Ncalc = len(CalcLines)
   Calcs = deepcopy(CalcLines)
-  Pars = deepcopy(Parameters)
+  try:
+    Pars = deepcopy(Parameters)
+  except:
+    Pars = []
+  #endtry
 
   #convert parameters to variables
 
@@ -32641,6 +32652,7 @@ def ureadclc(callkey=''):
   NL = "\n"
 
 
+  #reakpoint()
   undugui_clean(callkey)
 
   if not os.path.exists(FileCLC):
@@ -32675,7 +32687,7 @@ def ureadclc(callkey=''):
   for lin in Uclcorig:
     lin = lin.strip()
     sw = lin.split('=')
-    print(sw)
+    #print(sw)
     if sw[0].strip() == '$PerLen':
       try:
         val = Variables.pop('$PerLen')
@@ -33129,7 +33141,11 @@ def ureadclc(callkey=''):
 
   #endwhile iline < nlines - 1
 
-  Npar = len(Parameters)
+  try:
+    Npar = len(Parameters)
+  except:
+    Npar = 0
+  #endtry
 
   NMagPol = len(MagPols)
   NspecMagPol = len(SpecMagPols)
@@ -34235,8 +34251,19 @@ def uwriteclc(callkey='',fileclc=''):
   mpperi = deepcopy(MagPols)
   mpspec = deepcopy(SpecMagPols)
 
-  Npar = len(Pars)
-  Nvar = len(Variables)
+  try:
+    Npar = len(Pars)
+  except:
+    Npar = 0
+    Pars = {}
+  #endtry
+
+  try:
+    Nvar = len(Variables)
+  except:
+    Nvar = 0
+    Variables = {}
+  #endtry
 
   #reakpoint()
   mats = deepcopy(Materials)
@@ -36503,7 +36530,7 @@ def _runundumag(callkey='',modus=''):
 
 #=============================================================================
 
-if platform.system() == 'Linux': RunUndu = "bash $UNDUMAG/shell/undumag_run.sh"
+if platform.system() == 'Linux': RunUndu = "bash ../shell/undumag_run.sh"
 elif platform.system() == 'Windows': RunUndu = '..\\bin\\undumag.exe '
 else: Quit("*** Error: Unknown platform: ",platform.system())
 
@@ -37893,6 +37920,7 @@ def ureadclc(callkey=''):
   NL = "\n"
 
 
+  #reakpoint()
   undugui_clean(callkey)
 
   if not os.path.exists(FileCLC):
@@ -37927,7 +37955,7 @@ def ureadclc(callkey=''):
   for lin in Uclcorig:
     lin = lin.strip()
     sw = lin.split('=')
-    print(sw)
+    #print(sw)
     if sw[0].strip() == '$PerLen':
       try:
         val = Variables.pop('$PerLen')
@@ -38381,7 +38409,11 @@ def ureadclc(callkey=''):
 
   #endwhile iline < nlines - 1
 
-  Npar = len(Parameters)
+  try:
+    Npar = len(Parameters)
+  except:
+    Npar = 0
+  #endtry
 
   NMagPol = len(MagPols)
   NspecMagPol = len(SpecMagPols)
@@ -43308,7 +43340,7 @@ def _clWfclc(key):
 
         S_HorSlit_AppleII.set(AppleII["zSlit"])
         S_AirGap_AppleII.set(AppleII["AirGap"])
-        S_DeadCoat_AppleII.set(Pars["$Mcoating"])
+        S_DeadCoat_AppleII.set(Variables["$Mcoating"])
 
         S_S2Shift_AppleII.set(AppleII["S2Shift"])
         S_S3Shift_AppleII.set(AppleII["S3Shift"])
@@ -44338,7 +44370,7 @@ def ugui_ini_appleII(mode=''):
     AppleII["LzMag"] = 40.0
     AppleII["AirGap"] = 0.1
     AppleII["Mcoating"] = 0.014
-    Pars["$Mcoating"] = 0.014
+    Variables["$Mcoating"] = 0.014
     AppleII["FullGap"] = 5.0
 
     AppleII["Br"] = -1.38
@@ -44530,7 +44562,7 @@ def ugui_ini_appleII(mode=''):
 
   S_HorSlit_AppleII.set(AppleII["zSlit"])
   S_AirGap_AppleII.set(AppleII["AirGap"])
-  S_DeadCoat_AppleII.set(Pars["$Mcoating"])
+  S_DeadCoat_AppleII.set(AppleII["Mcoating"])
 
   S_S2Shift_AppleII.set(AppleII["S2Shift"])
   S_S3Shift_AppleII.set(AppleII["S3Shift"])
@@ -44848,7 +44880,11 @@ def _appleII(callkey=''):
 
 
 
+  #reakpoint()
   undugui_clean('AppleII')
+  Nvar = 0
+  Variables = {}
+
   ugui_ini_appleII('_appleII')
 
   WappleII = Toplevel()
@@ -51696,7 +51732,7 @@ def _listMags(mode='all',caller=''):
   del_firstmp, del_fxyz, del_fbott, del_fpn, bPrev,bCont, del_width, \
   del_width_old, del_width_ini, del_fb, del_fedi, del_del, del_fplot, del_fcop
 
-  print('_listMags',caller)
+  #print('_listMags',caller)
 
   if not NMagPolTot:
     wError("No magnets or poles defined so far")

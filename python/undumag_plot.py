@@ -31542,6 +31542,7 @@ def ureadclc(callkey=''):
   NL = "\n"
 
 
+  #reakpoint()
   undugui_clean(callkey)
 
   if not os.path.exists(FileCLC):
@@ -31576,7 +31577,7 @@ def ureadclc(callkey=''):
   for lin in Uclcorig:
     lin = lin.strip()
     sw = lin.split('=')
-    print(sw)
+    #print(sw)
     if sw[0].strip() == '$PerLen':
       try:
         val = Variables.pop('$PerLen')
@@ -32030,7 +32031,11 @@ def ureadclc(callkey=''):
 
   #endwhile iline < nlines - 1
 
-  Npar = len(Parameters)
+  try:
+    Npar = len(Parameters)
+  except:
+    Npar = 0
+  #endtry
 
   NMagPol = len(MagPols)
   NspecMagPol = len(SpecMagPols)
@@ -36335,6 +36340,7 @@ def ureadclc(callkey=''):
   NL = "\n"
 
 
+  #reakpoint()
   undugui_clean(callkey)
 
   if not os.path.exists(FileCLC):
@@ -36369,7 +36375,7 @@ def ureadclc(callkey=''):
   for lin in Uclcorig:
     lin = lin.strip()
     sw = lin.split('=')
-    print(sw)
+    #print(sw)
     if sw[0].strip() == '$PerLen':
       try:
         val = Variables.pop('$PerLen')
@@ -36823,7 +36829,11 @@ def ureadclc(callkey=''):
 
   #endwhile iline < nlines - 1
 
-  Npar = len(Parameters)
+  try:
+    Npar = len(Parameters)
+  except:
+    Npar = 0
+  #endtry
 
   NMagPol = len(MagPols)
   NspecMagPol = len(SpecMagPols)
