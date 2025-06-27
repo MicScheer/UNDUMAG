@@ -26769,6 +26769,10 @@ def nphasespace_ellip(emit,beta0,s,npoi=1000):
 #enddef
 
 def nl(): print('\n')
+def xstp(): set_x_stat('+')
+def xstm(): set_x_stat('-')
+def ystp(): set_y_stat('+')
+def ystm(): set_y_stat('-')
 
 
 # +PATCH,//NTUPPLOT/PYTHON

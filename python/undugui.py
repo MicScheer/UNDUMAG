@@ -26779,6 +26779,10 @@ def nphasespace_ellip(emit,beta0,s,npoi=1000):
 #enddef
 
 def nl(): print('\n')
+def xstp(): set_x_stat('+')
+def xstm(): set_x_stat('-')
+def ystp(): set_y_stat('+')
+def ystm(): set_y_stat('-')
 
 
 # +PATCH,//NTUPPLOT/PYTHON
@@ -35920,7 +35924,7 @@ def uwriteclc(callkey='',fileclc=''):
         comm = " !material index\n"
         n = 50 - len(line); Fclc.write(line + blanks[0:n] + comm)
       else:
-        line = vmat[0] + " " + vmat[1] + " " + vmat[2] + " " + vmat[3] + " " + vmat[4]
+        line = str(vmat[0]) + " " + str(vmat[1]) + " " + str(vmat[2]) + " " + str(vmat[3]) + " " + str(vmat[4])
         comm = "!Bc, direction of magnetization, material index\n"
         n = 50 - len(line); Fclc.write(line + blanks[0:n] + comm)
       #endif
