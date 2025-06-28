@@ -30280,6 +30280,7 @@ def utransrotcop(caller=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -30364,7 +30365,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  #reakpoint()
+  #if Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -30520,7 +30521,7 @@ def utransrotcop(caller=''):
                                           [vbrx,vbry,vbrz])
             mag[5][1] = crot[0]
             mag[5][2] = crot[1]
-            mag[5][3] = crot[1]
+            mag[5][3] = crot[2]
           #endif key == 'Rotate'
 
         #endfor
@@ -30686,6 +30687,7 @@ def checktransrotcop():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -31261,6 +31263,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -31460,6 +31463,7 @@ def ureadclc(callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33362,6 +33366,7 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33886,6 +33891,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -34502,6 +34508,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -34736,6 +34743,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -35078,6 +35086,7 @@ def utransrotcop(caller=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -35162,7 +35171,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  #reakpoint()
+  #if Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -35318,7 +35327,7 @@ def utransrotcop(caller=''):
                                           [vbrx,vbry,vbrz])
             mag[5][1] = crot[0]
             mag[5][2] = crot[1]
-            mag[5][3] = crot[1]
+            mag[5][3] = crot[2]
           #endif key == 'Rotate'
 
         #endfor
@@ -35484,6 +35493,7 @@ def checktransrotcop():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -36059,6 +36069,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -36258,6 +36269,7 @@ def ureadclc(callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \

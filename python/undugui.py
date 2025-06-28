@@ -5,8 +5,10 @@
 global WavesMode
 WavesMode = 'UNDUMAG'
 
-global idebug
+global idebug,Fdebug
 idebug = 0
+Fdebug = ''
+
 def debug(arg=''):
   global idebug
   idebug += 1
@@ -30300,6 +30302,7 @@ def undugui_clean(key=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -30516,6 +30519,7 @@ def calc_var(svar):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -30696,6 +30700,7 @@ def ugui_get_clc_line(iline,nlines,icomm):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -30863,6 +30868,7 @@ def ugui_calc():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -31071,6 +31077,7 @@ def ugui_calc_line(cline):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -31196,6 +31203,7 @@ def ugui_ini():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -31390,6 +31398,7 @@ def utransrotcop(caller=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -31474,7 +31483,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  #reakpoint()
+  #if Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -31630,7 +31639,7 @@ def utransrotcop(caller=''):
                                           [vbrx,vbry,vbrz])
             mag[5][1] = crot[0]
             mag[5][2] = crot[1]
-            mag[5][3] = crot[1]
+            mag[5][3] = crot[2]
           #endif key == 'Rotate'
 
         #endfor
@@ -31796,6 +31805,7 @@ def checktransrotcop():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -32371,6 +32381,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -32570,6 +32581,7 @@ def ureadclc(callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33558,6 +33570,7 @@ def _MbLeave(ev):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33649,6 +33662,7 @@ def _MenuBar(ev):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -33921,6 +33935,7 @@ def write_variables(Fclc):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -34155,6 +34170,7 @@ def uwriteclc(callkey='',fileclc=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -36081,6 +36097,7 @@ def ureadfil(callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -36244,6 +36261,7 @@ def _undumag(callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -36438,6 +36456,7 @@ def _runundumag(callkey='',modus=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -36564,6 +36583,11 @@ if os.path.exists("undugui.cfg"):
 
 #reakpoint()
 
+args=sys.argv
+if len(args) > 1: Fdebug = args[1]
+else: Fdebug = ''
+
+
 NL = "\n"
 Rmodus = ''
 
@@ -36658,6 +36682,7 @@ def utransrotcop(caller=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -36742,7 +36767,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  #reakpoint()
+  #if Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -36898,7 +36923,7 @@ def utransrotcop(caller=''):
                                           [vbrx,vbry,vbrz])
             mag[5][1] = crot[0]
             mag[5][2] = crot[1]
-            mag[5][3] = crot[1]
+            mag[5][3] = crot[2]
           #endif key == 'Rotate'
 
         #endfor
@@ -37064,6 +37089,7 @@ def checktransrotcop():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -37639,6 +37665,7 @@ def undu_coils_to_filaments(kcoil=-1,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -37838,6 +37865,7 @@ def ureadclc(callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -39740,6 +39768,7 @@ def plothull3dxzy(isame=0,facecolor='blue',alpha=0.5,edgecolor='black', ishow=1,
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -40264,6 +40293,7 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -40880,6 +40910,7 @@ def _showGeoPythonXYZ(modus='xy',item=-1,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -41114,6 +41145,7 @@ def _showGeoUndu(modus='3d',item=-1,kseg=0,callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -41498,6 +41530,7 @@ def _GetMirror(key=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -41732,6 +41765,7 @@ def _GetHybrid():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -42002,6 +42036,7 @@ def GetHybridEnd():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -42234,6 +42269,7 @@ def _EndPoles_Whybrid():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -42421,6 +42457,7 @@ def _mirror():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -42630,6 +42667,7 @@ def _hybrid():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -42838,6 +42876,7 @@ def _updateMenu(menu):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -42928,6 +42967,7 @@ def _enterMenu(ev,menu):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -43020,6 +43060,7 @@ def _keypressMenu(ev,menu):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -43112,6 +43153,7 @@ def _leaveMenu(ev,menu):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -43209,6 +43251,7 @@ def _clWfclc(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -43405,6 +43448,7 @@ def _uclc(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -43543,6 +43587,7 @@ def ugui_ini_mirror(mode=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -43882,6 +43927,7 @@ def ugui_ini_hybrid(mode=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -44266,6 +44312,7 @@ def ugui_ini_appleII(mode=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -44591,6 +44638,7 @@ def _cnWappleII():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -44681,6 +44729,7 @@ def _clWappleII(callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -44800,6 +44849,7 @@ def _appleII(callkey=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -45200,6 +45250,7 @@ def Set_Coil(k):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -45320,6 +45371,7 @@ def Get_Coil(k):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -45446,6 +45498,7 @@ def update_coils(caller=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -45549,6 +45602,7 @@ def _WaddCoils(key=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -45661,6 +45715,7 @@ def _WaddCoilRace():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -45936,6 +45991,7 @@ def _WeditCoil():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -46217,6 +46273,7 @@ def _clWaddCoils(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -46345,6 +46402,7 @@ def _cnWaddCoilRace():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -46435,6 +46493,7 @@ def _cnWaddCoil():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -46525,6 +46584,7 @@ def _cnWaddCoils():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -46624,6 +46684,7 @@ def _clWlistCoils():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -46715,6 +46776,7 @@ def _listCoils(modecoil='first'):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -47549,6 +47611,7 @@ def update_magnets(caller=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -47991,6 +48054,7 @@ def default_mag(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -48382,6 +48446,7 @@ def default_pol(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -48654,6 +48719,7 @@ def _WaddMag(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -49038,6 +49104,7 @@ def _WaddPol(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -49342,6 +49409,7 @@ def _clWaddPol(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -49579,6 +49647,7 @@ def _clWaddMag(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -49875,6 +49944,7 @@ def _EditMagGet(mag,caller=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -50418,6 +50488,7 @@ def _clWEditMag(mag):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -50517,6 +50588,7 @@ def _focoEditMag(ev,imp,idx,kdx):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -50607,6 +50679,7 @@ def _editMag(imp):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -51428,6 +51501,7 @@ def getMagPolsTot():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -51535,6 +51609,7 @@ def getSpecMagPols():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -51638,6 +51713,7 @@ def _listMags(mode='all',caller=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -52558,6 +52634,7 @@ def _searchVariable(key='first'):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -52773,6 +52850,7 @@ def _EntryVarGet(stvar):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -52874,6 +52952,7 @@ def _listVarsGet():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -53089,6 +53168,7 @@ def _listVariables(mode='first'):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -53613,6 +53693,7 @@ def delParameter(vnam):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -53718,6 +53799,7 @@ def delVariable(vnam):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -53823,6 +53905,7 @@ def checkVariable(vnam,vdef):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -53931,6 +54014,7 @@ def addVariable(vnam,vdef,vcom):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -54054,6 +54138,7 @@ def _addVariables(mode='first'):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -55162,6 +55247,7 @@ def _MaddMatIron():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -55298,6 +55384,7 @@ def _MaddMatRECnolin():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -55428,6 +55515,7 @@ def _MaddMatREClin():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -55580,6 +55668,7 @@ def _clWaddMatRECnolin():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -55676,6 +55765,7 @@ def _clWaddMatREClin():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -55774,6 +55864,7 @@ def addMatRECnolin(recfile,iwidget=0):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -55902,6 +55993,7 @@ def addMatREClin(recfile='undugui_1.06_0.17.dat',rmu=1.06,rksi=0.17,iwidget=0):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -56042,6 +56134,7 @@ def _MlistMat(sgeo=""):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -56386,6 +56479,7 @@ def uwritenam(key=''):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -56565,6 +56659,7 @@ def _clWSetMap():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -56682,6 +56777,7 @@ def _clWSetSym():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -56795,6 +56891,7 @@ def _SetCenter():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -56891,6 +56988,7 @@ def _SetSym():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -56998,6 +57096,7 @@ def _ReSetSym():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -57105,6 +57204,7 @@ def _Mcontrol_SetMap():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -57311,6 +57411,7 @@ def _Mcontrol_SetSym():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -57493,6 +57594,7 @@ def ureadnam():
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -57719,6 +57821,7 @@ def _clWfnam(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
@@ -57844,6 +57947,7 @@ def _unam(key):
   global Inhom,DictInhom
   global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
   global Caller
+  global Fdebug
 
   global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
   Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
