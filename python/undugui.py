@@ -36639,7 +36639,7 @@ if platform.system() == 'Linux':
       Quit('\n Bad directory structure, giving up!')
 
 elif platform.system() == 'Windows':
-  com = UI + Sepp + '..\bin\\undumag.exe'
+  com = UI + Sepp + '..\\bin\\undumag.exe'
   if not os.path.exists(com):
     print(com," not found")
     Quit('\n Giving up!')
