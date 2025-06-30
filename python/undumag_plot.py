@@ -318,7 +318,7 @@ c--   workingspace: aa(n),bb(n),cc(n),c(n),cn(n)
 
   #enddo
 
-  # vorletzte zeile
+  # vorletzte Zeile
 
   bb[n2]=bb[n2]/aa[n2]
   cc[n2]=cc[n2]/aa[n2]
@@ -951,13 +951,21 @@ def util_vnorm(v):
 
 def util_rotate(cen,vrot,phi,vin,eps=1.0e-10):
 
+
       istat=0
+      rm = [[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]
+
+      if phi == 0.0:
+        vout=vin
+        return istat, vout,rm
+      #endif
+
       vlen=util_vnorm(vrot)
 
       if vlen == 0.0:
         vout=vin
         istat=1
-        return istat, vout
+        return istat, vout,rm
       #endif
 
       o = vrot/vlen
@@ -27071,9 +27079,13 @@ def startup(sfile='ntupplot_startup.py'):
 
   if get_mshwelcome() == False:
     mshwelcome("Ntup-Plot",2021)
-  if WavesMode == 'WAVES' or WavesMode == 'WPLOT' or WavesMode == 'WSHOP': fcfg = 'waveplot.cfg'
-  elif WavesMode == 'UNDUMAG': fcfg = 'undugui.cfg'
-  else: fcfg = 'ntupplot.cfg'
+  if WavesMode == 'WAVES' or WavesMode == 'WPLOT' or WavesMode == 'WSHOP':
+    fcfg = 'waveplot.cfg'
+  elif WavesMode == 'UNDUMAG':
+    fcfg = 'undugui.cfg'
+  else:
+    fcfg = 'ntupplot.cfg'
+  #endif
 
   print("\n")
   print("\nHints:\n------")
@@ -30365,7 +30377,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  #if Fdebug == 'utransrotcop': breakpoint()
+  if Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -30454,8 +30466,6 @@ def utransrotcop(caller=''):
       #endtry
 
     elif key == 'Rotate' or key == 'Rotate_Shape':
-
-      #reakpoint()
 
       mp = trc[1]
       tr = trc[2].split()
@@ -31546,7 +31556,9 @@ def ureadclc(callkey=''):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-  #reakpoint()
+  global Fdebug
+  if Fdebug == 'ureadclc': breakpoint()
+
   NL = "\n"
 
 
@@ -35171,7 +35183,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  #if Fdebug == 'utransrotcop': breakpoint()
+  if Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -35260,8 +35272,6 @@ def utransrotcop(caller=''):
       #endtry
 
     elif key == 'Rotate' or key == 'Rotate_Shape':
-
-      #reakpoint()
 
       mp = trc[1]
       tr = trc[2].split()
@@ -36352,7 +36362,9 @@ def ureadclc(callkey=''):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-  #reakpoint()
+  global Fdebug
+  if Fdebug == 'ureadclc': breakpoint()
+
   NL = "\n"
 
 

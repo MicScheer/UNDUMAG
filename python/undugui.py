@@ -2,19 +2,19 @@
 # +PATCH,//UNDUMAG/PYTHON
 # +DECK,undugui,T=PYTHON.
 
-global WavesMode
-WavesMode = 'UNDUMAG'
-
-global idebug,Fdebug
-idebug = 0
-Fdebug = ''
-
 def debug(arg=''):
   global idebug
   idebug += 1
   print("idebug:",idebug)
   if arg: print("\n",arg,"\n")
 #enddef debug(arg)
+
+global WavesMode
+global idebug,Fdebug
+
+WavesMode = 'UNDUMAG'
+Fdebug = ''
+idebug = 0
 
 #!/usr/bin/env python
 
@@ -330,7 +330,7 @@ c--   workingspace: aa(n),bb(n),cc(n),c(n),cn(n)
 
   #enddo
 
-  # vorletzte zeile
+  # vorletzte Zeile
 
   bb[n2]=bb[n2]/aa[n2]
   cc[n2]=cc[n2]/aa[n2]
@@ -963,13 +963,21 @@ def util_vnorm(v):
 
 def util_rotate(cen,vrot,phi,vin,eps=1.0e-10):
 
+
       istat=0
+      rm = [[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]
+
+      if phi == 0.0:
+        vout=vin
+        return istat, vout,rm
+      #endif
+
       vlen=util_vnorm(vrot)
 
       if vlen == 0.0:
         vout=vin
         istat=1
-        return istat, vout
+        return istat, vout,rm
       #endif
 
       o = vrot/vlen
@@ -27083,9 +27091,13 @@ def startup(sfile='ntupplot_startup.py'):
 
   if get_mshwelcome() == False:
     mshwelcome("Ntup-Plot",2021)
-  if WavesMode == 'WAVES' or WavesMode == 'WPLOT' or WavesMode == 'WSHOP': fcfg = 'waveplot.cfg'
-  elif WavesMode == 'UNDUMAG': fcfg = 'undugui.cfg'
-  else: fcfg = 'ntupplot.cfg'
+  if WavesMode == 'WAVES' or WavesMode == 'WPLOT' or WavesMode == 'WSHOP':
+    fcfg = 'waveplot.cfg'
+  elif WavesMode == 'UNDUMAG':
+    fcfg = 'undugui.cfg'
+  else:
+    fcfg = 'ntupplot.cfg'
+  #endif
 
   print("\n")
   print("\nHints:\n------")
@@ -30188,6 +30200,20 @@ def undu_plot_mag_3d(cnams='',alpha=1.0):
 
 #import undumag_plot as upl
 #from undumag_plot import *
+
+args=sys.argv
+
+if len(args) > 1:
+  print("Setting Fdebug due to script argument:",Fdebug)
+  Fdebug = args[1]
+elif fexist('.undugui.deb'):
+  F = open('.undugui.deb','r')
+  Fdebug = F.readline().strip()
+  F.close()
+  if len(Fdebug) > 0:
+    print("Setting Fdebug as read from .undumag.deb:",Fdebug)
+#endif
+
 #import m_hbook as m
 
 global TransRotCop, EchoCLC,DictTransRotCop
@@ -31483,7 +31509,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  #if Fdebug == 'utransrotcop': breakpoint()
+  if Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -31572,8 +31598,6 @@ def utransrotcop(caller=''):
       #endtry
 
     elif key == 'Rotate' or key == 'Rotate_Shape':
-
-      #reakpoint()
 
       mp = trc[1]
       tr = trc[2].split()
@@ -32664,7 +32688,9 @@ def ureadclc(callkey=''):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-  #reakpoint()
+  global Fdebug
+  if Fdebug == 'ureadclc': breakpoint()
+
   NL = "\n"
 
 
@@ -33555,7 +33581,8 @@ def ureadclc(callkey=''):
 
 
 def start():
-  pass
+  global Fdebug
+  if Fdebug == 'start': breakpoint()
 #enddef
 
 def _nTopLevel(title='TopLevel',att='-topmost',attn=1):
@@ -36255,6 +36282,9 @@ def ureadfil(callkey=''):
   #debug("debug: Ende Filaments")
 #enddef
 
+if Fdebug == 'main' or Fdebug == 'undugui': breakpoint()
+
+
 def _undumag(callkey=''):
 
   global TransRotCop,EchoCLC,DictTransRotCop
@@ -36551,11 +36581,75 @@ def _runundumag(callkey='',modus=''):
 
 #enddef
 
+
 #=============================================================================
 
-if platform.system() == 'Linux': RunUndu = "bash ../shell/undumag_run.sh"
-elif platform.system() == 'Windows': RunUndu = '..\\bin\\undumag.exe '
+RunUndu = ''
+frequired = ['undumag.clc','undumag.nam']
+
+if platform.system() == 'Linux':
+  Sepp = '/'
+elif platform.system() == 'Windows':
+  Sepp = '\\'
 else: Quit("*** Error: Unknown platform: ",platform.system())
+
+UI = os.getcwd() + Sepp
+
+print('\n')
+for f in frequired:
+  print(' Checking ',f)
+  if not os.path.exists(UI + Sepp + f):
+    UINCL = os.environ['UNDUMAG'] + Sepp + 'stage'
+    print(' Not found, trying',UINCL)
+    UI = UINCL
+    break
+  else:
+    print(' Found')
+  #endif
+#endfor
+
+print('\n')
+for f in frequired:
+  print('\n Checking ',f)
+  if not os.path.exists(UI + Sepp + f):
+    Quit(' Not found, giving up!')
+  else:
+    print(' Found')
+  #endif
+#endfor
+
+if platform.system() == 'Linux':
+  ifound = 0
+  com = UI + Sepp + '../shell/undumag_run.sh'
+  print('\n Checking for ',com)
+  if not os.path.exists(com):
+    print(" Not found")
+    com = UI + Sepp + '../bin/undumag.exe'
+    print('\n Checking for ',com)
+    if not os.path.exists(com):
+      print(" Not found")
+    else:
+      print(' Found')
+      ifound = 1
+    #endif
+  else:
+    print(" Found")
+    ifound = 1
+  #endif
+  if not ifound:
+      Quit('\n Bad directory structure, giving up!')
+
+elif platform.system() == 'Windows':
+  com = UI + Sepp + '..\bin\\undumag.exe'
+  if not os.path.exists(com):
+    print(com," not found")
+    Quit('\n Giving up!')
+#endif
+
+print('\nWorking directory is ',UI,'\n')
+#sleep(3)
+
+os.chdir(UI)
 
 iLoad = 0
 EchoCLC = 0
@@ -36583,10 +36677,6 @@ if os.path.exists("undugui.cfg"):
 
 #reakpoint()
 
-args=sys.argv
-if len(args) > 1: Fdebug = args[1]
-else: Fdebug = ''
-
 
 NL = "\n"
 Rmodus = ''
@@ -36596,7 +36686,10 @@ AppleII = {}
 mshwelcome(program='UNDUMAG',year='2022')
 
 undu_get_runnumber()
+
+
 ugui_ini()
+
 
 
 MyFontStyle = 'arial'
@@ -36767,7 +36860,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  #if Fdebug == 'utransrotcop': breakpoint()
+  if Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -36856,8 +36949,6 @@ def utransrotcop(caller=''):
       #endtry
 
     elif key == 'Rotate' or key == 'Rotate_Shape':
-
-      #reakpoint()
 
       mp = trc[1]
       tr = trc[2].split()
@@ -37948,7 +38039,9 @@ def ureadclc(callkey=''):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-  #reakpoint()
+  global Fdebug
+  if Fdebug == 'ureadclc': breakpoint()
+
   NL = "\n"
 
 
@@ -43341,7 +43434,10 @@ def _clWfclc(key):
 
   if key == 'LoadCLC':
 
-    ureadclc('clWfclc')
+    try:
+      ureadclc('clWfclc')
+    except:
+      print("*** ureadclc failed for key 'clWfclc'")
 
     try:
 
@@ -43436,6 +43532,7 @@ def _clWfclc(key):
     #endtry: ureadclc
 
   #endif key == 'LoadCLC':
+
 
 #enddef _clWfclc()
 
@@ -47694,7 +47791,7 @@ def update_magnets(caller=''):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-
+  if Fdebug == 'update_magnets': breakpoint()
 #  print("update_magnets:caller",caller)
 
   if caller == '_clWaddPol':
@@ -50028,7 +50125,8 @@ def _EditMagGet(mag,caller=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  print("Baustelle _EditMagGet",caller)
+  if Fdebug == '_EditMagGet': breakpoint()
+  #print("Baustelle _EditMagGet",caller)
 
 # Concept of magnets
 
@@ -50823,14 +50921,14 @@ def _editMag(imp):
 
   S_MateType.set(mattype)
 
-#  ewid = max(ewid,len(tvmattype))
+#  ewid = max(ewid,len(str(tvmattype)))
 
   #ewid = len(mattype)
   ispec = mp[2]
-#  ewid = max(ewid,len(ispec))
+#  ewid = max(ewid,len(str(ispec)))
 
   key = mp[3]
-  ewid = max(ewid,len(key))
+  ewid = max(ewid,len(str(key)))
 
   cen = mp[4]
 
@@ -50845,7 +50943,7 @@ def _editMag(imp):
     tvxcen = xcen
   #endif xcen.find("$")
 
-  ewid = max(ewid,len(tvxcen))
+  ewid = max(ewid,len(str(tvxcen)))
 
   if type(ycen) == str and ycen.find("$") > -1:
     V_Ycen = calc_var(ycen)
@@ -50854,7 +50952,7 @@ def _editMag(imp):
     tvycen = ycen
   #endif ycen.find("$")
 
-  ewid = max(ewid,len(tvycen))
+  ewid = max(ewid,len(str(tvycen)))
 
   if type(zcen) == str and ycen.find("$") > -1:
     V_Zcen = calc_var(zcen)
@@ -50863,7 +50961,7 @@ def _editMag(imp):
     tvzcen = zcen
   #endif zcen.find("$")
 
-  ewid = max(ewid,len(tvzcen))
+  ewid = max(ewid,len(str(tvzcen)))
 
   vmat = mp[5]
   bc = vmat[0]
@@ -50875,7 +50973,7 @@ def _editMag(imp):
     tvbc = bc
   #endif bc.find("$")
 
-  ewid = max(ewid,len(tvbc))
+  ewid = max(ewid,len(str(tvbc)))
 
   bxn = calc_var(vmat[1])
   byn = calc_var(vmat[2])
@@ -50888,7 +50986,7 @@ def _editMag(imp):
     tvbxn = str(bxn)
   #endif bxn.find("$") > -1
 
-  ewid = max(ewid,len(tvbxn))
+  ewid = max(ewid,len(str(tvbxn)))
 
   if type(byn) == str and byn.find("$") > -1:
     V_Byn = calc_var(byn)
@@ -50897,7 +50995,7 @@ def _editMag(imp):
     tvbyn = str(byn)
   #endif byn.find("$") > -1
 
-  ewid = max(ewid,len(tvbyn))
+  ewid = max(ewid,len(str(tvbyn)))
 
   if type(bzn) == str and bzn.find("$") > -1:
     V_Bzn = calc_var(bzn)
@@ -50906,7 +51004,7 @@ def _editMag(imp):
     tvbzn = str(bzn)
   #endif bzn.find("$") > -1
 
-  ewid = max(ewid,len(tvbzn))
+  ewid = max(ewid,len(str(tvbzn)))
 
   mat = vmat[4]
   col = vmat[5]
@@ -50918,7 +51016,7 @@ def _editMag(imp):
     tvmat = mat
   #endif mat.find("$") > -1
 
-  ewid = max(ewid,len(tvmat))
+  ewid = max(ewid,len(str(tvmat)))
 
   if type(col) == str and col.find("$") > -1:
     vcol = calc_var(col)
@@ -50927,7 +51025,8 @@ def _editMag(imp):
     tvcol = col
   #endif col.find("$") > -1
 
-  ewid = max(ewid,len(tvcol))
+  ewid = max(ewid,len(str(tvcol)))
+
 
   siz = mp[6]
 
@@ -50963,8 +51062,8 @@ def _editMag(imp):
       #endif key == 'BlockUsChamf'
     #endif xlen.find("$")
 
-    ewid = max(ewid,len(tvchus))
-    ewid = max(ewid,len(tvchds))
+    ewid = max(ewid,len(str(tvchus)))
+    ewid = max(ewid,len(str(tvchds)))
 
     if type(xlen) == str and xlen.find("$") > -1:
       V_Xlen = calc_var(xlen)
@@ -50972,7 +51071,7 @@ def _editMag(imp):
     else:
       tvxlen = xlen
     #endif xlen.find("$")
-    ewid = max(ewid,len(tvxlen))
+    ewid = max(ewid,len(str(tvxlen)))
 
     if type(ylen) == str and ylen.find("$") > -1:
       V_Ylen = calc_var(ylen)
@@ -50980,7 +51079,7 @@ def _editMag(imp):
     else:
       tvylen = ylen
     #endif ylen.find("$")
-    ewid = max(ewid,len(tvylen))
+    ewid = max(ewid,len(str(tvylen)))
 
     if type(zlen) == str and zlen.find("$") > -1:
       V_Zlen = calc_var(zlen)
@@ -50988,7 +51087,7 @@ def _editMag(imp):
     else:
       tvzlen = zlen
     #endif zlen.find("$")
-    ewid = max(ewid,len(tvzlen))
+    ewid = max(ewid,len(str(tvzlen)))
 
     div = mp[7]
 
@@ -51031,35 +51130,35 @@ def _editMag(imp):
   else:
     tnxdiv = nxdiv
   #endif nxdiv.find("$")
-  ewid = max(ewid,len(tnxdiv))
+  ewid = max(ewid,len(str(tnxdiv)))
 
   if type(nydiv) == str and nydiv.find("$") > -1:
     tnydiv = nydiv + " = " + str(vnydiv)
   else:
     tnydiv = nydiv
   #endif nydiv.find("$")
-  ewid = max(ewid,len(tnydiv))
+  ewid = max(ewid,len(str(tnydiv)))
 
   if type(nzdiv) == str and nzdiv.find("$") > -1:
     tnzdiv = nzdiv + " = " + str(vnzdiv)
   else:
     tnzdiv = nzdiv
   #endif nzdiv.find("$")
-  ewid = max(ewid,len(tnzdiv))
+  ewid = max(ewid,len(str(tnzdiv)))
 
   if type(fracdivy) == str and fracdivy.find("$") > -1:
     tfracdivy = fracdivy + " = " + str(vfracdivy)
   else:
     tfracdivy = fracdivy
   #endif fracdivy.find("$")
-  ewid = max(ewid,len(tfracdivy))
+  ewid = max(ewid,len(str(tfracdivy)))
 
   if type(fracdivz) == str and fracdivz.find("$") > -1:
     tfracdivz = fracdivz + " = " + str(vfracdivz)
   else:
     tfracdivz = fracdivz
   #endif fracdivz.find("$")
-  ewid = max(ewid,len(tfracdivz))
+  ewid = max(ewid,len(str(tfracdivz)))
 
   S_Mat.set(tvmat)
   fMat = Frame(WEditMag)
@@ -54407,6 +54506,8 @@ S_AddRSang = StringVar()
 
 def _clWlistTRC():
   global Umaster, WlistTRC,WediTRC,WaddTRC
+  global Fdebug
+  if Fdebug == '_clWlistTRC': breakpoint()
 
   try:
     WediTRC.destroy()
@@ -54424,11 +54525,13 @@ def _clWlistTRC():
 #enddef _clWediTRC()
 
 def _listTRC(key='list',caller=''):
+  global Fdebug
+  if Fdebug == '_listTRC': breakpoint()
 
   global TransRotCop
   global Umaster,WlistTRC, WediTRC
 
-  if len(TransRotCop) <= 0:
+  if len(TransRotCop) <= 0 or TransRotCop[0] == None:
     wError("No Operations defined")
     return
   #endif Nmodul < 0
@@ -54515,6 +54618,8 @@ MenuTRC.add_command(label='List', command= lambda key='list': _listTRC(key),font
 
 def INHtoDINH():
   global Inhom,DictInhom
+  global Fdebug
+  if Fdebug == 'InHtoDINH': breakpoint()
   DictInhom = {}
   for it in range(len(Inhom)):
     cmm = Inhom[it][1]
@@ -54528,7 +54633,14 @@ def INHtoDINH():
 
 def TRCtoDTRC(caller=''):
   global TransRotCop,DictTransRotCop
+
+  global Fdebug
+  if Fdebug == 'TRCtoDTRC': breakpoint()
+
   DictTransRotCop = {}
+
+  if not len(TransRotCop) or TransRotCop[0] == None: return
+
   for it in range(len(TransRotCop)):
     cmm = TransRotCop[it][1]
     if cmm in DictTransRotCop:
@@ -54537,10 +54649,13 @@ def TRCtoDTRC(caller=''):
       DictTransRotCop[cmm] = [it]
     #endif
   #endfor
+
 #enddef TRCtoDTRC
 
 def _EdiTRC(ied):
 
+  global Fdebug
+  if Fdebug == '_EdiTRC': breakpoint()
   global TransRotCop
   global Umaster,WlistTRC, WediTRC
 
@@ -54887,6 +55002,8 @@ def _clWediTRC(itrc):
 #enddef _clWediTRC()
 
 def _AddTransRotCop(key=''):
+  global Fdebug
+  if Fdebug == '_AddTransRotCop': breakpoint()
 
 
   global TransRotCop
@@ -54900,7 +55017,12 @@ def _AddTransRotCop(key=''):
   global S_AddRTx,S_AddRTy,S_AddRTz,S_AddRomx,S_AddRomy,S_AddRomz,S_AddRang
   global S_AddRSTx,S_AddRSTy,S_AddRSTz,S_AddRSomx,S_AddRSomy,S_AddRSomz,S_AddRSang
 
-  S_AddTRCmag.set('MagMoth')
+  if NMagPolTot > 0:
+    mp = MagPolsTot[-1]
+    S_AddTRCmag.set(mp[0][1])
+  else:
+    S_AddTRCmag.set('MagMoth')
+  #endif
 
   WaddTRC = Toplevel()
   WaddTRC.title("Add Translation")
@@ -54980,7 +55102,8 @@ def _AddTransRotCop(key=''):
     + " " + S_AddRSomx.get() + " " + S_AddRSomy.get() + " " + S_AddRSomz.get() \
     + " " + S_AddRSang.get()]
 
-    TransRotCop.append(trc.append('new'))
+    trc.append('new')
+    TransRotCop.append(trc)
 
     fmag = Frame(ftrc)
     lmag = Label(fmag,width=widlab,text='Magnet',justify=LEFT,font=MyFont)
@@ -55055,7 +55178,8 @@ def _AddTransRotCop(key=''):
     S_AddRomx.get() + " " + S_AddRomy.get() + " " + S_AddRomz.get() \
     + " " + S_AddRang.get()]
 
-    TransRotCop.append(trc.append('new'))
+    trc.append('new')
+    TransRotCop.append(trc)
 
     fmag = Frame(ftrc)
     lmag = Label(fmag,width=widlab,text='Magnet',justify=LEFT,font=MyFont)
@@ -55119,7 +55243,8 @@ def _AddTransRotCop(key=''):
     S_AddCTmoth.set('Mother')
 
     trc = ['Copy',S_AddTRCmag.get() + " " + S_AddCTmag.get() + " " + S_AddCTmoth.get()]
-    TransRotCop.append(trc.append('new'))
+    trc.append('new')
+    TransRotCop.append(trc)
 
     fmag = Frame(ftrc)
     lmag = Label(fmag,width=widlab,text='Magnet to copy',justify=LEFT,font=MyFont)
@@ -55146,10 +55271,109 @@ def _AddTransRotCop(key=''):
 
   ftrc.pack()
 
-  bClose = Button(WaddTRC,text='Ok',command=_clWaddTRC)
-  bClose.pack(expand=TRUE,fill=X)
+  fbott = Frame(WaddTRC)
+
+  elab=20
+  bCancel = Button(fbott,text='Cancel',command = _cnWaddTRC,width=elab)
+  bCancel.pack(side=LEFT,fill=X)
+
+  bClose = Button(fbott,text='Ok',command = _clWaddTRC)
+  bClose.pack(expand=TRUE,fill=X,side=LEFT)
+
+  fbott.pack(expand=TRUE,fill=X)
 
 #enddef _AddTransRotCop(key='')
+
+def _cnWaddTRC():
+  global TransRotCop,EchoCLC,DictTransRotCop
+  global Inhom,DictInhom
+  global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
+  global Caller
+  global Fdebug
+
+  global Ucfg,Uclcorig, Uclc, Nmag, Npol, Nmodul, NspecMag, NspecPol, \
+  Magnets, Pols, SpecMags, SpecPols,  NMagPol, MagPols,  NspecMagPol, SpecMagPols, \
+  NMagPolTot, MagPolsTot, DictMagPolsTot, DictCoils, DictCoilsHeader, DictCalcs, IclcRead, \
+  Nmat, Materials, Br, Rmu, Coating, PerLen, ChamfM, ChamfP, MCol, PCol, \
+  AirGap, KeeperGap, MspaceX, MoffY, Parameters, Variables, Npar, Ncalc, Nvar, \
+  CalcLines, Calcs, Pars, Ucomment, Modules, MagPolsTotOld, MagPolOld, \
+  EditMag_CheckMode,CopyMag_CheckMode, EditMagX, EditMagY,CopyMagX, CopyMagY,WWait, WError, \
+  CheckVars, CheckCalcs, CheckDictCalcs, CheckVarNum, VarNum, \
+  MagPolsUpdate, MagPolsDel, NMagPolDel,SpecXYZ,DictCornFiles,S_Ucomment,\
+  S_ChamfUs, S_ChamfDs, S_Coating,DictVcomments,DictPcomments, IUNDUMAGisRunning
+
+  global Rmodus, Debug, Ical, MyFontStyle, MyFontSize,MyFont, RunUndu, \
+  MustUpdate, MustWriteCLC, UnduColors, DictUnduColors
+
+  global UMain, Mgeo, Mmat, MpreDefs, MShowGeo,MShowGeo2, MListVars
+  global WaddMag, WappleII, Whybrid, WFileCLC, S_FileCLC, S_FileNAM, FileCLC, FileNAM, LinesNam, FileMu, \
+  WallListMags, WlistVars, WAddVars, WlistMat, Wmirror, WsetMirror
+
+  global AppleII_Mode, AppleII, AppleIIOld, VAppleII, \
+  S_nPer_AppleII, S_FullGap_AppleII, S_WithCoils_AppleII, \
+  S_Xlen_AppleII, S_Ylen_AppleII, S_Zlen_AppleII, \
+  S_DeadCoat_AppleII, S_AirGap_AppleII, S_Br_AppleII, S_Mu_AppleII, S_KsiPerp_AppleII, \
+  S_HorSlit_AppleII, S_S2Shift_AppleII, S_S3Shift_AppleII, \
+  S_NdivX_AppleII, S_NdivY_AppleII, S_NdivZ_AppleII, S_NdivXHalf_AppleII
+
+  global V_CmagOld, V_CmothOld, V_XcenOld, V_YcenOld, V_ZcenOld, V_cornsOld, V_NcornOld, V_CornFileOld, \
+  V_nXdivOld, V_nYdivOld, V_nZdivOld, \
+  V_FracDivYOld,   V_FracDivZOld,  V_XlenOld, V_YlenOld, V_ZlenOld, V_KeyOld, V_MatTypeOld, V_MatOld, \
+  V_BcOld, V_BxnOld, V_BynOld, V_BznOld, V_IspecOld
+
+  global WEditMagOld, WCopyMagOld, S_CmagOld, S_CmothOld, S_XcenOld, S_YcenOld, S_ZcenOld, S_cornsOld, S_NcornOld, S_CornFileOld, \
+  S_CornFile, S_nXdivOld, S_nYdivOld, S_nZdivOld, \
+  S_FracDivYOld, S_FracDivZOld, S_XlenOld, S_YlenOld, S_ZlenOld, S_KeyOld, S_MateTypeOld, S_MatOld, \
+  S_BcOld, S_BxnOld, S_BynOld, S_BznOld, S_IspecOld
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,DictHulls
+
+  global V_Cmag, V_Cmoth, V_Xcen, V_Ycen, V_Zcen, V_corns, V_Ncorn, V_CornFile, \
+  V_nXdiv, V_nYdiv, V_nZdiv, \
+  V_FracDivY, V_FracDivZ, V_Xlen, V_Ylen, V_Zlen, V_Key, V_MatType, V_Mat, \
+  V_Bc, V_Bxn, V_Byn, V_Bzn, V_Ispec
+
+  global WEditMag,WCopyMag, S_Cmag, S_Cmoth, S_Xcen, S_Ycen, S_Zcen, S_corns, S_Ncorn, \
+  S_CornFile, S_CornFileEdi, \
+  S_nXdiv, S_nYdiv, S_nZdiv, \
+  S_FracDivY, S_FracDivZ, S_Xlen, S_Ylen, S_Zlen, S_Key, S_MateType, S_Mat, \
+  S_Bc, S_Bxn, S_Byn, S_Bzn, S_Ispec, S_Color, WsearchVar, S_SearchVar
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi
+
+  global WaddPol, WEditPol,WCopyPol, S_Iron_Cmag, S_Iron_Cmoth, S_Iron_Xcen, S_Iron_Ycen, S_Iron_Zcen, S_Iron_corns, S_Iron_Ncorn, S_Iron_CornFile, \
+  S_Iron_nXdiv, S_Iron_nYdiv, S_Iron_nZdiv, \
+  S_Iron_FracDivY,S_Iron_FracDivZ,S_Iron_Xlen, S_Iron_Ylen, S_Iron_Zlen, S_Iron_Key, S_Iron_MatType, S_Iron_Mat, \
+  S_Iron_Bc, S_Iron_Bxn, S_Iron_Byn, S_Iron_Bzn, S_Iron_Ispec, S_Iron_Color
+
+  global LastCLC, LastNAM
+  global Nmoth, MyMoth, Moths, MothsXYZ, Hulls, DictMoths, DictCoils, DictCoilsHeader, DictCalcs, \
+  NMothSel, NMagPolSel,MagPolsSel,DictMagPolsSel, MothsSel,DictMothsSel
+  global Ngeo,Nvox,Facets,FcBox
+
+  global WFileNAM, WSetSym, NamelistVars, DictNamelistVars, \
+  S_IxSym, S_IySym, S_IzSym, S_KxCenter, S_xSym, S_xCenter, \
+  cIxSym, cIySym, cIzSym, KxCenter, cIxSym, Xcenter, Xsym
+
+  global GeoWaddVars, GeoWlistVars
+  global Mirror, VMirror, Hybrid, VHybrid, Hybrid_Mode
+
+  global WSetMap, \
+  S_xMapMin,S_yMapMin,S_zMapMin,S_xMapMax,S_yMapMax,S_zMapMax, S_MHmap, \
+  S_dxMap,S_NxMap,S_NyMap,S_NzMap,S_dxBeff,S_NxBeff, S_xMinBeff,S_xMaxBeff
+
+  global NCoil, Coils, Filaments, S_Current_Coil, S_Name_Coil, \
+  S_nWindings_Coil, S_Filling_Coil, \
+  S_Xcen_Coil,S_Ycen_Coil,S_Zcen_Coil,S_VnX_Coil,S_VnY_Coil,S_VnZ_Coil, \
+  S_AngRot_Coil,S_xLenOut_Coil,S_zLenIn_Coil,S_zLenOut_Coil,S_RadiusIn_Coil, \
+  S_Height_Coil,S_nDivHeight_Coil,S_nDivWidth_Coil,S_nDivArc_Coil,S_Color_Coil, \
+  WaddCoil,WaddCoils,Selected_Coil, Stored_Coil, Restore_Coil, CurrLoops, \
+  WaddCoilRace,WaddCoilCirc
+
+  global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
+
+  WaddTRC.destroy()
+#enddef _cnWaddTRC()
 
 def _clWaddTRC():
   global WaddTRC, TransRotCop
@@ -58108,7 +58332,11 @@ plt.show(block=False)
 start()
 
 ntupini()
+
+
+#reakpoint()
 startup("undugui_start.py")
+
 
 WaveFilePrefix = 'undugui_'
 
