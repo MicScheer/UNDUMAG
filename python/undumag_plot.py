@@ -30377,7 +30377,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  if Fdebug == 'utransrotcop': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -31557,7 +31557,7 @@ def ureadclc(callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global Fdebug
-  if Fdebug == 'ureadclc': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'ureadclc': breakpoint()
 
   NL = "\n"
 
@@ -33990,6 +33990,8 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
+  if Fdebug == 'debug' or Fdebug == '_showGeoPython': breakpoint()
+  #reakpoint()
 
   isameo = getisame()
 
@@ -35183,7 +35185,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  if Fdebug == 'utransrotcop': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -36363,7 +36365,7 @@ def ureadclc(callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global Fdebug
-  if Fdebug == 'ureadclc': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'ureadclc': breakpoint()
 
   NL = "\n"
 

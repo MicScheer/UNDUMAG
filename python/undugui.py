@@ -1,13 +1,5 @@
-
 # +PATCH,//UNDUMAG/PYTHON
 # +DECK,undugui,T=PYTHON.
-
-def debug(arg=''):
-  global idebug
-  idebug += 1
-  print("idebug:",idebug)
-  if arg: print("\n",arg,"\n")
-#enddef debug(arg)
 
 global WavesMode
 global idebug,Fdebug
@@ -15,6 +7,13 @@ global idebug,Fdebug
 WavesMode = 'UNDUMAG'
 Fdebug = ''
 idebug = 0
+
+def debug(arg=''):
+  global idebug
+  idebug += 1
+  print("idebug:",idebug)
+  if arg: print("\n",arg,"\n")
+#enddef debug(arg)
 
 #!/usr/bin/env python
 
@@ -31509,7 +31508,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  if Fdebug == 'utransrotcop': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -32689,7 +32688,7 @@ def ureadclc(callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global Fdebug
-  if Fdebug == 'ureadclc': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'ureadclc': breakpoint()
 
   NL = "\n"
 
@@ -33582,7 +33581,7 @@ def ureadclc(callkey=''):
 
 def start():
   global Fdebug
-  if Fdebug == 'start': breakpoint()
+  if Fdebug == 'debug' or  Fdebug == 'start': breakpoint()
 #enddef
 
 def _nTopLevel(title='TopLevel',att='-topmost',attn=1):
@@ -36282,7 +36281,7 @@ def ureadfil(callkey=''):
   #debug("debug: Ende Filaments")
 #enddef
 
-if Fdebug == 'main' or Fdebug == 'undugui': breakpoint()
+if Fdebug == 'debug' or  Fdebug == 'main' or Fdebug == 'undugui': breakpoint()
 
 
 def _undumag(callkey=''):
@@ -36860,7 +36859,7 @@ def utransrotcop(caller=''):
 
 
   #print("utransrotcop:",caller)
-  if Fdebug == 'utransrotcop': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'utransrotcop': breakpoint()
 
   printnl()
   itrc = -1
@@ -38040,7 +38039,7 @@ def ureadclc(callkey=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
   global Fdebug
-  if Fdebug == 'ureadclc': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'ureadclc': breakpoint()
 
   NL = "\n"
 
@@ -40473,6 +40472,8 @@ def _showGeoPython(modus='3d',item=-1,callkey=''):
   UnduColors = ['white','black','red','green','blue','yellow','magenta','cyan']
   for k in range(len(UnduColors)): DictUnduColors[UnduColors[k]] = k
 
+  if Fdebug == 'debug' or Fdebug == '_showGeoPython': breakpoint()
+  #reakpoint()
 
   isameo = getisame()
 
@@ -47791,9 +47792,10 @@ def update_magnets(caller=''):
 
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
-  if Fdebug == 'update_magnets': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'update_magnets': breakpoint()
 #  print("update_magnets:caller",caller)
 
+  #reakpoint()
   if caller == '_clWaddPol':
     pass
   #endif
@@ -49934,7 +49936,7 @@ def _clWaddMag(key):
   #endfor mat in Materials
 
   if ifound == 0:
-    wError("Undefined material index _clWaddMag")
+    wError("Undefined material index in _clWaddMag")
     _MaddMatREClin()
     return
   #endif ifound == 0
@@ -50125,7 +50127,7 @@ def _EditMagGet(mag,caller=''):
   global S_CylrIn,S_CylrOut,S_CylHeight,S_CyldPhi,Ntcyls,Ncylinder,DictCyls
 
 
-  if Fdebug == '_EditMagGet': breakpoint()
+  if Fdebug == 'debug' or Fdebug == '_EditMagGet': breakpoint()
   #print("Baustelle _EditMagGet",caller)
 
 # Concept of magnets
@@ -50537,7 +50539,7 @@ def _ccWEditMag(mag):
   global EditMag_CheckMode,CopyMag_CheckMode,  WEditMag, MagPolsTot,MagPolOld
   global SgeoWeditMag
 
-  print("_ccWEditMag(mag):",mag)
+  #print("_ccWEditMag(mag):",mag)
 
   EditMag_CheckMode = 1
   sgeo = WEditMag.geometry().split('+')
@@ -54507,7 +54509,7 @@ S_AddRSang = StringVar()
 def _clWlistTRC():
   global Umaster, WlistTRC,WediTRC,WaddTRC
   global Fdebug
-  if Fdebug == '_clWlistTRC': breakpoint()
+  if Fdebug == 'debug' or Fdebug == '_clWlistTRC': breakpoint()
 
   try:
     WediTRC.destroy()
@@ -54526,7 +54528,7 @@ def _clWlistTRC():
 
 def _listTRC(key='list',caller=''):
   global Fdebug
-  if Fdebug == '_listTRC': breakpoint()
+  if Fdebug == 'debug' or Fdebug == '_listTRC': breakpoint()
 
   global TransRotCop
   global Umaster,WlistTRC, WediTRC
@@ -54619,7 +54621,7 @@ MenuTRC.add_command(label='List', command= lambda key='list': _listTRC(key),font
 def INHtoDINH():
   global Inhom,DictInhom
   global Fdebug
-  if Fdebug == 'InHtoDINH': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'InHtoDINH': breakpoint()
   DictInhom = {}
   for it in range(len(Inhom)):
     cmm = Inhom[it][1]
@@ -54635,7 +54637,7 @@ def TRCtoDTRC(caller=''):
   global TransRotCop,DictTransRotCop
 
   global Fdebug
-  if Fdebug == 'TRCtoDTRC': breakpoint()
+  if Fdebug == 'debug' or Fdebug == 'TRCtoDTRC': breakpoint()
 
   DictTransRotCop = {}
 
@@ -54652,10 +54654,44 @@ def TRCtoDTRC(caller=''):
 
 #enddef TRCtoDTRC
 
-def _EdiTRC(ied):
+def _clWediTRC(itrc):
 
+  global Umaster, WediTRC
+  global TransRotCop
+  global S_Remanence,S_BrX,S_BrY,S_BrZ,S_BrC,S_BrM
+  global S_CS,S_CT
+  global S_Tx,S_Ty,S_Tz,s_TrcStat
+  global S_RSx,S_RSy,S_RSz,S_RSomx,S_RSomy,S_RSomz,S_RSang
+  global S_Rx,S_Ry,S_Rz,S_Romx,S_Romy,S_Romz,S_Rang
+
+  trc = TransRotCop[itrc]
+
+  if TransRotCop[itrc][0] == 'Remanence':
+    TransRotCop[itrc][2] = S_Remanence.get() + " " \
+    + S_BrX.get() + " " + S_BrY.get() + " " + S_BrZ.get() + " " \
+    + S_BrM.get() + " " + S_BrC.get()
+  elif TransRotCop[itrc][0] == 'Copy':
+    TransRotCop[itrc][1] = S_CS.get() + " " + S_CT.get()
+  elif TransRotCop[itrc][0] == 'Translate':
+    TransRotCop[itrc][2] = S_Tx.get() + " " + S_Ty.get() + " " + S_Tz.get()
+  elif TransRotCop[itrc][0] == 'Rotate_Shape':
+    TransRotCop[itrc][2] = S_RSx.get() + " " + S_RSy.get() + " " + S_RSz.get() \
+    + " " + S_RSomx.get() + " " + S_RSomy.get() + " " + S_RSomz.get() \
+    + " " + S_RSang.get()
+  elif TransRotCop[itrc][0] == 'Rotate':
+    TransRotCop[itrc][2] = S_Rx.get() + " " + S_Ry.get() + " " + S_Rz.get() \
+    + " " + S_Romx.get() + " " + S_Romy.get() + " " + S_Romz.get() \
+    + " " + S_Rang.get()
+  #endif
+
+  WediTRC.destroy()
+  _listTRC('refresh')
+
+#enddef _clWediTRC()
+
+def _EdiTRC(ied):
   global Fdebug
-  if Fdebug == '_EdiTRC': breakpoint()
+  if Fdebug == 'debug' or Fdebug == '_EdiTRC': breakpoint()
   global TransRotCop
   global Umaster,WlistTRC, WediTRC
 
@@ -55003,7 +55039,7 @@ def _clWediTRC(itrc):
 
 def _AddTransRotCop(key=''):
   global Fdebug
-  if Fdebug == '_AddTransRotCop': breakpoint()
+  if Fdebug == 'debug' or Fdebug == '_AddTransRotCop': breakpoint()
 
 
   global TransRotCop
@@ -55376,14 +55412,45 @@ def _cnWaddTRC():
 #enddef _cnWaddTRC()
 
 def _clWaddTRC():
-  global WaddTRC, TransRotCop
 
+  global Fdebug
+  if Fdebug == 'debug' or Fdebug == '_clWaddTRC': breakpoint()
+
+  global Umaster, WaddTRC
+  global TransRotCop
+  global S_AddRemanence,S_AddBrX,S_AddBrY,S_AddBrZ,S_AddBrC,S_AddBrM
+  global S_AddCS,S_AddCT
+  global S_AddTx,S_AddTy,S_AddTz,s_TrcStat
+  global S_AddRSx,S_AddRSy,S_AddRSz,S_AddRSomx,S_AddRSomy,S_AddRSomz,S_AddRSang
+  global S_AddRx,S_AddRy,S_AddRz,S_AddRomx,S_AddRomy,S_AddRomz,S_AddRang
+
+  for itrc in range(len(TransRotCop)):
+
+    if TransRotCop[itrc][0] == 'Remanence':
+      TransRotCop[itrc][2] = S_AddRemanence.get() + " " \
+      + S_AddBrX.get() + " " + S_AddBrY.get() + " " + S_AddBrZ.get() + " " \
+      + S_AddBrM.get() + " " + S_AddBrC.get()
+    elif TransRotCop[itrc][0] == 'Copy':
+      TransRotCop[itrc][1] = S_AddCS.get() + " " + S_AddCT.get()
+    elif TransRotCop[itrc][0] == 'Translate':
+      TransRotCop[itrc][2] = S_AddTx.get() + " " + S_AddTy.get() + " " + S_AddTz.get()
+    elif TransRotCop[itrc][0] == 'Rotate_Shape':
+      TransRotCop[itrc][2] = S_AddRSx.get() + " " + S_AddRSy.get() + " " + S_AddRSz.get() \
+      + " " + S_AddRSomx.get() + " " + S_AddRSomy.get() + " " + S_AddRSomz.get() \
+      + " " + S_AddRSang.get()
+    elif TransRotCop[itrc][0] == 'Rotate':
+      TransRotCop[itrc][2] = S_AddRx.get() + " " + S_AddRy.get() + " " + S_AddRz.get() \
+      + " " + S_AddRomx.get() + " " + S_AddRomy.get() + " " + S_AddRomz.get() \
+      + " " + S_AddRang.get()
+    #endif
+
+  #endfor
 
   WaddTRC.destroy()
   _listTRC('refresh')
 
-
 #enddef _clWaddTRC()
+
 
 
 global S_MateType, S_MateMode, S_MuPar, S_KsiPerp, S_FileMat
