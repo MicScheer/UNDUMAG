@@ -36592,14 +36592,18 @@ elif platform.system() == 'Windows':
   Sepp = '\\'
 else: Quit("*** Error: Unknown platform: ",platform.system())
 
+#reakpoint()
 UI = os.getcwd() + Sepp
+UINCL = UI
 
 print('\n')
+ifound = 1
 for f in frequired:
   print(' Checking ',f)
   if not os.path.exists(UI + Sepp + f):
+    print(' Not found, trying system variable UNDUMAG')
+    ifound = 0
     UINCL = os.environ['UNDUMAG'] + Sepp + 'stage'
-    print(' Not found, trying',UINCL)
     UI = UINCL
     break
   else:
@@ -36607,15 +36611,30 @@ for f in frequired:
   #endif
 #endfor
 
-print('\n')
-for f in frequired:
-  print('\n Checking ',f)
+if ifound == 0:
+  try:
+    UINCL = os.environ['UNDUMAG'] + Sepp + 'stage'
+  except: ifound = -1
+#endif
+
+if ifound == -1:
   if not os.path.exists(UI + Sepp + f):
     Quit(' Not found, giving up!')
-  else:
-    print(' Found')
-  #endif
-#endfor
+#endif
+
+UI = UINCL
+
+if ifound != 1:
+  print('\n')
+  for f in frequired:
+    print('\n Checking ',f)
+    if not os.path.exists(UI + Sepp + f):
+      Quit(' Not found, giving up!')
+    else:
+      print(' Found')
+    #endif
+  #endfor
+#endif
 
 if platform.system() == 'Linux':
   ifound = 0
@@ -36644,6 +36663,9 @@ elif platform.system() == 'Windows':
     print(com," not found")
     Quit('\n Giving up!')
 #endif
+
+RunUndu = com
+#Quit(RunUndu)
 
 print('\nWorking directory is ',UI,'\n')
 #sleep(3)
