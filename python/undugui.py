@@ -36576,7 +36576,7 @@ def _runundumag(callkey='',modus=''):
   #endif IUNDUMAGisRunning
 
   Rmodus = modus
-  _undumag('_rundunmag')
+  _undumag('_rundumag')
 
 #enddef
 
