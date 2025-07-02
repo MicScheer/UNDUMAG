@@ -1,3 +1,4 @@
+*CMZ :          02/07/2025  15.23.57  by  Michael Scheer
 *CMZ :  2.05/02 04/11/2023  11.41.40  by  Michael Scheer
 *CMZ :  2.05/01 03/10/2023  16.58.27  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.44.14  by  Michael Scheer
@@ -64,7 +65,8 @@
       implicit none
 
 *KEEP,hulldim.
-      include 'hulldim.cmn'
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
 
       double precision xin(*),yin(*),zin(*),
@@ -97,6 +99,7 @@
       data ez/0.0d0,0.0d0,1.0d0/
 
       ical=ical+1
+c      print*,"ical:",ical
 
       if (nverhullmax.le.0) then
         kfail=-1
@@ -432,9 +435,11 @@ c16.8.2023        p3(1)=x(i)-p21(1)
 c16.8.2023        p3(2)=y(i)-p21(2)
 c16.8.2023        p3(3)=z(i)-p21(3)
         p3(1)=x(i)-p1(1)
+        p3(1)=0.0d0
         p3(2)=y(i)-p1(2)
         p3(3)=z(i)-p1(3)
-        pn=sqrt(p3(1)**2+p3(3)**2)
+        pn=sqrt(p3(2)**2+p3(3)**2)
+
 c18Feb2020        pn=sqrt(p3(1)**2+p3(2)**2+p3(3)**2)
         if (pn.lt.tiny) then
           cycle
@@ -442,7 +447,8 @@ c18Feb2020        pn=sqrt(p3(1)**2+p3(2)**2+p3(3)**2)
 
         p3=p3/pn
 
-        if (p3(3).le.zmin1) then
+c        if (p3(3).le.zmin1) then
+        if (p3(2).le.zmin1) then
 c 2.3.2023          q(1)=p21(2)*p3(3)-p21(3)*p3(2)
 c 2.3.2023          q(2)=p21(3)*p3(1)-p21(1)*p3(3)
 c 2.3.2023          q(3)=p21(1)*p3(2)-p21(2)*p3(1)
@@ -451,10 +457,12 @@ c 2.3.2023          if (abs(qn).gt.tiny) then
 c 2.3.2023   points on the line are eleminated later
             ithird=i
             ibuffm(3)=i
-            zmin1=p3(3)
+            zmin1=p3(2)
+c            print*,i,zmin1
 c 2.3.2023          endif
         endif
       enddo
+
 
       if (ithird.eq.0) then
         zmin2=1.0d30
@@ -1071,7 +1079,6 @@ c        print*,q
         deallocate(kedgebuff)
 
       endif !kfail
-
 
 9999  continue
 
