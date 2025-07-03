@@ -1,3 +1,4 @@
+*CMZ :          03/07/2025  16.38.12  by  Michael Scheer
 *CMZ :  2.05/02 30/10/2023  09.33.51  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  09.44.39  by  Michael Scheer
 *CMZ :  2.03/00 26/08/2022  13.47.55  by  Michael Scheer
@@ -27,14 +28,12 @@
       integer, dimension (:), allocatable :: istore,ihullb
       integer ifail,n,nh,i,ihull(*),next,i1,i2,idup,kll,nb,k,
      &  ixmin,ixmax,iymin,iymax,iflat,nin,ifailin
-c+self,if=debug2d.
       integer :: ical=0
-c+self.
 
       ifailin=ifail
-c+self,if=debug2d.
-      ical=ical+1
-c+self.
+c      ical=ical+1
+c      print*,"2d:",ical
+c      if (ical.eq.11810) call util_break
       ifail=0
 
       tiny=tinyin
@@ -287,6 +286,11 @@ c+self.
         enddo
 
         nh=nh+1
+        if (nh.gt.n+1) then
+          call util_break
+          nh=nh-1
+          exit
+        endif
         ihull(nh)=next
 
         vx1=x(ihull(nh))-x(ihull(nh-1))

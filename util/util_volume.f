@@ -1,3 +1,4 @@
+*CMZ :          03/07/2025  16.35.25  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  15.32.24  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  12.20.19  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  15.00.22  by  Michael Scheer
@@ -13,14 +14,20 @@
      &  p1(3),p2(3),p3(3),vnor(3),dist,a,rotmat(3,3),r(3),vrot(3)
 
       integer l,n,kfail,nhull,nedge,nface,iover,i,ipoi,iface,npoi,kfacelast,k
+      integer :: ical=0
+
       double precision, dimension(:), allocatable :: x,y,z,xr,yr,zr
       integer, dimension(:,:), allocatable :: kedge
       integer, dimension(:), allocatable :: kface,khull
 
 *KEEP,hulldim.
-      include 'hulldim.cmn'
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
 
+c      ical=ical+1
+c      print*,"util_volume:",ical
+c      if (ical.eq.338) call util_break
 
       allocate(x(n),y(n),z(n),khull(lenhull),xr(n),yr(n),zr(n),
      &  kedge(4,lenedge),kface(lenface))

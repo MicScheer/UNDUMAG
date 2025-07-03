@@ -1,4 +1,4 @@
-*CMZ :          03/07/2025  13.10.39  by  Michael Scheer
+*CMZ :          03/07/2025  16.39.28  by  Michael Scheer
 *CMZ :  2.05/02 04/11/2023  11.41.40  by  Michael Scheer
 *CMZ :  2.05/01 03/10/2023  16.58.27  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.44.14  by  Michael Scheer
@@ -64,9 +64,8 @@
 
       implicit none
 
-*KEEP,HULLDIM.
-      integer lenhull,lenedge,lenface,nverhullmax
-      common/uhullc/lenhull,lenedge,lenface,nverhullmax
+*KEEP,hulldim.
+      include 'hulldim.cmn'
 *KEND.
 
       double precision xin(*),yin(*),zin(*),
@@ -99,7 +98,7 @@
       data ez/0.0d0,0.0d0,1.0d0/
 
       ical=ical+1
-c      print*,"ical:",ical
+c      print*,"hull_3d::ical:",ical
 
       if (nverhullmax.le.0) then
         kfail=-1
@@ -404,6 +403,7 @@ c 1.3.2023      tiny2=tiny**2
       p1(2)=y(ifirst)
       p1(3)=z(ifirst)
 
+
       if (ithird.eq.0) then
 
         if (kzmin.eq.1) then
@@ -426,7 +426,7 @@ c18Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
             endif
           enddo
 
-        endif
+        endif !kzmin.eq.1
 
         p21(1)=x(isecond)-x(ifirst)
         p21(2)=y(isecond)-y(ifirst)
@@ -468,9 +468,9 @@ c            print*,i,zmin1
 c 2.3.2023          endif
           endif
         enddo
+      endif !ithird
 
-
-c      if (ithird.eq.0) then
+      if (ithird.eq.0) then
         zmin2=1.0d30
         do i=1,npoi
           if (i.eq.ifirst.or.i.eq.isecond) cycle
