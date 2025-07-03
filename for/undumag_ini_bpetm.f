@@ -1,3 +1,4 @@
+*CMZ :          03/07/2025  13.15.32  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  14.23.52  by  Michael Scheer
 *CMZ :  2.04/16 11/09/2023  10.29.37  by  Michael Scheer
 *CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
@@ -21,7 +22,7 @@ c+seq,debugutil.
 
       double precision rmag(3),vnormlab(3),r1(3),r1lab(3),vmaglab(3),
      &  p1(3),p2(3),p3(3),ts(3,3),tsinv(3,3),tz(3,3),ws(3,3),vx,vy,vn,
-     &  ts1(3,3),ts1inv(3,3),sa,dum,ca,bc,q,qsign,r2(3),a,b
+     &  ts1(3,3),ts1inv(3,3),sa,dum,ca,bc,q,qsign,r2(3),a,b,dq
 
       integer im,i,iplan,nplan,j,icorn,ifail,ip2,imag
       integer :: idebug=0
@@ -89,6 +90,14 @@ c if mag. vector is parallel, skip plane
           else
             dum=0.0d0
           endif
+
+c          print*,"dum:",im,iplan,dum
+c          if (dum.eq.0.0d0) then
+c            cycle
+c            print*,"iplan:",iplan
+c            print*,"vmaglab:",bc
+c            print*,"vnormlab:",vnormlab
+c          endif
 
             bpetm(1,7,iplan,im)=
      &        vmaglab(1)*vnormlab(1)+
@@ -242,10 +251,13 @@ c              if (abs(r1(1)-r2(1)).gt.tiny) then
                 print*,"imag,iplan,icorn,a,b,q:",imag,iplan,icorn,a,b,q
               endif
 
-              qsign=qsign+q*(
+              dq=q*(
      &           vnormlab(1)*bpebc(4,imag)
      &          +vnormlab(2)*bpebc(5,imag)
      &          +vnormlab(3)*bpebc(6,imag))
+
+              qsign=qsign+dq
+c              print*,"dq:",imag,iplan,dq
 
             enddo ! icorn
 
@@ -264,6 +276,11 @@ c for while calculation qsign
           write(lun6,*)
 
           write(lun6,*)"|Q/Br| (supposed to be lower then 1.0e-9:",abs(qsign/bpebc(7,imag))
+          if (modsimphull.eq.0) then
+            write(lun6,*)
+            write(lun6,*)"*** Change segmentation or try MODSIMPHULL=1 in undumag.nam!"
+            write(lun6,*)
+          endif
         endif
 
       enddo ! imag=1,nmag

@@ -1,3 +1,4 @@
+*CMZ :          03/07/2025  07.32.38  by  Michael Scheer
 *CMZ :  2.04/23 27/09/2023  08.50.09  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  21.24.47  by  Michael Scheer
 *CMZ :  2.04/17 11/09/2023  15.31.12  by  Michael Scheer
@@ -24,7 +25,7 @@
       integer :: ical=0,idebug=0
 
       ical=ical+1
-c      print*,"Simp call:",ical
+      print*,"Simp call:",ical
 c      if (ical.eq.7) then
 c        idebug=1
 cc        call util_break

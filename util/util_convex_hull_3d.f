@@ -1,4 +1,4 @@
-*CMZ :          02/07/2025  15.23.57  by  Michael Scheer
+*CMZ :          03/07/2025  13.10.39  by  Michael Scheer
 *CMZ :  2.05/02 04/11/2023  11.41.40  by  Michael Scheer
 *CMZ :  2.05/01 03/10/2023  16.58.27  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.44.14  by  Michael Scheer
@@ -64,7 +64,7 @@
 
       implicit none
 
-*KEEP,hulldim.
+*KEEP,HULLDIM.
       integer lenhull,lenedge,lenface,nverhullmax
       common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
@@ -386,6 +386,10 @@ c 1.3.2023      tiny2=tiny**2
           ifirst=ibuffm(1)
           isecond=ibuffm(2)
           kzmin=2
+        else
+          ifirst=ibuffm(khull(1))
+          isecond=ibuffm(khull(2))
+          ithird=ibuffm(khull(3))
         endif
 
       endif
@@ -400,55 +404,57 @@ c 1.3.2023      tiny2=tiny**2
       p1(2)=y(ifirst)
       p1(3)=z(ifirst)
 
-      if (kzmin.eq.1) then
+      if (ithird.eq.0) then
 
-        do i=1,npoi
-          if (i.eq.ifirst) cycle
-          p21(1)=x(i)-p1(1)
-          p21(2)=y(i)-p1(2)
-          p21(3)=z(i)-p1(3)
+        if (kzmin.eq.1) then
+
+          do i=1,npoi
+            if (i.eq.ifirst) cycle
+            p21(1)=x(i)-p1(1)
+            p21(2)=y(i)-p1(2)
+            p21(3)=z(i)-p1(3)
 c18Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
-          pn=sqrt(p21(1)**2+p21(3)**2)
-          if (pn.lt.tiny) then
-            cycle
-          endif
-          p21=p21/pn
-          if (p21(3).lt.zmin1) then
-            isecond=i
-            zmin1=p21(3)
-            ibuffm(2)=i
-          endif
-        enddo
+            pn=sqrt(p21(1)**2+p21(3)**2)
+            if (pn.lt.tiny) then
+              cycle
+            endif
+            p21=p21/pn
+            if (p21(3).lt.zmin1) then
+              isecond=i
+              zmin1=p21(3)
+              ibuffm(2)=i
+            endif
+          enddo
 
-      endif
+        endif
 
-      p21(1)=x(isecond)-x(ifirst)
-      p21(2)=y(isecond)-y(ifirst)
-      p21(3)=z(isecond)-z(ifirst)
+        p21(1)=x(isecond)-x(ifirst)
+        p21(2)=y(isecond)-y(ifirst)
+        p21(3)=z(isecond)-z(ifirst)
 
-      ithird=0
-      do i=1,npoi
+        ithird=0
+        do i=1,npoi
 
-        if (i.eq.ifirst.or.i.eq.isecond.or.kveto(i).ne.0) cycle
+          if (i.eq.ifirst.or.i.eq.isecond.or.kveto(i).ne.0) cycle
 
 c16.8.2023        p3(1)=x(i)-p21(1)
 c16.8.2023        p3(2)=y(i)-p21(2)
 c16.8.2023        p3(3)=z(i)-p21(3)
-        p3(1)=x(i)-p1(1)
-        p3(1)=0.0d0
-        p3(2)=y(i)-p1(2)
-        p3(3)=z(i)-p1(3)
-        pn=sqrt(p3(2)**2+p3(3)**2)
+          p3(1)=x(i)-p1(1)
+          p3(1)=0.0d0
+          p3(2)=y(i)-p1(2)
+          p3(3)=z(i)-p1(3)
+          pn=sqrt(p3(2)**2+p3(3)**2)
 
 c18Feb2020        pn=sqrt(p3(1)**2+p3(2)**2+p3(3)**2)
-        if (pn.lt.tiny) then
-          cycle
-        endif
+          if (pn.lt.tiny) then
+            cycle
+          endif
 
-        p3=p3/pn
+          p3=p3/pn
 
 c        if (p3(3).le.zmin1) then
-        if (p3(2).le.zmin1) then
+          if (p3(2).le.zmin1) then
 c 2.3.2023          q(1)=p21(2)*p3(3)-p21(3)*p3(2)
 c 2.3.2023          q(2)=p21(3)*p3(1)-p21(1)*p3(3)
 c 2.3.2023          q(3)=p21(1)*p3(2)-p21(2)*p3(1)
@@ -460,11 +466,11 @@ c 2.3.2023   points on the line are eleminated later
             zmin1=p3(2)
 c            print*,i,zmin1
 c 2.3.2023          endif
-        endif
-      enddo
+          endif
+        enddo
 
 
-      if (ithird.eq.0) then
+c      if (ithird.eq.0) then
         zmin2=1.0d30
         do i=1,npoi
           if (i.eq.ifirst.or.i.eq.isecond) cycle
@@ -481,7 +487,8 @@ c15Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
             ibuffm(3)=i
           endif
         enddo
-      endif
+
+      endif !ithird
 
       !Find all points of first plane
 
@@ -489,9 +496,6 @@ c15Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
       isecond=ibuffm(2)
       ithird=ibuffm(3)
 
-      ifirst=ibuffm(1)
-      isecond=ibuffm(2)
-      ithird=ibuffm(3)
 
       ibuff(1:3)=ibuffm(1:3)
       iplans(1:3,1)=ibuff(1:3)
@@ -531,6 +535,14 @@ c15Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
         endif
 
         if (abs(dist).lt.tiny) then
+          ifound=0
+          do k=1,nbuff
+            if(ibuff(k).eq.jpoi) then
+              ifound=1
+              exit
+            endif
+          enddo
+          if (ifound.eq.1) cycle
           nbuff=nbuff+1
           iplans(nbuff,1)=jpoi
           ibuff(nbuff)=jpoi

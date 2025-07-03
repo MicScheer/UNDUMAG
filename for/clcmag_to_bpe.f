@@ -1,3 +1,4 @@
+*CMZ :          03/07/2025  08.12.34  by  Michael Scheer
 *CMZ :  2.04/13 04/09/2023  10.46.42  by  Michael Scheer
 *CMZ :  2.04/07 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/02 27/02/2023  20.55.09  by  Michael Scheer
@@ -56,8 +57,11 @@ c      type (T_Magnet) :: tmag
       allocate(ibpecorn(nplanmax,nvoxcopy_t))
 
       allocate(bpetm(3,8,nplanmax,nvoxcopy_t))
+      bpetm=0.0d0
       allocate(bpemag(3,ncornmax,nplanmax,nvoxcopy_t))
+      bpemag=0.0d0
       allocate(bperot(3,ncornmax,nplanmax,nvoxcopy_t))
+      bperot=0.0d0
 
       kv=0
 
