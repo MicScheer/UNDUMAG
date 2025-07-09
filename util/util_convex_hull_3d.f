@@ -1,4 +1,4 @@
-*CMZ :          03/07/2025  16.39.28  by  Michael Scheer
+*CMZ :          09/07/2025  08.28.45  by  Michael Scheer
 *CMZ :  2.05/02 04/11/2023  11.41.40  by  Michael Scheer
 *CMZ :  2.05/01 03/10/2023  16.58.27  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.44.14  by  Michael Scheer
@@ -1115,7 +1115,8 @@ c      endif
       endif
 
       if (kfail.eq.0.and.nface+nhull-nedge.ne.2) then
-        write(6,*)"Error in util_convex_hull3d: Euler's formula not fullfilled"
+        write(6,*)"*** Error in util_convex_hull3d: Euler's formula not fullfilled ***"
+        print*,"ical: ",ical
         kfail=-99
       endif
 

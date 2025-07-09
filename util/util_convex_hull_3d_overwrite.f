@@ -1,3 +1,4 @@
+*CMZ :          04/07/2025  20.11.01  by  Michael Scheer
 *CMZ :  2.04/26 28/09/2023  12.41.02  by  Michael Scheer
 *CMZ :  2.04/25 28/09/2023  08.25.12  by  Michael Scheer
 *CMZ :  2.04/23 27/09/2023  09.35.27  by  Michael Scheer
@@ -83,21 +84,41 @@ c+seq,debugutil.
           enddo
           flush(lunbad)
           close(lunbad)
-          print*,"*** Trying util_convex_hull_3d_simp.f"
+
+          print*,"*** Trying util_convex_hull_3d_python.f"
           print*,""
 
           modsimp=2
 
         endif
-
       endif
 
-      if (modsimp.ne.0) then
+      if (modsimp.gt.0) then
+
+        n=npoi
+
+        call util_weed_points(n,xh,yh,zh,tiny)
+
+        call util_convex_hull_3d_python(n,xh,yh,zh,khull,kedge,kface,nhull,nedge,nface,
+     &  kfacelast,kfail)
+
+        if (kfail.ne.0) then
+          print*,""
+          print*,"*** Error in util_convex_hull_3d_overwrite:"
+          print*,"*** Bad return from util_convex_hull_3d_python.f"
+          return
+        else if (modsimp.eq.-2) then
+          print*,"--> Success"
+        endif
+
+      else if (modsimp.lt.0) then
 
         n=npoi
         n3=n*(n+1)**2
 
         allocate(ksimp(4*n3),lface(n3),vn(3,4*n3))
+
+        n=npoi
 
         call util_weed_points(n,xh,yh,zh,tiny)
 
@@ -109,7 +130,7 @@ c+seq,debugutil.
           print*,"*** Error in util_convex_hull_3d_overwrite:"
           print*,"*** Bad return from util_convex_hull_3d_simp.f"
           return
-        else if (modsimp.eq.2) then
+        else if (modsimp.eq.-2) then
           print*,"--> Success"
         endif
 
@@ -171,7 +192,7 @@ c+seq,debugutil.
         print*,'--> Success!'
       endif
 
-      if (modsimp.eq.2) modsimp=0
+      if (modsimp.eq.2.or.modsimp.eq.-2) modsimp=0
 
       return
       end

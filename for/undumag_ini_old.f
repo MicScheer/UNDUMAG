@@ -1,4 +1,4 @@
-*CMZ :          15/03/2025  16.20.09  by  Michael Scheer
+*CMZ :  2.06/00 09/07/2025  09.58.28  by  Michael Scheer
 *CMZ :  2.04/06 23/10/2023  14.26.43  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  14.44.40  by  Michael Scheer
 *CMZ :  2.04/00 05/12/2022  15.18.35  by  Michael Scheer
@@ -351,7 +351,7 @@ cdebug
 
       kcalcvars=1 !to avoid problems with undumag.in if coating is used
 
-      if (hulltiny.le.0d0) hulltiny=1.0e-6
+      if (hulltiny.le.0d0) hulltiny=1.0e-9
 
       ndivfby=max(ndivfboxy,1)
 

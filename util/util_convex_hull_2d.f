@@ -1,4 +1,4 @@
-*CMZ :          03/07/2025  16.38.12  by  Michael Scheer
+*CMZ :          09/07/2025  09.59.46  by  Michael Scheer
 *CMZ :  2.05/02 30/10/2023  09.33.51  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  09.44.39  by  Michael Scheer
 *CMZ :  2.03/00 26/08/2022  13.47.55  by  Michael Scheer
@@ -14,6 +14,8 @@
 *CMZ :  1.17/14 12/04/2016  13.09.48  by  Michael Scheer
 *-- Author :    Michael Scheer   12/04/2016
       subroutine util_convex_hull_2d(nin,x,y,nh,ihull,tinyin,ifail)
+
+      use utilmod
 
 ! Returns convex hull index-array, last point [x(ihull(nh)),y(ihull(nh))]
 ! is first point [x(ihull(1)),y(ihull(1))]
@@ -31,13 +33,16 @@
       integer :: ical=0
 
       ifailin=ifail
-c      ical=ical+1
+      ical=ical+1
+
+c      if (ical.eq.21) ifailin=-1
 c      print*,"2d:",ical
 c      if (ical.eq.11810) call util_break
       ifail=0
 
       tiny=tinyin
       if (tiny.le.0.0d0) tiny=1.0d-12
+      tiny=1.0d-30
 
       n=nin
 
@@ -185,6 +190,15 @@ c      if (ical.eq.11810) call util_break
         goto 9999
       endif
 
+      if (modsimp.eq.1) then
+        call util_convex_hull_2d_python(n,x,y,nh,ihull,ifail)
+        if (ifail.ne.0) then
+          ifail=-9
+          print*,"*** Error in util_convex_hull_2d: Bad return from util_convex_hull_2d_python ***"
+          goto 9999
+        endif
+      endif
+
       xymin=1.0d30
       do i=1,n
         if (y(i).lt.ymin+tiny) then
@@ -287,7 +301,7 @@ c      if (ical.eq.11810) call util_break
 
         nh=nh+1
         if (nh.gt.n+1) then
-          call util_break
+c          call util_break
           nh=nh-1
           exit
         endif
@@ -299,6 +313,18 @@ c      if (ical.eq.11810) call util_break
       enddo
 
 9999  continue
+
+      if (ifail.ne.0) then
+        if (ifail.ne.2.and.ifail.ne.3.and.ifail.ne.-9) then
+          print*,"*** Error in util_convex_hull_2d, trying now util_convex_hull_2d_python ***"
+          call util_convex_hull_2d_python(n,x,y,nh,ihull,ifail)
+        endif
+        if (ifail.ne.0) then
+          print*,'*** No success, giving up ***'
+        else
+          print*,'--- Success ---'
+        endif
+      endif
 
       n=nb
       x(1:n)=xb(1:n)
@@ -319,7 +345,7 @@ c+self,if=debug2d.
         enddo
         Print*,"------------------------"
         flush(772)
-        close(772)
+c        close(772)
       endif
 c+self.,if=debug2d.
 

@@ -1,3 +1,4 @@
+*CMZ :          09/07/2025  09.58.28  by  Michael Scheer
 *CMZ :  2.04/25 28/09/2023  08.29.16  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
 *CMZ :  2.04/03 22/08/2023  09.03.52  by  Michael Scheer
@@ -60,7 +61,7 @@
       if (rcvthron.eq.0.0d0) rcvthron=1.0d30
 
       if (cuttiny.eq.0.0d0) cuttiny=0.1
-      if (hulltiny.eq.0.0d0) hulltiny=1.0d-6
+      if (hulltiny.eq.0.0d0) hulltiny=1.0d-9
 
       if (nchiiron.le.0) nchiiron=1
 
