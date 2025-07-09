@@ -1,4 +1,5 @@
-*CMZ :          09/07/2025  09.59.46  by  Michael Scheer
+*CMZ :          09/07/2025  12.40.26  by  Michael Scheer
+*CMZ :  2.06/00 09/07/2025  09.59.46  by  Michael Scheer
 *CMZ :  2.05/02 30/10/2023  09.33.51  by  Michael Scheer
 *CMZ :  2.04/04 06/03/2023  09.44.39  by  Michael Scheer
 *CMZ :  2.03/00 26/08/2022  13.47.55  by  Michael Scheer
@@ -42,7 +43,6 @@ c      if (ical.eq.11810) call util_break
 
       tiny=tinyin
       if (tiny.le.0.0d0) tiny=1.0d-12
-      tiny=1.0d-30
 
       n=nin
 
@@ -140,6 +140,8 @@ c      if (ical.eq.11810) call util_break
       nb=n
 
       call util_weed_points_2d(n,x,y,tiny)
+
+      tiny=1.0d-30
 
       istore=0
       do k=1,n
