@@ -1,4 +1,5 @@
-*CMZ :          03/07/2025  16.35.25  by  Michael Scheer
+*CMZ :          09/07/2025  14.34.38  by  Michael Scheer
+*CMZ :  2.06/00 08/07/2025  13.43.27  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  15.32.24  by  Michael Scheer
 *CMZ :  2.04/22 26/09/2023  12.20.19  by  Michael Scheer
 *CMZ :  2.04/03 03/03/2023  15.00.22  by  Michael Scheer
@@ -14,7 +15,6 @@
      &  p1(3),p2(3),p3(3),vnor(3),dist,a,rotmat(3,3),r(3),vrot(3)
 
       integer l,n,kfail,nhull,nedge,nface,iover,i,ipoi,iface,npoi,kfacelast,k
-      integer :: ical=0
 
       double precision, dimension(:), allocatable :: x,y,z,xr,yr,zr
       integer, dimension(:,:), allocatable :: kedge
@@ -25,9 +25,6 @@
       common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
 
-c      ical=ical+1
-c      print*,"util_volume:",ical
-c      if (ical.eq.338) call util_break
 
       allocate(x(n),y(n),z(n),khull(lenhull),xr(n),yr(n),zr(n),
      &  kedge(4,lenedge),kface(lenface))
@@ -63,12 +60,16 @@ c      if (ical.eq.338) call util_break
           v=0.0d0
           goto 9999
         endif
+
         call util_matrix_to_rot_vec_to_z(vnor,rotmat,kfail)
+
         if (kfail.ne.0) then
           v=0.0d0
           goto 9999
         endif
+
         call util_mat_mul_vec_3x3(rotmat,vnor,vrot)
+
         do ipoi=1,npoi
           k=kface(l+1+ipoi)
           r(1)=x(k)
@@ -79,6 +80,7 @@ c      if (ical.eq.338) call util_break
           yr(ipoi)=vrot(2)
           zr(ipoi)=vrot(3)
         enddo
+
         call util_area(npoi,xr,yr,tiny,a,kfail)
         if (kfail.ne.0) then
           v=0.0d0
@@ -91,6 +93,5 @@ c      if (ical.eq.338) call util_break
 9999  continue
 
       deallocate(x,y,z,xr,yr,zr,kedge,kface,khull)
-
       return
       end

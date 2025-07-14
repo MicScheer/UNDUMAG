@@ -1,4 +1,5 @@
-*CMZ :          15/03/2025  16.14.10  by  Michael Scheer
+*CMZ :          14/07/2025  09.02.39  by  Michael Scheer
+*CMZ :  2.06/00 08/07/2025  15.06.45  by  Michael Scheer
 *CMZ :  2.05/05 27/02/2024  16.53.50  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.31.14  by  Michael Scheer
 *CMZ :  2.04/22 25/09/2023  12.27.21  by  Michael Scheer
@@ -32,7 +33,7 @@
 
       integer, dimension (:), allocatable :: ncorn1,ncorn2
 
-      integer :: idebug=0,
+      integer :: idebug=0,ical=0,
      &  i,j,l,n,ix,iy,iz,kz,imag,ip,npoi,iplan,icorn,
      &  nxdiv,nydiv,nzdiv,kcut,izdiv,klast,nplan,ncorn
 
@@ -47,7 +48,8 @@
       type(T_Voxel) :: tvox
 
 
-      if (idebug.gt.0) call util_break
+      ical=ical+1
+      if (idebug.gt.1) call util_break
 
       tmag=t_magnets(imag)
 
@@ -179,7 +181,7 @@
             zdiv=zdiv-gcenv(3) ! relative to gcenv, i.e. GCEN of voxel
 
             if (zdiv-zmin.le.cuttiny.or.zmax-zdiv.le.cuttiny) then
-              if (idebug.gt.0) call util_break
+              if (idebug.gt.1) call util_break
               cycle
             endif
 
@@ -304,7 +306,7 @@
 
               if (zdiv-zmin.le.cuttiny.or.zmax-zdiv.le.cuttiny) then
 
-                if (idebug.gt.0) call util_break
+                if (idebug.gt.1) call util_break
                 klast=iz-1
                 !cycle
                 ! Hier ggf. clcmag_corn_to_vox benutzen, und auch unten
@@ -496,7 +498,7 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
 
             enddo !nzdiv -1
 
-          volmag=0.0d0
+            volmag=0.0d0
 
           do iz=1,nzdiv
 
@@ -527,39 +529,33 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
             write(lun6,*)"*** Warning in clcmag_zcut: Sum of xyz-cut volumes differs from "
      &        //"xy-cuts by (rel.):",vol
             write(lun6,*)"*** magnet, ixdiv, iydiv: ",trim(tmag%cnam),ix,iy
-            write(lun6,*)"Maybe you should try MODSIMPHULL=1 in undumag.nam"
+            write(lun6,*)"Maybe you should try modsimphull=+/-1 in undumag.nam or try different values of HULLTINY in undumag.nam."
           endif
 
         endif !nzdiv.eq.1
-
       enddo !iy=1,nydiv
 
       enddo !nxdiv
 
-!      if (nzdiv.gt.1) then
       deallocate(ncorn1,ncorn2,corn1,corn2,xh,yh,zh,xhc,yhc,zhc,kedge,kface)
-!      endif
 
       t_magnets(imag)%nvoxels=nvox
       nvox_t=nvox_t+nvox
 
-      if (idebug.gt.0) call util_break
+      if (idebug.gt.1) call util_break
 
 
       volmag=0.0d0
       do ix=1,nxdiv
         do iy=1,nydiv
           do iz=1,nzdiv
+            if (t_magnets(imag)%t_xyzcuts(ix,iy,iz)%nhull.eq.0) cycle
             volmag=volmag+t_magnets(imag)%t_xyzcuts(ix,iy,iz)%volume
-            !print*,"++++++++++++++++++++++++++++++++++++++++++++++++"
-            !print*,ix,iy,iz
-            !print*,"++++++++++++++++++++++++++++++++++++++++++++++++"
             l=1
             nplan=0
             do i=1,t_magnets(imag)%t_xyzcuts(ix,iy,iz)%kfacelast
               nplan=nplan+1
               ncorn=t_magnets(imag)%t_xyzcuts(ix,iy,iz)%kface(l)
-              !print*,nplan,ncorn
               if (nplan.gt.nplanmax) then
                 nplanmax=nplan
                 call clcbuff_reallocate
@@ -568,9 +564,9 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
               l=l+n+1
               if (nplan.eq.t_magnets(imag)%t_xyzcuts(ix,iy,iz)%nface) exit
             enddo
-          enddo
-        enddo
-      enddo
+          enddo !iz
+        enddo !iy
+      enddo !ix
 
       vol=(volmag-t_magnets(imag)%volume)/t_magnets(imag)%volume
 
@@ -578,7 +574,7 @@ c     &            t_magnets(imag)%cnam,ixdiv,iydiv," 1"
         write(lun6,*)"*** Warning in clcmag_zcut: Sum of xyz-cut volumes differs from magnet "
      &    //"volume by (rel.): ",vol
         write(lun6,*)"*** magnet :",trim(tmag%cnam),imag
-        write(lun6,*)"Maybe you should try MODSIMPHULL=1 in undumag.nam"
+        write(lun6,*)"Maybe you should try modsimphull=+/-1 in undumag.nam"
       endif
 
       return

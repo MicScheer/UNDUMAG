@@ -1,4 +1,5 @@
-*CMZ :          09/07/2025  08.17.36  by  Michael Scheer
+*CMZ :          09/07/2025  14.33.10  by  Michael Scheer
+*CMZ :  2.06/00 09/07/2025  08.17.36  by  Michael Scheer
 *CMZ : 00.00/21 13/03/2017  11.18.51  by  Michael Scheer
 *CMZ : 00.00/20 20/02/2017  22.03.44  by  Michael Scheer
 *CMZ : 00.00/19 12/04/2016  09.18.40  by  Michael Scheer
@@ -9,7 +10,7 @@
 
       integer lun
 
-      double precision x(n),y(n),z(n),xx,yy
+      double precision x(n),y(n)
 
       integer n,ifail,k,nh,nedge,ihull(*)
 

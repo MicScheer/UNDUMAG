@@ -1,4 +1,4 @@
-*CMZ :          09/07/2025  08.28.45  by  Michael Scheer
+*CMZ :  2.06/00 09/07/2025  08.35.56  by  Michael Scheer
 *CMZ :  2.05/02 04/11/2023  11.41.40  by  Michael Scheer
 *CMZ :  2.05/01 03/10/2023  16.58.27  by  Michael Scheer
 *CMZ :  2.04/24 27/09/2023  16.44.14  by  Michael Scheer
@@ -64,8 +64,9 @@
 
       implicit none
 
-*KEEP,hulldim.
-      include 'hulldim.cmn'
+*KEEP,HULLDIM.
+      integer lenhull,lenedge,lenface,nverhullmax
+      common/uhullc/lenhull,lenedge,lenface,nverhullmax
 *KEND.
 
       double precision xin(*),yin(*),zin(*),
@@ -440,7 +441,7 @@ c18Feb2020          pn=sqrt(p21(1)**2+p21(2)**2+p21(3)**2)
 c16.8.2023        p3(1)=x(i)-p21(1)
 c16.8.2023        p3(2)=y(i)-p21(2)
 c16.8.2023        p3(3)=z(i)-p21(3)
-          p3(1)=x(i)-p1(1)
+c7.7.2025          p3(1)=x(i)-p1(1)
           p3(1)=0.0d0
           p3(2)=y(i)-p1(2)
           p3(3)=z(i)-p1(3)
