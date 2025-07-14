@@ -109,6 +109,12 @@ for d in tree:
 #endfor
 
 if not os.path.exists(UI + 'lib'): os.system('mkdir ' + UI + 'lib')
+if not os.path.exists(UI + 'dynlib'): os.system('mkdir ' + UI + 'dynlib')
+#reakpoint()
+cwdo=os.getcwd()
+os.chdir(UI + Sepp + 'python')
+os.system('python3 build_hull3d.py')
+os.chdir(cwdo)
 
 
 Iverbose = 0
@@ -520,12 +526,16 @@ def undu_update():
         #endtry
     #endfor
     sgfor = "gfortran -O2 -cpp -fd-lines-as-comments -Wno-align-commons -fopenmp  -ffixed-line-length-none -finit-local-zero  -funroll-loops -o " + UI + "bin" + Sepp + "undumag.exe " + UI + "main" + Sepp + "undumag_main.f"
+
     slink = ' '
     for flib in ['libundu.a','libundu_modules.a','liburad.a','libutil.a','libmshcern.a','libmshplt.a','libmshplt_modules.a']:
       slink += UI + "lib" + Sepp + flib + ' '
     #endfor
+    slink += ' -L' + UI + 'dynlib -lhull3d_python'
+
     #reakpoint()
     scom = sgfor + slink
+
     if Iverbose > 0: print("\n",scom,"\n")
     if Idry == 0: forcomp(scom)
     if Iverbose >=0: print("\n--- " + UI  + "bin"+Sepp+"undumag.exe updated ---\n")

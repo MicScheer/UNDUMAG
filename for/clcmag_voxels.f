@@ -1,4 +1,5 @@
-*CMZ :          15/03/2025  16.21.51  by  Michael Scheer
+*CMZ :          14/07/2025  10.46.54  by  Michael Scheer
+*CMZ :  2.06/00 04/07/2025  15.38.36  by  Michael Scheer
 *CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/23 27/09/2023  07.36.57  by  Michael Scheer
 *CMZ :  2.04/20 20/09/2023  15.31.58  by  Michael Scheer
@@ -59,25 +60,28 @@ c+self.
           allocate(t_magnets(imag)%t_voxels(t_magnets(imag)%nvoxels))
 
           nvox=0
-          if (idebug.eq.1) then
-            print*,"imag, ix, iy, iz, ixdiv, iydiv, izdiv, kvox, volume"
-          else if (idebug.ge.2) then
-            print*,"imag, nvoxels:",imag,t_magnets(imag)%nvoxels
-          endif
+c          if (idebug.eq.1.and.imag.eq.12) then
+c            print*,"imag, ix, iy, iz, nhull, ixdiv, iydiv, izdiv, kvox, volume"
+c          else if (idebug.ge.2) then
+c            print*,"imag, nvoxels:",imag,t_magnets(imag)%nvoxels
+c          endif
 
           do iz=1,t_magnets(imag)%nzdiv
             do iy=1,t_magnets(imag)%nydiv
               do ix=1,t_magnets(imag)%nxdiv
 
-                if (idebug.eq.1) then
-                  print*,imag,ix,iy,iz,
-     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%ixdiv,
-     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%iydiv,
-     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%izdiv,
-     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%ixdiv,
-     &              t_magnets(imag)%kvoxels(ix,iy,iz),
-     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%volume
-                endif
+                if (t_magnets(imag)%t_xyzcuts(ix,iy,iz)%nhull.eq.0) cycle
+
+c                if (idebug.eq.1.and.imag.eq.12.and.ix.eq.2.and.iy.eq.7.and.iz.eq.2) then
+c                  print*,imag,ix,iy,iz,
+c     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%nhull,
+c     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%ixdiv,
+c     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%iydiv,
+c     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%izdiv,
+c     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%ixdiv,
+c     &              t_magnets(imag)%kvoxels(ix,iy,iz),
+c     &              t_magnets(imag)%t_xyzcuts(ix,iy,iz)%volume
+c                endif
 
                 if (t_magnets(imag)%t_xyzcuts(ix,iy,iz)%ixdiv.eq.0.or.
      &            t_magnets(imag)%t_xyzcuts(ix,iy,iz)%iydiv.eq.0.or.
@@ -91,6 +95,9 @@ c+self.
 
                 kvox=t_magnets(imag)%kvoxels(ix,iy,iz)
 
+                if (imag.eq.12.and.ix.eq.2.and.iy.eq.7.and.iz.eq.2) then
+                  print*,kvox,t_magnets(imag)%t_xyzcuts(ix,iy,iz)%volume
+                endif
                 if (kvox.eq.0) then
                   if (t_magnets(imag)%t_xyzcuts(ix,iy,iz)%volume.ne.0d0) then
                     print*,imag,ix,iy,iz
@@ -222,7 +229,7 @@ c+self.
           write(lun6,*)'*** Warning in clcmag_voxels: Sum of volumes of voxels does not match "
      &      //"the one of the magnet ',t_magnets(imag)%cnam
           write(lun6,*)"Rel. error :",(volmag-t_magnets(imag)%volume)/volmag
-          write(lun6,*)'*** Consider to set MODSIMPHULL=1  in undumag.nam'
+          write(lun6,*)'*** Consider to set modsimphull=+/-1  in undumag.nam'
         endif
       enddo !imag
 

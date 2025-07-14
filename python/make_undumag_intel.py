@@ -109,6 +109,12 @@ for d in tree:
 #endfor
 
 if not os.path.exists(UI + 'lib'): os.system('mkdir ' + UI + 'lib')
+if not os.path.exists(UI + 'dynlib'): os.system('mkdir ' + UI + 'dynlib')
+#reakpoint()
+cwdo=os.getcwd()
+os.chdir(UI + Sepp + 'python')
+os.system('python3 build_hull3d.py')
+os.chdir(cwdo)
 
 
 Iverbose = 0
@@ -513,6 +519,7 @@ def undu_update():
     for flib in ['libundu.a','libundu_modules.a','liburad.a','libutil.a','libmshcern.a','libmshplt.a','libmshplt_modules.a']:
       slink += UI + "lib" + Sepp + flib + ' '
     #endfor
+    slink += ' -L' + UI + 'dynlib -lhull3d_python'
     #reakpoint()
     scom = sgfor + slink
     if Iverbose > 0: print("\n",scom,"\n")

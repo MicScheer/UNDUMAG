@@ -513,6 +513,7 @@ def undu_update():
       slink += UI + "lib" + Sepp + flib + ' '
     #endfor
     #reakpoint()
+    slink += ' -L' + UI + 'dynlib -lhull3d_python'
     scom = sgfor + slink
     if Iverbose > 0: print("\n",scom,"\n")
     if Idry == 0: forcomp(scom)
