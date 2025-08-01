@@ -18,12 +18,6 @@
       print *
       print *
 
-      call undumag_system
-
-      print *
-      print *
-      print *
-
       call util_zeit_kommentar(lun6,"")
 
       open(unit=999,file="undumag.ver")
