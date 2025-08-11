@@ -1,3 +1,4 @@
+*CMZ :          11/08/2025  16.07.19  by  Michael Scheer
 *CMZ :  2.05/02 24/10/2023  14.46.42  by  Michael Scheer
 *CMZ :  2.04/01 22/08/2023  09.03.52  by  Michael Scheer
 *CMZ :  2.04/00 14/01/2023  14.39.42  by  Michael Scheer
@@ -68,6 +69,7 @@
           do l=inh+1,ninhom_t
             if (clcinhom(l)(1:5).eq.'! End') then
               iend=l
+              exit
             endif
           enddo
 
