@@ -1858,13 +1858,16 @@ except:
 #from pyhull.convex_hull import ConvexHull
 #from pyhull import qconvex, qdelaunay, qvoronoi
 
-if platform.system() == 'Windows':
-    import msh_tex_windows
-    from msh_tex_windows import *
-else:
-    import msh_tex_linux
-    from msh_tex_linux import *
-#endif
+#if platform.system() == 'Windows':
+#    import msh_tex_windows
+#    from msh_tex_windows import *
+#else:
+#    import msh_tex_linux
+#    from msh_tex_linux import *
+##endif
+
+import msh_tex
+from msh_tex import *
 
 
 global \
@@ -3358,11 +3361,17 @@ def set_frame_square(wf=0,window='!'):
 #enddef
 
 def get_geo_all():
-    global Wmaster,WinX,WinY,ScreenW,ScreenH,CanW,CanH
+    global Wmaster,WinX,WinY,ScreenW,ScreenH,CanW,CanH,MPLmaster,WavesMode,WAVESHOPmaster
 
     wid,h,WinX,WinY = getgeo()
-    ScreenW = Wmaster.winfo_screenwidth()
-    ScreenH = Wmaster.winfo_screenheight()
+
+    try:
+      ScreenW = Wmaster.winfo_screenwidth()
+      ScreenH = Wmaster.winfo_screenheight()
+    except:
+      ScreenW = WAVESHOPmaster.winfo_screenwidth()
+      ScreenH = WAVESHOPmaster.winfo_screenheight()
+    #endtry
 
     fig = plt.gcf()
     CanW,CanH = fig.canvas.get_width_height()
@@ -14316,15 +14325,15 @@ def nproj2n(nt='?', xy='', weight=1., select='',
   h = pd.DataFrame([x,y,hz,hz2,hn]).T
   h.columns=['x','y','z','z2','n']
 
-  h.z[np.isnan(h.z)] = 0.0
-  h.z2[np.isnan(h.z2)] = 0.0
-  h.n[np.isnan(h.n)] = 0.0
+  h.loc[np.isnan(h.z),"z"] = 0.0
+  h.loc[np.isnan(h.z2),"z2"] = 0.0
+  h.loc[np.isnan(h.n),"n"] = 0.0
 
   h['ave'] = h.z/h.n
-  h.ave[np.isnan(h.ave)] = 0.0
+  h.loc[np.isnan(h.ave),"ave"] = 0.0
 
   h['ez'] = (h.z2/h.n-h.ave**2)**0.5
-  h.ez[np.isnan(h.ez)] = 0.0
+  h.loc[np.isnan(h.ez),"ez"] = 0.0
 
   head2 = H2head[idx]
 
@@ -14646,12 +14655,12 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
 
   h.columns=['x','y','y2','n']
 
-  h.y[np.isnan(h.y)] = 0.0
-  h.y2[np.isnan(h.y2)] = 0.0
-  h.n[np.isnan(h.n)] = 0.0
+  h.loc[np.isnan(h.y),"y"] = 0.0
+  h.loc[np.isnan(h.y2),"y2"] = 0.0
+  h.loc[np.isnan(h.n),"n"] = 0.0
 
   h['ave'] = h.y/h.n
-  h.ave[np.isnan(h.ave)] = 0.0
+  h.loc[np.isnan(h.ave),"ave"] = 0.0
 
   if w.min() == w.max() and w.min() == 1.:
     h['ey'] = h.n**0.5
@@ -14659,7 +14668,7 @@ def nproj1(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
     h['ey'] = (h.y2/h.n-h.ave**2)**0.5
   #endif
 
-  h.ey[np.isnan(h.ey)] = 0.0
+  h.loc[np.isnan(h.ey),"ey"] = 0.0
 
   H1h = h
   H1[idx] = h
@@ -14956,12 +14965,12 @@ def nproj1n(nt='?', var='', weight=1., select='', scalex=1., scaley = 1,
 
   h.columns=['x','y','y2','n']
 
-  h.y[np.isnan(h.y)] = 0.0
-  h.y2[np.isnan(h.y2)] = 0.0
-  h.n[np.isnan(h.n)] = 0.0
+  h.loc[np.isnan(h.y),"y"] = 0.0
+  h.loc[np.isnan(h.y2),"y2"] = 0.0
+  h.loc[np.isnan(h.n),"n"] = 0.0
 
   h['ave'] = h.y/h.n
-  h.ave[np.isnan(h.ave)] = 0.0
+  h.loc[np.isnan(h.ave),"ave"] = 0.0
 
   if w.min() == w.max() and w.min() == 1.:
     h['ey'] = h.n**0.5
@@ -16126,6 +16135,7 @@ def window_set_title(Title='',fig=-1):
 
 def gui_key_press(ev):
   if ev.key in ['q', 'Q']: Quit()
+  elif ev.key in ['c','C']: window_close()
 #enddef
 
 def window(title='', geom="!", block=False, projection = '2d',
@@ -16168,7 +16178,7 @@ def window(title='', geom="!", block=False, projection = '2d',
   FillColor,WisLinux,Ishow,Sepp,Backslash
 
   global Tfig, Tax2d, Tax3d, IsameGlobal, ScreenWidth, ScreenHeight, Tdate, \
-  Figman, Wmaster
+  Figman, Wmaster,WAVESHOPmaster
 
   #nreakpoint()
 
@@ -16206,6 +16216,10 @@ def window(title='', geom="!", block=False, projection = '2d',
 
   MPLmain = Fig
   MPLmaster = MPLmain.canvas.toolbar.master
+
+  try: wshdum = WAVESHOPmaster
+  except: WAVESHOPmaster = MPLmaster
+
   Wmaster = MPLmaster
 
   plt_connect('key_press_event', gui_key_press)
@@ -16984,12 +16998,18 @@ def samezone(isame=1):
   if not isame: Isame = 0
 #enddef samezone(isame=1)
 
-def nextzone(projection='2d', visible=True, isame=0):
+def nextzones(isilent=1):
+
+  global Nxzone, Nyzone, Kzone, Isame, Kplots, Kzone
+  if not isilent: print(Nxzone, Nyzone, Kzone, Isame, Kzone, Kplots[:Nxzone*Nyzone])
+  return Nxzone, Nyzone, Kzone, Isame, Kzone, Kplots[:Nxzone*Nyzone]
+
+def nextzone(projection='2d', visible=True, isame=0,caller=''):
 
   global Nxzone, Nyzone, Kzone, Isame, Kecho, Kplots, Kzone
 
   if Kecho:
-    print("nextzone(projection=" + projection + ", visible=" + str(visible) +")")
+    print("nextzone(projection=" + projection + ", visible=" + str(visible) + ", caller=" + caller +")")
 
   try:
     IsameGlobal.set(0)
@@ -17008,7 +17028,7 @@ def nextzone(projection='2d', visible=True, isame=0):
   ny = Nyzone
   kzone = Kzone
 
-  if kzone < nx * ny:
+  if kzone < (nx * ny):
     kzone += 1
     zone(nx,ny,kzone,'s',projection=projection,visible=visible)
   else:
@@ -17062,6 +17082,7 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
 
   global Tax2d, Tax3d, Debug, ClearCanvas
 
+  #print('zone:',nx,ny,kzone,isame,projection,visible)
   ClearCanvas = 0
 
   if ny == 1: set_y_of_xlab(-0.1)
@@ -17942,6 +17963,8 @@ def null3d(xmin=-10., xmax=10., ymin=-10., ymax=10., zmin=-10., zmax=10.,elev=30
 
   set_view_3d(elev,azim,roll)
 
+  Kplots[Kzone-1] = 1
+
 #  showplot()
 #enddef null3d(xmin=-10., xmax=10., ymin=-10., ymax=10., zmin=-10., zmax=10.)
 
@@ -17995,7 +18018,7 @@ def null(xmin=-10., xmax=10., ymin=-10., ymax=10.):
 #enddef null(xmin=-10., xmax=10., ymin=-10., ymax=10.)
 
 def nnull(xmin=-10., xmax=10., ymin=-10., ymax=10.):
-  nextzone()
+  nextzone(caller='nnull')
   null(xmin, xmax, ymin, ymax)
 #enddef
 
@@ -18651,6 +18674,8 @@ def hcopy1d(idh,idnew,tit='',scalex=1.,scaley=1., reset=0, overwrite=True):
   ymin = H1hh[7] * scaley
   ymax = H1hh[8] * scaley
 
+  #reakpoint()
+
   hret = hbook1(idnew,tit,nx,xmin,xmax,overwrite=overwrite)
 
   idxnew = GetIndexH1(idnew)
@@ -18673,11 +18698,15 @@ def hcopy1d(idh,idnew,tit='',scalex=1.,scaley=1., reset=0, overwrite=True):
   head1[10] *= scaley
 
   H1[idxnew] = deepcopy(H1[idx])
+#  print(H1[idx])
+#  print(H1[idxnew])
   H1[idxnew].y *= scaley
   H1[idxnew].ey *= scaley
   H1[idxnew].y2 *= scaley**2
 
   H1head[idxnew] = head1
+
+#  print(H1[idxnew].y)
 
   return idxnew
 #def hcopy1d(idh,idnew,tit='',scalex=1.,scaley=1., reset=0)
@@ -19335,7 +19364,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
     lcol = color
   #endif color == 'default'
 
-  varliso =varlis
+  varliso = varlis
 
   if type(varlis) == str:
     varlis = nlistcolon(varlis)
@@ -19370,14 +19399,15 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
   idx = GetIndexH1(hist)
 
   if Kecho:
+    #reakpoint()
     if type(hist) == str: shis = "'" + hist + "'"
     elif type(hist) == int: shis = str(hist)
     else: shis = H1hh[1]
     if idn != -1:
-      s = "nplot('" + Nhead[idn][1] + "', '" + varlis + "', select='" + select + "', weights='" + weights + "', plopt='" + plopt + "', legend='" + \
+      s = "nplot('" + Nhead[idn][1] + "', '" + varliso + "', select='" + select + "', weights='" + weights + "', plopt='" + plopt + "', legend='" + \
       legend + "', scalex=" + str(scalex) + ", scaley=" + str(scaley) + ", scalez=" + str(scalez) + ", scalet=" + str(scalet) + ", cmap='" + cmap + "'," + shis + ")"
     else:
-      s = "nplot(nt, '" + varlis + "', select='" + select + "', weights='" + weights + "', plopt='" + plopt + "', legend='" + \
+      s = "nplot(nt, '" + varliso + "', select='" + select + "', weights='" + weights + "', plopt='" + plopt + "', legend='" + \
       legend + "', scalex=" + str(scalex) + ", scaley=" + str(scaley) + ", scalez=" + str(scalez) + ", scalet=" + str(scalet) + ", cmap='" + cmap + "'," + shis + ")"
     print(s)
   #endif Kecho
@@ -19760,7 +19790,7 @@ color='default',isort=0):
 def nnplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
           scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='HnPlot',
          color='default',isort=0):
-  nextzone()
+  nextzone(caller='nnplot')
   nplot(nt,varlis,select,weights,plopt, legend,scalex, scaley, scalez, scalet,
         cmap, hist,color,isort)
 #enddef nnplot(
@@ -19795,7 +19825,7 @@ def nplt(nt='?',varlis='',select='',weights='',plopt='', legend='',
 def nnplt(nt='?',varlis='',select='',weights='',plopt='', legend='',
           scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='HnPlot',
          color='default',isort=0):
-  nextzone()
+  nextzone(caller='nnplt')
   nplt(nt,varlis,select,weights,plopt, legend,scalex, scaley, scalez, scalet,
         cmap, hist,color,isort)
 #enddef nnplt
@@ -22803,11 +22833,15 @@ def getzone(projection=''):
 
 
   global ClearCanvas
+  #print("getzone:ClearCanvas,Nxzone,Nyzone,Kzone:",ClearCanvas,Nxzone,Nyzone,Kzone)
+
   if ClearCanvas: _clearCanvas(1)
 
+  #reakpoint()
   Fig = plt.gcf()
   Axes = Fig.get_axes()
-  #print("getzone 1:",Axes)
+  #print("\ngetzone:",len(Axes))
+  #nzret = nextzones(0)
 
   if not len(Axes):
     #print("getzone 2:",Axes)
@@ -22834,14 +22868,29 @@ def getzone(projection=''):
   Axes = Fig.axes
   Ax = plt.gca()
 
-  ifound = 0
+  try:
+    azones = Ax.get_label().split('_')
+    mx = int(azones[0])
+    my = int(azones[1])
+    mz = int(azones[2])
+#    if mx!=Nxzone or my!=Nyzone or mz!=Kzone:
+#      print(Nxzone,Nyzone,Kzone)
+#      zone(Nxzone,Nyzone,Kzone,'s')
+    #endif
+  except: mz = -9
 
+  #reakpoint()
+  ifound = 0
+  #print(Zones)
+
+  iz = 0
   for z in Zones:
+    iz += 1
     if z[0] == Fig:
       Nxzone = z[1]
       Nyzone = z[2]
       Kzone = z[3]
-      ifound = 1
+      ifound = iz
       break
   #endfor z in Zones:
 
@@ -22874,10 +22923,24 @@ def getzone(projection=''):
     i += 1
   #endfor ax in Axes
 
-  if iax >= 0 and iax < len(Axes)-1 and  hasattr(Axes[iax+1],'get_label'):
-    Fig.delaxes(Axes[iax+1])
-
-  Fig.delaxes(Ax)
+  #print("mz:",mz,iax,Isame)
+  #reakpoint()
+#  if iax >= 0 and iax < len(Axes)-1 and  hasattr(Axes[iax+1],'get_label'):
+#    Fig.delaxes(Axes[iax+1])
+#
+#  Fig.delaxes(Ax)
+  #reakpoint()
+#  print("AK:",Axes,len(Axes),Kzone)
+#  print(Kplots[:5])
+  if not Isame:
+#    idel = -1
+#    for ipl in range(Kzone):
+#      if Kplots[ipl] == 1: idel += 1
+#    #endfor
+    Fig.delaxes(Axes[-1])
+#    Fig.delaxes(Axes[Kzone-1])
+#    if idel > -1: Fig.delaxes(Axes[idel])
+#    print("Gelöscht")
   Legend = []
 
   label = str(Nxzone) + "_" + str(Nyzone) + "_" + str(Kzone)
@@ -28643,7 +28706,8 @@ def _nPlot():
 
 
   global FillColor
-
+  print("_Plot!")
+  breakpoint()
   print(WavesMode)
   if not len(Nhead):
     nError("  No Ntuple defined so far!  ")
@@ -30374,13 +30438,15 @@ Kurad = 0
 Nreload = 0
 
 
-if platform.system() == 'Windows':
-  import msh_tex_windows
-  from msh_tex_windows import *
-else:
-  import msh_tex_linux
-  from msh_tex_linux import *
+#if platform.system() == 'Windows':
+#  import msh_tex_windows
+#  from msh_tex_windows import *
+#else:
+#  import msh_tex_linux
+#  from msh_tex_linux import *
 #endif
+
+import msh_tex
 
 global Ntcyls, Ncylinder
 Ntcyls = []
