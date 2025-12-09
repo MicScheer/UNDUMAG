@@ -20396,7 +20396,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
         #reakpoint()
 
         if Ihist or Isurf or Itrisurf or Iinter or Iboxes:
-          if Iinter or Iboxes:   Kcolorbar[Kzone] = 1
+          #if Iinter or Iboxes:   Kcolorbar[Kzone] = 1 wird in hplot gesetzt
 
 #20.5.2024          nproj2(nto,varliso,weights,select,scalex=scalex,scaley=scaley,nx=nx,ny=ny,idh=hist)
           nproj2(nt,varlis,weights,'',scalex=scalex,scaley=scaley,nx=nx,ny=ny,idh=hist)
@@ -20405,7 +20405,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
           iplot = 1
 
         else:
-          Kcolorbar[Kzone] = 1
+          #Kcolorbar[Kzone] = 1
           nproj2(nt,varlis,weights,'',scalex=scalex,scaley=scaley,nx=nx,ny=ny,idh=hist)
           hplave(hist,'M')
           iplot = 1
