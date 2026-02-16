@@ -27579,8 +27579,8 @@ def vshiftphase(vreal,vimag,ishift=-9999,shift=9999.):
   vi = deepcopy(vimag)
   vi.reset_index()
 
-  vc = deepcopy(vr)
-  vcn = deepcopy(vr)
+  vc = deepcopy(vr).astype(complex)
+  vcn = deepcopy(vr).astype(complex)
   vrn = deepcopy(vr)
   vin = deepcopy(vr)
 
