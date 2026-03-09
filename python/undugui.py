@@ -20175,6 +20175,24 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
   idx = GetIndexH1(hist)
 
+  if idx == -1:
+
+    idx = GetIndexH2(hist)
+    if idx != -1:
+      H2Last = H2[idx]
+      h2h = H2head[idx]
+      if nx == -1: nx = h2h[2]
+      if ny == -1: ny = h2h[6]
+    #endif
+
+  else:
+
+    H1Last = H1[idx]
+    h1h = H1head[idx]
+    if nx == -1: nx = h2h[2]
+
+  #endif
+
   if Kecho:
     #reakpoint()
     if type(hist) == str: shis = "'" + hist + "'"
@@ -27050,6 +27068,8 @@ h2info = H2Info
 
 hfill2 = h2fill
 hfill1 = h1fill
+
+GetIndexH = GetIndex
 
 h1index = GetIndexH1
 h2index = GetIndexH2

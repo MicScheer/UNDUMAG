@@ -217,7 +217,7 @@ def set_console_title(console='Python'):
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
   Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
-  FillColor,WisLinux,Ishow,Sepp,Backslash,Kcolorbar
+  FillColor,WisLinux,Ishow,Sepp,Backslash,Kcolorbar,kcolorbar
 #+PATCH,//WAVES/PYTHON
 #+KEEP,vecglobind,T=PYTHON.
 
@@ -619,7 +619,7 @@ def util_spline_coef(x,y,yp1=9999.,ypn=9999.):
   Tdate, TdateOv, Trun, TrunOv, Icallfromoverview,\
   LogX,LogY, LogZ, NxBinMax, Khdeleted, Waveplot, \
   Mrun, Mcomment, Mdate, ROFx, Rofy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid, KxAxis,KyAxis,KzAxis,Kbox, \
-  FillColor,WisLinux,Ishow,Sepp,Backslash,Kcolorbar
+  FillColor,WisLinux,Ishow,Sepp,Backslash,Kcolorbar,kcolorbar
 #+PATCH,//WAVES/PYTHON
 #+KEEP,vecglobind,T=PYTHON.
 
@@ -1232,7 +1232,7 @@ AtitFontSize3d, Atitfontsize3d, NXtick,NXtick3d, Nxtick,Nxtick3d, Ktitles, Dummy
 ZoomXmin,ZoomXmax, ZoomYmin, ZoomYmax, ZoomZmin,ZoomZmax,Tdate, TdateOv, Trun, TrunOv, \
 LogX, LogY, LogZ, NxbBinMax, Khdeleted,WisLinux, Waveplot, \
 Mrun, Mcomment, Mdate, ROFx, ROFy, Hull2D,Hull3DList,THull3D,Hull3D, Kgrid,KyAxis,KxAxis,KzAxis,Kbox, \
-FillColor,Ishow,Kcolorbar
+FillColor,Ishow,Kcolorbar,kcolorbar
 
 
 FillColor = 'none'
@@ -1564,7 +1564,10 @@ Hull3DList = []
 THull3D = type(Hull3D)
 Ishow = 1
 
-Kcolorbar = 0
+Kcolorbar = []
+for i in range(1001): Kcolorbar.append(0)
+kcolorbar = 0
+
 #+PATCH,//WAVES/PYTHON
 #+KEEP,nxyzglobal,T=PYTHON.
 global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv,Nx,Nxy,Nxyz
