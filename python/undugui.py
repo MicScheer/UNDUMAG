@@ -20189,7 +20189,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
     H1Last = H1[idx]
     h1h = H1head[idx]
-    if nx == -1: nx = h2h[2]
+    if nx == -1: nx = h1h[2]
 
   #endif
 
