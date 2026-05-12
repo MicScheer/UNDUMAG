@@ -1,5 +1,6 @@
-*CMZ :  2.02/01 28/05/2021  09.17.01  by  Michael Scheer
-*CMZ :  1.15/12 04/05/2017  15.15.21  by  Michael Scheer
+*CMZ :          12/05/2026  08.28.47  by  Michael Scheer
+*CMZ :  4.00/11 28/05/2021  09.17.01  by  Michael Scheer
+*CMZ :  3.05/05 12/07/2018  13.12.16  by  Michael Scheer
 *CMZ :  3.02/00 24/09/2014  13.51.08  by  Michael Scheer
 *CMZ :  3.01/03 19/03/2014  12.24.14  by  Michael Scheer
 *CMZ :  2.70/12 01/03/2013  16.28.24  by  Michael Scheer
@@ -11,7 +12,7 @@
 *CMZ : 00.00/00 10/01/95  15.27.54  by  Michael Scheer
 *-- Author : Michael Scheer
       SUBROUTINE UTIL_SPLINE_INTER(XA,YA,Y2A,N,X,Y,MODE)
-*KEEP,gplhint.
+*KEEP,GPLHINT.
 !******************************************************************************
 !
 !      Copyright 2013 Helmholtz-Zentrum Berlin (HZB)
@@ -79,10 +80,15 @@ C-       Y: Y(X) IS CALCULATED
 
       double precision XA(*),YA(*),Y2A(*),EPS,XX
 
-      save klold,nold,xa1old,xanold
+c      save klold,nold,xa1old,xanold
 
       DATA KLOLD/1/,NOLD/-99/
       DATA XA1OLD/-9999.D0/,XANOLD/-9999./
+
+      if (klold.lt.1.or.klold.gt.n-1) klold=1
+      if (nold.lt.1.or.nold.gt.n-1) nold=1
+      if (xa1old.lt.xa(1).or.xa1old.gt.xa(n-1)) xa1old=xa(1)
+      if (xanold.lt.xa(2).or.xanold.gt.xa(n)) xanold=xa(n)
 
       EPS=ABS(XA(N)-XA(1))/1.0D10
       XX=X
