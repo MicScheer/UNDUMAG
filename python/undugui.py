@@ -14516,7 +14516,7 @@ def nproj2(nt='?', xy='', weight=1., select='',
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
-
+  #reakpoint()
   if type(nt) == str:
     if nt == "" or nt == "?":
       print("\nUsage: nproj2(nt='', xy='', weigth=1. select='', scalex=1., scaley=1., scalez=1., nx=51, ny=51, idh=-1)")
@@ -14559,7 +14559,7 @@ def nproj2(nt='?', xy='', weight=1., select='',
     if idn != -1: sj2 = "nproj2(nt='" + snt + "', xy='"
     else: sj2 = "nproj2(nt,"
 
-    print(sj2 + xy + "', weight='" + str(weight)\
+    print(sj2,xy," ', weight='" + str(weight)\
     + "', select='" + select + "', scalex=" + str(scalex) + ", scaley="\
     + str(scaley) + ", scalez=" + str(scalez)\
     + ", nx=" + str(nx) + ", ny=" + str(ny) + ", idh=" + sidh + ")" )
@@ -20100,7 +20100,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
 
   #print("Nplot!")
-  #!reakpoint()
+  #reakpoint()
 
   NxBinMax = 0
   nto = nt
