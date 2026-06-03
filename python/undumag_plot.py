@@ -17399,8 +17399,6 @@ def hplot2d(idh, plopt='!', block=False, scalex=1., scaley=1., scalez=1.,
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
 
-  #reakpoint()
-
   if type(idh) != int:
     idx = GetIndexH2(idh)
   else:
@@ -17460,10 +17458,14 @@ def hplot2d(idh, plopt='!', block=False, scalex=1., scaley=1., scalez=1.,
   #endif
 
   dz = z
+
   set_plot_params_3d()
 
   if not plopt: plopt = Mode3d
   plotoptions(plopt)
+
+#  print("--- Break in hplot2d ---")
+#  #reakpoint()
 
   if Ihist:
 
@@ -17761,7 +17763,7 @@ def nextzones(isilent=1):
   if not isilent: print(Nxzone, Nyzone, Kzone, Isame, Kzone, Kplots[:Nxzone*Nyzone])
   return Nxzone, Nyzone, Kzone, Isame, Kzone, Kplots[:Nxzone*Nyzone]
 
-def nextzone(projection='2d', visible=True, isame=0,caller=''):
+def nextzone(projection='2d', visible=False, isame=0,caller=''):
 
   global Nxzone, Nyzone, Kzone, Isame, Kecho, Kplots, Kzone
 
@@ -17845,7 +17847,7 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
   #print("Zone!")
   #reakpoint()
 
-  #print('zone:',nx,ny,kzone,isame,projection,visible)
+  if Kecho: print('zone:',nx,ny,kzone,isame,projection,visible)
   ClearCanvas = 0
 
   if ny == 1: set_y_of_xlab(-0.1)
@@ -20087,7 +20089,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 
 
   #print("Nplot!")
-  #reakpoint()
+  #!reakpoint()
 
   NxBinMax = 0
   nto = nt
@@ -20383,11 +20385,14 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
           "\nxOpt: " + '{:.4g}'.format(xopt) + \
           "\nyOpt: " + '{:.4g}'.format(yopt)
         else:
-          scom = "global globyopt; globyopt = (nt." + varlis[1] + ").max()"
-          exec(scom)
-          yopt = globyopt
-          tex += \
-          "\nyOpt: " + '{:.4g}'.format(yopt)
+          try:
+            scom = "global globyopt; globyopt = (nt." + varlis[1] + ").max()"
+            exec(scom)
+            yopt = globyopt
+            tex += \
+            "\nyOpt: " + '{:.4g}'.format(yopt)
+          except:
+            pass
         #endif
 
         text(Xstat,Ystat,tex,halign='left')
@@ -26613,6 +26618,7 @@ def setwin(wintit):
 
   global Fig, Ax, Figman, Nwins, Nfigs
 
+  #print("Break in setwin!")
   #reakpoint()
   ifig = -1
   fnums = plt.get_fignums()
@@ -26643,12 +26649,14 @@ def setwin(wintit):
 
   Fig = plt.figure(ifig)
 
-  if len(Fig.axes) == 0:
+  nax = len(Fig.axes)
+
+  if nax == 0:
     #print("no axes")
     Ax = Fig.add_subplot(111,visible=False,label='111')
   else:
     #print("axes!")
-    Ax = Fig.axes[0]
+    Ax = Fig.axes[nax-1]
   #endif
 
   plt.sca(Ax)
