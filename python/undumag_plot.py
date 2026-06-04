@@ -29535,9 +29535,10 @@ def _nPlot():
 
 
   global FillColor
-  print("_Plot!")
-  breakpoint()
-  print(WavesMode)
+  #print("_Plot!")
+  #reakpoint()
+  #print(WavesMode)
+
   if not len(Nhead):
     nError("  No Ntuple defined so far!  ")
     return
