@@ -5794,6 +5794,9 @@ def hdelete(h='?'):
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
 
+  #print("Break in hdelete")
+  #reakpoint()
+
   if type(h) == str and h == '?':
     print("\nUsage: hdelete(Histo)\nThe histogram is not really deleted but marked as.")
     return
@@ -10241,6 +10244,9 @@ def hbook2(idh=-1, tit='Histogram2D',
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
 
+  #print("Break in hbook2")
+  #reakpoint()
+
   if type(idh) == int and idh <0:
     print("hbook2(idh=-1, tit='Histogram2D', nx=10, xmin=0., xmax=1., ny=10, ymin=0., ymax=1.0, overwrite=False)")
     return 0
@@ -12210,6 +12216,8 @@ def GetIndexH2(idh='?'):
   H2HLast = H2head[idx]
   H2Last = H2h
   Khdeleted = H2hh[38]
+
+#  if Khdeleted: idx = -1
 
   return idx
 #def GetIndexH2(idh='?')
@@ -14505,7 +14513,10 @@ def nproj2(nt='?', xy='', weight=1., select='',
 #*CMZ :          29/09/2019  11.11.01  by  Michael Scheer
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
+
+  #print("break in nproj2!")
   #reakpoint()
+
   if type(nt) == str:
     if nt == "" or nt == "?":
       print("\nUsage: nproj2(nt='', xy='', weigth=1. select='', scalex=1., scaley=1., scalez=1., nx=51, ny=51, idh=-1)")
@@ -20088,7 +20099,7 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
   global N1, N2, N3, N4, N5, N6, N7,N8,N9,Nv, Nx, Nxy, Nxyz
 
 
-  #print("Nplot!")
+  #print("Break in Nplot!")
   #reakpoint()
 
   NxBinMax = 0
@@ -20169,18 +20180,21 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
   if idx == -1:
 
     idx = GetIndexH2(hist)
+
     if idx != -1:
       H2Last = H2[idx]
       h2h = H2head[idx]
-      if nx == -1: nx = h2h[2]
-      if ny == -1: ny = h2h[6]
+      if Khdeleted == 0:
+        if nx == -1: nx = h2h[2]
+        if ny == -1: ny = h2h[6]
+      #endif
     #endif
 
   else:
 
     H1Last = H1[idx]
     h1h = H1head[idx]
-    if nx == -1: nx = h1h[2]
+    if Khdeleted == 0 and nx == -1: nx = h1h[2]
 
   #endif
 
