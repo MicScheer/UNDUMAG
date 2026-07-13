@@ -29705,12 +29705,12 @@ def undu_readbeff():
   Undu_BzMax = float(beff[1])
   Undu_Bzeff = float(beff[3])
 
-  if abs(Undu_ByMin) < 1.e-9: Undu_ByMin = 0.0
-  if abs(Undu_ByMax) < 1.e-9: Undu_ByMax = 0.0
-  if abs(Undu_BzMin) < 1.e-9: Undu_BzMin = 0.0
-  if abs(Undu_BzMax) < 1.e-9: Undu_BzMax = 0.0
-  if abs(Undu_Byeff) < 1.e-9: Undu_Byeff = 0.0
-  if abs(Undu_Bzeff) < 1.e-9: Undu_Bzeff = 0.0
+  if np.abs(Undu_ByMin) < 1.e-9: Undu_ByMin = 0.0
+  if np.abs(Undu_ByMax) < 1.e-9: Undu_ByMax = 0.0
+  if np.abs(Undu_BzMin) < 1.e-9: Undu_BzMin = 0.0
+  if np.abs(Undu_BzMax) < 1.e-9: Undu_BzMax = 0.0
+  if np.abs(Undu_Byeff) < 1.e-9: Undu_Byeff = 0.0
+  if np.abs(Undu_Bzeff) < 1.e-9: Undu_Bzeff = 0.0
 
   line = Fbeff.readline()
   line = Fbeff.readline()

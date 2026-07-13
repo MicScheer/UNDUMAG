@@ -113,7 +113,13 @@ if not os.path.exists(UI + 'dynlib'): os.system('mkdir ' + UI + 'dynlib')
 #reakpoint()
 cwdo=os.getcwd()
 os.chdir(UI + Sepp + 'python')
-os.system('python3 build_hull3d.py')
+
+if platform.system() == 'Windows':
+  os.system('python3 build_hull3d_windows.py')
+else:
+  os.system('python3 build_hull3d_linux.py')
+#endif
+
 os.chdir(cwdo)
 
 
