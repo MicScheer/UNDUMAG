@@ -17880,8 +17880,14 @@ def nextzone(projection='2d', visible=False, isame=0,caller=''):
 
   global Nxzone, Nyzone, Kzone, Isame, Kecho, Kplots, Kzone
 
+  global Debug
+  if Debug:
+    print("Break in nextzone(...)")
+    print("nextzone(projection=" + projection + ", visible=" + str(visible) + ", isame=" + str(isame) + ", caller=" + caller +")")
+    breakpoint()
+
   if Kecho:
-    print("nextzone(projection=" + projection + ", visible=" + str(visible) + ", caller=" + caller +")")
+    print("nextzone(projection=" + projection + ", visible=" + str(visible) + ", isame=" + str(isame) + ", caller=" + caller +")")
 
   #print("Nextzone!")
   #reakpoint()
@@ -17904,9 +17910,25 @@ def nextzone(projection='2d', visible=False, isame=0,caller=''):
   kzone = Kzone
 
   if kzone < (nx * ny):
+
     kzone += 1
     zone(nx,ny,kzone,'s',projection=projection,visible=visible)
+
   else:
+
+    if not isame:
+
+      fig = plt.gcf()
+
+      ia = 1
+      for ax in fig.axes:
+        ia += 1
+        fig.delaxes(ax)
+        Kcolorbar[ia] = 0
+      #endfor
+
+#    #endif not Isame
+
     kzone = 1
     zone(nx,ny,kzone,same,projection=projection,visible=visible)
   #endif kzone == nx * ny
@@ -17958,10 +17980,20 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
 
   global Tax2d, Tax3d, Debug, ClearCanvas
 
-  #print("Zone!")
-  #reakpoint()
+  global Debug
+
+  if Debug:
+    print("Break in zone(...)")
+    breakpoint()
 
   if Kecho: print('zone:',nx,ny,kzone,isame,projection,visible)
+
+  if type(IsameGlobal) == int:
+    ksame = IsameGlobal
+  else:
+    ksame = IsameGlobal.get()
+  #endif type(IsameGlobal) == int
+
   ClearCanvas = 0
 
   if ny == 1: set_y_of_xlab(-0.1)
@@ -23850,16 +23882,13 @@ def getzone(projection=''):
 
 
   global ClearCanvas
-  #print("getzone:ClearCanvas,Nxzone,Nyzone,Kzone:",ClearCanvas,Nxzone,Nyzone,Kzone)
-
-  #print("Getzone!")
-  #reakpoint()
 
   global Debug
 
-#  if Debug:
-#    print("Break in getzone!")
-    #reakpoint()
+  if Debug:
+    print("Break in getzone!")
+    print("getzone:ClearCanvas,Nxzone,Nyzone,Kzone:",ClearCanvas,Nxzone,Nyzone,Kzone)
+    breakpoint()
 
   if ClearCanvas: _clearCanvas(1)
 
@@ -23952,32 +23981,18 @@ def getzone(projection=''):
     i += 1
   #endfor ax in Axes
 
-  #print("mz:",mz,iax,Isame)
-  #reakpoint()
-#  if iax >= 0 and iax < len(Axes)-1 and  hasattr(Axes[iax+1],'get_label'):
-#    Fig.delaxes(Axes[iax+1])
-#
-#  Fig.delaxes(Ax)
-  #reakpoint()
-#  print("AK:",Axes,len(Axes),Kzone)
-#  print(Kplots[:5])
-  #reakpoint()
   if not Isame:
-#    idel = -1
-#    for ipl in range(Kzone):
-#      if Kplots[ipl] == 1: idel += 1
-#    #endfor
+
     delPlot()
+
     if Kcolorbar[Kzone]:
       delPlot()
       Kcolorbar[Kzone] = 0
       kcolorbar = 0
-#      Kcolorbar = 0
-#    Fig.delaxes(Axes[-1])
-#    if Kcolorbar: Fig.delaxes(Axes[-2])
-#    Fig.delaxes(Axes[Kzone-1])
-#    if idel > -1: Fig.delaxes(Axes[idel])
-#    print("Gelöscht")
+    #endif
+
+  #endif not Isame
+
   Legend = []
 
   label = str(Nxzone) + "_" + str(Nyzone) + "_" + str(Kzone)
