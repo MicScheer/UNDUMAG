@@ -17683,7 +17683,7 @@ def nextzone(projection='2d', visible=False, isame=0,caller=''):
   if isame: same = 's'
   else: same = ''
 
-  Kplots[Kzone-1] = 0
+  #Kplots[Kzone-1] = 0
   reset_zoom()
 
   nx = Nxzone
@@ -17716,7 +17716,7 @@ def nextzone(projection='2d', visible=False, isame=0,caller=''):
 
 #def nextzone(projection='2d', visible=True)
 
-def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
+def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=False):
 
 #+KEEP,plotglobind,T=PYTHON.
 #*CMZ :          28/09/2019  14.39.13  by  Michael Scheer
@@ -17764,7 +17764,10 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
   global Debug
 
   if Debug:
-    print("Break in zone(...)")
+    try:
+      print("Break in zone:",nx,ny,kzone,isame,Kplots[kzone])
+    except:
+      print("Break in zone:",nx,ny,kzone,isame)
     breakpoint()
 
   if Kecho: print('zone:',nx,ny,kzone,isame,projection,visible)
@@ -17774,6 +17777,8 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
   else:
     ksame = IsameGlobal.get()
   #endif type(IsameGlobal) == int
+
+  if isame or ksame: Isame = 1
 
   ClearCanvas = 0
 
@@ -17846,6 +17851,7 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
   if not isame and Isame == 0 and ksame == 0:
 
     Fig.clear()
+    Kplots = list(np.linspace(1,1000,1000)*0)
     Tdate = None
     reset_zoom()
     date_on_figure()
@@ -17872,6 +17878,16 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
   else:
 
     if nx != Nxzone or ny != Nyzone or kzone != Kzone:
+
+      if Kplots[kzone-1]:
+        Fig.delaxes(Fig.axes[kzone-1])
+        Kplots[kzone-1] = 0
+        if Kcolorbar[kzone]:
+          Fig.delaxes(Fig.axes[kzone-1])
+          Kcolorbar[kzone] = 0
+        #endif
+      #endif
+
       if projection.lower() == '2d':
         Ax = Fig.add_subplot(ny,nx,kzone,visible=visible,label=label)
         Tax2d = type(Ax)
@@ -17883,6 +17899,9 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=True):
         Ax = Fig.add_subplot(ny,nx,kzone,projection=projection,visible=visible,label=label)
       #if projection.lower() == '2d'
     #endif nx == Nxzone and ny == Nyzone and kzone == Kzone
+    #      Quit()
+    if kzone < Kzone: print(Fig.axes)
+    #      Quit()
   #endif isame == '' and Isame == 0 and IsameGlobal.get() == 0
 
   Nxzone = nx
@@ -17967,7 +17986,7 @@ def window_close(win=-1):
     Nxzone = 0
     Nyzone = 0
     Kzone = 0
-    Kplot = []
+    Kplots = list(np.linspace(1,1000,1000)*0)
     Fig = None
     Ax = None
     plt.close(plt.gcf())
@@ -20575,6 +20594,39 @@ def nplot(nt='?',varlis='',select='',weights='',plopt='', legend='',
 #  Zones[Kzone-1][5] = Kcolorbar
 
 #enddef nplot(...) nt idn
+
+def nscat(nt='?',varlis='',select='',weights='',plopt='', legend='',
+          scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='!',
+          color='default',isort=0,nx=-1,ny=-1):
+
+  varliso = varlis
+
+  #reakpoint()
+
+  if type(varlis) == str:
+    varlis = nlistcolon(varlis)
+    if varlis[0] == '':
+      varlis = nt.columns
+      vdum = []
+      vdum.append(varlis[0])
+      if len(varlis) > 1:
+        vdum.append(varlis[1])
+      varlis = vdum
+    #endif varlis[0] == ''
+  #endif type(varlis) == str
+
+  if len(varlis) == 2:
+    if not weights:
+      nplot(nt,varlis,select,weights,'scat2d',legend,scalex,scaley,scalez,scalet,cmap,hist,color,isort,nx,ny)
+    else:
+      varlis = varliso + ":" + weights
+      nplot(nt,varlis,select,'','scat2d',legend,scalex,scaley,scalez,scalet,cmap,hist,color,isort,nx,ny)
+    #endif
+  elif len(varlis) == 3:
+    nplot(nt,varlis,select,'','scat2d',legend,scalex,scaley,scalez,scalet,cmap,hist,color,isort,nx,ny)
+  #endif
+
+#enddef nscat
 
 def nprof(nt='?',varlis='',select='',weights='',plopt='', legend='',
 scalex=1., scaley=1., scalez=1., scalet=1., cmap='', hist='HnPlot',
