@@ -17933,6 +17933,7 @@ def nextzone(projection='2d', visible=False, isame=0,caller=''):
 
       ia = 1
       for ax in fig.axes:
+        Kplots[ia-1] = 0
         ia += 1
         fig.delaxes(ax)
         Kcolorbar[ia] = 0
@@ -18081,7 +18082,6 @@ def zone(nx=1, ny=1, kzone=1, isame='', projection='2d', visible=False):
   if not isame and Isame == 0 and ksame == 0:
 
     Fig.clear()
-    Kplots = list(np.linspace(1,1000,1000)*0)
     Tdate = None
     reset_zoom()
     date_on_figure()
